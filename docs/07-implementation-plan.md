@@ -150,6 +150,10 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 - `internal/einoapp/httpapi/response_test.go`
 - `internal/einoapp/httpapi/sse.go`
 - `internal/einoapp/httpapi/sse_test.go`
+- `internal/einoapp/httpapi/routes.go`
+- `internal/einoapp/httpapi/routes_test.go`
+- `internal/einoapp/httpapi/actions.go`
+- `internal/einoapp/execution/commands.go`
 - `internal/einoapp/llm/config.go`
 - `internal/einoapp/llm/provider.go`
 - `internal/einoapp/llm/redacted_error.go`
@@ -160,6 +164,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 - `internal/einoapp/capabilities/registry_test.go`
 - `internal/einoapp/facts/repository.go`
 - `internal/einoapp/facts/model.go`
+- `internal/einoapp/facts/memory_repository.go`
 - `internal/einoapp/product/projection.go`
 - `internal/einoapp/product/errors.go`
 - `docs/adr/YYYY-MM-DD-backend-foundation-boundaries.md`
@@ -170,17 +175,23 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 - 后端服务配置只来自配置文件；`configs/eino-workbench.local.yaml` 可包含本地密钥但必须 ignored，不使用环境变量覆盖服务配置。
 - 成功响应保持 OpenAPI 中定义的业务 schema 直出；错误响应统一 `eino_error_envelope.v1`，并包含 request id、安全错误码和可展示摘要。
 - SSE 编码必须统一处理 `id`、`event`、`data`、flush、content type、no-cache 和编码失败。
-- `httpapi` 不得手写业务 DTO 第二套真相；只能调用 product projection、facts query 和 execution command 接口。
+- `httpapi` 必须通过 `Dependencies` 注入 product projection 和 execution command 接口；handler 不得持有全局 projection 或自行制造 run 执行结果。
+- `Dependencies` 必须成对提供 projection 和 commands；禁止只注入一侧后让另一侧静默 fallback，避免 split facts。
+- `httpapi` 不得手写业务 DTO 第二套真相；请求解析结构必须覆盖对应 schema 字段并只负责 transport 边界，业务输出只能调用 product projection、facts query 和 execution command 接口。
+- `httpapi` 必须解析 `message`、`action`、`resume` 请求并校验单个 JSON body；合法 schema 字段如 Action `attachments/context` 不得被误拒。
+- `execution` 先提供 Message/Action/Resume command 边界；Phase 1 默认命令只能创建 accepted run fact，resume 必须确认目标 run fact 存在，不实现真实 Eino runner、checkpoint 或 stream reducer。
+- `DefaultDependencies` 必须让 execution commands 和 product projection 共享同一个 facts repository；禁止默认服务路径出现执行接受结果和产品投影脱节。
 - `llm` 只暴露 provider interface、config、mock provider、redacted error；真实 OpenAI-compatible provider 可在 Phase 4 扩展。
 - `capabilities` 必须先提供 registry、provider interface、tool metadata、risk/approval policy；任何工具选择都必须通过 registry，不得写死工具名或自然语言关键词。
-- `facts` 先定义最小 repository interface 和事实模型；Product Facts 的 SQLite 实现仍在 Phase 3.2 完成。
-- `product` 先定义 Workbench、ActionResult、Replay、SSE projection 的接口边界；实际完整映射仍在 Phase 3 完成。
+- `facts` 先定义最小 repository interface、事实模型和 Phase 1 内存 repository；Product Facts 的 SQLite 实现仍在 Phase 3.2 完成。
+- `product` 先定义 Workbench、ActionResult、Replay、SSE projection 的接口边界和 facts-backed 空投影；实际完整映射仍在 Phase 3 完成。
 - 不创建通用 `utils` 包；公共能力按职责放入 `bootstrap`、`httpapi`、`llm`、`capabilities`、`facts`、`product`、`observability`。
 
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/bootstrap ./internal/einoapp/httpapi ./internal/einoapp/llm ./internal/einoapp/capabilities ./internal/einoapp/facts ./internal/einoapp/product -run 'Config|Response|SSE|Provider|Registry|Facts|Projection|Redaction' -count=1
+go test ./internal/einoapp/bootstrap ./internal/einoapp/httpapi ./internal/einoapp/execution ./internal/einoapp/llm ./internal/einoapp/capabilities ./internal/einoapp/facts ./internal/einoapp/product -run 'Config|Response|SSE|Commands|Provider|Registry|Facts|Projection|Redaction' -count=1
+go test ./internal/einoapp/httpapi -run 'MessageRequestParsesIntoExecutionCommand|ActionRequestParsesActionID|ResumeRequest|ResumeMissingRun|TrailingJSON|InvalidMessage|InvalidAction|InvalidResume|DefaultDependencies|PartialDependencies|InjectedProjection' -count=1
 go test ./internal/einoapp/architecture -run ImportBoundary -count=1
 bash scripts/eino_workbench_server_smoke.sh --scenario contract
 ```

@@ -1,6 +1,7 @@
 package facts_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -38,5 +39,27 @@ func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
 
 	if result.StructuredResult.SchemaVersion != "tool.structured_result.v1" {
 		t.Fatalf("structured result schema = %q", result.StructuredResult.SchemaVersion)
+	}
+}
+
+func TestMemoryRepositoryTracksLatestRunByWorkspace(t *testing.T) {
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+
+	first := facts.Run{RunID: "run-1", WorkspaceID: "ws-1", Status: facts.RunStatusCreated}
+	second := facts.Run{RunID: "run-2", WorkspaceID: "ws-1", Status: facts.RunStatusRunning}
+	if err := repository.CreateRun(ctx, first); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.CreateRun(ctx, second); err != nil {
+		t.Fatal(err)
+	}
+
+	latest, err := repository.LatestRun(ctx, "ws-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if latest.RunID != "run-2" {
+		t.Fatalf("latest run = %q", latest.RunID)
 	}
 }

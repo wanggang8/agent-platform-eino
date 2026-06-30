@@ -5,6 +5,7 @@ import "context"
 type Repository interface {
 	CreateRun(ctx context.Context, run Run) error
 	GetRun(ctx context.Context, runID string) (Run, error)
+	LatestRun(ctx context.Context, workspaceID string) (Run, error)
 	AppendTurn(ctx context.Context, turn Turn) error
 	AppendToolCall(ctx context.Context, call ToolCall) error
 	AppendToolResult(ctx context.Context, result ToolResult) error

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/product"
 )
 
@@ -34,5 +35,26 @@ func TestProductErrorConvertsToSafeAPIError(t *testing.T) {
 	}
 	if err.SafeDetail == "" {
 		t.Fatal("safe detail is empty")
+	}
+}
+
+func TestFactsProjectionReadsLatestRunFromProductFacts(t *testing.T) {
+	repository := facts.NewMemoryRepository()
+	if err := repository.CreateRun(context.Background(), facts.Run{
+		RunID:       "run-facts",
+		WorkspaceID: "ws-demo",
+		Status:      facts.RunStatusCreated,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	projection := product.NewFactsProjection(repository)
+
+	view, err := projection.WorkbenchView(context.Background(), "ws-demo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if view.RunID != "run-facts" {
+		t.Fatalf("run_id = %q", view.RunID)
 	}
 }

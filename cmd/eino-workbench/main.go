@@ -21,7 +21,7 @@ func main() {
 		Addr:         cfg.Server.Addr,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
-		Handler:      httpapi.NewRouter(),
+		Handler:      httpapi.NewRouter(httpapi.DefaultDependencies()),
 	}
 
 	log.Printf("eino-workbench listening on http://%s", cfg.Server.Addr)

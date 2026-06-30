@@ -1,11 +1,17 @@
 package product
 
-import "context"
+import (
+	"context"
+	"errors"
+
+	"agent-platform-eino/internal/einoapp/facts"
+)
 
 type Projection interface {
 	WorkbenchView(ctx context.Context, workspaceID string) (WorkbenchView, error)
 	RunSnapshot(ctx context.Context, workspaceID string, runID string) (WorkbenchView, error)
 	ActionResult(ctx context.Context, workspaceID string, actionID string, runID string) (ActionResult, error)
+	ResumeResult(ctx context.Context, workspaceID string, runID string) (ActionResult, error)
 	ReplayView(ctx context.Context, workspaceID string, runID string) (ReplayView, error)
 }
 
@@ -79,6 +85,10 @@ func (projection EmptyProjection) ActionResult(_ context.Context, workspaceID st
 	}, nil
 }
 
+func (projection EmptyProjection) ResumeResult(ctx context.Context, workspaceID string, runID string) (ActionResult, error) {
+	return projection.ActionResult(ctx, workspaceID, "resume", runID)
+}
+
 func (projection EmptyProjection) ReplayView(_ context.Context, workspaceID string, runID string) (ReplayView, error) {
 	return ReplayView{
 		SchemaVersion: "eino_replay_view.v1",
@@ -100,4 +110,70 @@ func newWorkbenchView(workspaceID string, runID string) WorkbenchView {
 			Tabs: []string{"evidence", "structured", "runtime", "audit"},
 		},
 	}
+}
+
+type FactsProjection struct {
+	repository facts.Repository
+}
+
+func NewFactsProjection(repository facts.Repository) FactsProjection {
+	return FactsProjection{repository: repository}
+}
+
+func (projection FactsProjection) WorkbenchView(ctx context.Context, workspaceID string) (WorkbenchView, error) {
+	run, err := projection.repository.LatestRun(ctx, workspaceID)
+	if errors.Is(err, facts.ErrNotFound) {
+		return newWorkbenchView(workspaceID, ""), nil
+	}
+	if err != nil {
+		return WorkbenchView{}, err
+	}
+	return newWorkbenchView(run.WorkspaceID, run.RunID), nil
+}
+
+func (projection FactsProjection) RunSnapshot(ctx context.Context, workspaceID string, runID string) (WorkbenchView, error) {
+	run, err := projection.repository.GetRun(ctx, runID)
+	if errors.Is(err, facts.ErrNotFound) {
+		return newWorkbenchView(workspaceID, runID), nil
+	}
+	if err != nil {
+		return WorkbenchView{}, err
+	}
+	return newWorkbenchView(run.WorkspaceID, run.RunID), nil
+}
+
+func (projection FactsProjection) ActionResult(ctx context.Context, workspaceID string, actionID string, runID string) (ActionResult, error) {
+	run, err := projection.repository.GetRun(ctx, runID)
+	if errors.Is(err, facts.ErrNotFound) {
+		run = facts.Run{WorkspaceID: workspaceID, RunID: runID}
+	} else if err != nil {
+		return ActionResult{}, err
+	}
+	return ActionResult{
+		SchemaVersion: "eino_action_result.v1",
+		WorkspaceID:   run.WorkspaceID,
+		ActionID:      actionID,
+		RunID:         run.RunID,
+		Status:        "accepted",
+		ResultCards:   []ResultCard{},
+		AuditRefs:     []string{},
+	}, nil
+}
+
+func (projection FactsProjection) ResumeResult(ctx context.Context, workspaceID string, runID string) (ActionResult, error) {
+	return projection.ActionResult(ctx, workspaceID, "resume", runID)
+}
+
+func (projection FactsProjection) ReplayView(ctx context.Context, workspaceID string, runID string) (ReplayView, error) {
+	view, err := projection.RunSnapshot(ctx, workspaceID, runID)
+	if err != nil {
+		return ReplayView{}, err
+	}
+	return ReplayView{
+		SchemaVersion: "eino_replay_view.v1",
+		WorkspaceID:   view.WorkspaceID,
+		RunID:         view.RunID,
+		Events:        []any{},
+		View:          view,
+	}, nil
 }

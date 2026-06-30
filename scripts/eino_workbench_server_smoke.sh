@@ -139,7 +139,7 @@ PY
 
 curl -fsS \
   -H "Content-Type: application/json" \
-  -d '{}' \
+  -d '{"schema_version":"eino_action_request.v1","action_id":"action-smoke","client_request_id":"client-smoke-action","input":{"text":"hello"}}' \
   "${base_url}/api/workspaces/ws_smoke/agent/actions" \
   -o "${action_json}"
 python3 - "${action_json}" <<'PY'
