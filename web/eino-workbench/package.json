@@ -12,7 +12,7 @@
     "test": "vitest run",
     "stream-test": "node ../../scripts/eino_workbench_not_implemented.mjs stream-test Phase-3",
     "browser-test": "playwright test",
-    "visual-test": "node ../../scripts/eino_workbench_not_implemented.mjs visual-test Phase-2.4",
+    "visual-test": "EINO_WORKBENCH_REPORT_KIND=visual playwright test --grep @visual",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "send-smoke": "bash ../../scripts/eino_workbench_server_smoke.sh --scenario contract"
   },

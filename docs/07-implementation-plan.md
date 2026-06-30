@@ -220,7 +220,7 @@ npm run eino-workbench:browser-test -- --grep shell
 
 ```bash
 npm run eino-workbench:schema-test
-rg -n "legacy-acceptance-evidence|target|crop|selector" docs/visual-acceptance-matrix.md docs/fixtures/visual-evidence-matrix.json
+rg -n "legacy-acceptance-evidence|target|crop|selector|blocker" docs/visual-acceptance-matrix.md docs/fixtures/visual-evidence-matrix.json web/eino-workbench/tests/visual-fixtures
 ```
 
 ### Task 2.3 Stream reducer

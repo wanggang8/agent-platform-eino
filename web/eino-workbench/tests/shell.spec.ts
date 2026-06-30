@@ -18,6 +18,7 @@ test("@shell renders responsive workbench regions", async ({ page }, testInfo) =
 test("@visual captures fixture shell", async ({ page }) => {
   await page.goto("/workspaces/ws-demo");
   await expect(page.getByTestId("workbench-shell")).toHaveScreenshot("shell-fixture.png", {
-    mask: [page.getByText(/run-/), page.getByText(/\d{2}:\d{2}/)]
+    mask: [page.getByText(/run-/), page.getByText(/\d{2}:\d{2}/)],
+    maskColor: "#06141e"
   });
 });

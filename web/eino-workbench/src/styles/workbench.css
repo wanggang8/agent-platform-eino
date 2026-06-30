@@ -292,12 +292,22 @@
   color: var(--success);
 }
 
+.status-dot.danger,
+.status-pill.danger {
+  color: var(--danger);
+}
+
 .status-pill {
   border: 1px solid rgb(54 208 118 / 35%);
   border-radius: var(--radius-sm);
   padding: 2px 8px;
   background: rgb(54 208 118 / 10%);
   font-size: 12px;
+}
+
+.status-pill.danger {
+  border-color: rgb(239 83 80 / 35%);
+  background: rgb(239 83 80 / 10%);
 }
 
 .tool-card svg.is-open {

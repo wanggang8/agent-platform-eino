@@ -1,0 +1,63 @@
+{
+  "schema_version": "eino_workbench_visual_fixtures.v1",
+  "states": [
+    {
+      "state_id": "empty",
+      "fixture_label": "空态",
+      "required_blocks": ["shell", "sidebar", "timeline", "composer", "inspector"],
+      "blocker": "空态没有稳定聊天区、输入区或 Inspector 空态时阻断 Phase 2 视觉验收。"
+    },
+    {
+      "state_id": "chat",
+      "fixture_label": "工具完成",
+      "required_blocks": ["shell", "sidebar", "timeline", "composer", "tool-card", "inspector"],
+      "blocker": "成功态没有三栏布局、工具卡或 Inspector 证据时阻断 Phase 2 视觉验收。"
+    },
+    {
+      "state_id": "tool-collapsed",
+      "fixture_label": "工具完成",
+      "required_blocks": ["timeline", "tool-card"],
+      "blocker": "工具折叠态缺少时间线或紧凑工具卡时阻断 Phase 2 视觉验收。"
+    },
+    {
+      "state_id": "tool-expanded",
+      "fixture_label": "工具完成",
+      "required_blocks": ["timeline", "tool-card", "inspector"],
+      "blocker": "工具展开态缺少 StructuredResult 或 Inspector 证据时阻断 Phase 2 视觉验收。"
+    },
+    {
+      "state_id": "approval-waiting",
+      "fixture_label": "审批等待",
+      "required_blocks": ["timeline", "approval-card", "composer", "inspector"],
+      "blocker": "审批卡、Inspector 等待态不可见或输入区未体现等待态时阻断 HITL 视觉验收。"
+    },
+    {
+      "state_id": "clarification-waiting",
+      "fixture_label": "澄清等待",
+      "required_blocks": ["timeline", "clarification-card", "composer", "inspector"],
+      "blocker": "澄清卡、Inspector 等待态不可见或候选交互不可见时阻断澄清视觉验收。"
+    },
+    {
+      "state_id": "failed",
+      "fixture_label": "失败态",
+      "required_blocks": ["timeline", "tool-card", "inspector"],
+      "blocker": "失败态未在原工具位置展示安全错误摘要时阻断安全视觉验收。"
+    },
+    {
+      "state_id": "inspector-tabs",
+      "fixture_label": "工具完成",
+      "required_blocks": ["inspector"],
+      "blocker": "Inspector tabs 不稳定或无法切换证据/结构化/运行/审计视图时阻断 Phase 2 视觉验收。"
+    }
+  ],
+  "blocks": {
+    "shell": {"selector": "[data-testid=\"workbench-shell\"]"},
+    "sidebar": {"selector": "[data-testid=\"workspace-sidebar\"]", "desktop_only": true},
+    "timeline": {"selector": "[data-testid=\"chat-timeline\"]"},
+    "composer": {"selector": "[data-testid=\"chat-composer\"]"},
+    "tool-card": {"selector": "[data-testid=\"tool-card\"]"},
+    "approval-card": {"selector": "[data-testid=\"approval-card\"]"},
+    "clarification-card": {"selector": "[data-testid=\"clarification-card\"]"},
+    "inspector": {"selector": "[data-testid=\"inspector\"]"}
+  }
+}

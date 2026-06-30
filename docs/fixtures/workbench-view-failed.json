@@ -5,6 +5,25 @@
   "status": "failed",
   "timeline": [
     {
+      "item_id": "tool-card-failed-1",
+      "kind": "tool_card",
+      "tool_call_id": "call-provider-timeout",
+      "status": "failed",
+      "safe_summary": "工具执行失败，已生成安全错误摘要。",
+      "structured_result": {
+        "schema_version": "tool.structured_result.v1",
+        "status": "failed",
+        "data": {
+          "summary": "模型服务请求超时。"
+        },
+        "metadata": {
+          "safe": true,
+          "result_ref": "result:error:provider-timeout",
+          "source": "system"
+        }
+      }
+    },
+    {
       "item_id": "notice-failed-1",
       "kind": "run_notice",
       "status": "failed",

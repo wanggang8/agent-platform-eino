@@ -12,12 +12,14 @@ export function ToolCard({ item }: { readonly item: TimelineItem }) {
     <Collapsible.Root open={!collapsed} onOpenChange={() => toggleToolCard(item.item_id)}>
       <article className="tool-card" data-testid="tool-card">
         <Collapsible.Trigger className="tool-card-header">
-          <span className="status-dot success"><CheckCircle2 size={16} /></span>
+          <span className={`status-dot ${item.status === "failed" ? "danger" : "success"}`}>
+            {item.status === "failed" ? <CircleAlert size={16} /> : <CheckCircle2 size={16} />}
+          </span>
           <div>
             <strong>工具调用</strong>
             <p>{item.safe_summary ?? "工具结果已生成安全结构化摘要。"}</p>
           </div>
-          <span className="status-pill">{statusLabel(item.status)}</span>
+          <span className={`status-pill ${item.status === "failed" ? "danger" : ""}`}>{statusLabel(item.status)}</span>
           <ChevronRight className={collapsed ? "" : "is-open"} size={18} />
         </Collapsible.Trigger>
         <Collapsible.Content>
