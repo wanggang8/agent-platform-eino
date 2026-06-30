@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -161,7 +162,7 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 		},
 		"llm": map[string]any{
 			"provider":   cfg.LLM.Provider,
-			"base_url":   cfg.LLM.BaseURL,
+			"base_url":   redactURL(cfg.LLM.BaseURL),
 			"model":      cfg.LLM.Model,
 			"timeout_ms": cfg.LLM.TimeoutMillis,
 			"credential_binding": map[string]any{
@@ -210,4 +211,15 @@ func redactValue(value string) string {
 		return ""
 	}
 	return "***"
+}
+
+func redactURL(value string) string {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return redactValue(value)
+	}
+	parsed.User = nil
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.String()
 }

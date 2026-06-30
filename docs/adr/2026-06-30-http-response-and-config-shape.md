@@ -14,6 +14,7 @@ Phase 1.6 开始补齐后端基础骨架。需要先固定 HTTP 响应形态和�
 - 示例配置提交为 `configs/eino-workbench.example.yaml`。
 - 启动服务必须通过 `--config <path>` 指定配置；测试和 smoke 使用临时配置文件。
 - 本地配置文件可以包含密钥，但日志、错误、验收记录和截图必须脱敏。
+- 配置摘要必须清理 DSN、URL userinfo、URL query 和 fragment；LLM base URL 只允许保留安全的 scheme/host/path。
 - 不使用环境变量覆盖服务配置；环境变量只允许用于前端测试工具自身的运行参数，不作为后端服务配置来源。
 - HTTP 成功响应保持业务 schema 直出，例如 `eino_workbench_view.v1`、`eino_action_result.v1`。
 - HTTP 错误响应统一使用 `eino_error_envelope.v1`。
@@ -38,7 +39,7 @@ Phase 1.6 开始补齐后端基础骨架。需要先固定 HTTP 响应形态和�
 
 - OpenAPI、fixtures、前端 contract 和 HTTP handler 必须保持成功响应业务 schema 直出。
 - `httpapi` 不得使用 `http.Error` 输出产品错误。
-- provider raw error、API key、Authorization、DSN secret、raw prompt 和 raw response body 不得进入日志或产品响应。
+- provider raw error、API key、Authorization、DSN secret、URL query secret、raw prompt 和 raw response body 不得进入日志或产品响应。
 - `configs/eino-workbench.local.yaml` 不得提交。
 
 ## 验证

@@ -95,7 +95,7 @@ database:
   dsn: "file:data/secret.db?password=db-secret"
 llm:
   provider: "mock"
-  base_url: "https://llm.example.test/v1"
+  base_url: "https://user:llm-secret@llm.example.test/v1?api_key=query-secret"
   model: "mock-chat"
   timeout_ms: 8000
   credential_binding:
@@ -128,10 +128,13 @@ budgets:
 
 	summary := cfg.RedactedSummary()
 	encoded := summary.String()
-	for _, secret := range []string{"db-secret"} {
+	for _, secret := range []string{"db-secret", "llm-secret", "query-secret", "api_key"} {
 		if strings.Contains(encoded, secret) {
 			t.Fatalf("redacted summary leaked %q: %s", secret, encoded)
 		}
+	}
+	if !strings.Contains(encoded, "https://llm.example.test/v1") {
+		t.Fatalf("redacted summary should keep safe base url origin/path: %s", encoded)
 	}
 }
 
