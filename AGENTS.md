@@ -24,6 +24,7 @@
 
 - 每个任务开始前必须先确认所属 Phase、对应设计文档、实施计划、验收门禁和受影响目录。
 - 如果需求、边界、数据来源、验收标准或旧项目参考含义不清楚，必须及时澄清；不得用猜测静默完成。
+- 涉及关键架构、技术选型、产品范围、安全边界、验收口径或会影响后续返工的决策时，如存在不清楚、不确定或多种合理方案，必须先澄清或形成 ADR，不得静默选择。
 - 不得为了推进速度绕过 `docs/pre-development-validation.md`、schema、fixture、acceptance plan 或 import boundary。
 - 旧项目 `/Users/vick/Desktop/project/ai-agent` 只能只读参考产品能力、验收基线和安全边界，不得复制旧 runtime 类型、旧执行链路、旧 Workbench 接口或旧 UI DOM 结构。
 
