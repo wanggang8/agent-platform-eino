@@ -58,6 +58,26 @@ go vet ./...
 go build ./...
 ```
 
+## Backend Foundation 门禁
+
+Phase 2.3 stream reducer、Phase 3 Eino chat、Action API、真实 LLM provider 和业务 provider 实现前，必须先通过后端基础门禁：
+
+```bash
+go test ./internal/einoapp/bootstrap ./internal/einoapp/httpapi ./internal/einoapp/llm ./internal/einoapp/capabilities ./internal/einoapp/facts ./internal/einoapp/product -run 'Config|Response|SSE|Provider|Registry|Facts|Projection|Redaction' -count=1
+go test ./internal/einoapp/architecture -run ImportBoundary -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario contract
+```
+
+通过标准：
+
+- 配置覆盖 server、database、LLM、security、observability、timeout、budget，并且脱敏输出不包含 token、credential、Authorization、API key 或连接密钥。
+- HTTP 成功响应保持 OpenAPI 业务 schema 直出；错误响应统一 `eino_error_envelope.v1`，包含 request id、安全错误码和可展示摘要。
+- SSE 编码统一处理 `id`、`event`、`data`、flush、content type、no-cache 和编码失败。
+- LLM 只通过 `llm.Provider` 接口接入 execution；provider 错误必须脱敏。
+- 工具注册和选择只通过 `capabilities.Registry`、metadata 和 policy；不得按自然语言关键词或工具名硬编码生产分支。
+- Workbench、ActionResult、SSE、Replay、Inspector 只能从 Product Facts / product projection 读取事实，不直接消费 execution event 或 provider payload。
+- 不存在通用 `utils` 包承载跨层逻辑。
+
 ## Contract 门禁
 
 ```bash

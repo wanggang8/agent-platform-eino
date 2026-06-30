@@ -138,6 +138,52 @@ go test ./internal/einoapp/... -run 'ImportBoundary|PhaseOnePackageSkeleton' -co
 bash scripts/eino_workbench_server_smoke.sh --scenario contract
 ```
 
+### Task 1.6 Backend foundation hardening
+
+目标：在进入 stream reducer、Eino chat 或 Action API 实现前，先固定后端基础设施，避免把配置、HTTP 响应、错误脱敏、LLM provider、能力注册和事实投影散落到业务 handler 中。
+
+创建/修改：
+
+- `internal/einoapp/bootstrap/config.go`
+- `internal/einoapp/bootstrap/config_test.go`
+- `internal/einoapp/httpapi/response.go`
+- `internal/einoapp/httpapi/response_test.go`
+- `internal/einoapp/httpapi/sse.go`
+- `internal/einoapp/httpapi/sse_test.go`
+- `internal/einoapp/llm/config.go`
+- `internal/einoapp/llm/provider.go`
+- `internal/einoapp/llm/redacted_error.go`
+- `internal/einoapp/llm/provider_test.go`
+- `internal/einoapp/capabilities/provider.go`
+- `internal/einoapp/capabilities/registry.go`
+- `internal/einoapp/capabilities/policy.go`
+- `internal/einoapp/capabilities/registry_test.go`
+- `internal/einoapp/facts/repository.go`
+- `internal/einoapp/facts/model.go`
+- `internal/einoapp/product/projection.go`
+- `internal/einoapp/product/errors.go`
+- `docs/adr/YYYY-MM-DD-backend-foundation-boundaries.md`
+
+要求：
+
+- 配置必须集中读取 server、database、LLM、security、observability、timeout、budget；配置日志必须脱敏。
+- 成功响应保持 OpenAPI 中定义的业务 schema 直出；错误响应统一 `eino_error_envelope.v1`，并包含 request id、安全错误码和可展示摘要。
+- SSE 编码必须统一处理 `id`、`event`、`data`、flush、content type、no-cache 和编码失败。
+- `httpapi` 不得手写业务 DTO 第二套真相；只能调用 product projection、facts query 和 execution command 接口。
+- `llm` 只暴露 provider interface、config、mock provider、redacted error；真实 OpenAI-compatible provider 可在 Phase 4 扩展。
+- `capabilities` 必须先提供 registry、provider interface、tool metadata、risk/approval policy；任何工具选择都必须通过 registry，不得写死工具名或自然语言关键词。
+- `facts` 先定义最小 repository interface 和事实模型；Product Facts 的 SQLite 实现仍在 Phase 3.2 完成。
+- `product` 先定义 Workbench、ActionResult、Replay、SSE projection 的接口边界；实际完整映射仍在 Phase 3 完成。
+- 不创建通用 `utils` 包；公共能力按职责放入 `bootstrap`、`httpapi`、`llm`、`capabilities`、`facts`、`product`、`observability`。
+
+任务级检查：
+
+```bash
+go test ./internal/einoapp/bootstrap ./internal/einoapp/httpapi ./internal/einoapp/llm ./internal/einoapp/capabilities ./internal/einoapp/facts ./internal/einoapp/product -run 'Config|Response|SSE|Provider|Registry|Facts|Projection|Redaction' -count=1
+go test ./internal/einoapp/architecture -run ImportBoundary -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario contract
+```
+
 ## Phase 2：React Workbench
 
 ### Task 2.0 Frontend architecture decision
@@ -318,6 +364,7 @@ go test ./internal/einoapp/store/sqlite -run 'RunTurnEvent|ToolCallResult|Contex
 - 普通自然语言默认进入 ChatModelAgent；不得按关键词硬编码 Fobrain 工具路由。
 - capability_hint / intent_hint 只作为候选入口，必须通过 registry 和 policy。
 - 每次模型调用前必须使用 `conversation-context.md` 生成 safe context snapshot。
+- 依赖 Phase 1.6 的 `llm.Provider`、`capabilities.Registry`、`facts.Repository` 和 `product.Projection` 接口，不得在 execution 中重新定义平行接口。
 
 任务级检查：
 
@@ -356,34 +403,30 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-basic
 go test ./internal/einoapp/product -run 'StructuredResult|Safety|AssistantSafety' -count=1
 ```
 
-### Task 4.2 LLM provider config and redacted errors
+### Task 4.2 Production LLM provider implementation
 
 创建：
 
-- `internal/einoapp/llm/config.go`
 - `internal/einoapp/llm/openai_compatible.go`
 - `internal/einoapp/llm/network_policy.go`
-- `internal/einoapp/llm/redacted_error.go`
-- `internal/einoapp/llm/provider_test.go`
+- `internal/einoapp/llm/openai_compatible_test.go`
 
 范围：
 
-- 读取 `EINO_LLM_PROVIDER`、`EINO_LLM_BASE_URL`、`EINO_LLM_API_KEY`、`EINO_LLM_MODEL`。
+- 基于 Phase 1.6 的 `llm.Provider` 和 `llm.Config` 接入 OpenAI-compatible ChatModel。
 - 禁止把 API key、Authorization、raw provider body 写入 Product Facts、Workbench、ActionResult、audit 或 replay。
 - provider non-2xx、timeout、malformed response 和 network blocked 必须转换为安全错误。
 
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/llm -run 'ProviderConfig|NetworkPolicy|RedactedError' -count=1
+go test ./internal/einoapp/llm -run 'OpenAICompatible|NetworkPolicy|RedactedError' -count=1
 ```
 
-### Task 4.3 Capability registry
+### Task 4.3 Capability adapters and Eino tool conversion
 
 创建：
 
-- `internal/einoapp/capabilities/provider.go`
-- `internal/einoapp/capabilities/registry.go`
 - `internal/einoapp/capabilities/tool_adapter.go`
 - `internal/einoapp/capabilities/provider_contract_test.go`
 
@@ -398,7 +441,7 @@ go test ./internal/einoapp/llm -run 'ProviderConfig|NetworkPolicy|RedactedError'
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/capabilities -run 'ProviderRegistry|ProviderContract|StructuredResultConversion|ToolSelectionMetadata' -count=1
+go test ./internal/einoapp/capabilities -run 'ProviderContract|StructuredResultConversion|ToolSelectionMetadata|EinoToolAdapter' -count=1
 ```
 
 ### Task 4.4 MCP adapter

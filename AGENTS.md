@@ -36,10 +36,15 @@
   - `facts`：只处理 Product Facts 的结构、存取和事实一致性。
   - `product`：只处理安全投影、Workbench/Action API 产品映射。
   - `capabilities`：只处理能力注册、能力选择、adapter 抽象。
+  - `llm`：只处理模型 provider interface、配置、网络策略、mock provider 和错误脱敏。
+  - `observability`：只处理 tracing、metrics、budget、日志和脱敏后的诊断。
   - `providers/*`：只处理具体业务 provider 接入。
   - `store/sqlite`：只处理持久化实现，不反向依赖业务、HTTP、LLM 或 provider。
+- 进入 stream reducer、Eino chat、Action API、真实 LLM provider 或业务 provider 前，必须先完成 `docs/07-implementation-plan.md` 的 Phase 1.6 Backend foundation hardening。
+- 后端基础必须先固定配置、统一错误响应、SSE 编码、LLM provider interface、capability registry、Product Facts repository interface 和 product projection interface。
 - 不允许跨层偷懒调用。需要跨层协作时，通过明确接口、命令对象、事实对象或注册表连接。
 - 不允许让 Workbench 展示、Action API、audit、replay、provider payload 互相直接耦合；所有产品出口必须从 Product Facts 投影。
+- 不创建万能 `utils` 包；公共能力必须按职责归属到 `bootstrap`、`httpapi`、`llm`、`capabilities`、`facts`、`product` 或 `observability`。
 
 ### 禁止硬编码
 

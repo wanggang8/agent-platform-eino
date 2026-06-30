@@ -54,6 +54,7 @@ Checkpoint/interrupt 用于内部暂停恢复，但 checkpoint ID 和 interrupt 
 cmd/eino-workbench/
 web/eino-workbench/
 internal/einoapp/
+  architecture/
   bootstrap/
   httpapi/
   product/
@@ -61,8 +62,22 @@ internal/einoapp/
   execution/
   facts/
   store/sqlite/
+  llm/
+  observability/
   providers/fobrain/
 ```
+
+## 后端基础边界
+
+在实现 stream reducer、Eino chat、Action API 或业务 provider 前，必须先完成后端基础边界：
+
+- `bootstrap` 统一加载 server、database、LLM、security、observability、timeout、budget 配置，并提供脱敏后的配置摘要。
+- `httpapi` 统一处理请求解析、request id、错误响应、JSON 编码和 SSE 编码。成功响应保持 OpenAPI 业务 schema 直出；错误响应统一 `eino_error_envelope.v1`。
+- `llm` 只暴露 provider interface、config、mock provider、redacted error 和 network policy；真实模型 provider 不得绕过该接口进入 execution。
+- `capabilities` 统一维护 provider interface、registry、tool metadata、risk policy、approval policy 和 Eino tool adapter。工具选择必须经过 registry 和 policy，不得按工具名或自然语言关键词硬编码。
+- `facts` 定义 Product Facts repository interface 和事实模型；持久化实现放在 `store/sqlite`。
+- `product` 定义 Workbench、ActionResult、SSE、Replay、Inspector 的安全投影接口。HTTP、Action API 和前端不得直接消费 execution event 或 provider payload。
+- 不设通用 `utils` 包；复用能力必须按职责归属到上述 package，避免跨层隐式依赖。
 
 ## Capability Registry
 
