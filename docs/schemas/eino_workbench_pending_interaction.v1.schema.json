@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_pending_interaction.v1.schema.json",
+  "title": "Eino Workbench Pending Interaction",
+  "type": "object",
+  "required": ["schema_version", "pending_id", "run_id", "kind", "status"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_pending_interaction.v1"},
+    "pending_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "kind": {"enum": ["approval", "clarification"]},
+    "status": {"enum": ["waiting", "submitted", "approved", "rejected", "cancelled", "expired", "consumed"]},
+    "question": {"type": "string"},
+    "operation_name": {"type": "string"},
+    "risk_summary": {"type": "string"},
+    "target_summary": {"type": "string"},
+    "input_mode": {"enum": ["single_choice", "multi_choice", "free_text", "mixed"]},
+    "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+    "resume_ref": {"type": "string"},
+    "expires_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_ref", "label", "entity_type"],
+      "properties": {
+        "candidate_ref": {"type": "string"},
+        "label": {"type": "string"},
+        "description": {"type": "string"},
+        "entity_type": {"enum": ["person", "asset", "vulnerability", "department", "business"]},
+        "safe_fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": {"type": "string"},
+              "value": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "waiting"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "resume_ref": true,
+          "question": true
+        },
+        "required": ["resume_ref", "question"]
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "approval"}}, "required": ["kind"]},
+      "then": {
+        "properties": {
+          "operation_name": true,
+          "risk_summary": true,
+          "target_summary": true
+        },
+        "required": ["operation_name", "risk_summary", "target_summary"]
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "clarification"}}, "required": ["kind"]},
+      "then": {
+        "properties": {"input_mode": true},
+        "required": ["input_mode"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {"const": "clarification"},
+          "status": {"const": "waiting"}
+        },
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "anyOf": [
+          {"properties": {"candidates": true}, "required": ["candidates"]},
+          {"properties": {"input_mode": {"const": "free_text"}}, "required": ["input_mode"]}
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

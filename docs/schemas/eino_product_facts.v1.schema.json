@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_product_facts.v1.schema.json",
+  "title": "Eino Product Facts",
+  "type": "object",
+  "required": ["schema_version", "run", "turns", "tool_calls", "tool_results", "pending_interactions", "audit_events"],
+  "properties": {
+    "schema_version": {"const": "eino_product_facts.v1"},
+    "run": {"$ref": "#/$defs/run"},
+    "turns": {"type": "array", "items": {"$ref": "#/$defs/turn"}},
+    "tool_calls": {"type": "array", "items": {"$ref": "#/$defs/tool_call"}},
+    "tool_results": {"type": "array", "items": {"$ref": "#/$defs/tool_result"}},
+    "pending_interactions": {"type": "array", "items": {"$ref": "eino_workbench_pending_interaction.v1.schema.json"}},
+    "audit_events": {"type": "array", "items": {"$ref": "eino_audit_event.v1.schema.json"}}
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "required": ["run_id", "workspace_id", "status"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "workspace_id": {"type": "string"},
+        "status": {"enum": ["created", "running", "waiting", "succeeded", "failed", "cancelled", "stopped"]},
+        "created_at": {"type": "string", "format": "date-time"},
+        "updated_at": {"type": "string", "format": "date-time"},
+        "model_label": {"type": "string"},
+        "safe_error": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "turn": {
+      "type": "object",
+      "required": ["turn_id", "run_id", "role", "content", "sequence"],
+      "properties": {
+        "turn_id": {"type": "string"},
+        "run_id": {"type": "string"},
+        "role": {"enum": ["user", "assistant", "system_notice"]},
+        "content": {"type": "string"},
+        "sequence": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "tool_call": {
+      "type": "object",
+      "required": ["tool_call_id", "tool_id", "display_name", "status"],
+      "properties": {
+        "tool_call_id": {"type": "string"},
+        "tool_id": {"type": "string"},
+        "display_name": {"type": "string"},
+        "status": {"enum": ["queued", "running", "succeeded", "failed", "cancelled"]},
+        "args_hash": {"type": "string"},
+        "args_preview": {"type": "string"},
+        "started_at": {"type": "string", "format": "date-time"},
+        "ended_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "tool_result": {
+      "type": "object",
+      "required": ["tool_call_id", "structured_result"],
+      "properties": {
+        "tool_call_id": {"type": "string"},
+        "structured_result": {
+          "oneOf": [
+            {"$ref": "tool.structured_result.v1.schema.json"},
+            {"$ref": "fobrain/tool_result.v2.schema.json"}
+          ]
+        },
+        "presentation": {
+          "type": "object",
+          "properties": {
+            "display_type": {"type": "string"},
+            "summary": {"type": "string"},
+            "result_ref": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "safe_error": {"type": "string"},
+        "result_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

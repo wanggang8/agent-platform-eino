@@ -1,0 +1,7 @@
+{
+  "schema_version": "eino_workbench_resume_request.v1",
+  "resume_ref": "resume_ref_clarification_1",
+  "client_request_id": "client-resume-clarification-1",
+  "selected_candidate_refs": ["person:fobrain:zhangsan-1"],
+  "comment": "选择安全部张三"
+}

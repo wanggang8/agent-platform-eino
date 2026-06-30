@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_message_request.v1.schema.json",
+  "title": "Eino Workbench Message Request",
+  "type": "object",
+  "required": ["schema_version", "message", "client_request_id"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_message_request.v1"},
+    "message": {"type": "string", "minLength": 1},
+    "client_request_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "workspace_id": {"type": "string"}
+  },
+  "additionalProperties": false
+}

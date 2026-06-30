@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/capability_catalog.v1.schema.json",
+  "title": "Eino Capability Catalog",
+  "type": "object",
+  "required": ["schema_version", "workspace_id", "capabilities"],
+  "properties": {
+    "schema_version": {"const": "eino.capability_catalog.v1"},
+    "workspace_id": {"type": "string"},
+    "capabilities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/capability"}
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": [
+        "capability_id",
+        "display_name_zh",
+        "description",
+        "input_schema_ref",
+        "result_schema_ref",
+        "risk_level",
+        "side_effect",
+        "approval_required",
+        "timeout_ms",
+        "credential_binding_policy",
+        "idempotency_required",
+        "policy_ref",
+        "enabled"
+      ],
+      "properties": {
+        "capability_id": {"type": "string", "pattern": "^(tool|connector|workflow|skill)\\.[a-z0-9_.-]+$"},
+        "display_name_zh": {"type": "string"},
+        "description": {"type": "string"},
+        "input_schema_ref": {"type": "string"},
+        "result_schema_ref": {"type": "string"},
+        "risk_level": {"enum": ["none", "low", "medium", "high"]},
+        "side_effect": {"enum": ["none", "read_external", "write_external", "local_runtime"]},
+        "approval_required": {"type": "boolean"},
+        "timeout_ms": {"type": "integer", "minimum": 1},
+        "credential_binding_policy": {"enum": ["none", "required", "optional"]},
+        "idempotency_required": {"type": "boolean"},
+        "policy_ref": {"type": "string"},
+        "enabled": {"type": "boolean"},
+        "connector_id": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string"}}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"side_effect": {"const": "write_external"}}, "required": ["side_effect"]},
+          "then": {
+            "properties": {
+              "approval_required": {"const": true},
+              "idempotency_required": {"const": true}
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

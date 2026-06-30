@@ -1,0 +1,31 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.my_permissions",
+  "display_type": "entity_detail",
+  "entity_type": "permission",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "读取我的权限范围",
+    "summary": "读取我的权限范围 fixture",
+    "facts": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "value": "读取我的权限范围 示例",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "value": "resolved",
+        "type": "status"
+      }
+    ]
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.my-permissions:fixture"
+  }
+}

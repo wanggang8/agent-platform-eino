@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_view.v1.schema.json",
+  "title": "Eino Workbench View",
+  "type": "object",
+  "required": ["schema_version", "workspace_id", "run_id", "status", "timeline", "inspector"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_view.v1"},
+    "workspace_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "status": {"enum": ["created", "running", "waiting", "succeeded", "failed", "cancelled", "stopped"]},
+    "timeline": {"type": "array", "items": {"$ref": "#/$defs/timeline_item"}},
+    "inspector": {"$ref": "#/$defs/inspector"}
+  },
+  "$defs": {
+    "timeline_item": {
+      "type": "object",
+      "required": ["item_id", "kind"],
+      "properties": {
+        "item_id": {"type": "string"},
+        "kind": {"enum": ["user_message", "assistant_message", "tool_card", "approval_card", "clarification_card", "run_notice"]},
+        "tool_call_id": {"type": "string"},
+        "pending_id": {"type": "string"},
+        "content": {"type": "string"},
+        "structured_result": {
+          "oneOf": [
+            {"$ref": "tool.structured_result.v1.schema.json"},
+            {"$ref": "fobrain/tool_result.v2.schema.json"}
+          ]
+        },
+        "status": {"type": "string"},
+        "safe_summary": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"enum": ["user_message", "assistant_message"]}}, "required": ["kind"]},
+          "then": {"properties": {"content": true}, "required": ["content"]}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "tool_card"}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "tool_call_id": true,
+              "status": true,
+              "structured_result": true
+            },
+            "required": ["tool_call_id", "status", "structured_result"]
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"enum": ["approval_card", "clarification_card"]}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "pending_id": true,
+              "status": true,
+              "content": true
+            },
+            "required": ["pending_id", "status", "content"]
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"const": "run_notice"}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "status": true,
+              "content": true
+            },
+            "required": ["status", "content"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "inspector": {
+      "type": "object",
+      "required": ["tabs"],
+      "properties": {
+        "tabs": {"type": "array", "items": {"enum": ["evidence", "structured", "runtime", "audit"]}},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_item"}},
+        "structured": {"$ref": "#/$defs/structured_panel"},
+        "runtime": {"$ref": "#/$defs/runtime_panel"},
+        "audit": {"type": "array", "items": {"$ref": "eino_audit_event.v1.schema.json"}}
+      },
+      "additionalProperties": false
+    },
+    "evidence_item": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": {"type": "string"},
+        "value": {"type": "string"},
+        "target_ref": {"type": "string"},
+        "observed_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "structured_panel": {
+      "type": "object",
+      "properties": {
+        "tool_call_id": {"type": "string"},
+        "result_ref": {"type": "string"},
+        "structured_result": {
+          "oneOf": [
+            {"$ref": "tool.structured_result.v1.schema.json"},
+            {"$ref": "fobrain/tool_result.v2.schema.json"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "runtime_panel": {
+      "type": "object",
+      "properties": {
+        "status": {"enum": ["created", "running", "waiting", "succeeded", "failed", "cancelled", "stopped"]},
+        "model_label": {"type": "string"},
+        "safe_error": {"type": "string"},
+        "pending_id": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

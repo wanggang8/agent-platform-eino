@@ -1,0 +1,14 @@
+{
+  "schema_version": "eino.provider_redacted_error.v1",
+  "category": "timeout",
+  "reason_code": "provider_timeout",
+  "safe_summary": "模型服务请求超时。",
+  "retryable": true,
+  "correlation_ref": "provider-error-timeout-1",
+  "redaction": {
+    "removed_secret": true,
+    "removed_auth_header": true,
+    "removed_raw_body": true,
+    "removed_raw_prompt": true
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/provider_redacted_error.v1.schema.json",
+  "title": "Provider Redacted Error",
+  "type": "object",
+  "required": ["schema_version", "category", "reason_code", "safe_summary", "retryable", "correlation_ref"],
+  "properties": {
+    "schema_version": {"const": "eino.provider_redacted_error.v1"},
+    "category": {"enum": ["config", "network", "auth", "timeout", "provider_response", "schema", "unknown"]},
+    "reason_code": {
+      "enum": [
+        "provider_network_blocked",
+        "provider_host_not_allowed",
+        "provider_insecure_scheme_blocked",
+        "provider_redirect_blocked",
+        "provider_config_invalid",
+        "provider_config_missing",
+        "provider_timeout",
+        "provider_unavailable",
+        "provider_malformed_response"
+      ]
+    },
+    "safe_summary": {"type": "string"},
+    "retryable": {"type": "boolean"},
+    "correlation_ref": {"type": "string"},
+    "redaction": {
+      "type": "object",
+      "required": ["removed_secret", "removed_auth_header", "removed_raw_body"],
+      "properties": {
+        "removed_secret": {"type": "boolean"},
+        "removed_auth_header": {"type": "boolean"},
+        "removed_raw_body": {"type": "boolean"},
+        "removed_raw_prompt": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

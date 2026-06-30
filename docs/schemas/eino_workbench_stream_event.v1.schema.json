@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_stream_event.v1.schema.json",
+  "title": "Eino Workbench Stream Event",
+  "type": "object",
+  "required": ["schema_version", "event_id", "run_id", "type", "sequence", "created_at"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_stream_event.v1"},
+    "event_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "type": {"enum": ["message.delta", "message.updated", "tool.updated", "pending.updated", "run.updated", "view.replaced", "audit.updated"]},
+    "sequence": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string", "format": "date-time"},
+    "message": {"$ref": "#/$defs/message_patch"},
+    "tool": {"$ref": "#/$defs/tool_patch"},
+    "pending": {"$ref": "eino_workbench_pending_interaction.v1.schema.json"},
+    "run": {"$ref": "#/$defs/run_patch"},
+    "view": {"$ref": "eino_workbench_view.v1.schema.json"},
+    "audit": {"$ref": "eino_audit_event.v1.schema.json"}
+  },
+  "$defs": {
+    "message_patch": {
+      "type": "object",
+      "required": ["message_id", "role"],
+      "properties": {
+        "message_id": {"type": "string"},
+        "role": {"enum": ["user", "assistant", "system_notice"]},
+        "content_delta": {"type": "string"},
+        "content": {"type": "string"},
+        "status": {"enum": ["streaming", "completed", "failed"]}
+      },
+      "additionalProperties": false
+    },
+    "tool_patch": {
+      "type": "object",
+      "required": ["tool_call_id", "status"],
+      "properties": {
+        "tool_call_id": {"type": "string"},
+        "tool_id": {"type": "string"},
+        "display_name": {"type": "string"},
+        "status": {"enum": ["queued", "running", "succeeded", "failed", "cancelled"]},
+        "safe_summary": {"type": "string"},
+        "structured_result": {
+          "oneOf": [
+            {"$ref": "tool.structured_result.v1.schema.json"},
+            {"$ref": "fobrain/tool_result.v2.schema.json"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "run_patch": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["created", "running", "waiting", "succeeded", "failed", "cancelled", "stopped"]},
+        "safe_error": {"type": "string"},
+        "updated_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"type": {"enum": ["message.delta", "message.updated"]}}, "required": ["type"]},
+      "then": {"properties": {"message": true}, "required": ["message"]}
+    },
+    {
+      "if": {"properties": {"type": {"const": "tool.updated"}}, "required": ["type"]},
+      "then": {"properties": {"tool": true}, "required": ["tool"]}
+    },
+    {
+      "if": {"properties": {"type": {"const": "pending.updated"}}, "required": ["type"]},
+      "then": {"properties": {"pending": true}, "required": ["pending"]}
+    },
+    {
+      "if": {"properties": {"type": {"const": "run.updated"}}, "required": ["type"]},
+      "then": {"properties": {"run": true}, "required": ["run"]}
+    },
+    {
+      "if": {"properties": {"type": {"const": "view.replaced"}}, "required": ["type"]},
+      "then": {"properties": {"view": true}, "required": ["view"]}
+    },
+    {
+      "if": {"properties": {"type": {"const": "audit.updated"}}, "required": ["type"]},
+      "then": {"properties": {"audit": true}, "required": ["audit"]}
+    }
+  ],
+  "additionalProperties": false
+}

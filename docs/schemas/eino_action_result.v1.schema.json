@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_action_result.v1.schema.json",
+  "title": "Eino Action Result",
+  "type": "object",
+  "required": ["schema_version", "workspace_id", "action_id", "run_id", "status", "result_cards", "audit_refs"],
+  "properties": {
+    "schema_version": {"const": "eino_action_result.v1"},
+    "workspace_id": {"type": "string"},
+    "action_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "status": {"enum": ["accepted", "running", "waiting", "completed", "failed", "stopped", "denied", "blocked"]},
+    "snapshot_url": {"type": "string"},
+    "events_url": {"type": "string"},
+    "stream_ref": {"type": "string"},
+    "final_answer": {"type": "string"},
+    "selected_capability": {"$ref": "#/$defs/selected_capability"},
+    "result_cards": {"type": "array", "items": {"$ref": "#/$defs/result_card"}},
+    "waiting": {"oneOf": [{"$ref": "#/$defs/waiting_approval"}, {"$ref": "#/$defs/waiting_clarification"}]},
+    "approval_refs": {"type": "array", "items": {"type": "string"}},
+    "resume_refs": {"type": "array", "items": {"type": "string"}},
+    "attention_reason": {"type": "string"},
+    "waiting_reason": {"type": "string"},
+    "terminal_reason": {"type": "string"},
+    "redacted_error": {"$ref": "#/$defs/redacted_error"},
+    "retry": {"$ref": "#/$defs/retry"},
+    "audit_refs": {"type": "array", "items": {"type": "string"}},
+    "idempotency_echo": {"type": "string"}
+  },
+  "$defs": {
+    "selected_capability": {
+      "type": "object",
+      "required": ["display_name"],
+      "properties": {
+        "capability_id": {"type": "string"},
+        "kind": {"enum": ["model", "tool", "skill", "workflow", "connector", "human_interaction"]},
+        "display_name": {"type": "string"},
+        "version": {"type": "string"},
+        "enabled": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "result_card": {
+      "type": "object",
+      "required": ["card_id", "title", "status"],
+      "properties": {
+        "card_id": {"type": "string"},
+        "tool_call_id": {"type": "string"},
+        "title": {"type": "string"},
+        "status": {"enum": ["queued", "running", "succeeded", "failed", "cancelled"]},
+        "safe_summary": {"type": "string"},
+        "structured_result": {
+          "oneOf": [
+            {"$ref": "tool.structured_result.v1.schema.json"},
+            {"$ref": "fobrain/tool_result.v2.schema.json"}
+          ]
+        },
+        "presentation": {"$ref": "#/$defs/presentation"}
+      },
+      "additionalProperties": false
+    },
+    "presentation": {
+      "type": "object",
+      "properties": {
+        "display_type": {"type": "string"},
+        "summary": {"type": "string"},
+        "result_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "waiting_approval": {
+      "type": "object",
+      "required": ["kind", "question", "approval_refs"],
+      "properties": {
+        "kind": {"const": "approval"},
+        "question": {"type": "string"},
+        "approval_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "risk_summary": {"type": "string"},
+        "target_summary": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "waiting_clarification": {
+      "type": "object",
+      "required": ["kind", "question", "resume_refs"],
+      "properties": {
+        "kind": {"const": "clarification"},
+        "question": {"type": "string"},
+        "resume_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "input_mode": {"enum": ["single_choice", "multi_choice", "free_text", "mixed"]},
+        "candidates": {"type": "array", "items": {"$ref": "eino_workbench_pending_interaction.v1.schema.json#/$defs/candidate"}}
+      },
+      "additionalProperties": false
+    },
+    "redacted_error": {
+      "type": "object",
+      "required": ["category", "message"],
+      "properties": {
+        "category": {"type": "string"},
+        "message": {"type": "string"},
+        "retryable": {"type": "boolean"},
+        "correlation_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "retry": {
+      "type": "object",
+      "required": ["retryable"],
+      "properties": {
+        "retryable": {"type": "boolean"},
+        "reason": {"type": "string"},
+        "after_ms": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "waiting"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "waiting": true,
+          "waiting_reason": true
+        },
+        "required": ["waiting", "waiting_reason"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {"enum": ["accepted", "running", "completed", "failed", "stopped", "denied", "blocked"]}
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {"waiting": true},
+        "not": {"required": ["waiting"]}
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "waiting": {
+            "type": "object",
+            "properties": {"kind": {"const": "approval"}},
+            "required": ["kind"]
+          }
+        },
+        "required": ["waiting"]
+      },
+      "then": {
+        "required": ["approval_refs"],
+        "properties": {
+          "approval_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "resume_refs": {"type": "array", "maxItems": 0, "items": {"type": "string"}}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "waiting": {
+            "type": "object",
+            "properties": {"kind": {"const": "clarification"}},
+            "required": ["kind"]
+          }
+        },
+        "required": ["waiting"]
+      },
+      "then": {
+        "required": ["resume_refs"],
+        "properties": {
+          "approval_refs": {"type": "array", "maxItems": 0, "items": {"type": "string"}},
+          "resume_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

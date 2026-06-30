@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/connector_status.v1.schema.json",
+  "title": "Connector Status",
+  "type": "object",
+  "required": ["schema_version", "workspace_id", "connector_id", "status", "credential_binding", "safe_summary"],
+  "properties": {
+    "schema_version": {"const": "eino.connector_status.v1"},
+    "workspace_id": {"type": "string"},
+    "connector_id": {"type": "string", "pattern": "^connector\\.[a-z0-9_.-]+$"},
+    "status": {"enum": ["healthy", "degraded", "unconfigured", "auth_failed", "timeout", "unavailable"]},
+    "credential_binding": {"$ref": "provider_credential_binding.v1.schema.json"},
+    "safe_summary": {"type": "string"},
+    "reason_code": {"type": "string"},
+    "checked_at": {"type": "string", "format": "date-time"},
+    "audit_ref": {"type": "string"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/tool_result.v2.schema.json",
+  "title": "Fobrain Professional Tool Result",
+  "type": "object",
+  "required": ["schema_version", "tool_id", "display_type", "status", "query", "data", "metadata"],
+  "properties": {
+    "schema_version": {"const": "fobrain.tool_result.v2"},
+    "tool_id": {"type": "string", "pattern": "^(tool|connector)\\.fobrain\\."},
+    "display_type": {"enum": ["entity_collection", "entity_detail", "metrics_summary", "operation_result", "connector_status", "entity_resolution"]},
+    "entity_type": {"enum": ["asset", "vulnerability", "ticket", "business_system", "user", "permission", "risk", "connector", "entity"]},
+    "status": {"enum": ["resolved", "waiting", "pending_approval", "not_found", "empty", "failed", "partial"]},
+    "query": {"$ref": "#/$defs/query"},
+    "data": {"$ref": "#/$defs/data"},
+    "metadata": {"$ref": "#/$defs/metadata"}
+  },
+  "$defs": {
+    "query": {
+      "type": "object",
+      "properties": {
+        "person_name": {"type": "string"},
+        "person_staff_id": {"type": "string"},
+        "department_name": {"type": "string"},
+        "business_name": {"type": "string"},
+        "asset_name": {"type": "string"},
+        "vulnerability_name": {"type": "string"},
+        "ip": {"type": "string"},
+        "asset_id": {"type": "string"},
+        "vulnerability_id": {"type": "string"},
+        "severity": {"type": "string"},
+        "status": {"type": "string"},
+        "time_range": {"type": "string"},
+        "first_time": {"type": "string"},
+        "finally_time": {"type": "string"},
+        "data_range": {"type": "integer"},
+        "network_type": {"type": "string"},
+        "page": {"type": "integer"},
+        "page_size": {"type": "integer"},
+        "keyword": {"type": "string"},
+        "field": {"type": "string"},
+        "order": {"type": "string"},
+        "source_ids": {"type": "array", "items": {"type": "integer"}},
+        "ports": {"type": "array", "items": {"type": "integer"}},
+        "protocols": {"type": "array", "items": {"type": "string"}},
+        "components": {"type": "array", "items": {"type": "string"}},
+        "operation_type": {"type": "string"},
+        "important_only": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "title": {"type": "string"},
+        "summary": {"type": "string"},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+        "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}},
+        "items": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+        "facts": {"type": "array", "items": {"$ref": "#/$defs/field_item"}},
+        "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
+        "actions": {"type": "array", "items": {"$ref": "#/$defs/action"}},
+        "evidence": {"$ref": "#/$defs/evidence"},
+        "pagination": {"$ref": "#/$defs/pagination"},
+        "empty_state": {"$ref": "#/$defs/state"},
+        "resolved_entity": {"$ref": "#/$defs/candidate"},
+        "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+        "resume_refs": {"type": "array", "items": {"type": "string"}},
+        "candidate_refs": {"type": "array", "items": {"type": "string"}},
+        "narrative": {"$ref": "#/$defs/narrative"}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["safe"],
+      "properties": {
+        "safe": {"type": "boolean", "const": true},
+        "source": {"const": "fobrain"},
+        "result_ref": {"type": "string"},
+        "attention_reason": {"type": "string"},
+        "observed_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": {"type": "string"},
+        "value": {},
+        "sub_label": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]},
+        "icon_hint": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "column": {
+      "type": "object",
+      "required": ["key", "label"],
+      "properties": {
+        "key": {"type": "string"},
+        "label": {"type": "string"},
+        "type": {"enum": ["text", "number", "status", "severity", "code", "datetime", "duration", "badge"]},
+        "width": {"enum": ["compact", "normal", "wide", "fill"]},
+        "align": {"enum": ["left", "center", "right"]},
+        "copyable": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "field_item": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "key": {"type": "string"},
+        "label": {"type": "string"},
+        "value": {},
+        "type": {"enum": ["text", "number", "status", "severity", "code", "datetime", "duration", "badge"]},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]},
+        "copyable": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "entity_ref": {"type": "string"},
+        "row_ref": {"type": "string"},
+        "display_name": {"type": "string"},
+        "masked_ip": {"type": "string"},
+        "asset_type": {"type": "string"},
+        "business_system": {"type": "string"},
+        "owner_name": {"type": "string"},
+        "vulnerability_ref": {"type": "string"},
+        "title": {"type": "string"},
+        "severity": {"type": "string"},
+        "status": {"type": "string"},
+        "affected_assets": {"type": "integer"},
+        "ticket_ref": {"type": "string"},
+        "target_status": {"type": "string"},
+        "risk_summary": {"type": "string"},
+        "summary": {"type": "string"},
+        "badges": {"type": "array", "items": {"$ref": "#/$defs/badge"}}
+      },
+      "additionalProperties": false
+    },
+    "badge": {
+      "type": "object",
+      "required": ["label"],
+      "properties": {
+        "label": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]}
+      },
+      "additionalProperties": false
+    },
+    "section": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": {"type": "string"},
+        "display_type": {"enum": ["entity_collection", "entity_detail", "metrics_summary"]},
+        "entity_type": {"enum": ["asset", "vulnerability", "ticket", "business_system", "user", "permission", "risk", "entity"]},
+        "data": {"$ref": "#/$defs/section_data"}
+      },
+      "additionalProperties": false
+    },
+    "section_data": {
+      "type": "object",
+      "properties": {
+        "summary": {"type": "string"},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+        "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}},
+        "items": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+        "facts": {"type": "array", "items": {"$ref": "#/$defs/field_item"}}
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": {"type": "string"},
+        "label": {"type": "string"},
+        "kind": {"enum": ["open", "download", "export", "retry", "resume", "approve", "reject", "select_candidate"]},
+        "role": {"enum": ["open", "download", "export", "retry", "resume", "approve", "reject", "confirm", "cancel"]},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]},
+        "enabled": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/evidence_source"}},
+        "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "freshness": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "evidence_source": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": {"type": "string"},
+        "value": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "kind", "artifact_ref"],
+      "properties": {
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "artifact_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "pagination": {
+      "type": "object",
+      "properties": {
+        "page": {"type": "integer"},
+        "page_size": {"type": "integer"},
+        "total": {"type": "integer"},
+        "has_more": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["title", "summary"],
+      "properties": {
+        "title": {"type": "string"},
+        "summary": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]}
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_ref", "entity_type", "display_name"],
+      "properties": {
+        "candidate_ref": {"type": "string"},
+        "entity_type": {"enum": ["person", "asset", "vulnerability", "department", "business"]},
+        "display_name": {"type": "string"},
+        "department_name": {"type": "string"},
+        "role_name": {"type": "string"},
+        "relation": {"type": "string"},
+        "alias": {"type": "string"},
+        "score": {"type": "number"}
+      },
+      "additionalProperties": false
+    },
+    "narrative": {
+      "type": "object",
+      "properties": {
+        "goal": {"type": "string"},
+        "situation": {"type": "string"},
+        "key_findings": {"type": "array", "items": {"$ref": "#/$defs/narrative_finding"}},
+        "risk_judgement": {"$ref": "#/$defs/narrative_finding"},
+        "next_actions": {"type": "array", "items": {"$ref": "#/$defs/narrative_action"}},
+        "evidence_links": {"type": "array", "items": {"$ref": "#/$defs/narrative_evidence"}}
+      },
+      "additionalProperties": false
+    },
+    "narrative_finding": {
+      "type": "object",
+      "required": ["label", "summary"],
+      "properties": {
+        "label": {"type": "string"},
+        "summary": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]},
+        "evidence_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "narrative_action": {
+      "type": "object",
+      "required": ["label", "kind"],
+      "properties": {
+        "label": {"type": "string"},
+        "kind": {"enum": ["open", "download", "export", "retry", "resume"]},
+        "target_ref": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]}
+      },
+      "additionalProperties": false
+    },
+    "narrative_evidence": {
+      "type": "object",
+      "required": ["label", "target_kind"],
+      "properties": {
+        "label": {"type": "string"},
+        "target_kind": {"enum": ["table", "row", "field", "tool_call", "artifact"]},
+        "table_id": {"type": "string"},
+        "row_ref": {"type": "string"},
+        "field_key": {"type": "string"},
+        "tool_call_id": {"type": "string"},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"display_type": {"const": "entity_collection"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "columns": true,
+              "items": true
+            },
+            "required": ["columns", "items"]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"display_type": {"const": "entity_detail"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "anyOf": [
+              {"properties": {"facts": true}, "required": ["facts"]},
+              {"properties": {"sections": true}, "required": ["sections"]}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"display_type": {"const": "metrics_summary"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {"metrics": true},
+            "required": ["metrics"]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"display_type": {"const": "operation_result"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "anyOf": [
+              {"properties": {"actions": true}, "required": ["actions"]},
+              {"properties": {"facts": true}, "required": ["facts"]},
+              {"properties": {"summary": true}, "required": ["summary"]}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"display_type": {"const": "connector_status"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "entity_type": {"const": "connector"},
+          "data": {
+            "type": "object",
+            "anyOf": [
+              {"properties": {"facts": true}, "required": ["facts"]},
+              {"properties": {"summary": true}, "required": ["summary"]}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"display_type": {"const": "entity_resolution"}}, "required": ["display_type"]},
+      "then": {
+        "properties": {
+          "status": {"enum": ["waiting", "resolved", "not_found"]},
+          "data": {
+            "type": "object",
+            "anyOf": [
+              {"properties": {"candidates": true}, "required": ["candidates"]},
+              {"properties": {"resolved_entity": true}, "required": ["resolved_entity"]}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

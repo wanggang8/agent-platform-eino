@@ -1,0 +1,33 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.ip_stats",
+  "display_type": "metrics_summary",
+  "entity_type": "asset",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "统计 IP 资产",
+    "summary": "统计 IP 资产 fixture",
+    "metrics": [
+      {
+        "label": "总数",
+        "value": 1,
+        "tone": "info"
+      }
+    ],
+    "narrative": {
+      "key_findings": [
+        {
+          "label": "摘要",
+          "summary": "统计 IP 资产 示例指标",
+          "tone": "info"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.ip-stats:fixture"
+  }
+}

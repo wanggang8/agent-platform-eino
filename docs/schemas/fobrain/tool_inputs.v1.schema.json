@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/tool_inputs.v1.schema.json",
+  "title": "Fobrain Tool Inputs",
+  "type": "object",
+  "$defs": {
+    "empty": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "owner_query": {
+      "type": "object",
+      "required": ["person_name"],
+      "properties": {
+        "person_name": {"type": "string"},
+        "person_staff_id": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100},
+        "severity": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "department_query": {
+      "type": "object",
+      "required": ["department_name"],
+      "properties": {
+        "department_name": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100},
+        "severity": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "ip_query": {
+      "type": "object",
+      "required": ["ip"],
+      "properties": {
+        "ip": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100},
+        "severity": {"type": "string"},
+        "status": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "asset_detail": {
+      "type": "object",
+      "required": ["asset_id"],
+      "properties": {"asset_id": {"type": "string"}},
+      "additionalProperties": false
+    },
+    "vulnerability_detail": {
+      "type": "object",
+      "required": ["vulnerability_id"],
+      "properties": {"vulnerability_id": {"type": "string"}},
+      "additionalProperties": false
+    },
+    "business_query": {
+      "type": "object",
+      "properties": {
+        "business_name": {"type": "string"},
+        "owner": {"type": "string"},
+        "keyword": {"type": "string"},
+        "time_range": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100}
+      },
+      "additionalProperties": false
+    },
+    "stats_query": {
+      "type": "object",
+      "properties": {
+        "field": {"type": "string"},
+        "severity": {"type": "string"},
+        "time_range": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "keyword_page_query": {
+      "type": "object",
+      "properties": {
+        "keyword": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100}
+      },
+      "additionalProperties": false
+    },
+    "threat_query": {
+      "type": "object",
+      "required": ["vulnerability_name"],
+      "properties": {
+        "vulnerability_name": {"type": "string"},
+        "vulnerability_id": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100}
+      },
+      "additionalProperties": false
+    },
+    "ticket_query": {
+      "type": "object",
+      "properties": {
+        "person": {"type": "string"},
+        "status": {"type": "string"},
+        "page": {"type": "integer", "minimum": 1},
+        "page_size": {"type": "integer", "minimum": 1, "maximum": 100}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

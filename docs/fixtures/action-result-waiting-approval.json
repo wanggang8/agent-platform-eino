@@ -1,0 +1,23 @@
+{
+  "schema_version": "eino_action_result.v1",
+  "workspace_id": "ws-demo",
+  "action_id": "tool.fobrain.update_ticket_status",
+  "run_id": "run-approval",
+  "status": "waiting",
+  "snapshot_url": "/api/workspaces/ws-demo/runs/run-approval",
+  "events_url": "/api/workspaces/ws-demo/runs/run-approval/stream",
+  "stream_ref": "sse:/api/workspaces/ws-demo/runs/run-approval/stream",
+  "selected_capability": {"display_name": "更新工单状态"},
+  "result_cards": [],
+  "waiting": {
+    "kind": "approval",
+    "question": "是否批准更新工单状态？",
+    "approval_refs": ["resume_ref_demo"]
+  },
+  "approval_refs": ["resume_ref_demo"],
+  "resume_refs": [],
+  "attention_reason": "approval_required",
+  "waiting_reason": "approval_required",
+  "audit_refs": ["/api/workspaces/ws-demo/runs/run-approval/replay"],
+  "idempotency_echo": "client-req-1"
+}

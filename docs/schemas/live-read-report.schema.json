@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/live-read-report.schema.json",
+  "title": "Eino Workbench Fobrain Live Read Report",
+  "type": "object",
+  "required": ["schema_version", "status", "tool_matrix_total", "tool_matrix_passed", "live_assertions", "screenshot_paths", "failure_category"],
+  "properties": {
+    "schema_version": {"const": "eino.live_read_report.v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "tool_matrix_total": {"type": "integer", "const": 24},
+    "tool_matrix_passed": {"type": "integer", "minimum": 0, "maximum": 24},
+    "live_assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tool_id", "status"],
+        "properties": {
+          "tool_id": {"type": "string"},
+          "status": {"enum": ["passed", "failed"]},
+          "safe_summary": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "screenshot_paths": {"type": "array", "items": {"type": "string"}},
+    "failure_category": {"type": "string"},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "tool_matrix_passed": {"const": 24},
+          "failure_category": {"const": "none"},
+          "live_assertions": {
+            "type": "array",
+            "minItems": 24,
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "required": ["tool_id", "status"],
+              "properties": {
+                "tool_id": {"type": "string"},
+                "status": {"const": "passed"},
+                "safe_summary": {"type": "string"}
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

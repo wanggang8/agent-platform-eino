@@ -1,0 +1,11 @@
+{
+  "schema_version": "eino_error_envelope.v1",
+  "request_id": "req-schema-invalid",
+  "error": {
+    "code": "schema_invalid",
+    "message": "请求格式不正确",
+    "safe_detail": "请检查必填字段和字段类型。",
+    "retryable": true,
+    "correlation_ref": "err:req-schema-invalid"
+  }
+}

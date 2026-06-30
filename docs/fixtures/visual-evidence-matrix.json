@@ -1,0 +1,116 @@
+{
+  "schema_version": "eino.visual_evidence_matrix.v1",
+  "viewports": [
+    {"name": "desktop", "width": 1440, "height": 900},
+    {"name": "mobile", "width": 390, "height": 844}
+  ],
+  "blocks": [
+    {
+      "block_id": "shell",
+      "selector": "[data-testid=\"workbench-shell\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/shell"
+    },
+    {
+      "block_id": "sidebar",
+      "selector": "[data-testid=\"workspace-sidebar\"]",
+      "required_viewports": ["desktop"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/sidebar"
+    },
+    {
+      "block_id": "timeline",
+      "selector": "[data-testid=\"chat-timeline\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/timeline"
+    },
+    {
+      "block_id": "composer",
+      "selector": "[data-testid=\"chat-composer\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/composer"
+    },
+    {
+      "block_id": "tool-card",
+      "selector": "[data-testid=\"tool-card\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/tool-card"
+    },
+    {
+      "block_id": "approval-card",
+      "selector": "[data-testid=\"approval-card\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/approval-card"
+    },
+    {
+      "block_id": "clarification-card",
+      "selector": "[data-testid=\"clarification-card\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/clarification-card"
+    },
+    {
+      "block_id": "inspector",
+      "selector": "[data-testid=\"inspector\"]",
+      "required_viewports": ["desktop", "mobile"],
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/inspector"
+    }
+  ],
+  "states": [
+    {
+      "state_id": "empty",
+      "fixture": "docs/fixtures/workbench-view-empty.json",
+      "blocks": ["shell", "sidebar", "timeline", "composer", "inspector"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "chat",
+      "fixture": "docs/fixtures/workbench-view-success.json",
+      "blocks": ["shell", "timeline", "composer", "inspector"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "tool-collapsed",
+      "fixture": "docs/fixtures/workbench-view-success.json",
+      "blocks": ["timeline", "tool-card"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "tool-expanded",
+      "fixture": "docs/fixtures/workbench-view-success.json",
+      "blocks": ["timeline", "tool-card", "inspector"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "approval-waiting",
+      "fixture": "docs/fixtures/action-result-waiting-approval.json",
+      "blocks": ["timeline", "approval-card", "composer"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "clarification-waiting",
+      "fixture": "docs/fixtures/action-result-waiting-clarification.json",
+      "blocks": ["timeline", "clarification-card", "composer"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "failed",
+      "fixture": "docs/fixtures/workbench-view-failed.json",
+      "blocks": ["timeline", "tool-card", "inspector"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    },
+    {
+      "state_id": "inspector-tabs",
+      "fixture": "docs/fixtures/workbench-view-success.json",
+      "blocks": ["inspector"],
+      "viewports": ["desktop", "mobile"],
+      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+    }
+  ],
+  "dynamic_masks": ["time", "run_id", "random_id", "model_latency", "token_count"]
+}

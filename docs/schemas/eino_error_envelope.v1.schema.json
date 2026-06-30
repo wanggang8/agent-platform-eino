@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_error_envelope.v1.schema.json",
+  "title": "Eino Error Envelope",
+  "type": "object",
+  "required": ["schema_version", "request_id", "error"],
+  "properties": {
+    "schema_version": {"const": "eino_error_envelope.v1"},
+    "request_id": {"type": "string"},
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "safe_detail", "retryable"],
+      "properties": {
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "safe_detail": {"type": "string"},
+        "retryable": {"type": "boolean"},
+        "correlation_ref": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

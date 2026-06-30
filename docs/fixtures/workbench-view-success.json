@@ -1,0 +1,57 @@
+{
+  "schema_version": "eino_workbench_view.v1",
+  "workspace_id": "ws-demo",
+  "run_id": "run-demo",
+  "status": "succeeded",
+  "timeline": [
+    {
+      "item_id": "turn-user-1",
+      "kind": "user_message",
+      "content": "查询我的资产"
+    },
+    {
+      "item_id": "tool-card-1",
+      "kind": "tool_card",
+      "tool_call_id": "call-my-assets",
+      "status": "succeeded",
+      "safe_summary": "共发现 1 个资产",
+      "structured_result": {
+        "schema_version": "fobrain.tool_result.v2",
+        "tool_id": "tool.fobrain.my_assets",
+        "display_type": "entity_collection",
+        "entity_type": "asset",
+        "status": "resolved",
+        "query": {"page": 1, "page_size": 20},
+        "data": {
+          "title": "我的资产",
+          "summary": "共发现 1 个资产",
+          "columns": [{"key": "display_name", "label": "资产名称", "type": "text"}],
+          "items": [{"entity_ref": "asset:fobrain:demo-1", "display_name": "prod-web-01"}]
+        },
+        "metadata": {"safe": true, "source": "fobrain", "result_ref": "result:fobrain:my-assets:demo"}
+      }
+    },
+    {
+      "item_id": "assistant-final-1",
+      "kind": "assistant_message",
+      "content": "已查询到 1 个资产。"
+    }
+  ],
+  "inspector": {
+    "tabs": ["evidence", "structured", "runtime", "audit"],
+    "evidence": [{"label": "工具", "value": "查询我的资产"}],
+    "structured": {"result_ref": "result:fobrain:my-assets:demo"},
+    "runtime": {"status": "succeeded"},
+    "audit": [
+      {
+        "schema_version": "eino_audit_event.v1",
+        "audit_id": "audit-demo-1",
+        "run_id": "run-demo",
+        "event_type": "tool",
+        "safe_summary": "tool completed",
+        "actor": "tool",
+        "created_at": "2026-06-30T00:00:00Z"
+      }
+    ]
+  }
+}

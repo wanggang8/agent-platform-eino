@@ -1,0 +1,30 @@
+{
+  "schema_version": "eino_workbench_view.v1",
+  "workspace_id": "ws-demo",
+  "run_id": "run-failed",
+  "status": "failed",
+  "timeline": [
+    {
+      "item_id": "notice-failed-1",
+      "kind": "run_notice",
+      "status": "failed",
+      "content": "工具执行失败，已生成安全错误摘要。"
+    }
+  ],
+  "inspector": {
+    "tabs": ["evidence", "structured", "runtime", "audit"],
+    "evidence": [{"label": "错误", "value": "provider_timeout"}],
+    "runtime": {"status": "failed", "safe_error": "模型服务请求超时。"},
+    "audit": [
+      {
+        "schema_version": "eino_audit_event.v1",
+        "audit_id": "audit-failed-1",
+        "run_id": "run-failed",
+        "event_type": "error",
+        "safe_summary": "provider timeout",
+        "actor": "system",
+        "created_at": "2026-06-30T00:00:00Z"
+      }
+    ]
+  }
+}

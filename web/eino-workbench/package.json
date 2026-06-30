@@ -1,0 +1,22 @@
+{
+  "name": "@agent-platform-eino/eino-workbench",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/eino_workbench_not_implemented.mjs dev Phase-2",
+    "schema-test": "node ../../scripts/eino_workbench_schema_validate.mjs",
+    "contract-generate": "node ../../scripts/eino_workbench_contract_generate.mjs",
+    "contract-test": "node ../../scripts/eino_workbench_schema_validate.mjs --contract && node ../../scripts/eino_workbench_contract_generate.mjs --check",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node ../../scripts/eino_workbench_schema_validate.mjs --contract && node ../../scripts/eino_workbench_contract_generate.mjs --check",
+    "stream-test": "node ../../scripts/eino_workbench_not_implemented.mjs stream-test Phase-3",
+    "browser-test": "node ../../scripts/eino_workbench_not_implemented.mjs browser-test Phase-2",
+    "visual-test": "node ../../scripts/eino_workbench_not_implemented.mjs visual-test Phase-2",
+    "build": "tsc --noEmit -p tsconfig.json",
+    "send-smoke": "bash ../../scripts/eino_workbench_server_smoke.sh --scenario contract"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

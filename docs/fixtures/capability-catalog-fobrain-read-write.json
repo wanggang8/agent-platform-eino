@@ -1,0 +1,40 @@
+{
+  "schema_version": "eino.capability_catalog.v1",
+  "workspace_id": "ws-demo",
+  "capabilities": [
+    {
+      "capability_id": "tool.fobrain.my_assets",
+      "display_name_zh": "查询我的资产",
+      "description": "查询当前用户负责的资产列表。",
+      "input_schema_ref": "docs/schemas/fobrain/my_assets.input.v1.schema.json",
+      "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "risk_level": "low",
+      "side_effect": "read_external",
+      "approval_required": false,
+      "timeout_ms": 15000,
+      "credential_binding_policy": "required",
+      "idempotency_required": false,
+      "policy_ref": "policy:fobrain:read:v1",
+      "enabled": true,
+      "connector_id": "connector.fobrain.security",
+      "tags": ["fobrain", "readonly"]
+    },
+    {
+      "capability_id": "tool.fobrain.update_ticket_status",
+      "display_name_zh": "更新工单状态",
+      "description": "更新 Fobrain 工单状态，必须审批。",
+      "input_schema_ref": "docs/schemas/fobrain/update_ticket_status.input.v1.schema.json",
+      "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "risk_level": "high",
+      "side_effect": "write_external",
+      "approval_required": true,
+      "timeout_ms": 15000,
+      "credential_binding_policy": "required",
+      "idempotency_required": true,
+      "policy_ref": "policy:fobrain:ticket-mutation:v1",
+      "enabled": true,
+      "connector_id": "connector.fobrain.security",
+      "tags": ["fobrain", "write", "approval"]
+    }
+  ]
+}

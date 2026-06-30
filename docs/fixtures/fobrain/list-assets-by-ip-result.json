@@ -1,0 +1,42 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.list_assets_by_ip",
+  "display_type": "entity_collection",
+  "entity_type": "asset",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "查询 IP 资产",
+    "summary": "查询 IP 资产 fixture",
+    "columns": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "type": "status"
+      }
+    ],
+    "items": [
+      {
+        "entity_ref": "asset:fobrain:fixture-1",
+        "display_name": "查询 IP 资产 示例",
+        "status": "resolved"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total": 1,
+      "has_more": false
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.list-assets-by-ip:fixture"
+  }
+}

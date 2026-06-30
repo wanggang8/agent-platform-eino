@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/visual_evidence_matrix.v1.schema.json",
+  "title": "Workbench Visual Evidence Matrix",
+  "type": "object",
+  "required": ["schema_version", "viewports", "blocks", "states", "dynamic_masks"],
+  "properties": {
+    "schema_version": {"const": "eino.visual_evidence_matrix.v1"},
+    "viewports": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["name", "width", "height"],
+        "properties": {
+          "name": {"enum": ["desktop", "mobile"]},
+          "width": {"type": "integer", "minimum": 1},
+          "height": {"type": "integer", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 8,
+      "items": {"$ref": "#/$defs/block"}
+    },
+    "states": {
+      "type": "array",
+      "minItems": 8,
+      "items": {"$ref": "#/$defs/state"}
+    },
+    "dynamic_masks": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "required": ["block_id", "selector", "required_viewports", "baseline_path"],
+      "properties": {
+        "block_id": {"enum": ["shell", "sidebar", "timeline", "composer", "tool-card", "approval-card", "clarification-card", "inspector"]},
+        "selector": {"type": "string"},
+        "required_viewports": {"type": "array", "minItems": 1, "items": {"enum": ["desktop", "mobile"]}},
+        "baseline_path": {"type": "string"},
+        "target_crop_path": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["state_id", "fixture", "blocks", "viewports", "required_evidence"],
+      "properties": {
+        "state_id": {"enum": ["empty", "chat", "tool-collapsed", "tool-expanded", "approval-waiting", "clarification-waiting", "failed", "inspector-tabs"]},
+        "fixture": {"type": "string"},
+        "blocks": {"type": "array", "minItems": 1, "items": {"enum": ["shell", "sidebar", "timeline", "composer", "tool-card", "approval-card", "clarification-card", "inspector"]}},
+        "viewports": {"type": "array", "minItems": 1, "items": {"enum": ["desktop", "mobile"]}},
+        "required_evidence": {"type": "array", "minItems": 1, "items": {"enum": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

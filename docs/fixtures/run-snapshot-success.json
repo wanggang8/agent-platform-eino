@@ -1,0 +1,26 @@
+{
+  "schema_version": "eino_run_snapshot.v1",
+  "workspace_id": "ws-demo",
+  "run_id": "run-demo",
+  "status": "succeeded",
+  "view": {
+    "schema_version": "eino_workbench_view.v1",
+    "workspace_id": "ws-demo",
+    "run_id": "run-demo",
+    "status": "succeeded",
+    "timeline": [
+      {
+        "item_id": "assistant-final-1",
+        "kind": "assistant_message",
+        "content": "已查询到 1 个资产。"
+      }
+    ],
+    "inspector": {
+      "tabs": ["evidence", "structured", "runtime", "audit"],
+      "runtime": {"status": "succeeded"}
+    }
+  },
+  "replay_url": "/api/workspaces/ws-demo/runs/run-demo/replay",
+  "stream_url": "/api/workspaces/ws-demo/runs/run-demo/stream",
+  "audit_refs": ["audit-demo-1"]
+}

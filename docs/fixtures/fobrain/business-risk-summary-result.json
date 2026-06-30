@@ -1,0 +1,33 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.business_risk_summary",
+  "display_type": "metrics_summary",
+  "entity_type": "risk",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "汇总业务风险",
+    "summary": "汇总业务风险 fixture",
+    "metrics": [
+      {
+        "label": "总数",
+        "value": 1,
+        "tone": "info"
+      }
+    ],
+    "narrative": {
+      "key_findings": [
+        {
+          "label": "摘要",
+          "summary": "汇总业务风险 示例指标",
+          "tone": "info"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.business-risk-summary:fixture"
+  }
+}

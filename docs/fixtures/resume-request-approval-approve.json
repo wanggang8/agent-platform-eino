@@ -1,0 +1,7 @@
+{
+  "schema_version": "eino_workbench_resume_request.v1",
+  "resume_ref": "resume_ref_approval_1",
+  "client_request_id": "client-resume-approval-1",
+  "decision": "approve",
+  "comment": "批准本次工单状态更新"
+}

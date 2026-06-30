@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/provider_policy_decision.v1.schema.json",
+  "title": "Provider Policy Decision",
+  "type": "object",
+  "required": ["schema_version", "allowed", "reason_code", "policy_ref", "audit_ref", "approval_required"],
+  "properties": {
+    "schema_version": {"const": "eino.provider_policy_decision.v1"},
+    "allowed": {"type": "boolean"},
+    "reason_code": {
+      "enum": [
+        "allowed",
+        "permission_denied",
+        "approval_required",
+        "credential_missing",
+        "credential_scope_denied",
+        "connector_auth_failure",
+        "connector_timeout",
+        "connector_transport_unavailable",
+        "connector_execution_failed",
+        "resource_conflict",
+        "schema_mismatch"
+      ]
+    },
+    "policy_ref": {"type": "string"},
+    "audit_ref": {"type": "string"},
+    "approval_required": {"type": "boolean"},
+    "safe_summary": {"type": "string"},
+    "credential_binding": {"$ref": "provider_credential_binding.v1.schema.json"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"reason_code": {"const": "approval_required"}}, "required": ["reason_code"]},
+      "then": {"properties": {"approval_required": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"allowed": {"const": false}}, "required": ["allowed"]},
+      "then": {"properties": {"reason_code": {"not": {"const": "allowed"}}}}
+    }
+  ],
+  "additionalProperties": false
+}

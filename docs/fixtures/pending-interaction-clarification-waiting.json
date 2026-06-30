@@ -1,0 +1,20 @@
+{
+  "schema_version": "eino_workbench_pending_interaction.v1",
+  "pending_id": "pending-clarification-1",
+  "run_id": "run-clarification",
+  "kind": "clarification",
+  "status": "waiting",
+  "question": "请选择要查询的人员",
+  "input_mode": "single_choice",
+  "candidates": [
+    {
+      "candidate_ref": "person:fobrain:zhangsan-1",
+      "label": "张三",
+      "description": "安全部",
+      "entity_type": "person",
+      "safe_fields": [{"label": "部门", "value": "安全部"}]
+    }
+  ],
+  "resume_ref": "resume_ref_clarification_1",
+  "expires_at": "2026-06-30T01:00:00Z"
+}

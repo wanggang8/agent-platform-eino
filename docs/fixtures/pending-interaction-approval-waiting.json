@@ -1,0 +1,13 @@
+{
+  "schema_version": "eino_workbench_pending_interaction.v1",
+  "pending_id": "pending-approval-1",
+  "run_id": "run-approval",
+  "kind": "approval",
+  "status": "waiting",
+  "question": "是否批准更新工单状态？",
+  "operation_name": "更新工单状态",
+  "risk_summary": "该操作会修改 Fobrain 工单状态。",
+  "target_summary": "ticket:T-1001 -> fixed",
+  "resume_ref": "resume_ref_approval_1",
+  "expires_at": "2026-06-30T01:00:00Z"
+}

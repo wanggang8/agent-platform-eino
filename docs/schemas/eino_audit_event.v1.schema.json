@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_audit_event.v1.schema.json",
+  "title": "Eino Audit Event",
+  "type": "object",
+  "required": ["schema_version", "audit_id", "run_id", "event_type", "safe_summary", "actor", "created_at"],
+  "properties": {
+    "schema_version": {"const": "eino_audit_event.v1"},
+    "audit_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "event_type": {"enum": ["message", "tool", "pending", "resume", "safety", "error"]},
+    "safe_summary": {"type": "string"},
+    "actor": {"enum": ["user", "system", "tool", "model"]},
+    "redaction": {"type": "string"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

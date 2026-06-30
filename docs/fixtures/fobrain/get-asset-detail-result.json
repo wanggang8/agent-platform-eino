@@ -1,0 +1,31 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.get_asset_detail",
+  "display_type": "entity_detail",
+  "entity_type": "asset",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "查询资产详情",
+    "summary": "查询资产详情 fixture",
+    "facts": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "value": "查询资产详情 示例",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "value": "resolved",
+        "type": "status"
+      }
+    ]
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.get-asset-detail:fixture"
+  }
+}

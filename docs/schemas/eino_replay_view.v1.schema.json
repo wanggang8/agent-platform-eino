@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_replay_view.v1.schema.json",
+  "title": "Eino Replay View",
+  "type": "object",
+  "required": ["schema_version", "run_id", "events"],
+  "properties": {
+    "schema_version": {"const": "eino_replay_view.v1"},
+    "run_id": {"type": "string"},
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {"$ref": "eino_workbench_stream_event.v1.schema.json"},
+          {"$ref": "eino_audit_event.v1.schema.json"}
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

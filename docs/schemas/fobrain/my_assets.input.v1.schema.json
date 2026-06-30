@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/my_assets.input.v1.schema.json",
+  "title": "Fobrain My Assets Input",
+  "type": "object",
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": {"const": "fobrain.my_assets.input.v1"},
+    "keyword": {"type": "string"},
+    "page": {"type": "integer", "minimum": 1, "default": 1},
+    "page_size": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20}
+  },
+  "additionalProperties": false
+}

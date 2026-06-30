@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/tool.structured_result.v1.schema.json",
+  "title": "Generic Tool StructuredResult",
+  "type": "object",
+  "required": ["schema_version", "status", "data", "metadata"],
+  "properties": {
+    "schema_version": {"const": "tool.structured_result.v1"},
+    "status": {"enum": ["resolved", "waiting", "pending_approval", "empty", "failed", "partial"]},
+    "data": {
+      "type": "object",
+      "properties": {
+        "summary": {"type": "string"},
+        "facts": {"type": "array", "items": {"$ref": "#/$defs/display_field"}}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["safe"],
+      "properties": {
+        "safe": {"type": "boolean", "const": true},
+        "result_ref": {"type": "string"},
+        "source": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "display_field": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "key": {"type": "string"},
+        "label": {"type": "string"},
+        "value": {},
+        "type": {"enum": ["text", "number", "status", "severity", "code", "datetime", "duration", "badge"]},
+        "tone": {"enum": ["neutral", "info", "success", "warning", "danger"]},
+        "copyable": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

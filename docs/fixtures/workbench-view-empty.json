@@ -1,0 +1,13 @@
+{
+  "schema_version": "eino_workbench_view.v1",
+  "workspace_id": "ws-demo",
+  "run_id": "run-empty",
+  "status": "created",
+  "timeline": [],
+  "inspector": {
+    "tabs": ["evidence", "structured", "runtime", "audit"],
+    "evidence": [],
+    "runtime": {"status": "created"},
+    "audit": []
+  }
+}

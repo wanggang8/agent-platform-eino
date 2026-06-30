@@ -1,0 +1,42 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.list_vulnerabilities_by_ip",
+  "display_type": "entity_collection",
+  "entity_type": "vulnerability",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "查询 IP 漏洞",
+    "summary": "查询 IP 漏洞 fixture",
+    "columns": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "type": "status"
+      }
+    ],
+    "items": [
+      {
+        "entity_ref": "vulnerability:fobrain:fixture-1",
+        "display_name": "查询 IP 漏洞 示例",
+        "status": "resolved"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total": 1,
+      "has_more": false
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.list-vulnerabilities-by-ip:fixture"
+  }
+}

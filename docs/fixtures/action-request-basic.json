@@ -1,0 +1,14 @@
+{
+  "schema_version": "eino_action_request.v1",
+  "action_id": "action-basic",
+  "client_request_id": "client-action-1",
+  "capability_hint": "tool.fobrain.my_assets",
+  "input": {
+    "text": "查询我的资产"
+  },
+  "context": {
+    "timezone": "Asia/Shanghai",
+    "locale": "zh-CN",
+    "safe_user_label": "demo-user"
+  }
+}

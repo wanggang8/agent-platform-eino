@@ -1,0 +1,42 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.my_business_systems",
+  "display_type": "entity_collection",
+  "entity_type": "business_system",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "查询我的业务系统",
+    "summary": "查询我的业务系统 fixture",
+    "columns": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "type": "status"
+      }
+    ],
+    "items": [
+      {
+        "entity_ref": "business_system:fobrain:fixture-1",
+        "display_name": "查询我的业务系统 示例",
+        "status": "resolved"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total": 1,
+      "has_more": false
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.my-business-systems:fixture"
+  }
+}

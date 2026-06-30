@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/real-model-report.schema.json",
+  "title": "Eino Workbench Real Model Report",
+  "type": "object",
+  "required": ["schema_version", "scenario", "status", "prompt_id", "prompt", "selected_tool", "sanitized_args_summary", "tool_card_rendering_status", "assistant_final_answer", "screenshot_path", "failure_category"],
+  "properties": {
+    "schema_version": {"const": "eino.real_model_report.v1"},
+    "scenario": {"type": "string"},
+    "status": {"enum": ["passed", "failed"]},
+    "prompt_id": {"type": "string"},
+    "prompt": {"type": "string"},
+    "selected_tool": {"type": "string", "pattern": "^(tool|connector|workflow)\\.[a-z0-9_.-]+$"},
+    "sanitized_args_summary": {"type": "string"},
+    "tool_card_rendering_status": {"enum": ["rendered", "not_rendered", "not_applicable"]},
+    "assistant_final_answer": {"type": "string"},
+    "screenshot_path": {"type": "string"},
+    "failure_category": {"type": "string"},
+    "assertion_ids": {"type": "array", "items": {"type": "string"}},
+    "run_id": {"type": "string"},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "tool_card_rendering_status": {"enum": ["rendered", "not_applicable"]},
+          "failure_category": {"const": "none"}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.my_assets",
+  "display_type": "entity_collection",
+  "entity_type": "asset",
+  "status": "resolved",
+  "query": {"page": 1, "page_size": 20},
+  "data": {
+    "title": "我的资产",
+    "summary": "共发现 1 个资产",
+    "columns": [
+      {"key": "display_name", "label": "资产名称", "type": "text", "width": "wide"},
+      {"key": "masked_ip", "label": "IP", "type": "code", "copyable": true}
+    ],
+    "items": [
+      {
+        "entity_ref": "asset:fobrain:prod-web-01",
+        "display_name": "prod-web-01",
+        "masked_ip": "10.10.11.69",
+        "risk_summary": "存在高危漏洞"
+      }
+    ],
+    "pagination": {"page": 1, "page_size": 20, "total": 1, "has_more": false}
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:my-assets:demo"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/live-write-report.schema.json",
+  "title": "Eino Workbench Fobrain Live Write Report",
+  "type": "object",
+  "required": ["schema_version", "status", "approval_required", "mutation_before_approval", "mutation_after_approval_count", "ticket_ref", "target_status", "screenshot_paths", "failure_category"],
+  "properties": {
+    "schema_version": {"const": "eino.live_write_report.v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "approval_required": {"type": "boolean", "const": true},
+    "mutation_before_approval": {"type": "boolean", "const": false},
+    "mutation_after_approval_count": {"type": "integer", "minimum": 0, "maximum": 1},
+    "ticket_ref": {"type": "string"},
+    "target_status": {"type": "string"},
+    "screenshot_paths": {"type": "array", "items": {"type": "string"}},
+    "failure_category": {"type": "string"},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "mutation_after_approval_count": {"const": 1},
+          "failure_category": {"const": "none"}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

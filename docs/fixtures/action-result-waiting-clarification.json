@@ -1,0 +1,22 @@
+{
+  "schema_version": "eino_action_result.v1",
+  "workspace_id": "ws-demo",
+  "action_id": "tool.fobrain.list_assets_by_owner",
+  "run_id": "run-clarification",
+  "status": "waiting",
+  "snapshot_url": "/api/workspaces/ws-demo/runs/run-clarification",
+  "events_url": "/api/workspaces/ws-demo/runs/run-clarification/stream",
+  "stream_ref": "sse:/api/workspaces/ws-demo/runs/run-clarification/stream",
+  "result_cards": [],
+  "waiting": {
+    "kind": "clarification",
+    "question": "请选择要查询的人员",
+    "resume_refs": ["resume_ref_demo"]
+  },
+  "approval_refs": [],
+  "resume_refs": ["resume_ref_demo"],
+  "attention_reason": "person_disambiguation_required",
+  "waiting_reason": "clarification_required",
+  "audit_refs": ["/api/workspaces/ws-demo/runs/run-clarification/replay"],
+  "idempotency_echo": "client-req-2"
+}

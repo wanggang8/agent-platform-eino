@@ -1,0 +1,42 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "tool.fobrain.threat_relevance_list",
+  "display_type": "entity_collection",
+  "entity_type": "risk",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "查询威胁关联资产",
+    "summary": "查询威胁关联资产 fixture",
+    "columns": [
+      {
+        "key": "display_name",
+        "label": "名称",
+        "type": "text"
+      },
+      {
+        "key": "status",
+        "label": "状态",
+        "type": "status"
+      }
+    ],
+    "items": [
+      {
+        "entity_ref": "risk:fobrain:fixture-1",
+        "display_name": "查询威胁关联资产 示例",
+        "status": "resolved"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total": 1,
+      "has_more": false
+    }
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:tool.fobrain.threat-relevance-list:fixture"
+  }
+}
