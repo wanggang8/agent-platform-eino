@@ -140,6 +140,32 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 
 ## Phase 2：React Workbench
 
+### Task 2.0 Frontend architecture decision
+
+创建/修改：
+
+- `docs/frontend-architecture.md`
+- `docs/07-implementation-plan.md`
+- `AGENTS.md`
+- `web/eino-workbench/package.json`
+- `web/eino-workbench/vite.config.ts`
+
+要求：
+
+- 固定前端基础架构：Vite + React + TypeScript + React Router + TanStack Query + Zustand + Radix UI Primitives + lucide-react。
+- 固定样式策略：CSS Modules 或分层普通 CSS；不默认使用 Tailwind、shadcn 或重型视觉组件库。
+- 固定状态边界：TanStack Query 只处理 server state，Zustand 只处理 UI/client state，Product Facts 仍只在后端。
+- 固定 contract 边界：前端只从 `web/eino-workbench/src/contracts/generated.ts` 消费类型，不手写平行 DTO。
+- 固定测试策略：Vitest + Testing Library + Playwright。
+- 后续如替换构建框架、状态分层、组件基础或样式体系，必须新增 ADR。
+
+任务级检查：
+
+```bash
+rg -n "Vite|React Router|TanStack Query|Zustand|Radix|Product Facts" docs/frontend-architecture.md docs/07-implementation-plan.md AGENTS.md
+npm run eino-workbench:typecheck
+```
+
 ### Task 2.1 React/Vite shell
 
 创建：
