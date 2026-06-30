@@ -160,6 +160,9 @@ function validateVisualEvidenceMatrix() {
       throw new Error(`duplicate visual block matrix entry ${block.block_id}`);
     }
     seen.add(block.block_id);
+    if (block.target_crop_path && !fs.existsSync(path.join(root, block.target_crop_path))) {
+      throw new Error(`visual block target reference missing for ${block.block_id}: ${block.target_crop_path}`);
+    }
   }
   const missing = [...expected].filter((blockID) => !seen.has(blockID));
   const extra = [...seen].filter((blockID) => !expected.has(blockID));

@@ -1,0 +1,6413 @@
+{
+  "schema_version": "workbench_visual_task15_analysis.v1",
+  "target": "docs/design/assets/workbench-target-ui-v1-2026-06-26.png",
+  "screenshot_prefixes": [
+    "1782607638250"
+  ],
+  "screenshot_prefix_label": "test-results/workbench-real-model-tool-1782607638250-*",
+  "target_crops": {
+    "main-chat": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/main-chat.png",
+    "fresh-main-chat": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/fresh-main-chat.png",
+    "process": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/process.png",
+    "evidence": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/evidence.png",
+    "audit": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/audit.png",
+    "internal-details": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/internal-details.png",
+    "full-shell": "test-results/workbench-ui-rewrite/15-visual-acceptance/target-crops/full-shell.png"
+  },
+  "source_report": "test-results/workbench-real-model-tool-report.json",
+  "dom_metrics": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell-dom-metrics.json",
+  "data_correctness": {
+    "scenario_count": 25,
+    "passed": 25,
+    "failed": 0,
+    "reported_screenshot_count": 150,
+    "full_shell_screenshot_count": 25,
+    "all_verdicts_passed": true,
+    "all_final_states_completed": true,
+    "all_product_gates_passed": true,
+    "all_full_shell_dom_gates_passed": true
+  },
+  "aggregate_by_region": {
+    "audit": {
+      "count": 25,
+      "avg_distance": 5.97,
+      "max_distance": 6.4,
+      "avg_density": 0.0416,
+      "avg_contrast": 22.29,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "evidence": {
+      "count": 25,
+      "avg_distance": 6.27,
+      "max_distance": 26.65,
+      "avg_density": 0.0808,
+      "avg_contrast": 26.98,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "fresh-main-chat": {
+      "count": 25,
+      "avg_distance": 2.85,
+      "max_distance": 18.6,
+      "avg_density": 0.0669,
+      "avg_contrast": 23.65,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "full-shell": {
+      "count": 25,
+      "avg_distance": 5.4,
+      "max_distance": 10.49,
+      "avg_density": 0.0812,
+      "avg_contrast": 24.92,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "internal-details": {
+      "count": 25,
+      "avg_distance": 8.16,
+      "max_distance": 8.77,
+      "avg_density": 0.0307,
+      "avg_contrast": 15.92,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "main-chat": {
+      "count": 25,
+      "avg_distance": 2.85,
+      "max_distance": 18.6,
+      "avg_density": 0.0669,
+      "avg_contrast": 23.65,
+      "statuses": {
+        "metric_ok": 25
+      }
+    },
+    "process": {
+      "count": 25,
+      "avg_distance": 7.76,
+      "max_distance": 8.12,
+      "avg_density": 0.0349,
+      "avg_contrast": 18.64,
+      "statuses": {
+        "metric_ok": 25
+      }
+    }
+  },
+  "metrics": [
+    {
+      "scenario": "current_user_context",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1924",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5503
+        },
+        {
+          "color": "#0c1818",
+          "count": 3062
+        },
+        {
+          "color": "#000c18",
+          "count": 767
+        },
+        {
+          "color": "#0c2430",
+          "count": 463
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.24,
+      "density": 0.0551,
+      "contrast_score": 21.5,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7165
+        },
+        {
+          "color": "#001818",
+          "count": 4421
+        },
+        {
+          "color": "#000c18",
+          "count": 1246
+        },
+        {
+          "color": "#0c1818",
+          "count": 1100
+        },
+        {
+          "color": "#001824",
+          "count": 423
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 7.68,
+      "density": 0.0348,
+      "contrast_score": 19.05,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6130
+        },
+        {
+          "color": "#0c1824",
+          "count": 3017
+        },
+        {
+          "color": "#001818",
+          "count": 2623
+        },
+        {
+          "color": "#0c2430",
+          "count": 1292
+        },
+        {
+          "color": "#0c1818",
+          "count": 674
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0615,
+      "contrast_score": 23.47,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7932
+        },
+        {
+          "color": "#001818",
+          "count": 4232
+        },
+        {
+          "color": "#0c1818",
+          "count": 966
+        },
+        {
+          "color": "#000c18",
+          "count": 701
+        },
+        {
+          "color": "#001824",
+          "count": 410
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 5.39,
+      "density": 0.0422,
+      "contrast_score": 22.52,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9115
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 411
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0205,
+      "contrast_score": 13.0,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-current_user_context-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1924",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5503
+        },
+        {
+          "color": "#0c1818",
+          "count": 3062
+        },
+        {
+          "color": "#000c18",
+          "count": 767
+        },
+        {
+          "color": "#0c2430",
+          "count": 463
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.24,
+      "density": 0.0551,
+      "contrast_score": 21.5,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5288
+        },
+        {
+          "color": "#0c1818",
+          "count": 3064
+        },
+        {
+          "color": "#000c18",
+          "count": 793
+        },
+        {
+          "color": "#0c2430",
+          "count": 463
+        },
+        {
+          "color": "#001818",
+          "count": 199
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0623,
+      "contrast_score": 23.24,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7169
+        },
+        {
+          "color": "#001818",
+          "count": 4415
+        },
+        {
+          "color": "#000c18",
+          "count": 1250
+        },
+        {
+          "color": "#0c1818",
+          "count": 1103
+        },
+        {
+          "color": "#001824",
+          "count": 423
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 7.68,
+      "density": 0.0352,
+      "contrast_score": 19.19,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6129
+        },
+        {
+          "color": "#0c1824",
+          "count": 3016
+        },
+        {
+          "color": "#001818",
+          "count": 2623
+        },
+        {
+          "color": "#0c2430",
+          "count": 1287
+        },
+        {
+          "color": "#0c1818",
+          "count": 667
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0619,
+      "contrast_score": 23.69,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7948
+        },
+        {
+          "color": "#001818",
+          "count": 4224
+        },
+        {
+          "color": "#0c1818",
+          "count": 965
+        },
+        {
+          "color": "#000c18",
+          "count": 708
+        },
+        {
+          "color": "#001824",
+          "count": 410
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 5.39,
+      "density": 0.0424,
+      "contrast_score": 22.54,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9115
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 411
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0205,
+      "contrast_score": 13.0,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_permissions-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5288
+        },
+        {
+          "color": "#0c1818",
+          "count": 3064
+        },
+        {
+          "color": "#000c18",
+          "count": 793
+        },
+        {
+          "color": "#0c2430",
+          "count": 463
+        },
+        {
+          "color": "#001818",
+          "count": 199
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0623,
+      "contrast_score": 23.24,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5653
+        },
+        {
+          "color": "#0c1818",
+          "count": 3191
+        },
+        {
+          "color": "#000c18",
+          "count": 718
+        },
+        {
+          "color": "#0c2424",
+          "count": 291
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0502,
+      "contrast_score": 20.79,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7258
+        },
+        {
+          "color": "#001818",
+          "count": 4447
+        },
+        {
+          "color": "#000c18",
+          "count": 1240
+        },
+        {
+          "color": "#0c1818",
+          "count": 1100
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0306,
+      "contrast_score": 17.87,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1821",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6452
+        },
+        {
+          "color": "#0c1824",
+          "count": 3814
+        },
+        {
+          "color": "#001818",
+          "count": 1580
+        },
+        {
+          "color": "#0c1818",
+          "count": 744
+        },
+        {
+          "color": "#0c2430",
+          "count": 694
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0523,
+      "contrast_score": 22.41,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7963
+        },
+        {
+          "color": "#001818",
+          "count": 4230
+        },
+        {
+          "color": "#0c1818",
+          "count": 965
+        },
+        {
+          "color": "#000c18",
+          "count": 702
+        },
+        {
+          "color": "#001824",
+          "count": 404
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.041,
+      "contrast_score": 22.3,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8968
+        },
+        {
+          "color": "#001818",
+          "count": 4127
+        },
+        {
+          "color": "#0c1818",
+          "count": 853
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 338
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0208,
+      "contrast_score": 12.8,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-assets_by_owner-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5653
+        },
+        {
+          "color": "#0c1818",
+          "count": 3191
+        },
+        {
+          "color": "#000c18",
+          "count": 718
+        },
+        {
+          "color": "#0c2424",
+          "count": 291
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0502,
+      "contrast_score": 20.79,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5609
+        },
+        {
+          "color": "#0c1818",
+          "count": 3182
+        },
+        {
+          "color": "#000c18",
+          "count": 725
+        },
+        {
+          "color": "#0c2424",
+          "count": 286
+        },
+        {
+          "color": "#001818",
+          "count": 151
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0522,
+      "contrast_score": 21.69,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7254
+        },
+        {
+          "color": "#001818",
+          "count": 4436
+        },
+        {
+          "color": "#000c18",
+          "count": 1242
+        },
+        {
+          "color": "#0c1818",
+          "count": 1105
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0308,
+      "contrast_score": 18.06,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1921",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6449
+        },
+        {
+          "color": "#0c1824",
+          "count": 3807
+        },
+        {
+          "color": "#001818",
+          "count": 1574
+        },
+        {
+          "color": "#0c1818",
+          "count": 741
+        },
+        {
+          "color": "#0c2430",
+          "count": 688
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.71,
+      "density": 0.0534,
+      "contrast_score": 22.92,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7961
+        },
+        {
+          "color": "#001818",
+          "count": 4232
+        },
+        {
+          "color": "#0c1818",
+          "count": 974
+        },
+        {
+          "color": "#000c18",
+          "count": 697
+        },
+        {
+          "color": "#001824",
+          "count": 403
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0405,
+      "contrast_score": 22.17,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8968
+        },
+        {
+          "color": "#001818",
+          "count": 4127
+        },
+        {
+          "color": "#0c1818",
+          "count": 853
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 338
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0208,
+      "contrast_score": 12.8,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerabilities_by_owner-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5609
+        },
+        {
+          "color": "#0c1818",
+          "count": 3182
+        },
+        {
+          "color": "#000c18",
+          "count": 725
+        },
+        {
+          "color": "#0c2424",
+          "count": 286
+        },
+        {
+          "color": "#001818",
+          "count": 151
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0522,
+      "contrast_score": 21.69,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5107
+        },
+        {
+          "color": "#0c1818",
+          "count": 3292
+        },
+        {
+          "color": "#000c18",
+          "count": 739
+        },
+        {
+          "color": "#0c2424",
+          "count": 265
+        },
+        {
+          "color": "#183048",
+          "count": 186
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.73,
+      "density": 0.0632,
+      "contrast_score": 24.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7252
+        },
+        {
+          "color": "#001818",
+          "count": 4456
+        },
+        {
+          "color": "#000c18",
+          "count": 1246
+        },
+        {
+          "color": "#0c1818",
+          "count": 1092
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0305,
+      "contrast_score": 17.77,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6569
+        },
+        {
+          "color": "#0c1824",
+          "count": 3498
+        },
+        {
+          "color": "#001818",
+          "count": 1631
+        },
+        {
+          "color": "#0c1818",
+          "count": 764
+        },
+        {
+          "color": "#0c2430",
+          "count": 695
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0578,
+      "contrast_score": 24.44,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7965
+        },
+        {
+          "color": "#001818",
+          "count": 4232
+        },
+        {
+          "color": "#0c1818",
+          "count": 969
+        },
+        {
+          "color": "#000c18",
+          "count": 699
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0411,
+      "contrast_score": 22.14,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8654
+        },
+        {
+          "color": "#001818",
+          "count": 4169
+        },
+        {
+          "color": "#0c1818",
+          "count": 886
+        },
+        {
+          "color": "#000c18",
+          "count": 438
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.027,
+      "contrast_score": 16.42,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_assets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5107
+        },
+        {
+          "color": "#0c1818",
+          "count": 3292
+        },
+        {
+          "color": "#000c18",
+          "count": 739
+        },
+        {
+          "color": "#0c2424",
+          "count": 265
+        },
+        {
+          "color": "#183048",
+          "count": 186
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.73,
+      "density": 0.0632,
+      "contrast_score": 24.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4976
+        },
+        {
+          "color": "#0c1818",
+          "count": 3283
+        },
+        {
+          "color": "#000c18",
+          "count": 757
+        },
+        {
+          "color": "#0c2424",
+          "count": 262
+        },
+        {
+          "color": "#183048",
+          "count": 183
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.73,
+      "density": 0.0704,
+      "contrast_score": 25.91,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7258
+        },
+        {
+          "color": "#001818",
+          "count": 4451
+        },
+        {
+          "color": "#000c18",
+          "count": 1235
+        },
+        {
+          "color": "#0c1818",
+          "count": 1099
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0305,
+      "contrast_score": 17.85,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6566
+        },
+        {
+          "color": "#0c1824",
+          "count": 3494
+        },
+        {
+          "color": "#001818",
+          "count": 1625
+        },
+        {
+          "color": "#0c1818",
+          "count": 761
+        },
+        {
+          "color": "#0c2430",
+          "count": 690
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.059,
+      "contrast_score": 24.9,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7968
+        },
+        {
+          "color": "#001818",
+          "count": 4226
+        },
+        {
+          "color": "#0c1818",
+          "count": 969
+        },
+        {
+          "color": "#000c18",
+          "count": 703
+        },
+        {
+          "color": "#001824",
+          "count": 404
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.041,
+      "contrast_score": 22.02,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8654
+        },
+        {
+          "color": "#001818",
+          "count": 4169
+        },
+        {
+          "color": "#0c1818",
+          "count": 886
+        },
+        {
+          "color": "#000c18",
+          "count": 438
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.027,
+      "contrast_score": 16.42,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-department_vulnerabilities-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4976
+        },
+        {
+          "color": "#0c1818",
+          "count": 3283
+        },
+        {
+          "color": "#000c18",
+          "count": 757
+        },
+        {
+          "color": "#0c2424",
+          "count": 262
+        },
+        {
+          "color": "#183048",
+          "count": 183
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.73,
+      "density": 0.0704,
+      "contrast_score": 25.91,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5231
+        },
+        {
+          "color": "#0c1818",
+          "count": 3222
+        },
+        {
+          "color": "#000c18",
+          "count": 769
+        },
+        {
+          "color": "#0c2430",
+          "count": 376
+        },
+        {
+          "color": "#001818",
+          "count": 178
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.0,
+      "density": 0.0685,
+      "contrast_score": 24.33,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7251
+        },
+        {
+          "color": "#001818",
+          "count": 4467
+        },
+        {
+          "color": "#000c18",
+          "count": 1242
+        },
+        {
+          "color": "#0c1818",
+          "count": 1095
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0298,
+      "contrast_score": 17.54,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0b1a23",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 5092
+        },
+        {
+          "color": "#0c1824",
+          "count": 4174
+        },
+        {
+          "color": "#001818",
+          "count": 1687
+        },
+        {
+          "color": "#0c2430",
+          "count": 1162
+        },
+        {
+          "color": "#0c1818",
+          "count": 998
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 4.36,
+      "density": 0.0703,
+      "contrast_score": 25.8,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7965
+        },
+        {
+          "color": "#001818",
+          "count": 4227
+        },
+        {
+          "color": "#0c1818",
+          "count": 972
+        },
+        {
+          "color": "#000c18",
+          "count": 702
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0408,
+      "contrast_score": 22.14,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8239
+        },
+        {
+          "color": "#001818",
+          "count": 4034
+        },
+        {
+          "color": "#0c1818",
+          "count": 1083
+        },
+        {
+          "color": "#000c18",
+          "count": 591
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.035,
+      "contrast_score": 17.2,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_assets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5231
+        },
+        {
+          "color": "#0c1818",
+          "count": 3222
+        },
+        {
+          "color": "#000c18",
+          "count": 769
+        },
+        {
+          "color": "#0c2430",
+          "count": 376
+        },
+        {
+          "color": "#001818",
+          "count": 178
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.0,
+      "density": 0.0685,
+      "contrast_score": 24.33,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a23",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5277
+        },
+        {
+          "color": "#0c1818",
+          "count": 3262
+        },
+        {
+          "color": "#000c18",
+          "count": 759
+        },
+        {
+          "color": "#001818",
+          "count": 177
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0645,
+      "contrast_score": 23.99,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7244
+        },
+        {
+          "color": "#001818",
+          "count": 4460
+        },
+        {
+          "color": "#000c18",
+          "count": 1245
+        },
+        {
+          "color": "#0c1818",
+          "count": 1098
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0301,
+      "contrast_score": 17.73,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#101e26",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4448
+        },
+        {
+          "color": "#000c18",
+          "count": 3555
+        },
+        {
+          "color": "#001818",
+          "count": 1577
+        },
+        {
+          "color": "#0c1818",
+          "count": 1212
+        },
+        {
+          "color": "#0c2430",
+          "count": 693
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 3.61,
+      "density": 0.1322,
+      "contrast_score": 31.15,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7962
+        },
+        {
+          "color": "#001818",
+          "count": 4233
+        },
+        {
+          "color": "#0c1818",
+          "count": 974
+        },
+        {
+          "color": "#000c18",
+          "count": 698
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0409,
+      "contrast_score": 22.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9305
+        },
+        {
+          "color": "#001818",
+          "count": 3573
+        },
+        {
+          "color": "#0c1818",
+          "count": 919
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 296
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0286,
+      "contrast_score": 15.52,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_vulnerabilities-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a23",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5277
+        },
+        {
+          "color": "#0c1818",
+          "count": 3262
+        },
+        {
+          "color": "#000c18",
+          "count": 759
+        },
+        {
+          "color": "#001818",
+          "count": 177
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0645,
+      "contrast_score": 23.99,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5059
+        },
+        {
+          "color": "#0c1818",
+          "count": 3268
+        },
+        {
+          "color": "#000c18",
+          "count": 790
+        },
+        {
+          "color": "#0c2430",
+          "count": 409
+        },
+        {
+          "color": "#183048",
+          "count": 246
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0594,
+      "contrast_score": 23.72,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7246
+        },
+        {
+          "color": "#001818",
+          "count": 4466
+        },
+        {
+          "color": "#000c18",
+          "count": 1236
+        },
+        {
+          "color": "#0c1818",
+          "count": 1094
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0308,
+      "contrast_score": 17.92,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6605
+        },
+        {
+          "color": "#0c1824",
+          "count": 3500
+        },
+        {
+          "color": "#001818",
+          "count": 1538
+        },
+        {
+          "color": "#0c2430",
+          "count": 1285
+        },
+        {
+          "color": "#0c1818",
+          "count": 778
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0594,
+      "contrast_score": 24.21,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7973
+        },
+        {
+          "color": "#001818",
+          "count": 4229
+        },
+        {
+          "color": "#0c1818",
+          "count": 962
+        },
+        {
+          "color": "#000c18",
+          "count": 705
+        },
+        {
+          "color": "#001824",
+          "count": 403
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.0408,
+      "contrast_score": 22.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8469
+        },
+        {
+          "color": "#001818",
+          "count": 4262
+        },
+        {
+          "color": "#0c1818",
+          "count": 897
+        },
+        {
+          "color": "#000c18",
+          "count": 469
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0286,
+      "contrast_score": 16.16,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-asset_detail-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1a25",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5059
+        },
+        {
+          "color": "#0c1818",
+          "count": 3268
+        },
+        {
+          "color": "#000c18",
+          "count": 790
+        },
+        {
+          "color": "#0c2430",
+          "count": 409
+        },
+        {
+          "color": "#183048",
+          "count": 246
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0594,
+      "contrast_score": 23.72,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#162530",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 2788
+        },
+        {
+          "color": "#000c18",
+          "count": 1788
+        },
+        {
+          "color": "#0c1818",
+          "count": 1445
+        },
+        {
+          "color": "#0c2430",
+          "count": 735
+        },
+        {
+          "color": "#182430",
+          "count": 405
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 18.6,
+      "density": 0.2266,
+      "contrast_score": 40.92,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0e1c26",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5385
+        },
+        {
+          "color": "#001818",
+          "count": 3701
+        },
+        {
+          "color": "#000c18",
+          "count": 2165
+        },
+        {
+          "color": "#0c1818",
+          "count": 951
+        },
+        {
+          "color": "#001824",
+          "count": 521
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 1.0,
+      "density": 0.1092,
+      "contrast_score": 29.3,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#1c2c35",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4610
+        },
+        {
+          "color": "#000c18",
+          "count": 1807
+        },
+        {
+          "color": "#0c2430",
+          "count": 1121
+        },
+        {
+          "color": "#001818",
+          "count": 1017
+        },
+        {
+          "color": "#001824",
+          "count": 730
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 26.65,
+      "density": 0.2559,
+      "contrast_score": 52.44,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7612
+        },
+        {
+          "color": "#001818",
+          "count": 4186
+        },
+        {
+          "color": "#0c1818",
+          "count": 965
+        },
+        {
+          "color": "#000c18",
+          "count": 770
+        },
+        {
+          "color": "#001824",
+          "count": 468
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 4.69,
+      "density": 0.052,
+      "contrast_score": 24.37,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#13212a",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4967
+        },
+        {
+          "color": "#001818",
+          "count": 3788
+        },
+        {
+          "color": "#000c18",
+          "count": 1923
+        },
+        {
+          "color": "#0c1818",
+          "count": 971
+        },
+        {
+          "color": "#001824",
+          "count": 521
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.1297,
+      "contrast_score": 42.97,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_detail-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#162530",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 2788
+        },
+        {
+          "color": "#000c18",
+          "count": 1788
+        },
+        {
+          "color": "#0c1818",
+          "count": 1445
+        },
+        {
+          "color": "#0c2430",
+          "count": 735
+        },
+        {
+          "color": "#182430",
+          "count": 405
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 18.6,
+      "density": 0.2266,
+      "contrast_score": 40.92,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5301
+        },
+        {
+          "color": "#0c1818",
+          "count": 3124
+        },
+        {
+          "color": "#000c18",
+          "count": 789
+        },
+        {
+          "color": "#0c2430",
+          "count": 327
+        },
+        {
+          "color": "#001818",
+          "count": 192
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0624,
+      "contrast_score": 23.04,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7211
+        },
+        {
+          "color": "#001818",
+          "count": 4450
+        },
+        {
+          "color": "#000c18",
+          "count": 1238
+        },
+        {
+          "color": "#0c1818",
+          "count": 1098
+        },
+        {
+          "color": "#001824",
+          "count": 415
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0321,
+      "contrast_score": 18.1,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6160
+        },
+        {
+          "color": "#0c1824",
+          "count": 3087
+        },
+        {
+          "color": "#001818",
+          "count": 2676
+        },
+        {
+          "color": "#0c2430",
+          "count": 732
+        },
+        {
+          "color": "#0c2424",
+          "count": 689
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 7.68,
+      "density": 0.0532,
+      "contrast_score": 21.65,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7948
+        },
+        {
+          "color": "#001818",
+          "count": 4228
+        },
+        {
+          "color": "#0c1818",
+          "count": 969
+        },
+        {
+          "color": "#000c18",
+          "count": 702
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0414,
+      "contrast_score": 22.17,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9128
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 409
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0197,
+      "contrast_score": 12.62,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_risk_summary-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5301
+        },
+        {
+          "color": "#0c1818",
+          "count": 3124
+        },
+        {
+          "color": "#000c18",
+          "count": 789
+        },
+        {
+          "color": "#0c2430",
+          "count": 327
+        },
+        {
+          "color": "#001818",
+          "count": 192
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0624,
+      "contrast_score": 23.04,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5509
+        },
+        {
+          "color": "#0c1818",
+          "count": 3155
+        },
+        {
+          "color": "#000c18",
+          "count": 706
+        },
+        {
+          "color": "#0c2430",
+          "count": 369
+        },
+        {
+          "color": "#001818",
+          "count": 182
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0592,
+      "contrast_score": 22.68,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7249
+        },
+        {
+          "color": "#001818",
+          "count": 4449
+        },
+        {
+          "color": "#000c18",
+          "count": 1240
+        },
+        {
+          "color": "#0c1818",
+          "count": 1098
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0311,
+      "contrast_score": 17.92,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0b1a23",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 4911
+        },
+        {
+          "color": "#0c1824",
+          "count": 4234
+        },
+        {
+          "color": "#001818",
+          "count": 1632
+        },
+        {
+          "color": "#0c1818",
+          "count": 1140
+        },
+        {
+          "color": "#0c2430",
+          "count": 1126
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 4.36,
+      "density": 0.0741,
+      "contrast_score": 26.6,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7970
+        },
+        {
+          "color": "#001818",
+          "count": 4219
+        },
+        {
+          "color": "#0c1818",
+          "count": 963
+        },
+        {
+          "color": "#000c18",
+          "count": 709
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.0411,
+      "contrast_score": 22.02,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7259
+        },
+        {
+          "color": "#001818",
+          "count": 4189
+        },
+        {
+          "color": "#0c1818",
+          "count": 1243
+        },
+        {
+          "color": "#000c18",
+          "count": 1189
+        },
+        {
+          "color": "#001824",
+          "count": 408
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0349,
+      "contrast_score": 17.09,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-business_list-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5509
+        },
+        {
+          "color": "#0c1818",
+          "count": 3155
+        },
+        {
+          "color": "#000c18",
+          "count": 706
+        },
+        {
+          "color": "#0c2430",
+          "count": 369
+        },
+        {
+          "color": "#001818",
+          "count": 182
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0592,
+      "contrast_score": 22.68,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5771
+        },
+        {
+          "color": "#0c1818",
+          "count": 3168
+        },
+        {
+          "color": "#000c18",
+          "count": 722
+        },
+        {
+          "color": "#0c2424",
+          "count": 289
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.74,
+      "density": 0.047,
+      "contrast_score": 20.16,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7264
+        },
+        {
+          "color": "#001818",
+          "count": 4398
+        },
+        {
+          "color": "#000c18",
+          "count": 1255
+        },
+        {
+          "color": "#0c1818",
+          "count": 1102
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.032,
+      "contrast_score": 18.51,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1921",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6341
+        },
+        {
+          "color": "#0c1824",
+          "count": 3802
+        },
+        {
+          "color": "#001818",
+          "count": 1747
+        },
+        {
+          "color": "#0c1818",
+          "count": 729
+        },
+        {
+          "color": "#0c2430",
+          "count": 699
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.71,
+      "density": 0.0541,
+      "contrast_score": 23.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7960
+        },
+        {
+          "color": "#001818",
+          "count": 4240
+        },
+        {
+          "color": "#0c1818",
+          "count": 968
+        },
+        {
+          "color": "#000c18",
+          "count": 697
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.0406,
+      "contrast_score": 21.94,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8969
+        },
+        {
+          "color": "#001818",
+          "count": 4081
+        },
+        {
+          "color": "#0c1818",
+          "count": 855
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 376
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0202,
+      "contrast_score": 12.54,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-external_high_risk_assets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5771
+        },
+        {
+          "color": "#0c1818",
+          "count": 3168
+        },
+        {
+          "color": "#000c18",
+          "count": 722
+        },
+        {
+          "color": "#0c2424",
+          "count": 289
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.74,
+      "density": 0.047,
+      "contrast_score": 20.16,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0d1c26",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4912
+        },
+        {
+          "color": "#0c1818",
+          "count": 3129
+        },
+        {
+          "color": "#000c18",
+          "count": 780
+        },
+        {
+          "color": "#0c2424",
+          "count": 323
+        },
+        {
+          "color": "#183048",
+          "count": 320
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.83,
+      "density": 0.078,
+      "contrast_score": 27.35,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7263
+        },
+        {
+          "color": "#001818",
+          "count": 4416
+        },
+        {
+          "color": "#000c18",
+          "count": 1255
+        },
+        {
+          "color": "#0c1818",
+          "count": 1094
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0315,
+      "contrast_score": 18.35,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6429
+        },
+        {
+          "color": "#0c1824",
+          "count": 3912
+        },
+        {
+          "color": "#001818",
+          "count": 1504
+        },
+        {
+          "color": "#0c1818",
+          "count": 731
+        },
+        {
+          "color": "#0c2430",
+          "count": 691
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0536,
+      "contrast_score": 23.04,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7964
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 979
+        },
+        {
+          "color": "#000c18",
+          "count": 695
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.0408,
+      "contrast_score": 22.01,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9138
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0192,
+      "contrast_score": 12.34,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-threat_relevance_list-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0d1c26",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4912
+        },
+        {
+          "color": "#0c1818",
+          "count": 3129
+        },
+        {
+          "color": "#000c18",
+          "count": 780
+        },
+        {
+          "color": "#0c2424",
+          "count": 323
+        },
+        {
+          "color": "#183048",
+          "count": 320
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.83,
+      "density": 0.078,
+      "contrast_score": 27.35,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5478
+        },
+        {
+          "color": "#0c1818",
+          "count": 3121
+        },
+        {
+          "color": "#000c18",
+          "count": 744
+        },
+        {
+          "color": "#0c2430",
+          "count": 470
+        },
+        {
+          "color": "#0c0c18",
+          "count": 173
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0532,
+      "contrast_score": 20.67,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7200
+        },
+        {
+          "color": "#001818",
+          "count": 4454
+        },
+        {
+          "color": "#000c18",
+          "count": 1245
+        },
+        {
+          "color": "#0c1818",
+          "count": 1092
+        },
+        {
+          "color": "#001824",
+          "count": 415
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0323,
+      "contrast_score": 18.19,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091a23",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 5677
+        },
+        {
+          "color": "#0c1824",
+          "count": 3535
+        },
+        {
+          "color": "#0c2430",
+          "count": 2731
+        },
+        {
+          "color": "#001818",
+          "count": 1073
+        },
+        {
+          "color": "#0c1818",
+          "count": 702
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 5.92,
+      "density": 0.06,
+      "contrast_score": 21.81,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7960
+        },
+        {
+          "color": "#001818",
+          "count": 4223
+        },
+        {
+          "color": "#0c1818",
+          "count": 968
+        },
+        {
+          "color": "#000c18",
+          "count": 707
+        },
+        {
+          "color": "#001824",
+          "count": 408
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0414,
+      "contrast_score": 22.28,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9128
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 409
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0197,
+      "contrast_score": 12.62,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vulnerability_status_summary-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5478
+        },
+        {
+          "color": "#0c1818",
+          "count": 3121
+        },
+        {
+          "color": "#000c18",
+          "count": 744
+        },
+        {
+          "color": "#0c2430",
+          "count": 470
+        },
+        {
+          "color": "#0c0c18",
+          "count": 173
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0532,
+      "contrast_score": 20.67,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5716
+        },
+        {
+          "color": "#0c1818",
+          "count": 3177
+        },
+        {
+          "color": "#000c18",
+          "count": 717
+        },
+        {
+          "color": "#0c2430",
+          "count": 364
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0483,
+      "contrast_score": 20.54,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7254
+        },
+        {
+          "color": "#001818",
+          "count": 4435
+        },
+        {
+          "color": "#000c18",
+          "count": 1251
+        },
+        {
+          "color": "#0c1818",
+          "count": 1092
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.031,
+      "contrast_score": 18.02,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 5534
+        },
+        {
+          "color": "#0c1824",
+          "count": 4203
+        },
+        {
+          "color": "#001818",
+          "count": 1595
+        },
+        {
+          "color": "#0c2430",
+          "count": 1158
+        },
+        {
+          "color": "#0c1818",
+          "count": 812
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 4.69,
+      "density": 0.0622,
+      "contrast_score": 24.78,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7970
+        },
+        {
+          "color": "#001818",
+          "count": 4229
+        },
+        {
+          "color": "#0c1818",
+          "count": 965
+        },
+        {
+          "color": "#000c18",
+          "count": 700
+        },
+        {
+          "color": "#001824",
+          "count": 404
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0411,
+      "contrast_score": 22.1,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9392
+        },
+        {
+          "color": "#001818",
+          "count": 3781
+        },
+        {
+          "color": "#0c1818",
+          "count": 825
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 184
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.024,
+      "contrast_score": 14.03,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-pending_tickets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5716
+        },
+        {
+          "color": "#0c1818",
+          "count": 3177
+        },
+        {
+          "color": "#000c18",
+          "count": 717
+        },
+        {
+          "color": "#0c2430",
+          "count": 364
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0483,
+      "contrast_score": 20.54,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5413
+        },
+        {
+          "color": "#0c1818",
+          "count": 3133
+        },
+        {
+          "color": "#000c18",
+          "count": 759
+        },
+        {
+          "color": "#0c2430",
+          "count": 471
+        },
+        {
+          "color": "#001818",
+          "count": 191
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0531,
+      "contrast_score": 20.17,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7214
+        },
+        {
+          "color": "#001818",
+          "count": 4469
+        },
+        {
+          "color": "#000c18",
+          "count": 1231
+        },
+        {
+          "color": "#0c1818",
+          "count": 1098
+        },
+        {
+          "color": "#001824",
+          "count": 415
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0313,
+      "contrast_score": 17.7,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5625
+        },
+        {
+          "color": "#000c18",
+          "count": 4871
+        },
+        {
+          "color": "#001818",
+          "count": 1905
+        },
+        {
+          "color": "#0c1818",
+          "count": 1295
+        },
+        {
+          "color": "#182430",
+          "count": 212
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 7.55,
+      "density": 0.0611,
+      "contrast_score": 21.5,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7955
+        },
+        {
+          "color": "#001818",
+          "count": 4226
+        },
+        {
+          "color": "#0c1818",
+          "count": 964
+        },
+        {
+          "color": "#000c18",
+          "count": 703
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0412,
+      "contrast_score": 22.26,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9128
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 409
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0197,
+      "contrast_score": 12.62,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-ip_stats-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5413
+        },
+        {
+          "color": "#0c1818",
+          "count": 3133
+        },
+        {
+          "color": "#000c18",
+          "count": 759
+        },
+        {
+          "color": "#0c2430",
+          "count": 471
+        },
+        {
+          "color": "#001818",
+          "count": 191
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 3.32,
+      "density": 0.0531,
+      "contrast_score": 20.17,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5321
+        },
+        {
+          "color": "#0c1818",
+          "count": 3127
+        },
+        {
+          "color": "#000c18",
+          "count": 765
+        },
+        {
+          "color": "#0c2430",
+          "count": 469
+        },
+        {
+          "color": "#001818",
+          "count": 188
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0608,
+      "contrast_score": 22.27,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7209
+        },
+        {
+          "color": "#001818",
+          "count": 4456
+        },
+        {
+          "color": "#000c18",
+          "count": 1238
+        },
+        {
+          "color": "#0c1818",
+          "count": 1094
+        },
+        {
+          "color": "#001824",
+          "count": 415
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0322,
+      "contrast_score": 18.22,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5612
+        },
+        {
+          "color": "#000c18",
+          "count": 4871
+        },
+        {
+          "color": "#001818",
+          "count": 1905
+        },
+        {
+          "color": "#0c1818",
+          "count": 1295
+        },
+        {
+          "color": "#182430",
+          "count": 216
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0617,
+      "contrast_score": 21.84,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7958
+        },
+        {
+          "color": "#001818",
+          "count": 4224
+        },
+        {
+          "color": "#0c1818",
+          "count": 967
+        },
+        {
+          "color": "#000c18",
+          "count": 705
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0414,
+      "contrast_score": 22.19,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9128
+        },
+        {
+          "color": "#001818",
+          "count": 4237
+        },
+        {
+          "color": "#0c1818",
+          "count": 766
+        },
+        {
+          "color": "#001824",
+          "count": 409
+        },
+        {
+          "color": "#000c18",
+          "count": 185
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0197,
+      "contrast_score": 12.62,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-vul_stats-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5321
+        },
+        {
+          "color": "#0c1818",
+          "count": 3127
+        },
+        {
+          "color": "#000c18",
+          "count": 765
+        },
+        {
+          "color": "#0c2430",
+          "count": 469
+        },
+        {
+          "color": "#001818",
+          "count": 188
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0608,
+      "contrast_score": 22.27,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5438
+        },
+        {
+          "color": "#0c1818",
+          "count": 3193
+        },
+        {
+          "color": "#000c18",
+          "count": 742
+        },
+        {
+          "color": "#0c2430",
+          "count": 363
+        },
+        {
+          "color": "#001818",
+          "count": 165
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0607,
+      "contrast_score": 22.87,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7253
+        },
+        {
+          "color": "#001818",
+          "count": 4461
+        },
+        {
+          "color": "#000c18",
+          "count": 1243
+        },
+        {
+          "color": "#0c1818",
+          "count": 1089
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0304,
+      "contrast_score": 17.8,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#112029",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4527
+        },
+        {
+          "color": "#000c18",
+          "count": 3118
+        },
+        {
+          "color": "#001818",
+          "count": 1658
+        },
+        {
+          "color": "#0c1818",
+          "count": 1216
+        },
+        {
+          "color": "#0c2430",
+          "count": 1162
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 6.56,
+      "density": 0.135,
+      "contrast_score": 38.66,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7952
+        },
+        {
+          "color": "#001818",
+          "count": 4225
+        },
+        {
+          "color": "#0c1818",
+          "count": 963
+        },
+        {
+          "color": "#000c18",
+          "count": 706
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.041,
+      "contrast_score": 22.14,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7362
+        },
+        {
+          "color": "#001818",
+          "count": 4102
+        },
+        {
+          "color": "#0c1818",
+          "count": 1275
+        },
+        {
+          "color": "#000c18",
+          "count": 991
+        },
+        {
+          "color": "#001824",
+          "count": 408
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0419,
+      "contrast_score": 18.4,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_assets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5438
+        },
+        {
+          "color": "#0c1818",
+          "count": 3193
+        },
+        {
+          "color": "#000c18",
+          "count": 742
+        },
+        {
+          "color": "#0c2430",
+          "count": 363
+        },
+        {
+          "color": "#001818",
+          "count": 165
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0607,
+      "contrast_score": 22.87,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5531
+        },
+        {
+          "color": "#0c1818",
+          "count": 3187
+        },
+        {
+          "color": "#000c18",
+          "count": 732
+        },
+        {
+          "color": "#0c2430",
+          "count": 362
+        },
+        {
+          "color": "#001818",
+          "count": 163
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0567,
+      "contrast_score": 22.08,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7256
+        },
+        {
+          "color": "#001818",
+          "count": 4441
+        },
+        {
+          "color": "#000c18",
+          "count": 1244
+        },
+        {
+          "color": "#0c1818",
+          "count": 1097
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0309,
+      "contrast_score": 17.91,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#101f29",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4508
+        },
+        {
+          "color": "#000c18",
+          "count": 3744
+        },
+        {
+          "color": "#001818",
+          "count": 1576
+        },
+        {
+          "color": "#0c2430",
+          "count": 1159
+        },
+        {
+          "color": "#0c1818",
+          "count": 963
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 5.39,
+      "density": 0.1257,
+      "contrast_score": 37.88,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7960
+        },
+        {
+          "color": "#001818",
+          "count": 4232
+        },
+        {
+          "color": "#0c1818",
+          "count": 967
+        },
+        {
+          "color": "#000c18",
+          "count": 700
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0411,
+      "contrast_score": 22.25,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9421
+        },
+        {
+          "color": "#001818",
+          "count": 3620
+        },
+        {
+          "color": "#0c1818",
+          "count": 880
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        },
+        {
+          "color": "#000c18",
+          "count": 151
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0288,
+      "contrast_score": 15.21,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_assets-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5531
+        },
+        {
+          "color": "#0c1818",
+          "count": 3187
+        },
+        {
+          "color": "#000c18",
+          "count": 732
+        },
+        {
+          "color": "#0c2430",
+          "count": 362
+        },
+        {
+          "color": "#001818",
+          "count": 163
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0567,
+      "contrast_score": 22.08,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0d1b24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5042
+        },
+        {
+          "color": "#0c1818",
+          "count": 3250
+        },
+        {
+          "color": "#000c18",
+          "count": 777
+        },
+        {
+          "color": "#001818",
+          "count": 222
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.0,
+      "density": 0.0772,
+      "contrast_score": 26.67,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7261
+        },
+        {
+          "color": "#001818",
+          "count": 4452
+        },
+        {
+          "color": "#000c18",
+          "count": 1238
+        },
+        {
+          "color": "#0c1818",
+          "count": 1096
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0305,
+      "contrast_score": 17.93,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0e1c24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4339
+        },
+        {
+          "color": "#000c18",
+          "count": 3421
+        },
+        {
+          "color": "#001818",
+          "count": 1765
+        },
+        {
+          "color": "#0c1818",
+          "count": 1542
+        },
+        {
+          "color": "#0c2430",
+          "count": 691
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 2.24,
+      "density": 0.1057,
+      "contrast_score": 29.36,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7952
+        },
+        {
+          "color": "#001818",
+          "count": 4235
+        },
+        {
+          "color": "#0c1818",
+          "count": 966
+        },
+        {
+          "color": "#000c18",
+          "count": 699
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0411,
+      "contrast_score": 22.16,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7452
+        },
+        {
+          "color": "#001818",
+          "count": 4067
+        },
+        {
+          "color": "#0c1818",
+          "count": 1269
+        },
+        {
+          "color": "#000c18",
+          "count": 870
+        },
+        {
+          "color": "#001824",
+          "count": 408
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0453,
+      "contrast_score": 18.94,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_vulnerabilities-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0d1b24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5042
+        },
+        {
+          "color": "#0c1818",
+          "count": 3250
+        },
+        {
+          "color": "#000c18",
+          "count": 777
+        },
+        {
+          "color": "#001818",
+          "count": 222
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.0,
+      "density": 0.0772,
+      "contrast_score": 26.67,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5484
+        },
+        {
+          "color": "#0c1818",
+          "count": 3240
+        },
+        {
+          "color": "#000c18",
+          "count": 731
+        },
+        {
+          "color": "#001818",
+          "count": 178
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0549,
+      "contrast_score": 22.0,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7265
+        },
+        {
+          "color": "#001818",
+          "count": 4431
+        },
+        {
+          "color": "#000c18",
+          "count": 1241
+        },
+        {
+          "color": "#0c1818",
+          "count": 1101
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0308,
+      "contrast_score": 18.01,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0d1b23",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 4337
+        },
+        {
+          "color": "#000c18",
+          "count": 4200
+        },
+        {
+          "color": "#001818",
+          "count": 1630
+        },
+        {
+          "color": "#0c1818",
+          "count": 1296
+        },
+        {
+          "color": "#0c2430",
+          "count": 691
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 3.16,
+      "density": 0.0915,
+      "contrast_score": 28.0,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7976
+        },
+        {
+          "color": "#001818",
+          "count": 4228
+        },
+        {
+          "color": "#0c1818",
+          "count": 968
+        },
+        {
+          "color": "#000c18",
+          "count": 704
+        },
+        {
+          "color": "#001824",
+          "count": 403
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.4,
+      "density": 0.041,
+      "contrast_score": 22.03,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9403
+        },
+        {
+          "color": "#001818",
+          "count": 3647
+        },
+        {
+          "color": "#0c1818",
+          "count": 883
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        },
+        {
+          "color": "#000c18",
+          "count": 188
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.68,
+      "density": 0.0267,
+      "contrast_score": 14.7,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_department_vulnerabilities-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5484
+        },
+        {
+          "color": "#0c1818",
+          "count": 3240
+        },
+        {
+          "color": "#000c18",
+          "count": 731
+        },
+        {
+          "color": "#001818",
+          "count": 178
+        },
+        {
+          "color": "#182418",
+          "count": 175
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.0549,
+      "contrast_score": 22.0,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5492
+        },
+        {
+          "color": "#0c1818",
+          "count": 3139
+        },
+        {
+          "color": "#000c18",
+          "count": 714
+        },
+        {
+          "color": "#0c2430",
+          "count": 363
+        },
+        {
+          "color": "#001818",
+          "count": 187
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0612,
+      "contrast_score": 23.14,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7256
+        },
+        {
+          "color": "#001818",
+          "count": 4412
+        },
+        {
+          "color": "#000c18",
+          "count": 1253
+        },
+        {
+          "color": "#0c1818",
+          "count": 1095
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0321,
+      "contrast_score": 18.39,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0c1a24",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 4889
+        },
+        {
+          "color": "#0c1824",
+          "count": 4222
+        },
+        {
+          "color": "#001818",
+          "count": 1632
+        },
+        {
+          "color": "#0c1818",
+          "count": 1139
+        },
+        {
+          "color": "#0c2430",
+          "count": 1125
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 3.0,
+      "density": 0.0758,
+      "contrast_score": 27.12,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7973
+        },
+        {
+          "color": "#001818",
+          "count": 4226
+        },
+        {
+          "color": "#0c1818",
+          "count": 963
+        },
+        {
+          "color": "#000c18",
+          "count": 701
+        },
+        {
+          "color": "#001824",
+          "count": 405
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.0406,
+      "contrast_score": 22.15,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7259
+        },
+        {
+          "color": "#001818",
+          "count": 4189
+        },
+        {
+          "color": "#0c1818",
+          "count": 1243
+        },
+        {
+          "color": "#000c18",
+          "count": 1189
+        },
+        {
+          "color": "#001824",
+          "count": 408
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0349,
+      "contrast_score": 17.09,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_business_systems-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5492
+        },
+        {
+          "color": "#0c1818",
+          "count": 3139
+        },
+        {
+          "color": "#000c18",
+          "count": 714
+        },
+        {
+          "color": "#0c2430",
+          "count": 363
+        },
+        {
+          "color": "#001818",
+          "count": 187
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.0,
+      "density": 0.0612,
+      "contrast_score": 23.14,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5701
+        },
+        {
+          "color": "#0c1818",
+          "count": 3117
+        },
+        {
+          "color": "#000c18",
+          "count": 712
+        },
+        {
+          "color": "#0c2430",
+          "count": 368
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.054,
+      "contrast_score": 22.18,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7259
+        },
+        {
+          "color": "#001818",
+          "count": 4382
+        },
+        {
+          "color": "#000c18",
+          "count": 1258
+        },
+        {
+          "color": "#0c1818",
+          "count": 1094
+        },
+        {
+          "color": "#001824",
+          "count": 407
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 8.12,
+      "density": 0.0332,
+      "contrast_score": 18.95,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0b1a23",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 5715
+        },
+        {
+          "color": "#0c1824",
+          "count": 4144
+        },
+        {
+          "color": "#001818",
+          "count": 1485
+        },
+        {
+          "color": "#0c2430",
+          "count": 1123
+        },
+        {
+          "color": "#0c1818",
+          "count": 783
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 4.36,
+      "density": 0.0657,
+      "contrast_score": 25.57,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7947
+        },
+        {
+          "color": "#001818",
+          "count": 4236
+        },
+        {
+          "color": "#0c1818",
+          "count": 969
+        },
+        {
+          "color": "#000c18",
+          "count": 700
+        },
+        {
+          "color": "#001824",
+          "count": 402
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 6.0,
+      "density": 0.041,
+      "contrast_score": 22.2,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#081721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 9372
+        },
+        {
+          "color": "#001818",
+          "count": 3836
+        },
+        {
+          "color": "#0c1818",
+          "count": 819
+        },
+        {
+          "color": "#001824",
+          "count": 406
+        },
+        {
+          "color": "#000c18",
+          "count": 174
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 8.77,
+      "density": 0.0232,
+      "contrast_score": 13.6,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-my_important_business_systems-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5701
+        },
+        {
+          "color": "#0c1818",
+          "count": 3117
+        },
+        {
+          "color": "#000c18",
+          "count": 712
+        },
+        {
+          "color": "#0c2430",
+          "count": 368
+        },
+        {
+          "color": "#0c0c18",
+          "count": 145
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 2.45,
+      "density": 0.054,
+      "contrast_score": 22.18,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5222
+        },
+        {
+          "color": "#0c1818",
+          "count": 3003
+        },
+        {
+          "color": "#000c18",
+          "count": 815
+        },
+        {
+          "color": "#0c2424",
+          "count": 347
+        },
+        {
+          "color": "#001818",
+          "count": 174
+        }
+      ],
+      "target_region": "main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0735,
+      "contrast_score": 25.19,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "process",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-process.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7109
+        },
+        {
+          "color": "#001818",
+          "count": 4433
+        },
+        {
+          "color": "#000c18",
+          "count": 1244
+        },
+        {
+          "color": "#0c1818",
+          "count": 1098
+        },
+        {
+          "color": "#001824",
+          "count": 419
+        }
+      ],
+      "target_region": "process",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0377,
+      "contrast_score": 19.76,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "evidence",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-evidence.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0c1b23",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 6446
+        },
+        {
+          "color": "#0c1824",
+          "count": 3347
+        },
+        {
+          "color": "#001818",
+          "count": 1738
+        },
+        {
+          "color": "#0c2424",
+          "count": 1221
+        },
+        {
+          "color": "#0c1818",
+          "count": 771
+        }
+      ],
+      "target_region": "evidence",
+      "target_average": "#0e1b26",
+      "average_distance": 3.61,
+      "density": 0.0774,
+      "contrast_score": 28.21,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "audit",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-audit.png",
+      "width": 560,
+      "height": 923,
+      "average": "#0a1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 7876
+        },
+        {
+          "color": "#001818",
+          "count": 4233
+        },
+        {
+          "color": "#0c1818",
+          "count": 971
+        },
+        {
+          "color": "#000c18",
+          "count": 700
+        },
+        {
+          "color": "#001824",
+          "count": 433
+        }
+      ],
+      "target_region": "audit",
+      "target_average": "#0e1b26",
+      "average_distance": 5.39,
+      "density": 0.0437,
+      "contrast_score": 22.97,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "internal-details",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-internal-details.png",
+      "width": 560,
+      "height": 923,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 8426
+        },
+        {
+          "color": "#001818",
+          "count": 4241
+        },
+        {
+          "color": "#0c1818",
+          "count": 926
+        },
+        {
+          "color": "#000c18",
+          "count": 461
+        },
+        {
+          "color": "#001824",
+          "count": 410
+        }
+      ],
+      "target_region": "internal-details",
+      "target_average": "#0e1b26",
+      "average_distance": 7.07,
+      "density": 0.0314,
+      "contrast_score": 17.28,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "fresh-main-chat",
+      "path": "test-results/workbench-real-model-tool-1782607638250-fobrain_connector_status-fresh-main-chat.png",
+      "width": 636,
+      "height": 761,
+      "average": "#0c1b24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 5222
+        },
+        {
+          "color": "#0c1818",
+          "count": 3003
+        },
+        {
+          "color": "#000c18",
+          "count": 815
+        },
+        {
+          "color": "#0c2424",
+          "count": 347
+        },
+        {
+          "color": "#001818",
+          "count": 174
+        }
+      ],
+      "target_region": "fresh-main-chat",
+      "target_average": "#0d1a24",
+      "average_distance": 1.41,
+      "density": 0.0735,
+      "contrast_score": 25.19,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "current_user_context",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/current_user_context-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1878
+        },
+        {
+          "color": "#0c1824",
+          "count": 1699
+        },
+        {
+          "color": "#0c1818",
+          "count": 750
+        },
+        {
+          "color": "#001818",
+          "count": 626
+        },
+        {
+          "color": "#0c2430",
+          "count": 224
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0655,
+      "contrast_score": 22.65,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_permissions",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_permissions-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1877
+        },
+        {
+          "color": "#0c1824",
+          "count": 1633
+        },
+        {
+          "color": "#0c1818",
+          "count": 748
+        },
+        {
+          "color": "#001818",
+          "count": 660
+        },
+        {
+          "color": "#0c2430",
+          "count": 224
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0685,
+      "contrast_score": 23.27,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "assets_by_owner",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/assets_by_owner-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1869
+        },
+        {
+          "color": "#0c1824",
+          "count": 1822
+        },
+        {
+          "color": "#0c1818",
+          "count": 786
+        },
+        {
+          "color": "#001818",
+          "count": 529
+        },
+        {
+          "color": "#0c2424",
+          "count": 188
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0626,
+      "contrast_score": 22.21,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerabilities_by_owner",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerabilities_by_owner-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1871
+        },
+        {
+          "color": "#0c1824",
+          "count": 1794
+        },
+        {
+          "color": "#0c1818",
+          "count": 782
+        },
+        {
+          "color": "#001818",
+          "count": 538
+        },
+        {
+          "color": "#0c2424",
+          "count": 188
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0638,
+      "contrast_score": 22.65,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_assets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/department_assets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1896
+        },
+        {
+          "color": "#0c1824",
+          "count": 1604
+        },
+        {
+          "color": "#0c1818",
+          "count": 834
+        },
+        {
+          "color": "#001818",
+          "count": 548
+        },
+        {
+          "color": "#0c2424",
+          "count": 190
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0695,
+      "contrast_score": 23.93,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "department_vulnerabilities",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/department_vulnerabilities-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1895
+        },
+        {
+          "color": "#0c1824",
+          "count": 1587
+        },
+        {
+          "color": "#0c1818",
+          "count": 833
+        },
+        {
+          "color": "#001818",
+          "count": 543
+        },
+        {
+          "color": "#0c2424",
+          "count": 187
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0725,
+      "contrast_score": 24.68,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_assets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_assets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1740
+        },
+        {
+          "color": "#000c18",
+          "count": 1688
+        },
+        {
+          "color": "#0c1818",
+          "count": 795
+        },
+        {
+          "color": "#001818",
+          "count": 567
+        },
+        {
+          "color": "#0c2430",
+          "count": 238
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.078,
+      "contrast_score": 24.59,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_vulnerabilities",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_vulnerabilities-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0b1923",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1819
+        },
+        {
+          "color": "#000c18",
+          "count": 1607
+        },
+        {
+          "color": "#0c1818",
+          "count": 822
+        },
+        {
+          "color": "#001818",
+          "count": 341
+        },
+        {
+          "color": "#001824",
+          "count": 183
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 3.0,
+      "density": 0.1027,
+      "contrast_score": 26.65,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "asset_detail",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/asset_detail-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1909
+        },
+        {
+          "color": "#0c1824",
+          "count": 1615
+        },
+        {
+          "color": "#0c1818",
+          "count": 823
+        },
+        {
+          "color": "#001818",
+          "count": 540
+        },
+        {
+          "color": "#0c2430",
+          "count": 261
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0666,
+      "contrast_score": 23.72,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_detail",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerability_detail-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#12212b",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1648
+        },
+        {
+          "color": "#0c1824",
+          "count": 1203
+        },
+        {
+          "color": "#0c1818",
+          "count": 524
+        },
+        {
+          "color": "#303c48",
+          "count": 329
+        },
+        {
+          "color": "#001818",
+          "count": 327
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 10.49,
+      "density": 0.2156,
+      "contrast_score": 41.11,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_risk_summary",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/business_risk_summary-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1874
+        },
+        {
+          "color": "#0c1824",
+          "count": 1667
+        },
+        {
+          "color": "#0c1818",
+          "count": 757
+        },
+        {
+          "color": "#001818",
+          "count": 671
+        },
+        {
+          "color": "#0c2430",
+          "count": 147
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.0,
+      "density": 0.0649,
+      "contrast_score": 22.61,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "business_list",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/business_list-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1815
+        },
+        {
+          "color": "#000c18",
+          "count": 1640
+        },
+        {
+          "color": "#0c1818",
+          "count": 796
+        },
+        {
+          "color": "#001818",
+          "count": 593
+        },
+        {
+          "color": "#0c2430",
+          "count": 211
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0754,
+      "contrast_score": 24.34,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "external_high_risk_assets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/external_high_risk_assets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1872
+        },
+        {
+          "color": "#0c1824",
+          "count": 1841
+        },
+        {
+          "color": "#0c1818",
+          "count": 732
+        },
+        {
+          "color": "#001818",
+          "count": 606
+        },
+        {
+          "color": "#0c2424",
+          "count": 185
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0616,
+      "contrast_score": 22.27,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "threat_relevance_list",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/threat_relevance_list-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1874
+        },
+        {
+          "color": "#0c1824",
+          "count": 1653
+        },
+        {
+          "color": "#0c1818",
+          "count": 831
+        },
+        {
+          "color": "#001818",
+          "count": 518
+        },
+        {
+          "color": "#0c2424",
+          "count": 201
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0716,
+      "contrast_score": 24.59,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vulnerability_status_summary",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerability_status_summary-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1892
+        },
+        {
+          "color": "#0c1824",
+          "count": 1738
+        },
+        {
+          "color": "#0c1818",
+          "count": 728
+        },
+        {
+          "color": "#0c2430",
+          "count": 498
+        },
+        {
+          "color": "#001818",
+          "count": 355
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0632,
+      "contrast_score": 22.3,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "pending_tickets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/pending_tickets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091821",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1882
+        },
+        {
+          "color": "#000c18",
+          "count": 1762
+        },
+        {
+          "color": "#0c1818",
+          "count": 811
+        },
+        {
+          "color": "#001818",
+          "count": 477
+        },
+        {
+          "color": "#0c2430",
+          "count": 233
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.0,
+      "density": 0.0648,
+      "contrast_score": 22.99,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "ip_stats",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_stats-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 2095
+        },
+        {
+          "color": "#000c18",
+          "count": 1468
+        },
+        {
+          "color": "#0c1818",
+          "count": 1000
+        },
+        {
+          "color": "#001818",
+          "count": 515
+        },
+        {
+          "color": "#182430",
+          "count": 216
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0731,
+      "contrast_score": 21.78,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "vul_stats",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vul_stats-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091721",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 2077
+        },
+        {
+          "color": "#000c18",
+          "count": 1471
+        },
+        {
+          "color": "#0c1818",
+          "count": 1005
+        },
+        {
+          "color": "#001818",
+          "count": 508
+        },
+        {
+          "color": "#182430",
+          "count": 214
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 6.4,
+      "density": 0.0764,
+      "contrast_score": 22.53,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_assets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_assets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1939
+        },
+        {
+          "color": "#000c18",
+          "count": 1481
+        },
+        {
+          "color": "#0c1818",
+          "count": 803
+        },
+        {
+          "color": "#001818",
+          "count": 361
+        },
+        {
+          "color": "#0c2430",
+          "count": 239
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 2.24,
+      "density": 0.107,
+      "contrast_score": 29.64,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_assets",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_department_assets-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0b1a24",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1939
+        },
+        {
+          "color": "#000c18",
+          "count": 1600
+        },
+        {
+          "color": "#0c1818",
+          "count": 745
+        },
+        {
+          "color": "#001818",
+          "count": 357
+        },
+        {
+          "color": "#0c2430",
+          "count": 239
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 2.24,
+      "density": 0.0998,
+      "contrast_score": 29.01,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_vulnerabilities",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_vulnerabilities-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0b1922",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1779
+        },
+        {
+          "color": "#000c18",
+          "count": 1591
+        },
+        {
+          "color": "#0c1818",
+          "count": 867
+        },
+        {
+          "color": "#001818",
+          "count": 371
+        },
+        {
+          "color": "#001824",
+          "count": 180
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 3.74,
+      "density": 0.0979,
+      "contrast_score": 26.77,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_department_vulnerabilities",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_department_vulnerabilities-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0a1822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1871
+        },
+        {
+          "color": "#000c18",
+          "count": 1712
+        },
+        {
+          "color": "#0c1818",
+          "count": 830
+        },
+        {
+          "color": "#001818",
+          "count": 346
+        },
+        {
+          "color": "#001824",
+          "count": 181
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 4.69,
+      "density": 0.0826,
+      "contrast_score": 24.8,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_business_systems",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_business_systems-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1811
+        },
+        {
+          "color": "#000c18",
+          "count": 1636
+        },
+        {
+          "color": "#0c1818",
+          "count": 793
+        },
+        {
+          "color": "#001818",
+          "count": 595
+        },
+        {
+          "color": "#0c2430",
+          "count": 209
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0769,
+      "contrast_score": 24.66,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "my_important_business_systems",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_important_business_systems-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#091822",
+      "dominant": [
+        {
+          "color": "#0c1824",
+          "count": 1868
+        },
+        {
+          "color": "#000c18",
+          "count": 1779
+        },
+        {
+          "color": "#0c1818",
+          "count": 783
+        },
+        {
+          "color": "#001818",
+          "count": 477
+        },
+        {
+          "color": "#0c2430",
+          "count": 207
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 5.39,
+      "density": 0.0683,
+      "contrast_score": 23.81,
+      "visual_status": "metric_ok"
+    },
+    {
+      "scenario": "fobrain_connector_status",
+      "region": "full-shell",
+      "path": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/fobrain_connector_status-full-shell.png",
+      "width": 1536,
+      "height": 1024,
+      "average": "#0a1922",
+      "dominant": [
+        {
+          "color": "#000c18",
+          "count": 1906
+        },
+        {
+          "color": "#0c1824",
+          "count": 1592
+        },
+        {
+          "color": "#0c1818",
+          "count": 696
+        },
+        {
+          "color": "#001818",
+          "count": 626
+        },
+        {
+          "color": "#0c2424",
+          "count": 246
+        }
+      ],
+      "target_region": "full-shell",
+      "target_average": "#0d1a25",
+      "average_distance": 4.36,
+      "density": 0.0813,
+      "contrast_score": 25.41,
+      "visual_status": "metric_ok"
+    }
+  ],
+  "contact_sheets": [
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/audit.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/evidence.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/fresh-main-chat.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/full-shell.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/internal-details.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/main-chat.png",
+    "test-results/workbench-ui-rewrite/15-visual-acceptance/region-contact-sheets/process.png"
+  ]
+}

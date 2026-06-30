@@ -21,6 +21,25 @@ docs/fixtures/visual-evidence-matrix.json
 
 该矩阵必须登记在 `docs/fixtures/manifest.json`。`schema-test` 会检查 8 个必选 block 是否精确覆盖，以及每个视觉状态引用的 fixture 是否存在。
 
+## 本地旧验收参考
+
+旧项目最终视觉参考已复制到：
+
+```text
+docs/assets/legacy/workbench/
+```
+
+这些图片只作为目标参考，不是新项目通过结果。新项目必须用 Playwright 重新生成 `web/eino-workbench/tests/__screenshots__/` 和 `test-results/eino-workbench-*`。
+
+| 用途 | 本地路径 |
+| --- | --- |
+| Canonical target | `docs/assets/legacy/workbench/canonical/workbench-target-ui-v1-2026-06-26.png` |
+| Task15 region contact sheets | `docs/assets/legacy/workbench/task15-contact-sheets/` |
+| Task15 target crops | `docs/assets/legacy/workbench/task15-target-crops/` |
+| Task17 scenario contact sheets | `docs/assets/legacy/workbench/task17-contact-sheets/` |
+| Final UI block references | `docs/assets/legacy/workbench/final-ui-blocks/` |
+| Final acceptance reports | `docs/assets/legacy/workbench/reports/` |
+
 ## 产品场景覆盖
 
 | 场景 | 必须行为 |

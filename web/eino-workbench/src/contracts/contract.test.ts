@@ -1,4 +1,5 @@
 import { contractSchemas } from "./generated";
+import { describe, expect, it } from "vitest";
 
 const requiredSchemaIds = [
   "https://agent-platform-eino.local/schemas/eino_action_result.v1.schema.json",
@@ -11,8 +12,10 @@ const requiredSchemaIds = [
 
 const schemaIds = new Set(contractSchemas.map((schema) => schema.id));
 
-for (const id of requiredSchemaIds) {
-  if (!schemaIds.has(id)) {
-    throw new Error(`missing generated contract schema ${id}`);
-  }
-}
+describe("generated contracts", () => {
+  it("includes Workbench runtime schema entries", () => {
+    for (const id of requiredSchemaIds) {
+      expect(schemaIds.has(id), `missing generated contract schema ${id}`).toBe(true);
+    }
+  });
+});

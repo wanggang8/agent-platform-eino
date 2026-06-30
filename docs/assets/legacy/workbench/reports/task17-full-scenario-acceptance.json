@@ -1,0 +1,5032 @@
+{
+  "schemaVersion": "workbench_full_scenario_acceptance.v1",
+  "createdAt": "2026-06-28T09:55:58.609Z",
+  "baseURL": "http://127.0.0.1:8080",
+  "sourceReport": "/Users/vick/Desktop/project/ai-agent/test-results/workbench-ui-rewrite/16-product-narrative/workbench-real-model-tool-report-1782607638250.json",
+  "scenarioCount": 25,
+  "passed": 25,
+  "failed": 0,
+  "screenshotCount": 275,
+  "screenshotRegions": {
+    "full-shell": 25,
+    "sidebar": 25,
+    "header": 25,
+    "main-chat": 25,
+    "composer": 25,
+    "narrative-link-result": 25,
+    "inspector-evidence": 25,
+    "inspector-structured": 25,
+    "inspector-runtime": 25,
+    "inspector-audit": 25,
+    "evidence-row-detail": 25
+  },
+  "staticBoundary": {
+    "scannedFiles": [
+      "internal/interfaces/workbench/static/workbench_presenters.js",
+      "internal/interfaces/workbench/static/workbench_render.js",
+      "internal/interfaces/workbench/static/workbench_transport.js",
+      "internal/interfaces/workbench/static/app.js",
+      "internal/interfaces/presentation/workbench_chat_view.go",
+      "internal/business/fobrain/domain/tool_result_display.go"
+    ],
+    "schemaDriven": true,
+    "displayTypeDriven": true,
+    "findings": [],
+    "verdict": "passed"
+  },
+  "results": [
+    {
+      "id": "current_user_context",
+      "prompt": "查看当前 Fobrain 用户信息",
+      "runID": "run-client-1782607638963-lqkmmts4",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "current_user_context",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-full-shell.png",
+          "sizeBytes": 351160,
+          "createdAt": "2026-06-28T09:55:14.473Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-sidebar.png",
+          "sizeBytes": 48673,
+          "createdAt": "2026-06-28T09:55:14.525Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:14.566Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-main-chat.png",
+          "sizeBytes": 102907,
+          "createdAt": "2026-06-28T09:55:14.620Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:14.668Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-narrative-link-result.png",
+          "sizeBytes": 104907,
+          "createdAt": "2026-06-28T09:55:14.954Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-inspector-evidence.png",
+          "sizeBytes": 101651,
+          "createdAt": "2026-06-28T09:55:15.027Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-inspector-structured.png",
+          "sizeBytes": 62981,
+          "createdAt": "2026-06-28T09:55:15.098Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-inspector-runtime.png",
+          "sizeBytes": 75399,
+          "createdAt": "2026-06-28T09:55:15.166Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-inspector-audit.png",
+          "sizeBytes": 82973,
+          "createdAt": "2026-06-28T09:55:15.241Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "current_user_context",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-current_user_context-evidence-row-detail.png",
+          "sizeBytes": 101651,
+          "createdAt": "2026-06-28T09:55:15.323Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓读取当前用户信息成功fobrain current user context is available用户上下文确认用户信息已返回，可作为后续权限和资产范围判断依据。关键结论fobrain current user context is available风险判断fobrain current user context is available查看字段证据详情来源fobrain current user context is available",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 674
+      },
+      "tabTextLengths": {
+        "evidence": 258,
+        "structured": 38,
+        "runtime": 147,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_permissions",
+      "prompt": "查看我的 Fobrain 权限范围",
+      "runID": "run-client-1782607649812-1mz9fg6i",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_permissions",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-full-shell.png",
+          "sizeBytes": 361338,
+          "createdAt": "2026-06-28T09:55:16.116Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-sidebar.png",
+          "sizeBytes": 48673,
+          "createdAt": "2026-06-28T09:55:16.165Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:16.211Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-main-chat.png",
+          "sizeBytes": 110445,
+          "createdAt": "2026-06-28T09:55:16.271Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:16.317Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-narrative-link-result.png",
+          "sizeBytes": 106104,
+          "createdAt": "2026-06-28T09:55:16.607Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-inspector-evidence.png",
+          "sizeBytes": 103012,
+          "createdAt": "2026-06-28T09:55:16.692Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-inspector-structured.png",
+          "sizeBytes": 62981,
+          "createdAt": "2026-06-28T09:55:16.766Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-inspector-runtime.png",
+          "sizeBytes": 76620,
+          "createdAt": "2026-06-28T09:55:16.833Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-inspector-audit.png",
+          "sizeBytes": 82664,
+          "createdAt": "2026-06-28T09:55:16.899Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_permissions",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_permissions-evidence-row-detail.png",
+          "sizeBytes": 103012,
+          "createdAt": "2026-06-28T09:55:16.971Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓读取我的权限范围成功fobrain current user context is available用户上下文确认用户信息已返回，可作为后续权限和资产范围判断依据。关键结论fobrain current user context is available风险判断fobrain current user context is available查看字段证据详情来源fobrain current user context is available",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 696
+      },
+      "tabTextLengths": {
+        "evidence": 258,
+        "structured": 38,
+        "runtime": 147,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "assets_by_owner",
+      "prompt": "查毛莉负责的资产列表",
+      "runID": "run-client-1782607666753-aa8p60fm",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "assets_by_owner",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-full-shell.png",
+          "sizeBytes": 343877,
+          "createdAt": "2026-06-28T09:55:17.772Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-sidebar.png",
+          "sizeBytes": 48673,
+          "createdAt": "2026-06-28T09:55:17.824Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:17.867Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-main-chat.png",
+          "sizeBytes": 101422,
+          "createdAt": "2026-06-28T09:55:17.925Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:17.968Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-narrative-link-result.png",
+          "sizeBytes": 101861,
+          "createdAt": "2026-06-28T09:55:18.264Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-inspector-evidence.png",
+          "sizeBytes": 98898,
+          "createdAt": "2026-06-28T09:55:18.340Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-inspector-structured.png",
+          "sizeBytes": 63558,
+          "createdAt": "2026-06-28T09:55:18.399Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-inspector-runtime.png",
+          "sizeBytes": 71931,
+          "createdAt": "2026-06-28T09:55:18.476Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-inspector-audit.png",
+          "sizeBytes": 80612,
+          "createdAt": "2026-06-28T09:55:18.545Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "assets_by_owner",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-assets_by_owner-evidence-row-detail.png",
+          "sizeBytes": 98898,
+          "createdAt": "2026-06-28T09:55:18.610Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询负责人资产成功共发现 0 个资产资产风险检索共发现 0 个资产资产范围共发现 0 个资产风险判断当前结果未发现需要立即处理的资产。查看证据明细资产列表结果来源共发现 0 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 439
+      },
+      "tabTextLengths": {
+        "evidence": 159,
+        "structured": 42,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "vulnerabilities_by_owner",
+      "prompt": "查毛莉负责的漏洞列表",
+      "runID": "run-client-1782607676620-wq0sm0a4",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-full-shell.png",
+          "sizeBytes": 348209,
+          "createdAt": "2026-06-28T09:55:19.401Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-sidebar.png",
+          "sizeBytes": 48673,
+          "createdAt": "2026-06-28T09:55:19.449Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:19.493Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-main-chat.png",
+          "sizeBytes": 103218,
+          "createdAt": "2026-06-28T09:55:19.549Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:19.593Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-narrative-link-result.png",
+          "sizeBytes": 103020,
+          "createdAt": "2026-06-28T09:55:19.873Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-inspector-evidence.png",
+          "sizeBytes": 99940,
+          "createdAt": "2026-06-28T09:55:19.944Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-inspector-structured.png",
+          "sizeBytes": 63558,
+          "createdAt": "2026-06-28T09:55:20.007Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-inspector-runtime.png",
+          "sizeBytes": 72128,
+          "createdAt": "2026-06-28T09:55:20.070Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-inspector-audit.png",
+          "sizeBytes": 79897,
+          "createdAt": "2026-06-28T09:55:20.132Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerabilities_by_owner",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerabilities_by_owner-evidence-row-detail.png",
+          "sizeBytes": 99940,
+          "createdAt": "2026-06-28T09:55:20.201Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询负责人漏洞成功共发现 0 个漏洞漏洞风险检索共发现 0 个漏洞漏洞范围共发现 0 个漏洞风险判断当前结果未发现需要立即处理的漏洞。查看证据明细漏洞列表结果来源共发现 0 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 442
+      },
+      "tabTextLengths": {
+        "evidence": 159,
+        "structured": 42,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "department_assets",
+      "prompt": "查北京华顺信安科技有限公司/企业产品中心/FOBrain产品部有哪些资产",
+      "runID": "run-client-1782607686478-sl8kr3qf",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "department_assets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-full-shell.png",
+          "sizeBytes": 355203,
+          "createdAt": "2026-06-28T09:55:20.972Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-sidebar.png",
+          "sizeBytes": 48740,
+          "createdAt": "2026-06-28T09:55:21.024Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:21.067Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-main-chat.png",
+          "sizeBytes": 107083,
+          "createdAt": "2026-06-28T09:55:21.121Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:21.168Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-narrative-link-result.png",
+          "sizeBytes": 104897,
+          "createdAt": "2026-06-28T09:55:21.435Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-inspector-evidence.png",
+          "sizeBytes": 101904,
+          "createdAt": "2026-06-28T09:55:21.499Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-inspector-structured.png",
+          "sizeBytes": 66400,
+          "createdAt": "2026-06-28T09:55:21.573Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-inspector-runtime.png",
+          "sizeBytes": 71111,
+          "createdAt": "2026-06-28T09:55:21.632Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-inspector-audit.png",
+          "sizeBytes": 80879,
+          "createdAt": "2026-06-28T09:55:21.704Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_assets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_assets-evidence-row-detail.png",
+          "sizeBytes": 101904,
+          "createdAt": "2026-06-28T09:55:21.766Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询部门资产成功共发现 0 个资产资产风险检索共发现 0 个资产资产范围共发现 0 个资产风险判断当前结果未发现需要立即处理的资产。查看证据明细资产列表结果来源共发现 0 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 506
+      },
+      "tabTextLengths": {
+        "evidence": 184,
+        "structured": 70,
+        "runtime": 111,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "department_vulnerabilities",
+      "prompt": "查北京华顺信安科技有限公司/企业产品中心/FOBrain产品部有哪些漏洞",
+      "runID": "run-client-1782607697368-90jhv63r",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-full-shell.png",
+          "sizeBytes": 364309,
+          "createdAt": "2026-06-28T09:55:22.556Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-sidebar.png",
+          "sizeBytes": 48741,
+          "createdAt": "2026-06-28T09:55:22.608Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:22.652Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-main-chat.png",
+          "sizeBytes": 115489,
+          "createdAt": "2026-06-28T09:55:22.707Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:22.752Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-narrative-link-result.png",
+          "sizeBytes": 105740,
+          "createdAt": "2026-06-28T09:55:23.039Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-inspector-evidence.png",
+          "sizeBytes": 102809,
+          "createdAt": "2026-06-28T09:55:23.108Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-inspector-structured.png",
+          "sizeBytes": 66400,
+          "createdAt": "2026-06-28T09:55:23.168Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-inspector-runtime.png",
+          "sizeBytes": 71434,
+          "createdAt": "2026-06-28T09:55:23.232Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-inspector-audit.png",
+          "sizeBytes": 81645,
+          "createdAt": "2026-06-28T09:55:23.301Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "department_vulnerabilities",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-department_vulnerabilities-evidence-row-detail.png",
+          "sizeBytes": 102809,
+          "createdAt": "2026-06-28T09:55:23.373Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询部门漏洞成功共发现 0 个漏洞漏洞风险检索共发现 0 个漏洞漏洞范围共发现 0 个漏洞风险判断当前结果未发现需要立即处理的漏洞。查看证据明细漏洞列表结果来源共发现 0 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 526
+      },
+      "tabTextLengths": {
+        "evidence": 184,
+        "structured": 70,
+        "runtime": 111,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "ip_assets",
+      "prompt": "查 10.10.11.69 关联的资产",
+      "runID": "run-client-1782607708228-r9kn7goj",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "ip_assets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-full-shell.png",
+          "sizeBytes": 385175,
+          "createdAt": "2026-06-28T09:55:24.177Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-sidebar.png",
+          "sizeBytes": 48741,
+          "createdAt": "2026-06-28T09:55:24.224Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:24.267Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-main-chat.png",
+          "sizeBytes": 120829,
+          "createdAt": "2026-06-28T09:55:24.325Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:24.366Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-narrative-link-result.png",
+          "sizeBytes": 118151,
+          "createdAt": "2026-06-28T09:55:24.635Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-inspector-evidence.png",
+          "sizeBytes": 118076,
+          "createdAt": "2026-06-28T09:55:24.716Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-inspector-structured.png",
+          "sizeBytes": 78887,
+          "createdAt": "2026-06-28T09:55:24.782Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-inspector-runtime.png",
+          "sizeBytes": 70252,
+          "createdAt": "2026-06-28T09:55:24.840Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-inspector-audit.png",
+          "sizeBytes": 80701,
+          "createdAt": "2026-06-28T09:55:24.907Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_assets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_assets-evidence-row-detail.png",
+          "sizeBytes": 118081,
+          "createdAt": "2026-06-28T09:55:25.184Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询 IP 资产成功共发现 3 个资产资产风险检索共发现 3 个资产资产范围共发现 3 个资产风险判断已返回资产证据，可继续结合业务影响判断优先级。查看证据明细资产列表结果来源共发现 3 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 3,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:asset:asset-fobrain-ref-06a35cb0e405",
+              "row:asset:asset-fobrain-ref-68f8a31db9ab",
+              "row:asset:asset-fobrain-ref-de85a7beca3e"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 2723
+      },
+      "tabTextLengths": {
+        "evidence": 2300,
+        "structured": 2110,
+        "runtime": 115,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:asset:asset-fobrain-ref-06a35cb0e405",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "asset:fobrain:ref-06a35cb0e405asset:fobrain:ref-06a35cb0e405IP10.10.11.69类型ssh来源Fobrain 资产中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "ip_vulnerabilities",
+      "prompt": "查10.10.11.226的漏洞",
+      "runID": "run-client-1782607718068-db3x2c0v",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-full-shell.png",
+          "sizeBytes": 451734,
+          "createdAt": "2026-06-28T09:55:25.976Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-sidebar.png",
+          "sizeBytes": 48741,
+          "createdAt": "2026-06-28T09:55:26.023Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:26.066Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-main-chat.png",
+          "sizeBytes": 116371,
+          "createdAt": "2026-06-28T09:55:26.124Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:26.168Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-narrative-link-result.png",
+          "sizeBytes": 176573,
+          "createdAt": "2026-06-28T09:55:26.433Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-inspector-evidence.png",
+          "sizeBytes": 176333,
+          "createdAt": "2026-06-28T09:55:26.505Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-inspector-structured.png",
+          "sizeBytes": 73266,
+          "createdAt": "2026-06-28T09:55:26.573Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-inspector-runtime.png",
+          "sizeBytes": 70592,
+          "createdAt": "2026-06-28T09:55:26.632Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-inspector-audit.png",
+          "sizeBytes": 81555,
+          "createdAt": "2026-06-28T09:55:26.699Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_vulnerabilities",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_vulnerabilities-evidence-row-detail.png",
+          "sizeBytes": 176383,
+          "createdAt": "2026-06-28T09:55:26.963Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询 IP 漏洞成功共发现 1 个漏洞漏洞风险检索共发现 1 个漏洞漏洞范围共发现 1 个漏洞风险判断存在需要继续确认和处理的漏洞。查看证据明细漏洞列表结果来源共发现 1 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 1,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:vulnerability:vuln-fobrain-ref-2b370c3e1fe9"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 1047
+      },
+      "tabTextLengths": {
+        "evidence": 682,
+        "structured": 137,
+        "runtime": 115,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:vulnerability:vuln-fobrain-ref-2b370c3e1fe9",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "亿赛通电子文档安全管理系统 UploadFileListServiceForClient 接口远程代码执行漏洞亿赛通电子文档安全管理系统（简称：CDG）是一款电子文档安全加密软件，该系统利用驱动层透明加密技术，通过对电子文档的加密保护，防止内部员工泄密和外部人员非法窃取企业核心重要数据资产，对电子文档进行全生命周期防护，系统具有透明加密、主动加密、智能加密等多种加密方式，用户可根据部门涉密程度的不同（如核心部门和普通部门），部署力度轻重不一的梯度式文档加密防护，实现技术、管理、审计进行有机的结合，在内部构建起立体化的整体信息防泄露体系，使得成本、效率和安全三者达到平衡，实现电子文档的数据安全。"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "asset_detail",
+      "prompt": "查看真实资产 ID 4ead9f549ee544619c183cd1ac461329 的资产详情",
+      "runID": "run-client-1782607727945-cwwbsf8j",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "asset_detail",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-full-shell.png",
+          "sizeBytes": 359030,
+          "createdAt": "2026-06-28T09:55:27.792Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-sidebar.png",
+          "sizeBytes": 48740,
+          "createdAt": "2026-06-28T09:55:27.840Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:27.885Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-main-chat.png",
+          "sizeBytes": 107258,
+          "createdAt": "2026-06-28T09:55:27.942Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:27.985Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-narrative-link-result.png",
+          "sizeBytes": 108962,
+          "createdAt": "2026-06-28T09:55:28.265Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-inspector-evidence.png",
+          "sizeBytes": 106020,
+          "createdAt": "2026-06-28T09:55:28.336Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-inspector-structured.png",
+          "sizeBytes": 70419,
+          "createdAt": "2026-06-28T09:55:28.410Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-inspector-runtime.png",
+          "sizeBytes": 71740,
+          "createdAt": "2026-06-28T09:55:28.476Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-inspector-audit.png",
+          "sizeBytes": 81605,
+          "createdAt": "2026-06-28T09:55:28.543Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "asset_detail",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-asset_detail-evidence-row-detail.png",
+          "sizeBytes": 106020,
+          "createdAt": "2026-06-28T09:55:28.615Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询资产详情成功资产详情查询完成资产详情确认已返回资产详情字段，可继续查看关联漏洞或业务影响。关键结论资产详情查询完成风险判断资产详情查询完成查看字段证据详情来源资产详情查询完成",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 552
+      },
+      "tabTextLengths": {
+        "evidence": 218,
+        "structured": 104,
+        "runtime": 110,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "vulnerability_detail",
+      "prompt": "查看真实漏洞 ID 31094912c529449c87908f4cb2111842 的漏洞详情",
+      "runID": "run-client-1782607739803-cpwvxrfb",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "vulnerability_detail",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-full-shell.png",
+          "sizeBytes": 735570,
+          "createdAt": "2026-06-28T09:55:29.442Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-sidebar.png",
+          "sizeBytes": 48740,
+          "createdAt": "2026-06-28T09:55:29.490Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:29.534Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-main-chat.png",
+          "sizeBytes": 275618,
+          "createdAt": "2026-06-28T09:55:29.603Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-composer.png",
+          "sizeBytes": 33518,
+          "createdAt": "2026-06-28T09:55:29.642Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-narrative-link-result.png",
+          "sizeBytes": 276394,
+          "createdAt": "2026-06-28T09:55:29.920Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-inspector-evidence.png",
+          "sizeBytes": 275207,
+          "createdAt": "2026-06-28T09:55:30.007Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-inspector-structured.png",
+          "sizeBytes": 162637,
+          "createdAt": "2026-06-28T09:55:30.083Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-inspector-runtime.png",
+          "sizeBytes": 157563,
+          "createdAt": "2026-06-28T09:55:30.149Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-inspector-audit.png",
+          "sizeBytes": 93269,
+          "createdAt": "2026-06-28T09:55:30.207Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_detail",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_detail-evidence-row-detail.png",
+          "sizeBytes": 275207,
+          "createdAt": "2026-06-28T09:55:30.287Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询漏洞详情成功亿赛通电子文档安全管理系统（简称：CDG）是一款电子文档安全加密软件，该系统利用驱动层透明加密技术，通过对电子文档的加密保护，防止内部员工泄密和外部人员非法窃取企业核心重要数据资产，对电子文档进行全生命周期防护，系统具有透明加密、主动加密、智能加密等多种加密方式，用户可根据部门涉密程度的不同（如核心部门和普通部门），部署力度轻重不一的梯度式文档加密防护，实现技术、管理、审计进行有机的结合，在内部构建起立体化的整体信息防泄露体系，使得成本、效率和安全三者达到平衡，实现电子文档的数据安全。 亿赛通电子文档安全管理系统存在代码执行漏洞，攻击者可通过该漏洞在服务器端任意执行代码，写入后门，获取服务器权限，进而控制整个 web 服务器。漏洞详情确认已返回漏洞级别、状态和影响范围，可继续定位资产或推进修复。关键结论亿赛通电子文档安全管理系统（简称：CDG）是一款电子文档安全加密软件，该系统利用驱动层透明加密技术，通过对电子文档的加密保护，防止内部员工泄密和外部人员非法窃取企业核心重要数据资产，对电...风险判断亿赛通电子文档安全管理系统（简称：CDG）是一款电子文档安全加密软件，",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 2328
+      },
+      "tabTextLengths": {
+        "evidence": 1062,
+        "structured": 459,
+        "runtime": 419,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "business_risk_summary",
+      "prompt": "汇总A测试业务系统的业务风险",
+      "runID": "run-client-1782607752728-o19ngqoc",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "business_risk_summary",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-full-shell.png",
+          "sizeBytes": 355102,
+          "createdAt": "2026-06-28T09:55:31.073Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-sidebar.png",
+          "sizeBytes": 48733,
+          "createdAt": "2026-06-28T09:55:31.124Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:31.166Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-main-chat.png",
+          "sizeBytes": 111625,
+          "createdAt": "2026-06-28T09:55:31.220Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:31.268Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-narrative-link-result.png",
+          "sizeBytes": 98414,
+          "createdAt": "2026-06-28T09:55:31.572Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-inspector-evidence.png",
+          "sizeBytes": 95397,
+          "createdAt": "2026-06-28T09:55:31.647Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-inspector-structured.png",
+          "sizeBytes": 62218,
+          "createdAt": "2026-06-28T09:55:31.707Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-inspector-runtime.png",
+          "sizeBytes": 73364,
+          "createdAt": "2026-06-28T09:55:31.783Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-inspector-audit.png",
+          "sizeBytes": 81984,
+          "createdAt": "2026-06-28T09:55:31.851Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_risk_summary",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_risk_summary-evidence-row-detail.png",
+          "sizeBytes": 95397,
+          "createdAt": "2026-06-28T09:55:31.923Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓汇总业务风险成功fobrain statistics completed业务风险统计fobrain statistics completed统计结果fobrain statistics completed风险判断fobrain statistics completed查看统计证据统计来源fobrain statistics completed",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 610
+      },
+      "tabTextLengths": {
+        "evidence": 215,
+        "structured": 38,
+        "runtime": 130,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "business_list",
+      "prompt": "查询业务系统列表",
+      "runID": "run-client-1782607761561-3ys339zi",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "business_list",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-full-shell.png",
+          "sizeBytes": 384230,
+          "createdAt": "2026-06-28T09:55:32.714Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-sidebar.png",
+          "sizeBytes": 48731,
+          "createdAt": "2026-06-28T09:55:32.762Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:32.800Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-main-chat.png",
+          "sizeBytes": 112360,
+          "createdAt": "2026-06-28T09:55:32.857Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:32.902Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-narrative-link-result.png",
+          "sizeBytes": 123652,
+          "createdAt": "2026-06-28T09:55:33.167Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-inspector-evidence.png",
+          "sizeBytes": 123710,
+          "createdAt": "2026-06-28T09:55:33.233Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-inspector-structured.png",
+          "sizeBytes": 78332,
+          "createdAt": "2026-06-28T09:55:33.301Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-inspector-runtime.png",
+          "sizeBytes": 72424,
+          "createdAt": "2026-06-28T09:55:33.367Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-inspector-audit.png",
+          "sizeBytes": 81597,
+          "createdAt": "2026-06-28T09:55:33.437Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "business_list",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-business_list-evidence-row-detail.png",
+          "sizeBytes": 123701,
+          "createdAt": "2026-06-28T09:55:33.693Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询业务系统成功共发现 5 个业务系统业务系统风险检索共发现 5 个业务系统业务系统范围共发现 5 个业务系统风险判断已返回业务系统证据，可继续结合业务影响判断优先级。查看证据明细业务系统列表结果来源共发现 5 个业务系统",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 5,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:business_system:business-fobrain-ref-895ea353d8f2",
+              "row:business_system:business-fobrain-ref-871330b21219",
+              "row:business_system:business-fobrain-ref-bbea691ed85f",
+              "row:business_system:business-fobrain-ref-e315a258d88f",
+              "row:business_system:business-fobrain-ref-1a5df32152f4"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 627
+      },
+      "tabTextLengths": {
+        "evidence": 279,
+        "structured": 121,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:business_system:business-fobrain-ref-895ea353d8f2",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "LG08-33-STLG08-33-ST业务名称LG08-33-ST负责人董秀坤来源Fobrain 业务中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "external_high_risk_assets",
+      "prompt": "查外网严重资产",
+      "runID": "run-client-1782607771436-4phb78ha",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-full-shell.png",
+          "sizeBytes": 345175,
+          "createdAt": "2026-06-28T09:55:34.498Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-sidebar.png",
+          "sizeBytes": 48731,
+          "createdAt": "2026-06-28T09:55:34.550Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:34.593Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-main-chat.png",
+          "sizeBytes": 98843,
+          "createdAt": "2026-06-28T09:55:34.649Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:34.693Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-narrative-link-result.png",
+          "sizeBytes": 104269,
+          "createdAt": "2026-06-28T09:55:34.980Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-inspector-evidence.png",
+          "sizeBytes": 101532,
+          "createdAt": "2026-06-28T09:55:35.042Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-inspector-structured.png",
+          "sizeBytes": 63849,
+          "createdAt": "2026-06-28T09:55:35.114Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-inspector-runtime.png",
+          "sizeBytes": 73259,
+          "createdAt": "2026-06-28T09:55:35.180Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-inspector-audit.png",
+          "sizeBytes": 80764,
+          "createdAt": "2026-06-28T09:55:35.259Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "external_high_risk_assets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-external_high_risk_assets-evidence-row-detail.png",
+          "sizeBytes": 101532,
+          "createdAt": "2026-06-28T09:55:35.320Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询外部高风险资产成功共发现 0 个资产资产风险检索共发现 0 个资产资产范围共发现 0 个资产风险判断当前结果未发现需要立即处理的资产。查看证据明细资产列表结果来源共发现 0 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 432
+      },
+      "tabTextLengths": {
+        "evidence": 165,
+        "structured": 42,
+        "runtime": 117,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "threat_relevance_list",
+      "prompt": "查亿赛通电子文档安全管理系统 UploadFileListServiceForClient 接口远程代码执行漏洞相关威胁资产",
+      "runID": "run-client-1782607781294-mn3kp4zi",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "threat_relevance_list",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-full-shell.png",
+          "sizeBytes": 372479,
+          "createdAt": "2026-06-28T09:55:36.084Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-sidebar.png",
+          "sizeBytes": 48733,
+          "createdAt": "2026-06-28T09:55:36.128Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:36.166Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-main-chat.png",
+          "sizeBytes": 126515,
+          "createdAt": "2026-06-28T09:55:36.225Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:36.266Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-narrative-link-result.png",
+          "sizeBytes": 102502,
+          "createdAt": "2026-06-28T09:55:36.547Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-inspector-evidence.png",
+          "sizeBytes": 99474,
+          "createdAt": "2026-06-28T09:55:36.621Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-inspector-structured.png",
+          "sizeBytes": 61052,
+          "createdAt": "2026-06-28T09:55:36.683Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-inspector-runtime.png",
+          "sizeBytes": 73047,
+          "createdAt": "2026-06-28T09:55:36.749Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-inspector-audit.png",
+          "sizeBytes": 80169,
+          "createdAt": "2026-06-28T09:55:36.815Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "threat_relevance_list",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-threat_relevance_list-evidence-row-detail.png",
+          "sizeBytes": 99474,
+          "createdAt": "2026-06-28T09:55:36.889Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询威胁关联资产成功共发现 0 个漏洞漏洞风险检索共发现 0 个漏洞漏洞范围共发现 0 个漏洞风险判断当前结果未发现需要立即处理的漏洞。查看证据明细漏洞列表结果来源共发现 0 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 547
+      },
+      "tabTextLengths": {
+        "evidence": 158,
+        "structured": 38,
+        "runtime": 115,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "vulnerability_status_summary",
+      "prompt": "汇总漏洞状态",
+      "runID": "run-client-1782607793186-8hrzd8xq",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-full-shell.png",
+          "sizeBytes": 356101,
+          "createdAt": "2026-06-28T09:55:37.709Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-sidebar.png",
+          "sizeBytes": 48733,
+          "createdAt": "2026-06-28T09:55:37.757Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:37.807Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-main-chat.png",
+          "sizeBytes": 110447,
+          "createdAt": "2026-06-28T09:55:37.868Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:37.909Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-narrative-link-result.png",
+          "sizeBytes": 103434,
+          "createdAt": "2026-06-28T09:55:38.199Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-inspector-evidence.png",
+          "sizeBytes": 100390,
+          "createdAt": "2026-06-28T09:55:38.282Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-inspector-structured.png",
+          "sizeBytes": 62218,
+          "createdAt": "2026-06-28T09:55:38.340Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-inspector-runtime.png",
+          "sizeBytes": 73906,
+          "createdAt": "2026-06-28T09:55:38.401Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-inspector-audit.png",
+          "sizeBytes": 82137,
+          "createdAt": "2026-06-28T09:55:38.468Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vulnerability_status_summary",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vulnerability_status_summary-evidence-row-detail.png",
+          "sizeBytes": 100390,
+          "createdAt": "2026-06-28T09:55:38.537Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓汇总漏洞状态成功fobrain statistics completed漏洞状态统计fobrain statistics completed待修复待修复：26复测通过复测通过：481新增新增：816风险判断fobrain statistics completed查看统计证据统计来源fobrain statistics completed",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 600
+      },
+      "tabTextLengths": {
+        "evidence": 229,
+        "structured": 38,
+        "runtime": 130,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "pending_tickets",
+      "prompt": "查询待处理漏洞工单",
+      "runID": "run-client-1782607803019-5jsdnv3x",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "pending_tickets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-full-shell.png",
+          "sizeBytes": 353208,
+          "createdAt": "2026-06-28T09:55:39.331Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-sidebar.png",
+          "sizeBytes": 48751,
+          "createdAt": "2026-06-28T09:55:39.382Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:39.427Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-main-chat.png",
+          "sizeBytes": 99129,
+          "createdAt": "2026-06-28T09:55:39.482Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:39.526Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-narrative-link-result.png",
+          "sizeBytes": 108370,
+          "createdAt": "2026-06-28T09:55:39.794Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-inspector-evidence.png",
+          "sizeBytes": 108273,
+          "createdAt": "2026-06-28T09:55:39.870Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-inspector-structured.png",
+          "sizeBytes": 66233,
+          "createdAt": "2026-06-28T09:55:39.943Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-inspector-runtime.png",
+          "sizeBytes": 71516,
+          "createdAt": "2026-06-28T09:55:40.011Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-inspector-audit.png",
+          "sizeBytes": 81927,
+          "createdAt": "2026-06-28T09:55:40.076Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "pending_tickets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-pending_tickets-evidence-row-detail.png",
+          "sizeBytes": 108291,
+          "createdAt": "2026-06-28T09:55:40.336Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询待处理工单成功共发现 1 个工单工单处理检索共发现 1 个工单工单范围共发现 1 个工单风险判断已返回工单证据，可继续结合业务影响判断优先级。查看证据明细工单列表结果来源共发现 1 个工单",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 1,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:ticket:ticket-fobrain-redacted"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 540
+      },
+      "tabTextLengths": {
+        "evidence": 261,
+        "structured": 83,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:ticket:ticket-fobrain-redacted",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "ticket:fobrain:redactedfobrain pending ticket摘要fobrain pending ticket来源Fobrain 工单中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "ip_stats",
+      "prompt": "统计 IP 资产情况",
+      "runID": "run-client-1782607811861-wq6skmpe",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "ip_stats",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-full-shell.png",
+          "sizeBytes": 361055,
+          "createdAt": "2026-06-28T09:55:41.139Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-sidebar.png",
+          "sizeBytes": 48752,
+          "createdAt": "2026-06-28T09:55:41.191Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:41.232Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-main-chat.png",
+          "sizeBytes": 108121,
+          "createdAt": "2026-06-28T09:55:41.293Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:41.335Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-narrative-link-result.png",
+          "sizeBytes": 106459,
+          "createdAt": "2026-06-28T09:55:41.612Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-inspector-evidence.png",
+          "sizeBytes": 106459,
+          "createdAt": "2026-06-28T09:55:41.697Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-inspector-structured.png",
+          "sizeBytes": 62218,
+          "createdAt": "2026-06-28T09:55:41.756Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-inspector-runtime.png",
+          "sizeBytes": 72159,
+          "createdAt": "2026-06-28T09:55:41.823Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-inspector-audit.png",
+          "sizeBytes": 82292,
+          "createdAt": "2026-06-28T09:55:41.890Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "ip_stats",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-ip_stats-evidence-row-detail.png",
+          "sizeBytes": 106459,
+          "createdAt": "2026-06-28T09:55:41.981Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓统计 IP 资产成功fobrain statistics completedIP 资产统计fobrain statistics completedstatusstatus：0statusstatus：0statusstatus：0风险判断fobrain statistics completed查看统计证据统计来源fobrain statistics completed",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 5207
+      },
+      "tabTextLengths": {
+        "evidence": 4817,
+        "structured": 38,
+        "runtime": 134,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "vul_stats",
+      "prompt": "统计漏洞情况",
+      "runID": "run-client-1782607827811-z2fatfsq",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "vul_stats",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-full-shell.png",
+          "sizeBytes": 369627,
+          "createdAt": "2026-06-28T09:55:42.803Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-sidebar.png",
+          "sizeBytes": 48752,
+          "createdAt": "2026-06-28T09:55:42.848Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:42.892Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-main-chat.png",
+          "sizeBytes": 116139,
+          "createdAt": "2026-06-28T09:55:42.951Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:42.991Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-narrative-link-result.png",
+          "sizeBytes": 107280,
+          "createdAt": "2026-06-28T09:55:43.259Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-inspector-evidence.png",
+          "sizeBytes": 107280,
+          "createdAt": "2026-06-28T09:55:43.350Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-inspector-structured.png",
+          "sizeBytes": 62218,
+          "createdAt": "2026-06-28T09:55:43.409Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-inspector-runtime.png",
+          "sizeBytes": 73601,
+          "createdAt": "2026-06-28T09:55:43.483Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-inspector-audit.png",
+          "sizeBytes": 82089,
+          "createdAt": "2026-06-28T09:55:43.551Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "vul_stats",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-vul_stats-evidence-row-detail.png",
+          "sizeBytes": 107280,
+          "createdAt": "2026-06-28T09:55:43.637Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓统计漏洞情况成功fobrain statistics completed漏洞统计fobrain statistics completedstatusstatus：0statusstatus：0statusstatus：0风险判断fobrain statistics completed查看统计证据统计来源fobrain statistics completed",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 4679
+      },
+      "tabTextLengths": {
+        "evidence": 4276,
+        "structured": 38,
+        "runtime": 130,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_assets",
+      "prompt": "我的资产有哪些",
+      "runID": "run-client-1782607844811-bcpyq0kc",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_assets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-full-shell.png",
+          "sizeBytes": 438727,
+          "createdAt": "2026-06-28T09:55:44.477Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-sidebar.png",
+          "sizeBytes": 48753,
+          "createdAt": "2026-06-28T09:55:44.524Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:44.567Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-main-chat.png",
+          "sizeBytes": 114012,
+          "createdAt": "2026-06-28T09:55:44.626Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:44.668Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-narrative-link-result.png",
+          "sizeBytes": 145395,
+          "createdAt": "2026-06-28T09:55:44.944Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-inspector-evidence.png",
+          "sizeBytes": 145790,
+          "createdAt": "2026-06-28T09:55:45.023Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-inspector-structured.png",
+          "sizeBytes": 82074,
+          "createdAt": "2026-06-28T09:55:45.083Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-inspector-runtime.png",
+          "sizeBytes": 71675,
+          "createdAt": "2026-06-28T09:55:45.148Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-inspector-audit.png",
+          "sizeBytes": 81645,
+          "createdAt": "2026-06-28T09:55:45.215Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_assets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_assets-evidence-row-detail.png",
+          "sizeBytes": 145580,
+          "createdAt": "2026-06-28T09:55:45.474Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询我的资产成功共发现 5 个资产资产风险检索共发现 5 个资产资产范围共发现 5 个资产风险判断已返回资产证据，可继续结合业务影响判断优先级。查看证据明细资产列表结果来源共发现 5 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 5,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:asset:asset-fobrain-ref-4c7e51241b6c",
+              "row:asset:asset-fobrain-ref-bcc9c3f752da",
+              "row:asset:asset-fobrain-ref-5bd33ab2262d",
+              "row:asset:asset-fobrain-ref-6ce4b16a9c2e",
+              "row:asset:asset-fobrain-ref-522d13ef07ac"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 6351
+      },
+      "tabTextLengths": {
+        "evidence": 5979,
+        "structured": 2077,
+        "runtime": 111,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:asset:asset-fobrain-ref-4c7e51241b6c",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "10.10.10.200_主机,softappBOCI-TOUCHANlinux0,softappBOCI-TOUCHANlinux1,softappBOCI-TOUCHANlinux2,softappBOCI-TOUCHANlinux3,softappBOCI-TOUCHANlinux4,softappBOCI-TOUCHANlinux5,softappBOCI-TOUCHANlinux6,softappBOCI-TOUCHANlinux7,softappBOCI-TOUCHANlinux8,softappBOCI-TOUCHANlinux9,softappBOCI-TOUCHANlinux"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_department_assets",
+      "prompt": "查我部门资产",
+      "runID": "run-client-1782607853636-9m4i6cqd",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_department_assets",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-full-shell.png",
+          "sizeBytes": 424819,
+          "createdAt": "2026-06-28T09:55:46.263Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-sidebar.png",
+          "sizeBytes": 48751,
+          "createdAt": "2026-06-28T09:55:46.315Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:46.359Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-main-chat.png",
+          "sizeBytes": 108990,
+          "createdAt": "2026-06-28T09:55:46.411Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:46.450Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-narrative-link-result.png",
+          "sizeBytes": 135946,
+          "createdAt": "2026-06-28T09:55:46.729Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-inspector-evidence.png",
+          "sizeBytes": 136257,
+          "createdAt": "2026-06-28T09:55:46.807Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-inspector-structured.png",
+          "sizeBytes": 69840,
+          "createdAt": "2026-06-28T09:55:46.875Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-inspector-runtime.png",
+          "sizeBytes": 71826,
+          "createdAt": "2026-06-28T09:55:46.949Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-inspector-audit.png",
+          "sizeBytes": 81370,
+          "createdAt": "2026-06-28T09:55:47.025Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_assets",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_assets-evidence-row-detail.png",
+          "sizeBytes": 136038,
+          "createdAt": "2026-06-28T09:55:47.289Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询本部门资产成功共发现 1 个资产资产风险检索共发现 1 个资产资产范围共发现 1 个资产风险判断已返回资产证据，可继续结合业务影响判断优先级。查看证据明细资产列表结果来源共发现 1 个资产",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 1,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:asset:asset-fobrain-ref-4c7e51241b6c"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 6211
+      },
+      "tabTextLengths": {
+        "evidence": 5872,
+        "structured": 1967,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:asset:asset-fobrain-ref-4c7e51241b6c",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "10.10.10.200_主机,softappBOCI-TOUCHANlinux0,softappBOCI-TOUCHANlinux1,softappBOCI-TOUCHANlinux2,softappBOCI-TOUCHANlinux3,softappBOCI-TOUCHANlinux4,softappBOCI-TOUCHANlinux5,softappBOCI-TOUCHANlinux6,softappBOCI-TOUCHANlinux7,softappBOCI-TOUCHANlinux8,softappBOCI-TOUCHANlinux9,softappBOCI-TOUCHANlinux"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_vulnerabilities",
+      "prompt": "我的漏洞有哪些",
+      "runID": "run-client-1782607864528-m6yuisy6",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-full-shell.png",
+          "sizeBytes": 433825,
+          "createdAt": "2026-06-28T09:55:48.160Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-sidebar.png",
+          "sizeBytes": 48666,
+          "createdAt": "2026-06-28T09:55:48.215Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:48.259Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-main-chat.png",
+          "sizeBytes": 130693,
+          "createdAt": "2026-06-28T09:55:48.315Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:48.357Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-narrative-link-result.png",
+          "sizeBytes": 150765,
+          "createdAt": "2026-06-28T09:55:48.624Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-inspector-evidence.png",
+          "sizeBytes": 150592,
+          "createdAt": "2026-06-28T09:55:48.700Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-inspector-structured.png",
+          "sizeBytes": 88405,
+          "createdAt": "2026-06-28T09:55:48.760Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-inspector-runtime.png",
+          "sizeBytes": 71618,
+          "createdAt": "2026-06-28T09:55:48.828Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-inspector-audit.png",
+          "sizeBytes": 81652,
+          "createdAt": "2026-06-28T09:55:48.895Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_vulnerabilities",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_vulnerabilities-evidence-row-detail.png",
+          "sizeBytes": 150630,
+          "createdAt": "2026-06-28T09:55:49.162Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询我的漏洞成功共发现 5 个漏洞漏洞风险检索共发现 5 个漏洞漏洞范围共发现 5 个漏洞风险判断存在需要继续确认和处理的漏洞。查看证据明细漏洞列表结果来源共发现 5 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 5,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:vulnerability:vuln-fobrain-ref-fdc26a9266c3",
+              "row:vulnerability:vuln-fobrain-ref-604b3614744c",
+              "row:vulnerability:vuln-fobrain-ref-e58b189e64d9",
+              "row:vulnerability:vuln-fobrain-ref-282aca0dfb25",
+              "row:vulnerability:vuln-fobrain-ref-734bd247e1fd"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 993
+      },
+      "tabTextLengths": {
+        "evidence": 577,
+        "structured": 237,
+        "runtime": 111,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:vulnerability:vuln-fobrain-ref-fdc26a9266c3",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "Harbor [redacted-id] 文件权限绕过漏洞（CVE-2019-16097）Harbor是一款开源的可信云本机注册表。该产品主要用于存储、签名和扫描容器映像以查找漏洞。 Harbor 1.7.0版本至1.8.2版本中的core/api/user.go文件存在权限许可和访问控制问题漏洞。攻击者可利用该漏洞创建admin账户来接管 Harbor 存储库。漏洞名称Harbor [redacted-id] 文件权限绕过漏洞（CVE-2019-16097）级别未标注状态未修复来源Fobrain 漏洞中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_department_vulnerabilities",
+      "prompt": "查我部门漏洞",
+      "runID": "run-client-1782607879461-sllfb13k",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-full-shell.png",
+          "sizeBytes": 396222,
+          "createdAt": "2026-06-28T09:55:49.978Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-sidebar.png",
+          "sizeBytes": 48664,
+          "createdAt": "2026-06-28T09:55:50.033Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:50.077Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-main-chat.png",
+          "sizeBytes": 107117,
+          "createdAt": "2026-06-28T09:55:50.132Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:50.177Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-narrative-link-result.png",
+          "sizeBytes": 137436,
+          "createdAt": "2026-06-28T09:55:50.437Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-inspector-evidence.png",
+          "sizeBytes": 137259,
+          "createdAt": "2026-06-28T09:55:50.510Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-inspector-structured.png",
+          "sizeBytes": 68856,
+          "createdAt": "2026-06-28T09:55:50.576Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-inspector-runtime.png",
+          "sizeBytes": 71570,
+          "createdAt": "2026-06-28T09:55:50.648Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-inspector-audit.png",
+          "sizeBytes": 81413,
+          "createdAt": "2026-06-28T09:55:50.716Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_department_vulnerabilities",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_department_vulnerabilities-evidence-row-detail.png",
+          "sizeBytes": 137302,
+          "createdAt": "2026-06-28T09:55:50.975Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询本部门漏洞成功共发现 1 个漏洞漏洞风险检索共发现 1 个漏洞漏洞范围共发现 1 个漏洞风险判断存在需要继续确认和处理的漏洞。查看证据明细漏洞列表结果来源共发现 1 个漏洞",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 1,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:vulnerability:vuln-fobrain-ref-fdc26a9266c3"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 768
+      },
+      "tabTextLengths": {
+        "evidence": 456,
+        "structured": 113,
+        "runtime": 113,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:vulnerability:vuln-fobrain-ref-fdc26a9266c3",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "Harbor [redacted-id] 文件权限绕过漏洞（CVE-2019-16097）Harbor是一款开源的可信云本机注册表。该产品主要用于存储、签名和扫描容器映像以查找漏洞。 Harbor 1.7.0版本至1.8.2版本中的core/api/user.go文件存在权限许可和访问控制问题漏洞。攻击者可利用该漏洞创建admin账户来接管 Harbor 存储库。漏洞名称Harbor [redacted-id] 文件权限绕过漏洞（CVE-2019-16097）级别未标注状态未修复来源Fobrain 漏洞中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_business_systems",
+      "prompt": "查我的业务系统",
+      "runID": "run-client-1782607898093-dmw2vgaw",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_business_systems",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-full-shell.png",
+          "sizeBytes": 387142,
+          "createdAt": "2026-06-28T09:55:51.774Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-sidebar.png",
+          "sizeBytes": 48664,
+          "createdAt": "2026-06-28T09:55:51.824Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:51.866Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-main-chat.png",
+          "sizeBytes": 113633,
+          "createdAt": "2026-06-28T09:55:51.921Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:51.970Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-narrative-link-result.png",
+          "sizeBytes": 125433,
+          "createdAt": "2026-06-28T09:55:52.245Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-inspector-evidence.png",
+          "sizeBytes": 125492,
+          "createdAt": "2026-06-28T09:55:52.326Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-inspector-structured.png",
+          "sizeBytes": 78332,
+          "createdAt": "2026-06-28T09:55:52.397Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-inspector-runtime.png",
+          "sizeBytes": 73509,
+          "createdAt": "2026-06-28T09:55:52.466Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-inspector-audit.png",
+          "sizeBytes": 80861,
+          "createdAt": "2026-06-28T09:55:52.535Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_business_systems",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_business_systems-evidence-row-detail.png",
+          "sizeBytes": 125482,
+          "createdAt": "2026-06-28T09:55:52.795Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询我的业务系统成功共发现 5 个业务系统业务系统风险检索共发现 5 个业务系统业务系统范围共发现 5 个业务系统风险判断已返回业务系统证据，可继续结合业务影响判断优先级。查看证据明细业务系统列表结果来源共发现 5 个业务系统",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 5,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:business_system:business-fobrain-ref-895ea353d8f2",
+              "row:business_system:business-fobrain-ref-871330b21219",
+              "row:business_system:business-fobrain-ref-bbea691ed85f",
+              "row:business_system:business-fobrain-ref-e315a258d88f",
+              "row:business_system:business-fobrain-ref-1a5df32152f4"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 640
+      },
+      "tabTextLengths": {
+        "evidence": 285,
+        "structured": 121,
+        "runtime": 117,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:business_system:business-fobrain-ref-895ea353d8f2",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "LG08-33-STLG08-33-ST业务名称LG08-33-ST负责人董秀坤来源Fobrain 业务中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "my_important_business_systems",
+      "prompt": "查我的重要业务系统",
+      "runID": "run-client-1782607909936-p46sgqfn",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "my_important_business_systems",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-full-shell.png",
+          "sizeBytes": 366698,
+          "createdAt": "2026-06-28T09:55:53.609Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-sidebar.png",
+          "sizeBytes": 48664,
+          "createdAt": "2026-06-28T09:55:53.658Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:53.701Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-main-chat.png",
+          "sizeBytes": 105720,
+          "createdAt": "2026-06-28T09:55:53.757Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:53.799Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-narrative-link-result.png",
+          "sizeBytes": 113507,
+          "createdAt": "2026-06-28T09:55:54.069Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-inspector-evidence.png",
+          "sizeBytes": 113453,
+          "createdAt": "2026-06-28T09:55:54.147Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-inspector-structured.png",
+          "sizeBytes": 65545,
+          "createdAt": "2026-06-28T09:55:54.218Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-inspector-runtime.png",
+          "sizeBytes": 74623,
+          "createdAt": "2026-06-28T09:55:54.284Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-inspector-audit.png",
+          "sizeBytes": 81747,
+          "createdAt": "2026-06-28T09:55:54.351Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "my_important_business_systems",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-my_important_business_systems-evidence-row-detail.png",
+          "sizeBytes": 113464,
+          "createdAt": "2026-06-28T09:55:54.610Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓查询我的重要业务系统成功共发现 1 个业务系统业务系统风险检索共发现 1 个业务系统业务系统范围共发现 1 个业务系统风险判断已返回业务系统证据，可继续结合业务影响判断优先级。查看证据明细业务系统列表结果来源共发现 1 个业务系统",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 3
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "structured-result-table",
+            "rowCount": 1,
+            "selectedCount": 1,
+            "rowRefs": [
+              "row:business_system:business-fobrain-redacted"
+            ]
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 538
+      },
+      "tabTextLengths": {
+        "evidence": 243,
+        "structured": 63,
+        "runtime": 121,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": true,
+        "rowRef": "row:business_system:business-fobrain-redacted",
+        "selected": true,
+        "detailChangedOrPresent": true,
+        "detailSample": "business:fobrain:redactedbusiness:fobrain:redacted来源Fobrain 业务中心系统来源"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 1,
+        "flashedTable": 0,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    },
+    {
+      "id": "fobrain_connector_status",
+      "prompt": "检查 Fobrain 安全连接器是否可用",
+      "runID": "run-client-1782607919761-24gup6bm",
+      "workspaceID": "ws-agent-chat",
+      "screenshots": [
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "full-shell",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-full-shell.png",
+          "sizeBytes": 390366,
+          "createdAt": "2026-06-28T09:55:55.396Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "sidebar",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-sidebar.png",
+          "sizeBytes": 48665,
+          "createdAt": "2026-06-28T09:55:55.444Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "header",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-header.png",
+          "sizeBytes": 33326,
+          "createdAt": "2026-06-28T09:55:55.482Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "main-chat",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-main-chat.png",
+          "sizeBytes": 118811,
+          "createdAt": "2026-06-28T09:55:55.541Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "composer",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-composer.png",
+          "sizeBytes": 32027,
+          "createdAt": "2026-06-28T09:55:55.583Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "narrative-link-result",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-narrative-link-result.png",
+          "sizeBytes": 126030,
+          "createdAt": "2026-06-28T09:55:55.865Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "inspector-evidence",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-inspector-evidence.png",
+          "sizeBytes": 123359,
+          "createdAt": "2026-06-28T09:55:55.934Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "inspector-structured",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-inspector-structured.png",
+          "sizeBytes": 74387,
+          "createdAt": "2026-06-28T09:55:55.998Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "inspector-runtime",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-inspector-runtime.png",
+          "sizeBytes": 78598,
+          "createdAt": "2026-06-28T09:55:56.057Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "inspector-audit",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-inspector-audit.png",
+          "sizeBytes": 83875,
+          "createdAt": "2026-06-28T09:55:56.132Z",
+          "provenance": "real_conversation_replay_ui"
+        },
+        {
+          "scenario": "fobrain_connector_status",
+          "region": "evidence-row-detail",
+          "path": "test-results/workbench-ui-rewrite/17-full-scenario-acceptance/screenshots/workbench-full-scenario-1782640513029-fobrain_connector_status-evidence-row-detail.png",
+          "sizeBytes": 123359,
+          "createdAt": "2026-06-28T09:55:56.201Z",
+          "provenance": "real_conversation_replay_ui"
+        }
+      ],
+      "dom": {
+        "shellVisible": true,
+        "regions": {
+          "sidebar": true,
+          "header": true,
+          "messages": true,
+          "inspector": true,
+          "composer": true
+        },
+        "forbiddenOldUI": false,
+        "visibleLeaks": [],
+        "tabs": [
+          {
+            "id": "evidence",
+            "text": "证据链",
+            "active": true
+          },
+          {
+            "id": "structured",
+            "text": "结构化结果",
+            "active": false
+          },
+          {
+            "id": "runtime",
+            "text": "运行详情",
+            "active": false
+          },
+          {
+            "id": "audit",
+            "text": "审计",
+            "active": false
+          }
+        ],
+        "missingTabs": [],
+        "messageCounts": {
+          "user": 1,
+          "assistant": 1,
+          "toolGroup": 1,
+          "narrative": 1,
+          "inspectorNarrative": 1
+        },
+        "toolGroups": [
+          {
+            "id": "tool-group-single_tool",
+            "status": "completed",
+            "statusLabel": "成功",
+            "text": "✓检查安全连接器成功连接状态正常；绑定状态：已绑定；Fobrain 连接器已配置连接状态确认连接器状态决定后续工具是否可以读取真实安全数据。关键结论连接状态正常；绑定状态：已绑定；Fobrain 连接器已配置风险判断连接状态正常；绑定状态：已绑定；Fobrain 连接器已配置查看字段证据详情来源连接状态正常；绑定状态：已绑定；Fobrain 连接器已配置",
+            "narrativeCount": 1,
+            "narrativeLinkCount": 2
+          }
+        ],
+        "evidenceTables": [
+          {
+            "tableID": "",
+            "rowCount": 0,
+            "selectedCount": 0,
+            "rowRefs": []
+          }
+        ],
+        "overflowCandidates": [],
+        "visibleTextLength": 649
+      },
+      "tabTextLengths": {
+        "evidence": 263,
+        "structured": 83,
+        "runtime": 134,
+        "audit": 352
+      },
+      "rowInteraction": {
+        "exercised": false,
+        "reason": "no evidence row"
+      },
+      "narrativeLink": {
+        "exercised": true,
+        "rowRef": null,
+        "targetRef": "table:structured-result-table",
+        "tableID": null,
+        "activeEvidence": true,
+        "selectedRows": 0,
+        "flashedTable": 1,
+        "matchedRow": true
+      },
+      "checks": {
+        "sourceReportPassed": true,
+        "finalStateCompleted": true,
+        "allRegionsPresent": true,
+        "noOldUI": true,
+        "noVisibleLeaks": true,
+        "requiredTabsPresent": true,
+        "hasToolGroup": true,
+        "hasAssistant": true,
+        "hasNarrative": true,
+        "toolGroupsTerminal": true,
+        "inspectorTextPresent": true,
+        "evidenceRowInteractionOK": true,
+        "narrativeInteractionOK": true,
+        "noSevereOverflow": true,
+        "screenshotMatrixComplete": true
+      },
+      "failedChecks": [],
+      "verdict": "passed"
+    }
+  ]
+}

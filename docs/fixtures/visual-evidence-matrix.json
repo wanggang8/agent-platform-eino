@@ -9,49 +9,58 @@
       "block_id": "shell",
       "selector": "[data-testid=\"workbench-shell\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/shell"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/shell",
+      "target_crop_path": "docs/assets/legacy/workbench/task17-contact-sheets/full-shell.png",
+      "notes": "Desktop target from Task17 full-shell contact sheet; mobile target from final-ui-blocks/10-full-mobile.png."
     },
     {
       "block_id": "sidebar",
       "selector": "[data-testid=\"workspace-sidebar\"]",
       "required_viewports": ["desktop"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/sidebar"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/sidebar",
+      "target_crop_path": "docs/assets/legacy/workbench/task17-contact-sheets/sidebar.png"
     },
     {
       "block_id": "timeline",
       "selector": "[data-testid=\"chat-timeline\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/timeline"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/timeline",
+      "target_crop_path": "docs/assets/legacy/workbench/task17-contact-sheets/main-chat.png"
     },
     {
       "block_id": "composer",
       "selector": "[data-testid=\"chat-composer\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/composer"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/composer",
+      "target_crop_path": "docs/assets/legacy/workbench/task17-contact-sheets/composer.png"
     },
     {
       "block_id": "tool-card",
       "selector": "[data-testid=\"tool-card\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/tool-card"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/tool-card",
+      "target_crop_path": "docs/assets/legacy/workbench/final-ui-blocks/06-single-tool-card.png"
     },
     {
       "block_id": "approval-card",
       "selector": "[data-testid=\"approval-card\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/approval-card"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/approval-card",
+      "target_crop_path": "docs/assets/legacy/workbench/final-ui-blocks/06-approval-card.png"
     },
     {
       "block_id": "clarification-card",
       "selector": "[data-testid=\"clarification-card\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/clarification-card"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/clarification-card",
+      "target_crop_path": "docs/assets/legacy/workbench/final-ui-blocks/06b-clarification-card.png"
     },
     {
       "block_id": "inspector",
       "selector": "[data-testid=\"inspector\"]",
       "required_viewports": ["desktop", "mobile"],
-      "baseline_path": "web/eino-workbench/tests/__screenshots__/inspector"
+      "baseline_path": "web/eino-workbench/tests/__screenshots__/inspector",
+      "target_crop_path": "docs/assets/legacy/workbench/task17-contact-sheets/inspector-structured.png"
     }
   ],
   "states": [
@@ -60,56 +69,56 @@
       "fixture": "docs/fixtures/workbench-view-empty.json",
       "blocks": ["shell", "sidebar", "timeline", "composer", "inspector"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "chat",
       "fixture": "docs/fixtures/workbench-view-success.json",
       "blocks": ["shell", "timeline", "composer", "inspector"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "tool-collapsed",
       "fixture": "docs/fixtures/workbench-view-success.json",
       "blocks": ["timeline", "tool-card"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "tool-expanded",
       "fixture": "docs/fixtures/workbench-view-success.json",
       "blocks": ["timeline", "tool-card", "inspector"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "approval-waiting",
       "fixture": "docs/fixtures/action-result-waiting-approval.json",
       "blocks": ["timeline", "approval-card", "composer"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "clarification-waiting",
       "fixture": "docs/fixtures/action-result-waiting-clarification.json",
       "blocks": ["timeline", "clarification-card", "composer"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "failed",
       "fixture": "docs/fixtures/workbench-view-failed.json",
       "blocks": ["timeline", "tool-card", "inspector"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     },
     {
       "state_id": "inspector-tabs",
       "fixture": "docs/fixtures/workbench-view-success.json",
       "blocks": ["inspector"],
       "viewports": ["desktop", "mobile"],
-      "required_evidence": ["fixture_screenshot", "playwright_baseline", "manual_acceptance_record"]
+      "required_evidence": ["fixture_screenshot", "target_reference", "playwright_baseline", "manual_acceptance_record"]
     }
   ],
   "dynamic_masks": ["time", "run_id", "random_id", "model_latency", "token_count"]

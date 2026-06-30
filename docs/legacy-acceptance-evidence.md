@@ -45,6 +45,17 @@ Fobrain 工具矩阵的源报告为：
 /Users/vick/Desktop/project/ai-agent/test-results/workbench-ui-rewrite/17-full-scenario-acceptance/contact-sheets/
 ```
 
+Phase 2 已将最终视觉参考复制到新项目，后续前端开发优先引用本地副本：
+
+```text
+docs/assets/legacy/workbench/canonical/workbench-target-ui-v1-2026-06-26.png
+docs/assets/legacy/workbench/task15-contact-sheets/
+docs/assets/legacy/workbench/task15-target-crops/
+docs/assets/legacy/workbench/task17-contact-sheets/
+docs/assets/legacy/workbench/final-ui-blocks/
+docs/assets/legacy/workbench/reports/
+```
+
 新项目可以参考这些截图的信息层级、布局密度、状态覆盖和验收粒度，但不得复制旧 DOM、旧 CSS 类名、旧前端 presenter 分支或旧接口结构。
 
 ## 不作为最终通过证据

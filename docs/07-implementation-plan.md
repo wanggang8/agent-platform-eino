@@ -173,12 +173,26 @@ npm run eino-workbench:typecheck
 - `web/eino-workbench/vite.config.ts`
 - `web/eino-workbench/index.html`
 - `web/eino-workbench/src/main.tsx`
-- `web/eino-workbench/src/components/Shell.tsx`
-- `web/eino-workbench/src/components/Timeline.tsx`
-- `web/eino-workbench/src/components/Inspector.tsx`
-- `web/eino-workbench/src/components/Composer.tsx`
+- `web/eino-workbench/src/app/App.tsx`
+- `web/eino-workbench/src/app/router.tsx`
+- `web/eino-workbench/src/app/queryClient.ts`
+- `web/eino-workbench/src/fixtures/workbenchFixtures.ts`
+- `web/eino-workbench/src/features/workbench/api/workbenchQueries.ts`
+- `web/eino-workbench/src/features/workbench/state/useWorkbenchUiStore.ts`
+- `web/eino-workbench/src/features/workbench/views/WorkbenchPage.tsx`
+- `web/eino-workbench/src/features/workbench/components/*.tsx`
 - `web/eino-workbench/src/styles/*.css`
+- `web/eino-workbench/src/test/*.tsx`
+- `web/eino-workbench/tests/shell.spec.ts`
 - `docs/visual-acceptance-matrix.md`（补 selector 和状态覆盖）
+
+要求：
+
+- 只使用 `docs/fixtures/` 和 `src/contracts/generated.ts` 渲染 fixture-only Workbench。
+- Desktop 保持左侧会话、中间时间线、右侧 Inspector。
+- Mobile 优先主聊天和输入区，Inspector 通过 panel/tabs 进入。
+- 组件按 `timeline.kind`、`status`、`structured_result.display_type` 渲染，不得按 `tool_id` 或旧 DOM 分支。
+- TanStack Query 只读取 fixture/server state；Zustand 只保存 UI 选择、Inspector tab、卡片展开和 mobile panel。
 
 任务级检查：
 

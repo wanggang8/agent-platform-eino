@@ -14,8 +14,8 @@
     "eino-workbench:typecheck": "npm --workspace @agent-platform-eino/eino-workbench run typecheck",
     "eino-workbench:test": "npm --workspace @agent-platform-eino/eino-workbench run test",
     "eino-workbench:stream-test": "node scripts/eino_workbench_not_implemented.mjs stream-test Phase-3",
-    "eino-workbench:browser-test": "node scripts/eino_workbench_not_implemented.mjs browser-test Phase-2",
-    "eino-workbench:visual-test": "node scripts/eino_workbench_not_implemented.mjs visual-test Phase-2",
+    "eino-workbench:browser-test": "npm --workspace @agent-platform-eino/eino-workbench run browser-test --",
+    "eino-workbench:visual-test": "npm --workspace @agent-platform-eino/eino-workbench run visual-test --",
     "eino-workbench:build": "npm --workspace @agent-platform-eino/eino-workbench run build",
     "eino-workbench:send-smoke": "bash scripts/eino_workbench_server_smoke.sh --scenario contract"
   },

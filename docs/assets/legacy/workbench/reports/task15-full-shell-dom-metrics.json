@@ -1,0 +1,3985 @@
+{
+  "schema_version": "workbench_visual_task15_dom.v1",
+  "created_at": "2026-06-28T09:56:30.590Z",
+  "base_url": "http://127.0.0.1:8080",
+  "source_report": "test-results/workbench-real-model-tool-report.json",
+  "scenario_count": 25,
+  "full_shell_screenshot_count": 25,
+  "records": [
+    {
+      "id": "current_user_context",
+      "run_id": "run-client-1782607638963-lqkmmts4",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/current_user_context-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 270,
+        "shell_length": 674,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_permissions",
+      "run_id": "run-client-1782607649812-1mz9fg6i",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_permissions-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 292,
+        "shell_length": 696,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "assets_by_owner",
+      "run_id": "run-client-1782607666753-aa8p60fm",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/assets_by_owner-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 134,
+        "shell_length": 439,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "vulnerabilities_by_owner",
+      "run_id": "run-client-1782607676620-wq0sm0a4",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerabilities_by_owner-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 137,
+        "shell_length": 442,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "department_assets",
+      "run_id": "run-client-1782607686478-sl8kr3qf",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/department_assets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 176,
+        "shell_length": 506,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "department_vulnerabilities",
+      "run_id": "run-client-1782607697368-90jhv63r",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/department_vulnerabilities-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 196,
+        "shell_length": 526,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "ip_assets",
+      "run_id": "run-client-1782607708228-r9kn7goj",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_assets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 277,
+        "shell_length": 2723,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "ip_vulnerabilities",
+      "run_id": "run-client-1782607718068-db3x2c0v",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_vulnerabilities-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 219,
+        "shell_length": 1047,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "asset_detail",
+      "run_id": "run-client-1782607727945-cwwbsf8j",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/asset_detail-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 188,
+        "shell_length": 552,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "vulnerability_detail",
+      "run_id": "run-client-1782607739803-cpwvxrfb",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerability_detail-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 1120,
+        "shell_length": 2328,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "business_risk_summary",
+      "run_id": "run-client-1782607752728-o19ngqoc",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/business_risk_summary-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 249,
+        "shell_length": 610,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "business_list",
+      "run_id": "run-client-1782607761561-3ys339zi",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/business_list-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 202,
+        "shell_length": 627,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "external_high_risk_assets",
+      "run_id": "run-client-1782607771436-4phb78ha",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/external_high_risk_assets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 121,
+        "shell_length": 432,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "threat_relevance_list",
+      "run_id": "run-client-1782607781294-mn3kp4zi",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/threat_relevance_list-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 243,
+        "shell_length": 547,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "vulnerability_status_summary",
+      "run_id": "run-client-1782607793186-8hrzd8xq",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vulnerability_status_summary-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 225,
+        "shell_length": 600,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "pending_tickets",
+      "run_id": "run-client-1782607803019-5jsdnv3x",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/pending_tickets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 133,
+        "shell_length": 540,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "ip_stats",
+      "run_id": "run-client-1782607811861-wq6skmpe",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/ip_stats-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 244,
+        "shell_length": 5207,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "vul_stats",
+      "run_id": "run-client-1782607827811-z2fatfsq",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/vul_stats-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 257,
+        "shell_length": 4679,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_assets",
+      "run_id": "run-client-1782607844811-bcpyq0kc",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_assets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 226,
+        "shell_length": 6351,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_department_assets",
+      "run_id": "run-client-1782607853636-9m4i6cqd",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_department_assets-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 193,
+        "shell_length": 6211,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_vulnerabilities",
+      "run_id": "run-client-1782607864528-m6yuisy6",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_vulnerabilities-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 270,
+        "shell_length": 993,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_department_vulnerabilities",
+      "run_id": "run-client-1782607879461-sllfb13k",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_department_vulnerabilities-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 166,
+        "shell_length": 768,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_business_systems",
+      "run_id": "run-client-1782607898093-dmw2vgaw",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_business_systems-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 209,
+        "shell_length": 640,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "my_important_business_systems",
+      "run_id": "run-client-1782607909936-p46sgqfn",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/my_important_business_systems-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 149,
+        "shell_length": 538,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    },
+    {
+      "id": "fobrain_connector_status",
+      "run_id": "run-client-1782607919761-24gup6bm",
+      "workspace_id": "ws-agent-chat",
+      "screenshot": "test-results/workbench-ui-rewrite/15-visual-acceptance/full-shell/fobrain_connector_status-full-shell.png",
+      "verdict": "passed",
+      "final_state": "completed",
+      "report_checks": {
+        "fresh_replay": true,
+        "dom_order": true,
+        "tool_card": true,
+        "answer_quality": true,
+        "auxiliary": "passed",
+        "schema_presentation": "passed",
+        "leak_count": 0
+      },
+      "dom": {
+        "has_shell": true,
+        "viewport": {
+          "width": 1536,
+          "height": 1024
+        },
+        "boxes": {
+          "shell": {
+            "x": 0,
+            "y": 0,
+            "width": 1536,
+            "height": 1024
+          },
+          "sidebar": {
+            "x": 0,
+            "y": 0,
+            "width": 244,
+            "height": 1024
+          },
+          "header": {
+            "x": 244,
+            "y": 0,
+            "width": 1292,
+            "height": 77
+          },
+          "messages": {
+            "x": 244,
+            "y": 77,
+            "width": 680,
+            "height": 784
+          },
+          "inspector": {
+            "x": 924,
+            "y": 77,
+            "width": 612,
+            "height": 947
+          },
+          "composer": {
+            "x": 258,
+            "y": 861,
+            "width": 652,
+            "height": 152
+          },
+          "selected_conversation": {
+            "x": 7,
+            "y": 229,
+            "width": 230,
+            "height": 67
+          }
+        },
+        "styles": {
+          "shell": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "sidebar": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.24) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "header": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209) rgb(184, 200, 209) rgba(66, 91, 107, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "user_message": {
+            "color": "rgb(215, 229, 235)",
+            "backgroundColor": "rgba(28, 70, 112, 0.52)",
+            "borderColor": "rgba(84, 164, 255, 0.3)",
+            "fontSize": "12px",
+            "fontWeight": "520",
+            "borderRadius": "8px"
+          },
+          "assistant_message": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "12.5px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "tool_card": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(184, 200, 209)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "inspector": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.2) rgba(103, 126, 143, 0.22)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "0px"
+          },
+          "composer": {
+            "color": "rgb(184, 200, 209)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgba(81, 103, 119, 0.34)",
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "borderRadius": "8px"
+          },
+          "send_button": {
+            "color": "rgb(234, 255, 255)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "borderColor": "rgb(234, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "760",
+            "borderRadius": "6px"
+          }
+        },
+        "counts": {
+          "user_messages": 1,
+          "assistant_messages": 1,
+          "tool_groups": 1,
+          "approval_cards": 0,
+          "clarification_cards": 0,
+          "inspector_tabs": 4
+        },
+        "has_phone_preview": false,
+        "forbidden_visible": false,
+        "raw_html_marker_visible": false
+      },
+      "visible_text": {
+        "main_length": 240,
+        "shell_length": 649,
+        "prompt_visible": true,
+        "expected_tool_names_visible": true
+      }
+    }
+  ]
+}
