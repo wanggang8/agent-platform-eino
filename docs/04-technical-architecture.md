@@ -71,7 +71,7 @@ internal/einoapp/
 
 在实现 stream reducer、Eino chat、Action API 或业务 provider 前，必须先完成后端基础边界：
 
-- `bootstrap` 统一加载 server、database、LLM、security、observability、timeout、budget 配置，并提供脱敏后的配置摘要。
+- `bootstrap` 统一从配置文件加载 server、database、LLM、security、observability、timeout、budget 配置，并提供脱敏后的配置摘要；后端服务不使用环境变量覆盖配置。
 - `httpapi` 统一处理请求解析、request id、错误响应、JSON 编码和 SSE 编码。成功响应保持 OpenAPI 业务 schema 直出；错误响应统一 `eino_error_envelope.v1`。
 - `llm` 只暴露 provider interface、config、mock provider、redacted error 和 network policy；真实模型 provider 不得绕过该接口进入 execution。
 - `capabilities` 统一维护 provider interface、registry、tool metadata、risk policy、approval policy 和 Eino tool adapter。工具选择必须经过 registry 和 policy，不得按工具名或自然语言关键词硬编码。

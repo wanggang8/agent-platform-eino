@@ -212,22 +212,18 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 
 ## 真实模型 smoke
 
-环境变量：
+真实模型和 Fobrain smoke 使用本地 ignored 配置文件，不使用环境变量作为服务配置来源：
 
 ```text
-EINO_LLM_PROVIDER
-EINO_LLM_BASE_URL
-EINO_LLM_API_KEY
-EINO_LLM_MODEL
-FOBRAIN_BASE_URL
-FOBRAIN_USER_API_TOKEN
-ENABLE_FOBRAIN_CONNECTOR=true
+configs/eino-workbench.local.yaml
 ```
+
+配置文件必须包含 LLM provider、Fobrain connector、credential binding、network policy、timeout 和 budget。该文件可包含本地密钥，但不得提交；验收记录只能写脱敏摘要。
 
 命令：
 
 ```bash
-bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc --config configs/eino-workbench.local.yaml
 ```
 
 smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清理进程。无凭据时脚本输出 skipped report，并在 acceptance 记录原因。有凭据时失败即 gate 失败。

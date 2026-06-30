@@ -6,7 +6,7 @@
   "required": ["schema_version", "provider", "base_url", "model", "timeout_ms", "network_safety", "credential_binding"],
   "properties": {
     "schema_version": {"const": "eino.llm_provider_config.v1"},
-    "provider": {"enum": ["openai_compatible", "openai", "azure_openai", "custom"]},
+    "provider": {"enum": ["mock", "openai_compatible", "openai", "azure_openai", "custom"]},
     "base_url": {"type": "string", "format": "uri"},
     "model": {"type": "string"},
     "model_label": {"type": "string"},

@@ -1,0 +1,41 @@
+server:
+  addr: "127.0.0.1:8081"
+  read_timeout: "10s"
+  write_timeout: "30s"
+
+database:
+  driver: "sqlite"
+  dsn: "data/eino-workbench.db"
+
+llm:
+  provider: "mock"
+  base_url: "http://127.0.0.1/mock-llm"
+  model: "mock-chat"
+  model_label: "Mock Chat"
+  timeout_ms: 30000
+  credential_binding:
+    schema_version: "eino.provider_credential_binding.v1"
+    workspace_id: "ws-local"
+    system: "llm"
+    status: "bound"
+    display_ref: "bound:llm:local"
+    owner_scope: "workspace"
+  network_safety:
+    require_https: false
+    allow_local_http: true
+    block_private_networks: true
+    allow_redirects: false
+    allowed_hosts:
+      - "127.0.0.1"
+
+security:
+  redact_secrets: true
+  allow_private_network: false
+
+observability:
+  log_level: "info"
+  enable_request_log: true
+
+budgets:
+  default_timeout: "60s"
+  max_tool_timeout: "120s"

@@ -115,3 +115,29 @@ func TestLegacyWorkbenchRoutesAreNotMounted(t *testing.T) {
 		}
 	}
 }
+
+func TestUnknownRouteReturnsUnifiedErrorEnvelope(t *testing.T) {
+	server := httptest.NewServer(httpapi.NewRouter())
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/unknown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", resp.StatusCode)
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["schema_version"] != "eino_error_envelope.v1" {
+		t.Fatalf("schema_version = %v", body["schema_version"])
+	}
+	if body["request_id"] == "" {
+		t.Fatalf("request_id is empty")
+	}
+}

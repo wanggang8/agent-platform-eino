@@ -6,16 +6,18 @@
 
 机器契约见 `docs/schemas/llm_provider_config.v1.schema.json`。
 
+后端服务配置只来自配置文件，例如 `configs/eino-workbench.local.yaml`。本地配置文件可以包含密钥，但必须被 `.gitignore` 忽略；不得通过环境变量覆盖模型 provider 配置。
+
 模型配置必须包含：
 
 - `provider`
 - `base_url`
-- `api_key`
 - `model`
 - `timeout_ms`
 - `network_safety`
+- `credential_binding`
 
-`model_label` 可展示；`base_url`、`api_key`、Authorization 和 provider raw error 不得进入产品输出。
+`model_label` 可展示；credential binding 只能展示安全 `display_ref`。密钥、Authorization 和 provider raw error 不得进入产品输出、日志、验收记录或截图。
 
 ## Network Safety
 

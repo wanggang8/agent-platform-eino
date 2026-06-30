@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
@@ -9,13 +10,21 @@ import (
 )
 
 func main() {
-	cfg := bootstrap.LoadConfig()
+	configPath := flag.String("config", "configs/eino-workbench.local.yaml", "path to eino-workbench config file")
+	flag.Parse()
+
+	cfg, err := bootstrap.LoadConfig(*configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 	server := &http.Server{
-		Addr:    cfg.Addr,
-		Handler: httpapi.NewRouter(),
+		Addr:         cfg.Server.Addr,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		Handler:      httpapi.NewRouter(),
 	}
 
-	log.Printf("eino-workbench listening on http://%s", cfg.Addr)
+	log.Printf("eino-workbench listening on http://%s", cfg.Server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}

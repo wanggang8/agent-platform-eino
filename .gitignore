@@ -3,3 +3,4 @@ test-results/
 .DS_Store
 npm-debug.log*
 web/eino-workbench/dist/
+configs/eino-workbench.local.yaml

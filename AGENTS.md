@@ -50,7 +50,7 @@
 
 - 不按工具名称、自然语言关键词、页面文案、旧 DOM 结构或 provider 私有字段硬编码业务逻辑。
 - 工具选择必须基于能力注册、capability metadata、intent classification、policy decision 和 Product Facts，不得写死 `fobrain_xxx` 等工具分支。
-- provider、模型、端口、凭据、外部 URL、开关、预算、超时、审批策略等部署相关值不得硬编码在业务代码中；必须来自配置、注册表、policy 或 fixture。
+- provider、模型、端口、凭据、外部 URL、开关、预算、超时、审批策略等部署相关值不得硬编码在业务代码中；后端服务配置必须来自配置文件，其他动态能力来自注册表、policy 或 fixture。
 - schema version、capability id、tool id 可以作为契约常量存在，但必须集中定义并由测试覆盖，不得散落在业务分支中。
 - 如果确实需要临时 hardcode，必须写明 Phase、移除条件、验收风险，并优先放入 fixture 或测试替身，不进入生产路径。
 
@@ -98,6 +98,7 @@
 
 - 所有外部输入在可信边界校验；HTTP/API 入参、provider 返回、LLM 输出、resume payload 都视为不可信。
 - 凭据、token、cookie、连接串不得写入代码、fixture、日志、截图或验收记录。
+- 本地配置文件 `configs/eino-workbench.local.yaml` 可以包含本机密钥，但必须被 `.gitignore` 忽略；日志和错误只能输出脱敏摘要。
 - provider 错误必须脱敏后进入 Product Facts / Workbench / Action API。
 - 写域操作必须经过 policy、approval、audit；不得由 provider 或前端直接决定。
 - 日志和 telemetry 只能记录必要上下文，不记录 raw payload、密钥、个人敏感信息或未投影安全数据。

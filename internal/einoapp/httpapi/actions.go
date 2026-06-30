@@ -1,47 +1,12 @@
 package httpapi
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"agent-platform-eino/internal/einoapp/product"
 )
-
-type workbenchView struct {
-	SchemaVersion string         `json:"schema_version"`
-	WorkspaceID   string         `json:"workspace_id"`
-	RunID         string         `json:"run_id"`
-	Status        string         `json:"status"`
-	Timeline      []timelineItem `json:"timeline"`
-	Inspector     inspector      `json:"inspector"`
-}
-
-type timelineItem struct {
-	ItemID  string `json:"item_id"`
-	Kind    string `json:"kind"`
-	Content string `json:"content,omitempty"`
-	Status  string `json:"status,omitempty"`
-}
-
-type inspector struct {
-	Tabs []string `json:"tabs"`
-}
-
-type actionResult struct {
-	SchemaVersion string       `json:"schema_version"`
-	WorkspaceID   string       `json:"workspace_id"`
-	ActionID      string       `json:"action_id"`
-	RunID         string       `json:"run_id"`
-	Status        string       `json:"status"`
-	ResultCards   []resultCard `json:"result_cards"`
-	AuditRefs     []string     `json:"audit_refs"`
-}
-
-type resultCard struct {
-	CardID string `json:"card_id"`
-	Title  string `json:"title"`
-	Status string `json:"status"`
-}
 
 type messageResponse struct {
 	SchemaVersion string `json:"schema_version"`
@@ -66,8 +31,10 @@ type runPatch struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func handleHealth(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{
+var projection product.Projection = product.NewEmptyProjection()
+
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	WriteJSON(w, r, http.StatusOK, map[string]string{
 		"schema_version": "eino_workbench_health.v1",
 		"status":         "ok",
 	})
@@ -75,13 +42,18 @@ func handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 func handleCurrentView(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
-	writeJSON(w, http.StatusOK, newWorkbenchView(workspaceID, "run_initial"))
+	view, err := projection.WorkbenchView(r.Context(), workspaceID)
+	if err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "工作台视图暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, view)
 }
 
 func handleMessage(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := "run_" + workspaceID + "_accepted"
-	writeJSON(w, http.StatusOK, messageResponse{
+	WriteJSON(w, r, http.StatusOK, messageResponse{
 		SchemaVersion: "eino_workbench_message_response.v1",
 		RunID:         runID,
 		Status:        "accepted",
@@ -92,31 +64,45 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 
 func handleAgentAction(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
-	writeJSON(w, http.StatusOK, newActionResult(workspaceID, "action_initial", "run_action_initial", "accepted"))
+	result, err := projection.ActionResult(r.Context(), workspaceID, "action_initial", "run_action_initial")
+	if err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "操作结果暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, result)
 }
 
 func handleResume(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
-	writeJSON(w, http.StatusOK, newActionResult(workspaceID, "resume_initial", runID, "accepted"))
+	result, err := projection.ActionResult(r.Context(), workspaceID, "resume_initial", runID)
+	if err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "恢复结果暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, result)
 }
 
 func handleRunSnapshot(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
-	writeJSON(w, http.StatusOK, newWorkbenchView(workspaceID, runID))
+	view, err := projection.RunSnapshot(r.Context(), workspaceID, runID)
+	if err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "运行快照暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, view)
 }
 
 func handleReplay(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
-	writeJSON(w, http.StatusOK, map[string]any{
-		"schema_version": "eino_replay_view.v1",
-		"workspace_id":   workspaceID,
-		"run_id":         runID,
-		"events":         []any{},
-		"view":           newWorkbenchView(workspaceID, runID),
-	})
+	replay, err := projection.ReplayView(r.Context(), workspaceID, runID)
+	if err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "回放暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, replay)
 }
 
 func handleRunStream(w http.ResponseWriter, r *http.Request) {
@@ -135,46 +121,13 @@ func handleRunStream(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	data, err := json.Marshal(event)
-	if err != nil {
-		http.Error(w, "failed to encode stream event", http.StatusInternalServerError)
+	w.Header().Set(requestIDHeader, requestID(r))
+	if err := WriteSSEEvent(w, SSEEvent{
+		ID:    event.EventID,
+		Event: event.Type,
+		Data:  event,
+	}); err != nil {
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("sse_encode_failed", "事件编码失败", true))
 		return
 	}
-
-	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("X-Accel-Buffering", "no")
-	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprintf(w, "id: %s\nevent: %s\ndata: %s\n\n", event.EventID, event.Type, data)
-}
-
-func newWorkbenchView(workspaceID string, runID string) workbenchView {
-	return workbenchView{
-		SchemaVersion: "eino_workbench_view.v1",
-		WorkspaceID:   workspaceID,
-		RunID:         runID,
-		Status:        "created",
-		Timeline:      []timelineItem{},
-		Inspector: inspector{
-			Tabs: []string{"evidence", "structured", "runtime", "audit"},
-		},
-	}
-}
-
-func newActionResult(workspaceID string, actionID string, runID string, status string) actionResult {
-	return actionResult{
-		SchemaVersion: "eino_action_result.v1",
-		WorkspaceID:   workspaceID,
-		ActionID:      actionID,
-		RunID:         runID,
-		Status:        status,
-		ResultCards:   []resultCard{},
-		AuditRefs:     []string{},
-	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, body any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
 }

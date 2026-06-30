@@ -49,11 +49,18 @@ esac
 
 cd "$(dirname "$0")/.."
 
-port="${EINO_WORKBENCH_SMOKE_PORT:-18081}"
+port="$(python3 - <<'PY'
+import socket
+with socket.socket() as s:
+    s.bind(("127.0.0.1", 0))
+    print(s.getsockname()[1])
+PY
+)"
 addr="127.0.0.1:${port}"
 base_url="http://${addr}"
 tmp_dir="$(mktemp -d)"
 server_log="${tmp_dir}/server.log"
+config_file="${tmp_dir}/eino-workbench.yaml"
 
 cleanup() {
   if [[ -n "${server_pid:-}" ]]; then
@@ -64,7 +71,46 @@ cleanup() {
 }
 trap cleanup EXIT
 
-EINO_WORKBENCH_ADDR="${addr}" go run ./cmd/eino-workbench >"${server_log}" 2>&1 &
+cat >"${config_file}" <<YAML
+server:
+  addr: "${addr}"
+  read_timeout: "10s"
+  write_timeout: "30s"
+database:
+  driver: "sqlite"
+  dsn: "${tmp_dir}/eino-workbench.db"
+llm:
+  provider: "mock"
+  base_url: "http://127.0.0.1/mock-llm"
+  model: "mock-chat"
+  model_label: "Mock Chat"
+  timeout_ms: 30000
+  credential_binding:
+    schema_version: "eino.provider_credential_binding.v1"
+    workspace_id: "ws_smoke"
+    system: "llm"
+    status: "bound"
+    display_ref: "bound:llm:smoke"
+    owner_scope: "workspace"
+  network_safety:
+    require_https: false
+    allow_local_http: true
+    block_private_networks: true
+    allow_redirects: false
+    allowed_hosts:
+      - "127.0.0.1"
+security:
+  redact_secrets: true
+  allow_private_network: false
+observability:
+  log_level: "debug"
+  enable_request_log: true
+budgets:
+  default_timeout: "60s"
+  max_tool_timeout: "120s"
+YAML
+
+go run ./cmd/eino-workbench --config "${config_file}" >"${server_log}" 2>&1 &
 server_pid="$!"
 
 for _ in {1..50}; do

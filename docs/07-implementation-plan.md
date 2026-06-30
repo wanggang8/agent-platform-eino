@@ -167,6 +167,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 要求：
 
 - 配置必须集中读取 server、database、LLM、security、observability、timeout、budget；配置日志必须脱敏。
+- 后端服务配置只来自配置文件；`configs/eino-workbench.local.yaml` 可包含本地密钥但必须 ignored，不使用环境变量覆盖服务配置。
 - 成功响应保持 OpenAPI 中定义的业务 schema 直出；错误响应统一 `eino_error_envelope.v1`，并包含 request id、安全错误码和可展示摘要。
 - SSE 编码必须统一处理 `id`、`event`、`data`、flush、content type、no-cache 和编码失败。
 - `httpapi` 不得手写业务 DTO 第二套真相；只能调用 product projection、facts query 和 execution command 接口。
