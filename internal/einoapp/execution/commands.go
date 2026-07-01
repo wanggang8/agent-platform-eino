@@ -41,6 +41,7 @@ type ActionCommand struct {
 	InputText       string
 	Attachments     []Attachment
 	Context         RequestContext
+	PolicyContext   capabilities.PolicyContext
 }
 
 // ResumeCommand 表示 approval/clarification 的恢复请求。
@@ -153,6 +154,7 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 		InputText:      command.InputText,
 		CapabilityHint: command.CapabilityHint,
 		ProductAction:  command.ActionID,
+		PolicyContext:  policyContextForAction(command),
 	})
 	if selection.Mode == SelectionModeRejected {
 		return AcceptedRun{}, ErrCapabilityNotRegistered
@@ -164,6 +166,12 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 	if err := commands.recordSelection(ctx, accepted.RunID, selection); err != nil {
 		return AcceptedRun{}, err
 	}
+	if selection.Mode == SelectionModeCapability && !selection.PolicyAllowed && !selection.RequiresApproval {
+		if err := commands.recordPolicyBlockedRun(ctx, accepted.RunID); err != nil {
+			return AcceptedRun{}, err
+		}
+		return accepted, nil
+	}
 	if selection.RequiresApproval {
 		return accepted, nil
 	}
@@ -174,6 +182,15 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 		return accepted, nil
 	}
 	return commands.runIfConfigured(ctx, accepted)
+}
+
+// policyContextForAction 只传递安全策略上下文；真实凭据仍由 provider 边界解析。
+func policyContextForAction(command ActionCommand) capabilities.PolicyContext {
+	context := command.PolicyContext
+	if context.WorkspaceID == "" {
+		context.WorkspaceID = command.WorkspaceID
+	}
+	return context
 }
 
 // Resume 校验 run 存在后接收恢复请求；完整 HITL 执行在后续 Phase 接入。
@@ -245,10 +262,18 @@ func (commands StaticCommands) recordSelection(ctx context.Context, runID string
 		AuditID:     runID + ":audit:capability:1",
 		RunID:       runID,
 		EventType:   "tool",
-		SafeSummary: "capability selected: " + selection.CapabilityID + "; policy: " + selection.PolicyReason,
+		SafeSummary: "capability selected: " + selection.CapabilityID + "; policy: " + safePolicyReason(selection.PolicyReason),
 		Actor:       "system",
 		CreatedAt:   time.Now().UTC(),
 	})
+}
+
+// recordPolicyBlockedRun 将非审批类策略阻断写成安全失败状态，避免 HTTP 层返回 500。
+func (commands StaticCommands) recordPolicyBlockedRun(ctx context.Context, runID string) error {
+	if commands.repository == nil {
+		return nil
+	}
+	return commands.repository.UpdateRunStatus(ctx, runID, facts.RunStatusFailed, "provider_policy_blocked", time.Now().UTC())
 }
 
 // runIfConfigured 在生产路径触发 runner；测试替身可不配置 runner。
@@ -260,6 +285,14 @@ func (commands StaticCommands) runIfConfigured(ctx context.Context, accepted Acc
 		return AcceptedRun{}, err
 	}
 	return accepted, nil
+}
+
+// safePolicyReason 把含 credential/token 等敏感标记的内部 reason 折叠为可入库摘要。
+func safePolicyReason(reason string) string {
+	if facts.ContainsUnsafeMaterial(reason) {
+		return "blocked"
+	}
+	return reason
 }
 
 // randomRunID 生成不含 workspace/action 信息的 opaque run id。

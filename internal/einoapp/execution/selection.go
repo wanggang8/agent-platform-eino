@@ -17,12 +17,14 @@ type SelectionRequest struct {
 	CapabilityHint string
 	IntentHint     string
 	ProductAction  string
+	PolicyContext  capabilities.PolicyContext
 }
 
 // SelectionResult 记录 registry/policy 之后的选择结果，供后续写入 Product Facts。
 type SelectionResult struct {
 	Mode             SelectionMode
 	CapabilityID     string
+	PolicyAllowed    bool
 	RequiresApproval bool
 	PolicyReason     string
 }
@@ -32,29 +34,33 @@ type SelectionResult struct {
 func SelectCapability(registry *capabilities.Registry, request SelectionRequest) SelectionResult {
 	if request.CapabilityHint == "" {
 		return SelectionResult{
-			Mode:         SelectionModeChat,
-			PolicyReason: "chat_default",
+			Mode:          SelectionModeChat,
+			PolicyAllowed: true,
+			PolicyReason:  "chat_default",
 		}
 	}
 	if registry == nil {
 		return SelectionResult{
-			Mode:         SelectionModeRejected,
-			PolicyReason: "capability_registry_unavailable",
+			Mode:          SelectionModeRejected,
+			PolicyAllowed: false,
+			PolicyReason:  "capability_registry_unavailable",
 		}
 	}
 
 	capability, ok := registry.Get(request.CapabilityHint)
 	if !ok {
 		return SelectionResult{
-			Mode:         SelectionModeRejected,
-			PolicyReason: "capability_not_registered",
+			Mode:          SelectionModeRejected,
+			PolicyAllowed: false,
+			PolicyReason:  "capability_not_registered",
 		}
 	}
-	decision := capabilities.EvaluatePolicy(capability)
+	decision := capabilities.EvaluatePolicy(capability, request.PolicyContext)
 	return SelectionResult{
 		Mode:             SelectionModeCapability,
 		CapabilityID:     capability.ID,
+		PolicyAllowed:    decision.Allowed,
 		RequiresApproval: decision.RequiresApproval,
-		PolicyReason:     decision.ReasonCode,
+		PolicyReason:     string(decision.ReasonCode),
 	}
 }

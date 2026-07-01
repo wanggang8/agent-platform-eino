@@ -147,8 +147,13 @@ capabilities:
     display_name: "Phase 3 read smoke"
     description: "Smoke-only read capability registered from temporary config"
     result_schema: "tool.structured_result.v1"
-    risk_level: "read_only"
+    risk_level: "low"
+    side_effect: "read_external"
+    policy_ref: "policy:smoke:read:v1"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
     approval_required: false
+    idempotency_required: false
     timeout: "5s"
   - id: "cap.smoke.write"
     provider_id: "phase3-smoke"
@@ -156,8 +161,13 @@ capabilities:
     display_name: "Phase 3 write smoke"
     description: "Smoke-only write capability registered from temporary config"
     result_schema: "tool.structured_result.v1"
-    risk_level: "write"
+    risk_level: "high"
+    side_effect: "write_external"
+    policy_ref: "policy:smoke:write:v1"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
     approval_required: true
+    idempotency_required: true
     timeout: "5s"
 YAML
 fi
@@ -529,7 +539,7 @@ with sqlite3.connect(db_path) as conn:
         (run_id,),
     ).fetchall()
     context_count = conn.execute("select count(*) from context_snapshots where run_id = ?", (run_id,)).fetchone()[0]
-assert any(event_type == "tool" and "capability selected: cap.smoke.write" in summary and "write_requires_approval" in summary for event_type, summary in rows), rows
+assert any(event_type == "tool" and "capability selected: cap.smoke.write" in summary and "approval_required" in summary for event_type, summary in rows), rows
 assert context_count == 0, context_count
 PY
   run_count_before_missing="$(python3 - "${tmp_dir}/eino-workbench.db" <<'PY'

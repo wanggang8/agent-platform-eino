@@ -59,7 +59,7 @@ func TestCapabilitySelectionUsesHintThroughRegistryAndPolicy(t *testing.T) {
 	}
 
 	write := execution.SelectCapability(registry, execution.SelectionRequest{CapabilityHint: "danger.write"})
-	if write.Mode != execution.SelectionModeCapability || !write.RequiresApproval || write.PolicyReason != "write_requires_approval" {
+	if write.Mode != execution.SelectionModeCapability || !write.RequiresApproval || write.PolicyReason != "approval_required" {
 		t.Fatalf("write capability policy mismatch: %+v", write)
 	}
 }

@@ -603,6 +603,14 @@ bash scripts/eino_workbench_server_smoke.sh --scenario real-model-chat --config 
 go test ./internal/einoapp/capabilities -run 'ProviderPolicy|CredentialBinding|CredentialLeak' -count=1
 ```
 
+完成状态：
+
+- 已实现 provider policy decision：risk、side_effect、approval_required、workspace scope、credential binding policy 和 connector status 均进入统一决策；risk 使用 capability catalog 的 `none/low/medium/high` 枚举。
+- policy reason 使用 `docs/schemas/provider_policy_decision.v1.schema.json` 中的稳定 reason code；写域和 `write_external` 在 Phase 6 前返回 `approval_required`，不会执行 mutation。
+- 凭据输出只使用 `CredentialBinding` 安全摘要；`status` 必须归一到 `configured/missing/unbound/bound`，`credential_ref`、token、secret、Authorization 和 raw connector config 会被折叠为安全 display/audit 摘要。
+- Action API 选择到缺凭据、workspace scope denied 或 connector unavailable 等非审批阻断时，会写入同源 Product Facts 的 failed run，`safe_error=provider_policy_blocked`，不会把 credential reason 明文写入 Product Facts。
+- 配置文件 capability 元数据已要求声明 `side_effect`、`policy_ref`、`permission_scope`、`credential_binding_policy` 和 `idempotency_required`，并支持按 provider 需要声明 `connector_id`。
+
 ### Task 4.5 MCP adapter contract
 
 创建：

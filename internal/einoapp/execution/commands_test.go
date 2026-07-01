@@ -273,6 +273,107 @@ func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T
 	}
 }
 
+func TestRunnerCommandsRecordPolicyBlockedCapabilityAsSafeFailedRun(t *testing.T) {
+	// 缺凭据、scope denied、connector unavailable 这类策略阻断必须返回可投影的安全失败状态，不能变成 500。
+	repository := facts.NewMemoryRepository()
+	runner := &recordingRunner{}
+	toolRunner := &recordingCapabilityRunner{}
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(fobrainReadCapabilityForPolicyTest()); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry)
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "tool.fobrain.asset.read",
+		InputText:       "asset",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runner.runID != "" || toolRunner.runID != "" {
+		t.Fatalf("policy blocked capability must not execute: runner=%q tool=%q", runner.runID, toolRunner.runID)
+	}
+	run, err := repository.GetRun(context.Background(), accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if run.Status != facts.RunStatusFailed || run.SafeError != "provider_policy_blocked" {
+		t.Fatalf("run policy failure mismatch: %+v", run)
+	}
+}
+
+func TestRunnerCommandsRecordPolicyContextBlocksAsSafeFailedRun(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		policyContext capabilities.PolicyContext
+	}{
+		{
+			name: "scope denied",
+			policyContext: capabilities.PolicyContext{
+				WorkspaceID: "ws_123",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws_other",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:main",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+			},
+		},
+		{
+			name: "connector unavailable",
+			policyContext: capabilities.PolicyContext{
+				WorkspaceID: "ws_123",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws_123",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:main",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusUnavailable,
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repository := facts.NewMemoryRepository()
+			toolRunner := &recordingCapabilityRunner{}
+			registry := capabilities.NewRegistry()
+			if err := registry.Register(fobrainReadCapabilityForPolicyTest()); err != nil {
+				t.Fatal(err)
+			}
+			commands := execution.NewToolRunnerCommandsWithRegistry(repository, &recordingRunner{}, toolRunner, registry)
+
+			accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+				WorkspaceID:     "ws_123",
+				ActionID:        "action-demo",
+				ClientRequestID: "client-action",
+				CapabilityHint:  "tool.fobrain.asset.read",
+				InputText:       "asset",
+				PolicyContext:   tc.policyContext,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if toolRunner.runID != "" {
+				t.Fatalf("policy blocked capability must not execute: %+v", toolRunner)
+			}
+			run, err := repository.GetRun(context.Background(), accepted.RunID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if run.Status != facts.RunStatusFailed || run.SafeError != "provider_policy_blocked" {
+				t.Fatalf("run policy failure mismatch: %+v", run)
+			}
+		})
+	}
+}
+
 func TestFactCommandsResumeRequiresExistingRun(t *testing.T) {
 	// resume 不能凭前端传参创建隐式 run，必须绑定已存在的 run 生命周期。
 	repository := facts.NewMemoryRepository()
@@ -308,4 +409,19 @@ func (runner *recordingCapabilityRunner) RunCapability(_ context.Context, runID 
 	runner.capabilityID = capabilityID
 	runner.inputText = inputText
 	return nil
+}
+
+func fobrainReadCapabilityForPolicyTest() capabilities.Capability {
+	return capabilities.Capability{
+		ID:                      "tool.fobrain.asset.read",
+		ProviderID:              "fobrain",
+		ToolName:                "fobrain_asset_read",
+		DisplayName:             "资产查询",
+		RiskLevel:               capabilities.RiskReadOnly,
+		SideEffect:              capabilities.SideEffectReadExternal,
+		PolicyRef:               "policy:fobrain:read:v1",
+		PermissionScope:         capabilities.PermissionScopeWorkspace,
+		CredentialBindingPolicy: capabilities.CredentialBindingRequired,
+		ConnectorID:             "fobrain",
+	}
 }

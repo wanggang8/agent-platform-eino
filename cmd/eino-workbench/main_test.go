@@ -23,12 +23,16 @@ func TestCapabilityRegistryFromConfigRegistersConfiguredCapabilities(t *testing.
 	// capability hint 只能命中配置文件声明的能力元数据。
 	registry, err := capabilityRegistryFromConfig([]bootstrap.CapabilityConfig{
 		{
-			ID:          "cap.smoke.read",
-			ProviderID:  "phase3-smoke",
-			ToolName:    "phase3_smoke_read",
-			DisplayName: "Phase 3 只读验证",
-			Description: "验证配置驱动能力注册",
-			RiskLevel:   string(capabilities.RiskReadOnly),
+			ID:                      "cap.smoke.read",
+			ProviderID:              "phase3-smoke",
+			ToolName:                "phase3_smoke_read",
+			DisplayName:             "Phase 3 只读验证",
+			Description:             "验证配置驱动能力注册",
+			RiskLevel:               string(capabilities.RiskReadOnly),
+			SideEffect:              string(capabilities.SideEffectReadExternal),
+			PolicyRef:               "policy:smoke:read:v1",
+			PermissionScope:         string(capabilities.PermissionScopeWorkspace),
+			CredentialBindingPolicy: string(capabilities.CredentialBindingNone),
 		},
 	})
 	if err != nil {
@@ -38,7 +42,12 @@ func TestCapabilityRegistryFromConfigRegistersConfiguredCapabilities(t *testing.
 	if !ok {
 		t.Fatal("configured capability was not registered")
 	}
-	if capability.ProviderID != "phase3-smoke" || capability.RiskLevel != capabilities.RiskReadOnly {
+	if capability.ProviderID != "phase3-smoke" ||
+		capability.RiskLevel != capabilities.RiskReadOnly ||
+		capability.SideEffect != capabilities.SideEffectReadExternal ||
+		capability.PolicyRef != "policy:smoke:read:v1" ||
+		capability.PermissionScope != capabilities.PermissionScopeWorkspace ||
+		capability.CredentialBindingPolicy != capabilities.CredentialBindingNone {
 		t.Fatalf("configured capability mismatch: %+v", capability)
 	}
 }

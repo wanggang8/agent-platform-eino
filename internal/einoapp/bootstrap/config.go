@@ -89,15 +89,21 @@ type BudgetConfig struct {
 
 // CapabilityConfig 定义由配置文件注册的能力元数据，不包含 provider raw payload。
 type CapabilityConfig struct {
-	ID               string        `yaml:"id"`
-	ProviderID       string        `yaml:"provider_id"`
-	ToolName         string        `yaml:"tool_name"`
-	DisplayName      string        `yaml:"display_name"`
-	Description      string        `yaml:"description"`
-	ResultSchema     string        `yaml:"result_schema"`
-	RiskLevel        string        `yaml:"risk_level"`
-	ApprovalRequired bool          `yaml:"approval_required"`
-	Timeout          time.Duration `yaml:"timeout"`
+	ID                      string        `yaml:"id"`
+	ProviderID              string        `yaml:"provider_id"`
+	ToolName                string        `yaml:"tool_name"`
+	DisplayName             string        `yaml:"display_name"`
+	Description             string        `yaml:"description"`
+	ResultSchema            string        `yaml:"result_schema"`
+	RiskLevel               string        `yaml:"risk_level"`
+	SideEffect              string        `yaml:"side_effect"`
+	PolicyRef               string        `yaml:"policy_ref"`
+	PermissionScope         string        `yaml:"permission_scope"`
+	CredentialBindingPolicy string        `yaml:"credential_binding_policy"`
+	ConnectorID             string        `yaml:"connector_id"`
+	ApprovalRequired        bool          `yaml:"approval_required"`
+	IdempotencyRequired     bool          `yaml:"idempotency_required"`
+	Timeout                 time.Duration `yaml:"timeout"`
 }
 
 // RedactedSummary 是可打印的配置摘要，必须保证不泄漏密钥。
@@ -176,8 +182,43 @@ func (cfg Config) Validate() error {
 		if strings.TrimSpace(capability.ToolName) == "" {
 			return fmt.Errorf("capabilities[%d].tool_name is required", index)
 		}
-		if capability.RiskLevel != "read_only" && capability.RiskLevel != "write" {
-			return fmt.Errorf("capabilities[%d].risk_level must be read_only or write", index)
+		if capability.RiskLevel != "none" &&
+			capability.RiskLevel != "low" &&
+			capability.RiskLevel != "medium" &&
+			capability.RiskLevel != "high" {
+			return fmt.Errorf("capabilities[%d].risk_level must be none, low, medium or high", index)
+		}
+		if strings.TrimSpace(capability.SideEffect) == "" {
+			return fmt.Errorf("capabilities[%d].side_effect is required", index)
+		}
+		if strings.TrimSpace(capability.PolicyRef) == "" {
+			return fmt.Errorf("capabilities[%d].policy_ref is required", index)
+		}
+		if capability.SideEffect != "" &&
+			capability.SideEffect != "none" &&
+			capability.SideEffect != "read_external" &&
+			capability.SideEffect != "write_external" &&
+			capability.SideEffect != "local_runtime" {
+			return fmt.Errorf("capabilities[%d].side_effect is invalid", index)
+		}
+		if strings.TrimSpace(capability.PermissionScope) == "" {
+			return fmt.Errorf("capabilities[%d].permission_scope is required", index)
+		}
+		if capability.PermissionScope != "workspace" &&
+			capability.PermissionScope != "caller" &&
+			capability.PermissionScope != "system" {
+			return fmt.Errorf("capabilities[%d].permission_scope is invalid", index)
+		}
+		if strings.TrimSpace(capability.CredentialBindingPolicy) == "" {
+			return fmt.Errorf("capabilities[%d].credential_binding_policy is required", index)
+		}
+		if capability.CredentialBindingPolicy != "none" &&
+			capability.CredentialBindingPolicy != "required" &&
+			capability.CredentialBindingPolicy != "optional" {
+			return fmt.Errorf("capabilities[%d].credential_binding_policy is invalid", index)
+		}
+		if capability.SideEffect == "write_external" && (!capability.ApprovalRequired || !capability.IdempotencyRequired) {
+			return fmt.Errorf("capabilities[%d].write_external requires approval and idempotency", index)
 		}
 	}
 	return nil
@@ -224,7 +265,7 @@ func providerRequiresAPIKey(provider string) bool {
 // derivedCredentialBinding 只生成可展示安全状态，不暴露 api_key。
 func derivedCredentialBinding(provider string, apiKey string) CredentialBinding {
 	status := "missing"
-	displayRef := "missing:llm"
+	displayRef := "missing"
 	if strings.TrimSpace(apiKey) != "" || provider == "mock" {
 		status = "bound"
 		displayRef = "bound:llm:" + provider
@@ -235,7 +276,7 @@ func derivedCredentialBinding(provider string, apiKey string) CredentialBinding 
 		System:        "llm",
 		Status:        status,
 		DisplayRef:    displayRef,
-		OwnerScope:    "local",
+		OwnerScope:    "system",
 	}
 }
 
@@ -333,13 +374,76 @@ func redactedCapabilitySummaries(capabilities []CapabilityConfig) []map[string]a
 	summaries := make([]map[string]any, 0, len(capabilities))
 	for _, capability := range capabilities {
 		summaries = append(summaries, map[string]any{
-			"id":                capability.ID,
-			"provider_id":       capability.ProviderID,
-			"risk_level":        capability.RiskLevel,
-			"approval_required": capability.ApprovalRequired,
+			"id":                        safeSummaryIdentifier(capability.ID),
+			"provider_id":               safeSummaryIdentifier(capability.ProviderID),
+			"risk_level":                capability.RiskLevel,
+			"side_effect":               capability.SideEffect,
+			"policy_ref":                safeSummaryPolicyRef(capability.PolicyRef),
+			"permission_scope":          capability.PermissionScope,
+			"credential_binding_policy": capability.CredentialBindingPolicy,
+			"connector_id":              safeSummaryOptionalIdentifier(capability.ConnectorID),
+			"approval_required":         capability.ApprovalRequired,
+			"idempotency_required":      capability.IdempotencyRequired,
 		})
 	}
 	return summaries
+}
+
+// safeSummaryPolicyRef 只保留 policy:<safe-part...> 形式，避免把 URL、DSN 或 query secret 打进摘要。
+func safeSummaryPolicyRef(value string) string {
+	value = strings.TrimSpace(value)
+	parts := strings.Split(value, ":")
+	if len(parts) < 2 || parts[0] != "policy" || unsafeConfigSummaryText(value) {
+		return "policy:redacted"
+	}
+	for _, part := range parts[1:] {
+		if !validSummaryIdentifier(part) {
+			return "policy:redacted"
+		}
+	}
+	return value
+}
+
+// safeSummaryOptionalIdentifier 清洗可选标识；空值保留为空，非法值折叠为 redacted。
+func safeSummaryOptionalIdentifier(value string) string {
+	if strings.TrimSpace(value) == "" {
+		return ""
+	}
+	return safeSummaryIdentifier(value)
+}
+
+// safeSummaryIdentifier 清洗配置摘要中的标识字段，避免误配的 URL/DSN 被打印。
+func safeSummaryIdentifier(value string) string {
+	value = strings.TrimSpace(value)
+	if unsafeConfigSummaryText(value) || !validSummaryIdentifier(value) {
+		return "redacted"
+	}
+	return value
+}
+
+// validSummaryIdentifier 限制配置摘要标识为简单 ASCII 标识；允许点用于 capability id。
+func validSummaryIdentifier(value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, char := range value {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '_' || char == '-' || char == '.' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+// unsafeConfigSummaryText 是配置摘要的最后防线，覆盖密钥、原始 payload 和 raw config 变体。
+func unsafeConfigSummaryText(value string) bool {
+	lower := strings.ToLower(value)
+	for _, marker := range []string{"authorization:", "bearer ", "api_key", "apikey", "token", "password", "credential", "secret", "raw provider", "raw body", "raw error", "raw payload", "raw_payload", "provider_payload", "raw config", "raw_config", "raw-config", "checkpoint-raw", "interrupt-raw"} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // String 将脱敏摘要编码为 YAML，便于人工审查。

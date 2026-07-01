@@ -42,8 +42,13 @@ capabilities:
     display_name: "Phase 3 只读验证"
     description: "验证配置驱动的能力注册"
     result_schema: "structured_result.v1"
-    risk_level: "read_only"
+    risk_level: "low"
+    side_effect: "read_external"
+    policy_ref: "policy:smoke:read:v1"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
     approval_required: false
+    idempotency_required: false
     timeout: "5s"
 `)
 	cfg, err := bootstrap.LoadConfig(path)
@@ -63,11 +68,20 @@ capabilities:
 	if cfg.LLM.CredentialBinding.DisplayRef != "bound:llm:mock" {
 		t.Fatalf("credential binding was not derived from local config: %+v", cfg.LLM.CredentialBinding)
 	}
+	if cfg.LLM.CredentialBinding.OwnerScope != "system" {
+		t.Fatalf("credential owner scope must match schema: %+v", cfg.LLM.CredentialBinding)
+	}
 	if cfg.LLM.NetworkSafety.AllowedHosts[0] != "llm.example.test" {
 		t.Fatalf("network safety allowed hosts not derived: %+v", cfg.LLM.NetworkSafety)
 	}
 	if len(cfg.Capabilities) != 1 || cfg.Capabilities[0].ID != "cap.smoke.read" {
 		t.Fatalf("capabilities were not loaded from local config: %+v", cfg.Capabilities)
+	}
+	if cfg.Capabilities[0].SideEffect != "read_external" ||
+		cfg.Capabilities[0].PolicyRef != "policy:smoke:read:v1" ||
+		cfg.Capabilities[0].PermissionScope != "workspace" ||
+		cfg.Capabilities[0].CredentialBindingPolicy != "none" {
+		t.Fatalf("capability policy fields were not loaded: %+v", cfg.Capabilities[0])
 	}
 }
 
@@ -119,7 +133,11 @@ capabilities:
   - id: "cap.invalid"
     provider_id: "phase3-smoke"
     tool_name: "phase3_smoke_read"
-    risk_level: "medium"
+    risk_level: "invalid"
+    side_effect: "read_external"
+    policy_ref: "policy:smoke:read:v1"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
 `)
 
 	_, err := bootstrap.LoadConfig(path)
@@ -322,7 +340,74 @@ capabilities:
     tool_name: "phase3_smoke_read"
     description: "contains no secret"
     result_schema: "structured_result.v1"
-    risk_level: "read_only"
+    risk_level: "low"
+    side_effect: "read_external"
+    policy_ref: "policy:smoke:read:v1"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
+    connector_id: "https://connector.example.test?api_key=db-local"
+	`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	encoded := cfg.RedactedSummary().String()
+	for _, expected := range []string{
+		"cap.smoke.read",
+		"phase3-smoke",
+		"side_effect: read_external",
+		"policy_ref: policy:smoke:read:v1",
+		"permission_scope: workspace",
+		"credential_binding_policy: none",
+		"idempotency_required: false",
+	} {
+		if !strings.Contains(encoded, expected) {
+			t.Fatalf("redacted summary missing capability metadata %q: %s", expected, encoded)
+		}
+	}
+	if !strings.Contains(encoded, "approval_required: false") {
+		t.Fatalf("redacted summary missing capability metadata: %s", encoded)
+	}
+	for _, forbidden := range []string{"phase3_smoke_read", "contains no secret", "structured_result.v1", "https://connector.example.test", "api_key", "db-local"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("redacted summary leaked detailed capability internals %q: %s", forbidden, encoded)
+		}
+	}
+}
+
+func TestRedactedSummaryFoldsUnsafeCapabilityPolicyMetadata(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+  timeout: "8s"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+capabilities:
+  - id: "cap.smoke.read"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_read"
+    risk_level: "low"
+    side_effect: "read_external"
+    policy_ref: "https://policy.example.test?password=db-local"
+    permission_scope: "workspace"
+    credential_binding_policy: "none"
+    connector_id: "dsn=file:data/db?raw_config=1"
 `)
 
 	cfg, err := bootstrap.LoadConfig(path)
@@ -331,10 +416,12 @@ capabilities:
 	}
 
 	encoded := cfg.RedactedSummary().String()
-	if !strings.Contains(encoded, "cap.smoke.read") || !strings.Contains(encoded, "phase3-smoke") {
-		t.Fatalf("redacted summary missing capability metadata: %s", encoded)
+	for _, forbidden := range []string{"https://policy.example.test", "password", "db-local", "dsn=file", "raw_config"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("redacted summary leaked unsafe policy metadata %q: %s", forbidden, encoded)
+		}
 	}
-	if strings.Contains(encoded, "phase3_smoke_read") || strings.Contains(encoded, "contains no secret") {
+	if !strings.Contains(encoded, "policy_ref: policy:redacted") || !strings.Contains(encoded, "connector_id: redacted") {
 		t.Fatalf("redacted summary leaked detailed capability internals: %s", encoded)
 	}
 }
@@ -344,7 +431,7 @@ func writeConfig(t *testing.T, body string) string {
 
 	// 测试配置使用 0600，模拟本地密钥配置文件的最小权限约束。
 	path := filepath.Join(t.TempDir(), "eino-workbench.yaml")
-	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(strings.TrimSpace(body)+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return path

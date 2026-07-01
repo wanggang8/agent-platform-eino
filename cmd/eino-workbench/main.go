@@ -92,15 +92,21 @@ func capabilityRegistryFromConfig(configs []bootstrap.CapabilityConfig) (*capabi
 	registry := capabilities.NewRegistry()
 	for _, cfg := range configs {
 		if err := registry.Register(capabilities.Capability{
-			ID:               cfg.ID,
-			ProviderID:       cfg.ProviderID,
-			ToolName:         cfg.ToolName,
-			DisplayName:      cfg.DisplayName,
-			Description:      cfg.Description,
-			ResultSchema:     cfg.ResultSchema,
-			RiskLevel:        capabilities.RiskLevel(cfg.RiskLevel),
-			ApprovalRequired: cfg.ApprovalRequired,
-			Timeout:          cfg.Timeout,
+			ID:                      cfg.ID,
+			ProviderID:              cfg.ProviderID,
+			ToolName:                cfg.ToolName,
+			DisplayName:             cfg.DisplayName,
+			Description:             cfg.Description,
+			ResultSchema:            cfg.ResultSchema,
+			RiskLevel:               capabilities.RiskLevel(cfg.RiskLevel),
+			SideEffect:              capabilities.SideEffect(cfg.SideEffect),
+			PolicyRef:               cfg.PolicyRef,
+			PermissionScope:         capabilities.PermissionScope(cfg.PermissionScope),
+			CredentialBindingPolicy: capabilities.CredentialBindingPolicy(cfg.CredentialBindingPolicy),
+			ConnectorID:             cfg.ConnectorID,
+			ApprovalRequired:        cfg.ApprovalRequired,
+			IdempotencyRequired:     cfg.IdempotencyRequired,
+			Timeout:                 cfg.Timeout,
 		}); err != nil {
 			return nil, err
 		}
