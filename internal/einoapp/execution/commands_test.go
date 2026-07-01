@@ -200,6 +200,41 @@ func TestRunnerCommandsRecordRegisteredCapabilitySelection(t *testing.T) {
 	}
 }
 
+func TestRunnerCommandsRunReadOnlyCapabilityThroughToolRunner(t *testing.T) {
+	// 只读 capability 选择后应进入 tool runner，而不是继续走普通 ChatModel runner。
+	repository := facts.NewMemoryRepository()
+	chatRunner := &recordingRunner{}
+	toolRunner := &recordingCapabilityRunner{}
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(capabilities.Capability{
+		ID:          "safe.read",
+		ProviderID:  "demo",
+		ToolName:    "safe_read",
+		DisplayName: "只读查询",
+		RiskLevel:   capabilities.RiskReadOnly,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, chatRunner, toolRunner, registry)
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "safe.read",
+		InputText:       "hello",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if chatRunner.runID != "" {
+		t.Fatalf("chat runner should not run capability path, got %q", chatRunner.runID)
+	}
+	if toolRunner.runID != accepted.RunID || toolRunner.capabilityID != "safe.read" || toolRunner.inputText != "hello" {
+		t.Fatalf("tool runner mismatch: %+v", toolRunner)
+	}
+}
+
 func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T) {
 	// 写域能力在 Phase 6 前只能留下选择审计，不能继续进入 runner 或 provider 执行。
 	repository := facts.NewMemoryRepository()
@@ -259,5 +294,18 @@ type recordingRunner struct {
 
 func (runner *recordingRunner) Run(_ context.Context, runID string) error {
 	runner.runID = runID
+	return nil
+}
+
+type recordingCapabilityRunner struct {
+	runID        string
+	capabilityID string
+	inputText    string
+}
+
+func (runner *recordingCapabilityRunner) RunCapability(_ context.Context, runID string, capabilityID string, inputText string) error {
+	runner.runID = runID
+	runner.capabilityID = capabilityID
+	runner.inputText = inputText
 	return nil
 }

@@ -65,10 +65,10 @@ Capability Registry 负责把 provider metadata 转成 Eino tool。
 
 转换规则：
 
-- tool name 来自稳定 capability id。
+- tool name 来自 registry 中稳定的 `tool_name` 元数据；`capability_id` 必须写入 ToolInfo extra 和 Product Facts，不能靠工具名反查业务分支。
 - tool description 使用 provider 描述和风险提示。
 - input schema 来自 `input_schema_ref`。
-- Eino `schema.ToolInfo.ParamsOneOf` 必须由项目 JSON Schema 2020-12 生成；支持 `oneOf`、`$defs` 等复杂输入时优先使用 Eino 的 JSON Schema 参数入口。
+- Phase 4.2 mock tool adapter 只支持轻量字段 schema，并映射到 Eino `schema.NewParamsOneOfByParams`；完整 JSON Schema 2020-12、`oneOf`、`$defs` 等复杂输入必须在真实 provider/MCP adapter 前补齐，并优先使用 Eino 的 JSON Schema 参数入口。
 - tool result 先进入 StructuredResult candidate。
 - Eino event 只能作为生成 Product Facts 的输入，不直接暴露给前端或外部 API。
 

@@ -81,12 +81,18 @@ type Runner interface {
 	Run(context.Context, string) error
 }
 
+// CapabilityRunner 执行已经通过 registry/policy 选择的只读能力。
+type CapabilityRunner interface {
+	RunCapability(context.Context, string, string, string) error
+}
+
 // StaticCommands 是 Phase 1/3 的最小命令实现，负责创建基础 run fact。
 type StaticCommands struct {
-	repository facts.Repository
-	newRunID   func() (string, error)
-	runner     Runner
-	registry   *capabilities.Registry
+	repository       facts.Repository
+	newRunID         func() (string, error)
+	runner           Runner
+	capabilityRunner CapabilityRunner
+	registry         *capabilities.Registry
 }
 
 // NewStaticCommands 创建不落 Product Facts 的静态命令替身。
@@ -121,6 +127,17 @@ func NewRunnerCommandsWithRegistry(repository facts.Repository, runner Runner, r
 	}
 }
 
+// NewToolRunnerCommandsWithRegistry 创建同时支持 chat runner 和只读 capability tool runner 的命令实现。
+func NewToolRunnerCommandsWithRegistry(repository facts.Repository, runner Runner, capabilityRunner CapabilityRunner, registry *capabilities.Registry) StaticCommands {
+	return StaticCommands{
+		repository:       repository,
+		newRunID:         randomRunID,
+		runner:           runner,
+		capabilityRunner: capabilityRunner,
+		registry:         registry,
+	}
+}
+
 // StartMessage 接收 Workbench 消息并创建 run。
 func (commands StaticCommands) StartMessage(ctx context.Context, command MessageCommand) (AcceptedRun, error) {
 	accepted, err := commands.acceptRun(ctx, command.WorkspaceID, command.RunID, command.Message)
@@ -148,6 +165,12 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 		return AcceptedRun{}, err
 	}
 	if selection.RequiresApproval {
+		return accepted, nil
+	}
+	if selection.Mode == SelectionModeCapability && commands.capabilityRunner != nil {
+		if err := commands.capabilityRunner.RunCapability(ctx, accepted.RunID, selection.CapabilityID, command.InputText); err != nil {
+			return AcceptedRun{}, err
+		}
 		return accepted, nil
 	}
 	return commands.runIfConfigured(ctx, accepted)

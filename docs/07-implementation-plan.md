@@ -539,6 +539,13 @@ go test ./internal/einoapp/execution -run 'AgentToolLoop|ToolFacts|ToolSafety' -
 bash scripts/eino_workbench_server_smoke.sh --scenario tool-card
 ```
 
+完成状态：
+
+- 已实现 registry metadata -> Eino `schema.ToolInfo` adapter、本地 mock read provider 和 `ToolLoopRunner`。
+- Action API 显式选择只读 capability 时进入 mock Eino `InvokableTool`，写入 ToolCall、Safety Gate 后的 ToolResult、tool audit，并由 Product Facts 投影 Workbench tool card、ActionResult result card 和 SSE `tool.updated`。
+- Phase 4.2 的参数装配按 `Capability.InputSchema.Properties` 选择字段，当前只支持单文本入口和轻量 `map[string]string` schema；完整 JSON Schema 2020-12 / `oneOf` / `$defs` adapter 必须在接真实 provider 前补齐。
+- 写域或需要 approval 的 capability 仍在 Phase 6 前阻断执行，只保留选择审计。
+
 ### Task 4.3 Production LLM provider implementation
 
 创建：

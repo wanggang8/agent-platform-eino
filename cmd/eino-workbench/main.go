@@ -43,11 +43,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	toolRunner := execution.NewToolLoopRunner(
+		repository,
+		registry,
+		capabilities.NewMockProvider("config-mock", registry.List()),
+		execution.ToolLoopRunnerConfig{},
+	)
 
 	// 服务路径使用 SQLite Product Facts，确保 Workbench、Action API、Replay 和 SSE 同源。
 	deps := httpapi.Dependencies{
 		Projection: product.NewFactsProjection(repository),
-		Commands:   execution.NewRunnerCommandsWithRegistry(repository, runner, registry),
+		Commands:   execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry),
 	}
 	server := &http.Server{
 		Addr:         cfg.Server.Addr,

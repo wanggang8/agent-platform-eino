@@ -13,10 +13,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection)
-    ;;
-  tool-card)
-    not_implemented "Phase 4"
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card)
     ;;
   real-model-chat)
     not_implemented "Phase 4.3"
@@ -111,7 +108,7 @@ capabilities:
     tool_name: "phase3_smoke_read"
     display_name: "Phase 3 read smoke"
     description: "Smoke-only read capability registered from temporary config"
-    result_schema: "structured_result.v1"
+    result_schema: "tool.structured_result.v1"
     risk_level: "read_only"
     approval_required: false
     timeout: "5s"
@@ -120,7 +117,7 @@ capabilities:
     tool_name: "phase3_smoke_write"
     display_name: "Phase 3 write smoke"
     description: "Smoke-only write capability registered from temporary config"
-    result_schema: "structured_result.v1"
+    result_schema: "tool.structured_result.v1"
     risk_level: "write"
     approval_required: true
     timeout: "5s"
@@ -280,7 +277,8 @@ import json, sys
 body = json.load(open(sys.argv[1]))
 assert body["schema_version"] == "eino_action_result.v1"
 assert body["status"] == "completed"
-assert body["final_answer"] == "已收到请求。"
+assert len(body["result_cards"]) == 1, body
+assert body["result_cards"][0]["safe_summary"] == "Phase 3 read smoke 完成", body
 print(body["run_id"])
 PY
 )"
@@ -292,7 +290,14 @@ with sqlite3.connect(db_path) as conn:
         "select event_type, safe_summary from audit_events where run_id = ? order by created_at",
         (run_id,),
     ).fetchall()
+    tool_count = conn.execute("select count(*) from tool_calls where run_id = ?", (run_id,)).fetchone()[0]
+    result_count = conn.execute(
+        "select count(*) from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchone()[0]
 assert any(event_type == "tool" and "capability selected: cap.smoke.read" in summary and "allowed" in summary for event_type, summary in rows), rows
+assert tool_count == 1, tool_count
+assert result_count >= 1, result_count
 PY
   curl -fsS \
     -H "Content-Type: application/json" \
@@ -347,6 +352,61 @@ PY
 )"
   [[ "${run_count_after_missing}" == "${run_count_before_missing}" ]]
   echo "capability-selection smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "tool-card" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-tool-card","client_request_id":"client-smoke-tool-card","capability_hint":"cap.smoke.read","input":{"text":"tool card smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "completed", body
+assert len(body["result_cards"]) == 1, body
+card = body["result_cards"][0]
+assert card["tool_call_id"], card
+assert card["title"] == "Phase 3 read smoke", card
+assert card["safe_summary"] == "Phase 3 read smoke 完成", card
+assert card["structured_result"]["schema_version"] == "tool.structured_result.v1", card
+print(body["run_id"])
+PY
+)"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+tool_cards = [item for item in body["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1, body["timeline"]
+card = tool_cards[0]
+assert card["status"] == "succeeded", card
+assert card["safe_summary"] == "Phase 3 read smoke 完成", card
+assert body["inspector"]["structured"]["structured_result"]["schema_version"] == "tool.structured_result.v1"
+PY
+  curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/stream" -o "${stream_body}"
+  grep -qi '^Content-Type: text/event-stream' "${stream_headers}"
+  grep -q "event: tool.updated" "${stream_body}"
+  grep -q "Phase 3 read smoke 完成" "${stream_body}"
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    tool_count = conn.execute("select count(*) from tool_calls where run_id = ?", (run_id,)).fetchone()[0]
+    result_rows = conn.execute(
+        "select tr.structured_schema_version, tr.safe_summary from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchall()
+    audit_rows = conn.execute("select event_type, safe_summary from audit_events where run_id = ?", (run_id,)).fetchall()
+assert tool_count == 1, tool_count
+assert any(schema == "tool.structured_result.v1" and summary == "Phase 3 read smoke 完成" for schema, summary in result_rows), result_rows
+assert any(event_type == "tool" and "tool completed: cap.smoke.read" in summary for event_type, summary in audit_rows), audit_rows
+PY
+  echo "tool-card smoke passed"
   exit 0
 fi
 
