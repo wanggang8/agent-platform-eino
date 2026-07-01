@@ -39,11 +39,13 @@ type DatabaseConfig struct {
 type LLMConfig struct {
 	Provider          string              `yaml:"provider"`
 	BaseURL           string              `yaml:"base_url"`
+	APIKey            string              `yaml:"api_key"`
 	Model             string              `yaml:"model"`
-	ModelLabel        string              `yaml:"model_label"`
-	TimeoutMillis     int                 `yaml:"timeout_ms"`
-	NetworkSafety     NetworkSafetyConfig `yaml:"network_safety"`
-	CredentialBinding CredentialBinding   `yaml:"credential_binding"`
+	Timeout           time.Duration       `yaml:"timeout"`
+	ModelLabel        string              `yaml:"-"`
+	TimeoutMillis     int                 `yaml:"-"`
+	NetworkSafety     NetworkSafetyConfig `yaml:"-"`
+	CredentialBinding CredentialBinding   `yaml:"-"`
 }
 
 // NetworkSafetyConfig 定义模型 provider 出站网络策略。
@@ -116,6 +118,7 @@ func LoadConfig(path string) (Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, fmt.Errorf("parse config file: %w", err)
 	}
+	cfg.applyDerivedDefaults()
 	if err := cfg.Validate(); err != nil {
 		return Config{}, err
 	}
@@ -139,26 +142,17 @@ func (cfg Config) Validate() error {
 	if strings.TrimSpace(cfg.LLM.BaseURL) == "" {
 		return errors.New("llm.base_url is required")
 	}
+	if err := validateBaseURL(cfg.LLM.BaseURL); err != nil {
+		return err
+	}
 	if strings.TrimSpace(cfg.LLM.Model) == "" {
 		return errors.New("llm.model is required")
 	}
-	if cfg.LLM.TimeoutMillis <= 0 {
-		return errors.New("llm.timeout_ms must be positive")
+	if providerRequiresAPIKey(cfg.LLM.Provider) && strings.TrimSpace(cfg.LLM.APIKey) == "" {
+		return errors.New("llm.api_key is required for provider")
 	}
-	if strings.TrimSpace(cfg.LLM.CredentialBinding.SchemaVersion) == "" {
-		return errors.New("llm.credential_binding.schema_version is required")
-	}
-	if strings.TrimSpace(cfg.LLM.CredentialBinding.WorkspaceID) == "" {
-		return errors.New("llm.credential_binding.workspace_id is required")
-	}
-	if strings.TrimSpace(cfg.LLM.CredentialBinding.System) == "" {
-		return errors.New("llm.credential_binding.system is required")
-	}
-	if strings.TrimSpace(cfg.LLM.CredentialBinding.Status) == "" {
-		return errors.New("llm.credential_binding.status is required")
-	}
-	if strings.TrimSpace(cfg.LLM.CredentialBinding.DisplayRef) == "" {
-		return errors.New("llm.credential_binding.display_ref is required")
+	if cfg.LLM.Timeout <= 0 {
+		return errors.New("llm.timeout must be positive")
 	}
 	if cfg.Server.ReadTimeout <= 0 {
 		return errors.New("server.read_timeout must be positive")
@@ -189,6 +183,97 @@ func (cfg Config) Validate() error {
 	return nil
 }
 
+// applyDerivedDefaults 从最小本地配置派生运行时安全字段，避免要求用户维护内部状态。
+func (cfg *Config) applyDerivedDefaults() {
+	cfg.LLM.applyDerivedDefaults()
+}
+
+// applyDerivedDefaults 派生 model label、timeout_ms、credential binding 和网络安全默认值。
+func (cfg *LLMConfig) applyDerivedDefaults() {
+	cfg.Provider = strings.TrimSpace(cfg.Provider)
+	cfg.BaseURL = strings.TrimSpace(cfg.BaseURL)
+	cfg.Model = strings.TrimSpace(cfg.Model)
+	if cfg.Timeout <= 0 {
+		cfg.Timeout = 30 * time.Second
+	}
+	cfg.ModelLabel = cfg.Model
+	cfg.TimeoutMillis = int(cfg.Timeout / time.Millisecond)
+	cfg.CredentialBinding = derivedCredentialBinding(cfg.Provider, cfg.APIKey)
+	cfg.NetworkSafety = derivedNetworkSafety(cfg.BaseURL)
+}
+
+// validateBaseURL 校验本地 YAML 中的 LLM 地址，避免派生出空网络策略。
+func validateBaseURL(value string) error {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return errors.New("llm.base_url must be an absolute URL")
+	}
+	return nil
+}
+
+// providerRequiresAPIKey 标记真实模型 provider 的最小凭据要求。
+func providerRequiresAPIKey(provider string) bool {
+	switch provider {
+	case "openai_compatible", "openai", "azure_openai", "custom":
+		return true
+	default:
+		return false
+	}
+}
+
+// derivedCredentialBinding 只生成可展示安全状态，不暴露 api_key。
+func derivedCredentialBinding(provider string, apiKey string) CredentialBinding {
+	status := "missing"
+	displayRef := "missing:llm"
+	if strings.TrimSpace(apiKey) != "" || provider == "mock" {
+		status = "bound"
+		displayRef = "bound:llm:" + provider
+	}
+	return CredentialBinding{
+		SchemaVersion: "eino.provider_credential_binding.v1",
+		WorkspaceID:   "local",
+		System:        "llm",
+		Status:        status,
+		DisplayRef:    displayRef,
+		OwnerScope:    "local",
+	}
+}
+
+// derivedNetworkSafety 从 base_url 推导默认网络策略；高级覆盖后续在真实 provider 阶段再引入。
+func derivedNetworkSafety(baseURL string) NetworkSafetyConfig {
+	parsed, err := url.Parse(baseURL)
+	host := ""
+	if err == nil {
+		host = parsed.Hostname()
+	}
+	localHTTP := parsed != nil && parsed.Scheme == "http" && isLocalHost(host)
+	return NetworkSafetyConfig{
+		RequireHTTPS:         !localHTTP,
+		AllowLocalHTTP:       localHTTP,
+		BlockPrivateNetworks: true,
+		AllowRedirects:       false,
+		AllowedHosts:         nonEmptyHosts(host),
+	}
+}
+
+// isLocalHost 判断本地开发允许的 loopback host。
+func isLocalHost(host string) bool {
+	switch host {
+	case "127.0.0.1", "localhost", "::1":
+		return true
+	default:
+		return false
+	}
+}
+
+// nonEmptyHosts 返回网络策略可用的 host 列表。
+func nonEmptyHosts(host string) []string {
+	if host == "" {
+		return nil
+	}
+	return []string{host}
+}
+
 // RedactedSummary 返回可写入日志或诊断的脱敏配置摘要。
 func (cfg Config) RedactedSummary() RedactedSummary {
 	return RedactedSummary{
@@ -202,10 +287,10 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 			"dsn":    redactValue(cfg.Database.DSN),
 		},
 		"llm": map[string]any{
-			"provider":   cfg.LLM.Provider,
-			"base_url":   redactURL(cfg.LLM.BaseURL),
-			"model":      cfg.LLM.Model,
-			"timeout_ms": cfg.LLM.TimeoutMillis,
+			"provider": cfg.LLM.Provider,
+			"base_url": redactURL(cfg.LLM.BaseURL),
+			"model":    cfg.LLM.Model,
+			"timeout":  cfg.LLM.Timeout.String(),
 			"credential_binding": map[string]any{
 				"schema_version": cfg.LLM.CredentialBinding.SchemaVersion,
 				"workspace_id":   cfg.LLM.CredentialBinding.WorkspaceID,

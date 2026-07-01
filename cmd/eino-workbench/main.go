@@ -36,8 +36,13 @@ func main() {
 		log.Fatalf("unsupported llm provider %q before Phase 4", cfg.LLM.Provider)
 	}
 	runner := execution.NewChatModelRunner(repository, llm.NewMockProvider("已收到请求。"), llm.Config{
-		Provider: cfg.LLM.Provider,
-		Model:    cfg.LLM.Model,
+		Provider:          cfg.LLM.Provider,
+		BaseURL:           cfg.LLM.BaseURL,
+		Model:             cfg.LLM.Model,
+		ModelLabel:        cfg.LLM.ModelLabel,
+		TimeoutMillis:     cfg.LLM.TimeoutMillis,
+		NetworkSafety:     llm.NetworkSafety(cfg.LLM.NetworkSafety),
+		CredentialBinding: llm.CredentialBinding(cfg.LLM.CredentialBinding),
 	}, execution.ChatModelRunnerConfig{})
 	registry, err := capabilityRegistryFromConfig(cfg.Capabilities)
 	if err != nil {

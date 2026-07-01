@@ -23,20 +23,9 @@ database:
 llm:
   provider: "mock"
   base_url: "https://llm.example.test/v1"
+  api_key: "sk-local-test"
   model: "mock-chat"
-  timeout_ms: 8000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws-demo"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:local"
-    owner_scope: "workspace"
-  network_safety:
-    require_https: true
-    allow_local_http: false
-    block_private_networks: true
-    allow_redirects: false
+  timeout: "8s"
 security:
   redact_secrets: true
   allow_private_network: false
@@ -68,8 +57,14 @@ capabilities:
 	if cfg.Server.ReadTimeout != 2*time.Second {
 		t.Fatalf("read timeout = %s, want 2s", cfg.Server.ReadTimeout)
 	}
-	if cfg.LLM.CredentialBinding.DisplayRef != "bound:llm:local" {
-		t.Fatalf("credential binding was not loaded from local config")
+	if cfg.LLM.TimeoutMillis != 8000 {
+		t.Fatalf("timeout millis = %d, want derived 8000", cfg.LLM.TimeoutMillis)
+	}
+	if cfg.LLM.CredentialBinding.DisplayRef != "bound:llm:mock" {
+		t.Fatalf("credential binding was not derived from local config: %+v", cfg.LLM.CredentialBinding)
+	}
+	if cfg.LLM.NetworkSafety.AllowedHosts[0] != "llm.example.test" {
+		t.Fatalf("network safety allowed hosts not derived: %+v", cfg.LLM.NetworkSafety)
 	}
 	if len(cfg.Capabilities) != 1 || cfg.Capabilities[0].ID != "cap.smoke.read" {
 		t.Fatalf("capabilities were not loaded from local config: %+v", cfg.Capabilities)
@@ -112,18 +107,7 @@ llm:
   provider: "mock"
   base_url: "https://llm.example.test/v1"
   model: "mock-chat"
-  timeout_ms: 8000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws-demo"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:local"
-  network_safety:
-    require_https: true
-    allow_local_http: false
-    block_private_networks: true
-    allow_redirects: false
+  timeout: "8s"
 security:
   redact_secrets: true
 observability:
@@ -144,6 +128,93 @@ capabilities:
 	}
 }
 
+func TestConfigValidationRejectsInvalidLLMBaseURL(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "not-a-url"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+`)
+
+	_, err := bootstrap.LoadConfig(path)
+	if err == nil || !strings.Contains(err.Error(), "llm.base_url") {
+		t.Fatalf("LoadConfig invalid base_url err = %v", err)
+	}
+}
+
+func TestConfigValidationRequiresAPIKeyForOpenAICompatible(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "openai_compatible"
+  base_url: "https://llm.example.test/v1"
+  model: "real-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+`)
+
+	_, err := bootstrap.LoadConfig(path)
+	if err == nil || !strings.Contains(err.Error(), "llm.api_key") {
+		t.Fatalf("LoadConfig missing api_key err = %v", err)
+	}
+}
+
+func TestConfigNormalizesLLMProvider(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: " mock "
+  base_url: "http://127.0.0.1/mock-llm"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.LLM.Provider != "mock" || cfg.LLM.CredentialBinding.DisplayRef != "bound:llm:mock" {
+		t.Fatalf("llm provider not normalized: provider=%q binding=%+v", cfg.LLM.Provider, cfg.LLM.CredentialBinding)
+	}
+}
+
 func TestRedactedSummaryDoesNotExposeSecrets(t *testing.T) {
 	// 配置摘要只允许进入日志的安全字段，URL 中的鉴权信息和查询密钥必须被移除。
 	path := writeConfig(t, `
@@ -157,20 +228,9 @@ database:
 llm:
   provider: "mock"
   base_url: "https://user:llm-secret@llm.example.test/v1?api_key=query-secret"
+  api_key: "sk-local-secret"
   model: "mock-chat"
-  timeout_ms: 8000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws-demo"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:local"
-    owner_scope: "workspace"
-  network_safety:
-    require_https: true
-    allow_local_http: false
-    block_private_networks: true
-    allow_redirects: false
+  timeout: "8s"
 security:
   redact_secrets: true
   allow_private_network: false
@@ -189,7 +249,7 @@ budgets:
 
 	summary := cfg.RedactedSummary()
 	encoded := summary.String()
-	for _, secret := range []string{"db-secret", "llm-secret", "query-secret", "api_key"} {
+	for _, secret := range []string{"db-secret", "llm-secret", "query-secret", "sk-local-secret", "api_key"} {
 		if strings.Contains(encoded, secret) {
 			t.Fatalf("redacted summary leaked %q: %s", secret, encoded)
 		}
@@ -212,19 +272,7 @@ llm:
   provider: "mock"
   base_url: "https://llm.example.test/v1"
   model: "mock-chat"
-  timeout_ms: 8000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws-demo"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:local"
-    owner_scope: "workspace"
-  network_safety:
-    require_https: true
-    allow_local_http: false
-    block_private_networks: true
-    allow_redirects: false
+  timeout: "8s"
 security:
   redact_secrets: true
   allow_private_network: false
@@ -260,18 +308,7 @@ llm:
   provider: "mock"
   base_url: "https://llm.example.test/v1"
   model: "mock-chat"
-  timeout_ms: 8000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws-demo"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:local"
-  network_safety:
-    require_https: true
-    allow_local_http: false
-    block_private_networks: true
-    allow_redirects: false
+  timeout: "8s"
 security:
   redact_secrets: true
 observability:

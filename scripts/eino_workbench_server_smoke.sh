@@ -77,22 +77,7 @@ llm:
   provider: "mock"
   base_url: "http://127.0.0.1/mock-llm"
   model: "mock-chat"
-  model_label: "Mock Chat"
-  timeout_ms: 30000
-  credential_binding:
-    schema_version: "eino.provider_credential_binding.v1"
-    workspace_id: "ws_smoke"
-    system: "llm"
-    status: "bound"
-    display_ref: "bound:llm:smoke"
-    owner_scope: "workspace"
-  network_safety:
-    require_https: false
-    allow_local_http: true
-    block_private_networks: true
-    allow_redirects: false
-    allowed_hosts:
-      - "127.0.0.1"
+  timeout: "30s"
 security:
   redact_secrets: true
   allow_private_network: false

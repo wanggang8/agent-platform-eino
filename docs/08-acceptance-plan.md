@@ -238,7 +238,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 configs/eino-workbench.local.yaml
 ```
 
-配置文件必须包含 LLM provider、Fobrain connector、credential binding、network policy、timeout 和 budget。该文件可包含本地密钥，但不得提交；验收记录只能写脱敏摘要。
+配置文件必须包含最小 LLM provider 字段、Fobrain connector、timeout 和 budget。LLM `credential_binding`、`model_label` 和 `network_safety` 由系统从 `provider/base_url/api_key/model/timeout` 派生；该文件可包含本地密钥，但不得提交；验收记录只能写脱敏摘要。
 
 命令：
 

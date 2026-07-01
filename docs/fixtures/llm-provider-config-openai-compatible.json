@@ -3,23 +3,5 @@
   "provider": "openai_compatible",
   "base_url": "https://llm.example.com/v1",
   "model": "example-chat-model",
-  "model_label": "Example Chat Model",
-  "timeout_ms": 30000,
-  "network_safety": {
-    "require_https": true,
-    "allow_local_http": false,
-    "block_private_networks": true,
-    "allow_redirects": false,
-    "allowed_hosts": ["llm.example.com"]
-  },
-  "credential_binding": {
-    "schema_version": "eino.provider_credential_binding.v1",
-    "workspace_id": "ws-demo",
-    "system": "llm",
-    "status": "bound",
-    "display_ref": "bound:llm:workspace-binding",
-    "owner_scope": "workspace",
-    "updated_at": "2026-06-30T00:00:00Z",
-    "audit_ref": "audit-llm-credential-1"
-  }
+  "timeout": "30s"
 }

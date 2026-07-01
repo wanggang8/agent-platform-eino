@@ -3,27 +3,14 @@
   "$id": "https://agent-platform-eino.local/schemas/llm_provider_config.v1.schema.json",
   "title": "LLM Provider Config",
   "type": "object",
-  "required": ["schema_version", "provider", "base_url", "model", "timeout_ms", "network_safety", "credential_binding"],
+  "required": ["schema_version", "provider", "base_url", "model"],
   "properties": {
     "schema_version": {"const": "eino.llm_provider_config.v1"},
     "provider": {"enum": ["mock", "openai_compatible", "openai", "azure_openai", "custom"]},
     "base_url": {"type": "string", "format": "uri"},
+    "api_key": {"type": "string"},
     "model": {"type": "string"},
-    "model_label": {"type": "string"},
-    "timeout_ms": {"type": "integer", "minimum": 1},
-    "network_safety": {
-      "type": "object",
-      "required": ["require_https", "allow_local_http", "block_private_networks", "allow_redirects"],
-      "properties": {
-        "require_https": {"type": "boolean"},
-        "allow_local_http": {"type": "boolean"},
-        "block_private_networks": {"type": "boolean"},
-        "allow_redirects": {"type": "boolean"},
-        "allowed_hosts": {"type": "array", "items": {"type": "string"}}
-      },
-      "additionalProperties": false
-    },
-    "credential_binding": {"$ref": "provider_credential_binding.v1.schema.json"}
+    "timeout": {"type": "string", "pattern": "^[0-9]+(ms|s|m|h)$"}
   },
   "additionalProperties": false
 }
