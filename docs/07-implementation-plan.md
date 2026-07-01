@@ -487,22 +487,29 @@ rg -n 'StructuredResult|Safety Gate|ToolInfo|InvokableTool|tool-card' docs/07-im
 - `internal/einoapp/product/safety.go`
 - `internal/einoapp/product/assistant_safety.go`
 - `internal/einoapp/product/structured_result_test.go`
-- `internal/einoapp/product/safety_test.go`
+- `internal/einoapp/product/assistant_safety_test.go`
 
 范围：
 
 - 定义 StructuredResult candidate 与 Safety Gate 通过后的安全 StructuredResult。
 - candidate 可以来自 provider/tool adapter；只有 Safety Gate 通过后的结果能写入 Product Facts。
 - Safety Gate 必须拒绝 Authorization、API key、token、password、raw credential ref、raw provider body、checkpoint id、interrupt id。
-- Assistant 输出进入 Product Facts 前也必须经过 assistant safety；Phase 4 可以先在单元测试中覆盖，不要求重写前端。
+- Assistant 输出进入 Product Facts 前也必须经过 assistant safety；`execution.EventMapper` 写入 `Turn` 和 `ToolResult` 前必须调用 product 安全门。
 - 不把 provider raw payload、Eino raw event 或模型 raw message 放入 `facts.ToolResult`。
 
 任务级检查：
 
 ```bash
 go test ./internal/einoapp/product -run 'StructuredResult|Safety|AssistantSafety' -count=1
+go test ./internal/einoapp/execution -run 'RunnerEventMapper' -count=1
 go test ./internal/einoapp/facts ./internal/einoapp/store/sqlite -run 'StructuredResult|Unsafe' -count=1
 ```
+
+完成状态：
+
+- 已实现 `StructuredResultCandidate`、`StructuredResultSafetyGate`、`AssistantSafetyGate` 和 `ContainsUnsafeMaterial`。
+- 已将安全门接入 `execution.EventMapper`，内存仓库和 SQLite 仓库路径都会拒绝 unsafe assistant、pending、StructuredResult schema/result_ref/summary 材料。
+- 当前 Phase 4.1 candidate 只包含 schema、result_ref、safe_summary。若 Phase 4.2 需要增加 display payload、evidence、pagination 或嵌套结构，必须先补 schema、size、depth 和 raw error/provider payload 门禁测试。
 
 ### Task 4.2 Mock capability adapter and Eino tool loop
 
@@ -517,6 +524,7 @@ go test ./internal/einoapp/facts ./internal/einoapp/store/sqlite -run 'Structure
 范围：
 
 - 先用配置驱动的 mock read capability 跑通 Eino `tool.BaseTool` / `tool.InvokableTool`。
+- 如果 mock adapter 增加 `StructuredResultCandidate` 的结构化字段，必须先扩展 Task 4.1 Safety Gate 的 schema/size/depth 校验。
 - `Info()` 只能从 Capability Registry metadata 生成 `schema.ToolInfo`；tool name 不得按 Fobrain 名称、自然语言关键词或旧工具名分支。
 - `InvokableRun(ctx, argumentsInJSON)` 必须校验参数、写 `ToolCall`、把 provider candidate 交给 Safety Gate、写 `ToolResult`，并只向 Eino 返回安全 tool message。
 - tool call、tool result、safe args summary、safe audit 必须先进入 Product Facts，再由 product projection 生成 Workbench/ActionResult/SSE。

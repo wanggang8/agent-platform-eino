@@ -48,6 +48,9 @@ func NewMemoryRepository() *MemoryRepository {
 
 // CreateRun 写入 run 根事实，并更新 workspace 最新 run 索引。
 func (repo *MemoryRepository) CreateRun(_ context.Context, run Run) error {
+	if ContainsUnsafeMaterial(run.SafeError) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -102,6 +105,9 @@ func (repo *MemoryRepository) GetSnapshot(_ context.Context, runID string) (Snap
 
 // UpdateRunStatus 更新内存 run 生命周期。
 func (repo *MemoryRepository) UpdateRunStatus(_ context.Context, runID string, status RunStatus, safeError string, updatedAt time.Time) error {
+	if ContainsUnsafeMaterial(safeError) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -123,6 +129,9 @@ func (repo *MemoryRepository) RecordIdempotency(_ context.Context, record Idempo
 
 // AppendTurn 追加内存消息事实。
 func (repo *MemoryRepository) AppendTurn(_ context.Context, turn Turn) error {
+	if ContainsUnsafeMaterial(turn.Content) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -132,6 +141,9 @@ func (repo *MemoryRepository) AppendTurn(_ context.Context, turn Turn) error {
 
 // AppendToolCall 追加内存工具调用事实。
 func (repo *MemoryRepository) AppendToolCall(_ context.Context, call ToolCall) error {
+	if ContainsUnsafeMaterial(call.ArgsPreview) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -141,6 +153,9 @@ func (repo *MemoryRepository) AppendToolCall(_ context.Context, call ToolCall) e
 
 // AppendToolResult 将工具结果关联到已有工具调用对应的 run。
 func (repo *MemoryRepository) AppendToolResult(_ context.Context, result ToolResult) error {
+	if UnsafeStructuredResultRef(result.StructuredResult) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -157,6 +172,12 @@ func (repo *MemoryRepository) AppendToolResult(_ context.Context, result ToolRes
 
 // AppendPendingInteraction 追加内存 pending 事实。
 func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pending PendingInteraction) error {
+	if ContainsUnsafeMaterial(pending.ResumeRef) ||
+		ContainsUnsafeMaterial(pending.CheckpointRef) ||
+		ContainsUnsafeMaterial(pending.Question) ||
+		ContainsUnsafeMaterial(pending.RiskSummary) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -176,6 +197,9 @@ func (repo *MemoryRepository) ConsumeResumeRefWithIdempotency(context.Context, s
 
 // AppendAuditEvent 追加内存审计事实。
 func (repo *MemoryRepository) AppendAuditEvent(_ context.Context, event AuditEvent) error {
+	if ContainsUnsafeMaterial(event.SafeSummary) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -185,6 +209,9 @@ func (repo *MemoryRepository) AppendAuditEvent(_ context.Context, event AuditEve
 
 // SaveContextSnapshot 追加内存安全上下文快照。
 func (repo *MemoryRepository) SaveContextSnapshot(_ context.Context, snapshot ContextSnapshot) error {
+	if ContainsUnsafeMaterial(snapshot.SafeSummary) {
+		return ErrUnsafeFactMaterial
+	}
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 

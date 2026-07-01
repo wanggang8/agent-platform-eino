@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"strings"
 	"time"
 
 	"agent-platform-eino/internal/einoapp/facts"
@@ -44,6 +43,9 @@ func (repo *Repository) Close() error {
 
 // CreateRun 创建 run 根事实，调用方负责提供稳定 id 和时间。
 func (repo *Repository) CreateRun(ctx context.Context, run facts.Run) error {
+	if facts.ContainsUnsafeMaterial(run.SafeError) {
+		return facts.ErrUnsafeFactMaterial
+	}
 	_, err := repo.db.ExecContext(ctx, `
 		INSERT INTO runs(run_id, workspace_id, status, created_at, updated_at, model_label, safe_error)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -109,7 +111,7 @@ func (repo *Repository) GetSnapshot(ctx context.Context, runID string) (facts.Sn
 
 // UpdateRunStatus 迁移 run 生命周期，并拒绝把明显不安全材料写入 safe_error。
 func (repo *Repository) UpdateRunStatus(ctx context.Context, runID string, status facts.RunStatus, safeError string, updatedAt time.Time) error {
-	if containsUnsafeMaterial(safeError) {
+	if facts.ContainsUnsafeMaterial(safeError) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	result, err := repo.db.ExecContext(ctx, `
@@ -169,7 +171,7 @@ func (repo *Repository) RecordIdempotency(ctx context.Context, record facts.Idem
 
 // AppendTurn 追加消息事实；content 必须已经是安全投影后的文本。
 func (repo *Repository) AppendTurn(ctx context.Context, turn facts.Turn) error {
-	if containsUnsafeMaterial(turn.Content) {
+	if facts.ContainsUnsafeMaterial(turn.Content) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -187,7 +189,7 @@ func (repo *Repository) AppendTurn(ctx context.Context, turn facts.Turn) error {
 
 // AppendToolCall 追加工具调用事实；args preview 只能是 allowlist 后的安全摘要。
 func (repo *Repository) AppendToolCall(ctx context.Context, call facts.ToolCall) error {
-	if containsUnsafeMaterial(call.ArgsPreview) {
+	if facts.ContainsUnsafeMaterial(call.ArgsPreview) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -208,7 +210,7 @@ func (repo *Repository) AppendToolCall(ctx context.Context, call facts.ToolCall)
 
 // AppendToolResult 追加工具结果事实，只保存 StructuredResult 引用和安全摘要。
 func (repo *Repository) AppendToolResult(ctx context.Context, result facts.ToolResult) error {
-	if containsUnsafeMaterial(result.StructuredResult.SafeSummary) {
+	if facts.UnsafeStructuredResultRef(result.StructuredResult) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -226,10 +228,10 @@ func (repo *Repository) AppendToolResult(ctx context.Context, result facts.ToolR
 
 // AppendPendingInteraction 追加审批/澄清等待事实；resume/checkpoint 都必须是安全引用。
 func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending facts.PendingInteraction) error {
-	if containsUnsafeMaterial(pending.ResumeRef) ||
-		containsUnsafeMaterial(pending.CheckpointRef) ||
-		containsUnsafeMaterial(pending.Question) ||
-		containsUnsafeMaterial(pending.RiskSummary) {
+	if facts.ContainsUnsafeMaterial(pending.ResumeRef) ||
+		facts.ContainsUnsafeMaterial(pending.CheckpointRef) ||
+		facts.ContainsUnsafeMaterial(pending.Question) ||
+		facts.ContainsUnsafeMaterial(pending.RiskSummary) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -331,7 +333,7 @@ func (repo *Repository) ConsumeResumeRefWithIdempotency(ctx context.Context, res
 
 // AppendAuditEvent 追加审计事件；只允许安全摘要进入 audit。
 func (repo *Repository) AppendAuditEvent(ctx context.Context, event facts.AuditEvent) error {
-	if containsUnsafeMaterial(event.SafeSummary) {
+	if facts.ContainsUnsafeMaterial(event.SafeSummary) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -349,7 +351,7 @@ func (repo *Repository) AppendAuditEvent(ctx context.Context, event facts.AuditE
 
 // SaveContextSnapshot 保存模型调用前的安全上下文摘要。
 func (repo *Repository) SaveContextSnapshot(ctx context.Context, snapshot facts.ContextSnapshot) error {
-	if containsUnsafeMaterial(snapshot.SafeSummary) {
+	if facts.ContainsUnsafeMaterial(snapshot.SafeSummary) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	_, err := repo.db.ExecContext(ctx, `
@@ -712,25 +714,4 @@ func parseTime(value string) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return parsed, nil
-}
-
-// containsUnsafeMaterial 是 repository 层的最后一道轻量防线，阻止明显密钥或 raw payload 入库。
-func containsUnsafeMaterial(value string) bool {
-	lower := strings.ToLower(value)
-	for _, marker := range []string{
-		"authorization:",
-		"bearer ",
-		"api_key",
-		"apikey",
-		"credential",
-		"secret",
-		"raw provider",
-		"raw_payload",
-		"checkpoint-raw",
-	} {
-		if strings.Contains(lower, marker) {
-			return true
-		}
-	}
-	return false
 }

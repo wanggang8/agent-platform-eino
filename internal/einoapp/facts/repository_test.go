@@ -2,6 +2,7 @@ package facts_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -59,13 +60,13 @@ func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
 		ToolCallID: "call-1",
 		Status:     facts.ToolResultSucceeded,
 		StructuredResult: facts.StructuredResultRef{
-			SchemaVersion: "tool.structured_result.v1",
+			SchemaVersion: facts.StructuredResultSchemaVersion,
 			ResultRef:     "result:call-1",
 			SafeSummary:   "查询完成",
 		},
 	}
 
-	if result.StructuredResult.SchemaVersion != "tool.structured_result.v1" {
+	if result.StructuredResult.SchemaVersion != facts.StructuredResultSchemaVersion {
 		t.Fatalf("structured result schema = %q", result.StructuredResult.SchemaVersion)
 	}
 }
@@ -119,5 +120,72 @@ func TestMemoryRepositoryTracksLatestRunByWorkspace(t *testing.T) {
 	}
 	if latest.RunID != "run-2" {
 		t.Fatalf("latest run = %q", latest.RunID)
+	}
+}
+
+func TestMemoryRepositoryRejectsUnsafeFactMaterial(t *testing.T) {
+	// 内存仓库也必须执行最后防线，避免单元测试替身掩盖 Product Facts 安全问题。
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-1", WorkspaceID: "ws-1", Status: facts.RunStatusRunning}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-unsafe",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusFailed,
+		SafeError:   "raw_payload={}",
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe create run err = %v", err)
+	}
+	if err := repository.AppendTurn(ctx, facts.Turn{
+		TurnID:  "turn-1",
+		RunID:   "run-1",
+		Role:    facts.TurnRoleAssistant,
+		Content: "Authorization: Bearer local-secret",
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe turn err = %v", err)
+	}
+	if err := repository.AppendToolCall(ctx, facts.ToolCall{
+		ToolCallID:  "call-1",
+		RunID:       "run-1",
+		Status:      facts.ToolCallRunning,
+		ArgsPreview: "target=example",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.AppendToolResult(ctx, facts.ToolResult{
+		ResultID:   "result-1",
+		ToolCallID: "call-1",
+		Status:     facts.ToolResultSucceeded,
+		StructuredResult: facts.StructuredResultRef{
+			SchemaVersion: facts.StructuredResultSchemaVersion,
+			ResultRef:     "credential_ref=local-secret",
+			SafeSummary:   "查询完成",
+		},
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe result ref err = %v", err)
+	}
+	if err := repository.AppendToolResult(ctx, facts.ToolResult{
+		ResultID:   "result-2",
+		ToolCallID: "call-1",
+		Status:     facts.ToolResultSucceeded,
+		StructuredResult: facts.StructuredResultRef{
+			SchemaVersion: "provider.raw.v1",
+			ResultRef:     "result:call-1",
+			SafeSummary:   "查询完成",
+		},
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe schema err = %v", err)
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-1",
+		RunID:         "run-1",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-1",
+		CheckpointRef: "checkpoint-raw-eino-id",
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe pending err = %v", err)
 	}
 }

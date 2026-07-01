@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"agent-platform-eino/internal/einoapp/facts"
+	"agent-platform-eino/internal/einoapp/product"
 )
 
 // RunnerEventKind 是 execution 内部事件类型，不允许直接作为 Workbench 或 Action API 契约。
@@ -71,11 +72,16 @@ func NewEventMapper(repository facts.Repository, config EventMapperConfig) Event
 func (mapper EventMapper) Map(ctx context.Context, event RunnerEvent) error {
 	switch event.Kind {
 	case RunnerEventAssistantMessage:
+		// assistant 文本进入 facts 前必须先经过产品安全门，避免 raw provider 内容旁路入库。
+		content, err := product.NewAssistantSafetyGate().Approve(event.Content)
+		if err != nil {
+			return err
+		}
 		return mapper.repository.AppendTurn(ctx, facts.Turn{
 			TurnID:    turnID(event),
 			RunID:     event.RunID,
 			Role:      facts.TurnRoleAssistant,
-			Content:   event.Content,
+			Content:   content,
 			Sequence:  event.Sequence,
 			CreatedAt: mapper.now(),
 		})
@@ -90,15 +96,20 @@ func (mapper EventMapper) Map(ctx context.Context, event RunnerEvent) error {
 			CreatedAt:   mapper.now(),
 		})
 	case RunnerEventToolResult:
+		// StructuredResult 是工具结果唯一事实材料，写入前必须完成安全候选收敛。
+		structuredResult, err := product.NewStructuredResultSafetyGate().Approve(product.StructuredResultCandidate{
+			SchemaVersion: product.StructuredResultSchemaVersion,
+			ResultRef:     event.ResultRef,
+			SafeSummary:   event.SafeSummary,
+		})
+		if err != nil {
+			return err
+		}
 		return mapper.repository.AppendToolResult(ctx, facts.ToolResult{
-			ResultID:   event.ResultID,
-			ToolCallID: event.ToolCallID,
-			Status:     facts.ToolResultStatus(event.Status),
-			StructuredResult: facts.StructuredResultRef{
-				SchemaVersion: "tool.structured_result.v1",
-				ResultRef:     event.ResultRef,
-				SafeSummary:   event.SafeSummary,
-			},
+			ResultID:         event.ResultID,
+			ToolCallID:       event.ToolCallID,
+			Status:           facts.ToolResultStatus(event.Status),
+			StructuredResult: structuredResult,
 		})
 	case RunnerEventPending:
 		return mapper.repository.AppendPendingInteraction(ctx, facts.PendingInteraction{

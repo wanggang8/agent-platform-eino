@@ -96,10 +96,12 @@
 | 字段 | 来源 | 可展示 | 说明 |
 | --- | --- | --- | --- |
 | `tool_call_id` | ToolCall | 是 | 关联工具调用 |
-| `structured_result` | Safety Gate | 是 | 唯一结果材料 |
+| `structured_result` | StructuredResult Safety Gate | 是 | 唯一结果材料，当前 schema 为 `tool.structured_result.v1` |
 | `presentation` | Product Mapper | 是 | 只能从 structured_result 派生 |
 | `safe_error` | Safety Gate | 是 | 失败摘要 |
 | `result_ref` | 项目生成 | 是 | 安全引用，不可反查 raw payload |
+
+工具 adapter/provider 只能产出 StructuredResult candidate。candidate 必须先通过 product 层 Safety Gate，转成 `facts.StructuredResultRef` 后才能写入 Product Facts。`execution.EventMapper` 是 assistant/tool runner event 写入路径的强制接入点，内存 repository 和 SQLite repository 都保留 schema/result_ref/summary 的最后一道 unsafe material 防线。
 
 ### PendingInteraction
 

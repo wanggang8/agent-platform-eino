@@ -85,7 +85,7 @@ func TestToolCallResultContextSnapshotAndAuditPersist(t *testing.T) {
 		ToolCallID: "call-1",
 		Status:     facts.ToolResultSucceeded,
 		StructuredResult: facts.StructuredResultRef{
-			SchemaVersion: "tool.structured_result.v1",
+			SchemaVersion: facts.StructuredResultSchemaVersion,
 			ResultRef:     "result:call-1",
 			SafeSummary:   "查询完成",
 		},
@@ -317,6 +317,16 @@ func TestUnsafeFactMaterialIsRejected(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-unsafe",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusFailed,
+		SafeError:   "raw_payload={}",
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}); !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe create run err = %v", err)
+	}
 	// checkpoint_ref 只能是安全引用，raw Eino checkpoint marker 必须被拒绝。
 	err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
 		PendingID:     "pending-1",
@@ -352,6 +362,47 @@ func TestUnsafeFactMaterialIsRejected(t *testing.T) {
 			})
 			if !errors.Is(err, facts.ErrUnsafeFactMaterial) {
 				t.Fatalf("unsafe args preview err = %v", err)
+			}
+		})
+	}
+
+	err = repository.AppendToolResult(ctx, facts.ToolResult{
+		ResultID:   "result-unsafe",
+		ToolCallID: "call-safe",
+		Status:     facts.ToolResultSucceeded,
+		StructuredResult: facts.StructuredResultRef{
+			SchemaVersion: facts.StructuredResultSchemaVersion,
+			ResultRef:     "result:call-safe",
+			SafeSummary:   "raw_payload={\"secret\":\"value\"}",
+		},
+	})
+	if !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+		t.Fatalf("unsafe structured result summary err = %v", err)
+	}
+
+	for _, testCase := range []struct {
+		name             string
+		schemaVersion    string
+		resultRef        string
+		wantUnsafeReason string
+	}{
+		{name: "unsafe result ref", schemaVersion: facts.StructuredResultSchemaVersion, resultRef: "checkpoint-raw-eino-id", wantUnsafeReason: "result ref"},
+		{name: "unsafe interrupt ref", schemaVersion: facts.StructuredResultSchemaVersion, resultRef: "interrupt-raw-eino-id", wantUnsafeReason: "interrupt ref"},
+		{name: "unsupported schema", schemaVersion: "provider.raw.v1", resultRef: "result:call-safe", wantUnsafeReason: "schema"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := repository.AppendToolResult(ctx, facts.ToolResult{
+				ResultID:   "result-" + testCase.name,
+				ToolCallID: "call-safe",
+				Status:     facts.ToolResultSucceeded,
+				StructuredResult: facts.StructuredResultRef{
+					SchemaVersion: testCase.schemaVersion,
+					ResultRef:     testCase.resultRef,
+					SafeSummary:   "查询完成",
+				},
+			})
+			if !errors.Is(err, facts.ErrUnsafeFactMaterial) {
+				t.Fatalf("unsafe structured result %s err = %v", testCase.wantUnsafeReason, err)
 			}
 		})
 	}
