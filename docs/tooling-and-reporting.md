@@ -74,6 +74,7 @@ npm run eino-workbench:visual-test -- --update-snapshots
 
 | 报告 | 路径 |
 | --- | --- |
+| 真实模型 provider 报告 | `test-results/eino-workbench-real-model-provider-report.json` |
 | 真实模型工具报告 | `test-results/eino-workbench-real-model-tool-report.json` |
 | live read 报告 | `test-results/eino-workbench-live-read-report.json` |
 | live write 报告 | `test-results/eino-workbench-live-write-report.json` |

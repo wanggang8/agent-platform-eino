@@ -18,6 +18,9 @@ case "${scenario}" in
   tool-card)
     not_implemented "Phase 4"
     ;;
+  real-model-chat)
+    not_implemented "Phase 4.3"
+    ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
     ;;
@@ -36,7 +39,7 @@ case "${scenario}" in
     ;;
   *)
     echo "unsupported scenario: ${scenario}" >&2
-    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
+    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
     exit 2
     ;;
 esac

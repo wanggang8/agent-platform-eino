@@ -169,9 +169,12 @@ Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 
 - 校验 schema。
 - 对 `capability-selection`，断言普通自然语言默认进入 ChatModelAgent，显式 action/capability_hint 通过配置驱动的 registry 和 policy，未知 hint 在创建 run 前被拒绝，需要审批的 hint 不会触发 runner 或 context snapshot。
 - 对 `context-projection`，断言模型输入上下文只来自 safe Product Facts / StructuredResult，并生成不含 raw、credential、token、checkpoint、interrupt 的 context snapshot。
+- 对 `tool-card`，断言 mock read capability 经 Eino tool loop 写入 ToolCall、Safety Gate 后的 ToolResult、Workbench 工具卡、ActionResult result card、SSE tool patch 和 audit。
 - 对 `run-lifecycle`，断言 cancel、stop、timeout、retry 和终态幂等符合 `run-lifecycle.md`。
 - 对 `action-consistency`，提交 Action 后用同一 run_id 拉取 run、views/current、replay，并断言 assistant/tool/pending/audit 字段同源。
 - 清理进程。
+
+Phase 4/P0 完成后，`tool-card` 不得再返回 `exit 2`；它必须使用本地 mock capability provider，不依赖真实模型凭据。`real-model-chat` 归属 P1 真实模型 smoke：只有在 Phase 4.3 引入 OpenAI-compatible provider 后才能打开；无本地凭据时必须生成 skipped report，不能作为通过信号。
 
 ## HITL 门禁
 
@@ -241,11 +244,20 @@ configs/eino-workbench.local.yaml
 
 ```bash
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc --config configs/eino-workbench.local.yaml
+bash scripts/eino_workbench_server_smoke.sh --scenario real-model-chat --config configs/eino-workbench.local.yaml
 ```
 
-smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清理进程。无凭据时脚本输出 skipped report，并在 acceptance 记录原因。有凭据时失败即 gate 失败。
+smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清理进程。无凭据时脚本输出 skipped report，并在 acceptance 记录原因。有凭据时失败即 gate 失败。`real-model-chat` 只验证模型 provider 边界和错误脱敏；Fobrain 工具选择仍由 `fobrain-poc` / Phase 5+ 门禁覆盖。
 
-报告必须包含：
+`real-model-chat` provider-only 报告必须包含：
+
+- prompt。
+- provider kind、model label 和脱敏配置摘要。
+- assistant final answer。
+- provider error category 或 success status。
+- redaction checks。
+
+`fobrain-poc` 工具选择报告必须包含：
 
 - prompt。
 - selected tool。
@@ -255,9 +267,11 @@ smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清�
 - screenshot path。
 - failure category。
 
-真实模型工具选择必须符合 `intent-and-capability-selection.md`：不按后端关键词路由；资产/漏洞、单 IP 查询/IP 统计、connector status/业务读取、写域审批等场景不得误选。误选、未写入 selected tool 或未写入 safe args summary 均为 failed。
+`real-model-chat` 已执行报告必须通过 `schemas/real-model-provider-report.schema.json`，状态只允许 passed/failed。
 
-已执行报告必须通过 `schemas/real-model-report.schema.json`，状态只允许 passed/failed。无凭据时不生成 real model report，改为生成 skipped report；skipped report 必须通过 `schemas/skip-report.schema.json`，且 `blocks_claims` 明确标记阻断项。
+Fobrain 真实模型工具选择必须符合 `intent-and-capability-selection.md`：不按后端关键词路由；资产/漏洞、单 IP 查询/IP 统计、connector status/业务读取、写域审批等场景不得误选。误选、未写入 selected tool 或未写入 safe args summary 均为 failed。
+
+`fobrain-poc` 已执行报告必须通过 `schemas/real-model-report.schema.json`，状态只允许 passed/failed。无凭据时不生成 real model report，改为生成 skipped report；skipped report 必须通过 `schemas/skip-report.schema.json`，且 `blocks_claims` 明确标记阻断项。
 
 ## Fobrain live 门禁
 

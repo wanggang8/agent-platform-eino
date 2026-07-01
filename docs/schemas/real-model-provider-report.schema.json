@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/real-model-provider-report.schema.json",
+  "title": "Eino Workbench Real Model Provider Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scenario",
+    "status",
+    "prompt_id",
+    "prompt",
+    "provider_kind",
+    "model_label",
+    "redacted_config_summary",
+    "assistant_final_answer",
+    "provider_error_category",
+    "redaction_checks",
+    "failure_category"
+  ],
+  "properties": {
+    "schema_version": {"const": "eino.real_model_provider_report.v1"},
+    "scenario": {"const": "real-model-chat"},
+    "status": {"enum": ["passed", "failed"]},
+    "prompt_id": {"type": "string"},
+    "prompt": {"type": "string"},
+    "provider_kind": {"type": "string"},
+    "model_label": {"type": "string"},
+    "redacted_config_summary": {
+      "type": "object",
+      "required": ["provider", "model", "timeout_ms", "credential_display_ref", "network_policy"],
+      "properties": {
+        "provider": {"type": "string"},
+        "base_url": {"type": "string"},
+        "model": {"type": "string"},
+        "timeout_ms": {"type": "integer", "minimum": 1},
+        "credential_display_ref": {"type": "string"},
+        "network_policy": {
+          "type": "object",
+          "properties": {
+            "require_https": {"type": "boolean"},
+            "allow_local_http": {"type": "boolean"},
+            "allowed_hosts_count": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "assistant_final_answer": {"type": "string"},
+    "provider_error_category": {"type": "string"},
+    "redaction_checks": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "authorization_not_present",
+          "api_key_not_present",
+          "token_not_present",
+          "raw_prompt_not_present",
+          "raw_provider_body_not_present"
+        ]
+      },
+      "minItems": 1
+    },
+    "run_id": {"type": "string"},
+    "report_created_at": {"type": "string", "format": "date-time"},
+    "failure_category": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "provider_error_category": {"const": "none"},
+          "failure_category": {"const": "none"}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

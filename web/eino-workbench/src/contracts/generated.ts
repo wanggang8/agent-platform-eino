@@ -132,6 +132,11 @@ export const contractSchemas = [
     "path": "docs/schemas/provider_redacted_error.v1.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/real-model-provider-report.schema.json",
+    "title": "Eino Workbench Real Model Provider Report",
+    "path": "docs/schemas/real-model-provider-report.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/real-model-report.schema.json",
     "title": "Eino Workbench Real Model Report",
     "path": "docs/schemas/real-model-report.schema.json"

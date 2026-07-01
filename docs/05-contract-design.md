@@ -188,12 +188,13 @@ SSE 事件必须包含：
 
 真实模型、live smoke、skip 记录必须有机器可读 schema：
 
+- `schemas/real-model-provider-report.schema.json`
 - `schemas/real-model-report.schema.json`
 - `schemas/live-read-report.schema.json`
 - `schemas/live-write-report.schema.json`
 - `schemas/skip-report.schema.json`
 
-real model、live read、live write report 只表达已执行后的 `passed` / `failed`。未执行场景统一写 `skip-report.schema.json`，不得把 skipped 混入 real/live report。
+real model provider、real model tool、live read、live write report 只表达已执行后的 `passed` / `failed`。未执行场景统一写 `skip-report.schema.json`，不得把 skipped 混入 real/live report。
 
 skip report 必须包含 command、missing_env、credential_scope、reason、rerun_condition、blocks_claims、expires_at。
 

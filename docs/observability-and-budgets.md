@@ -78,11 +78,11 @@ AuditEvent 不得包含 raw prompt、Authorization、API key、credential ref、
 
 ## 报告
 
-real model、live read、live write 和 skip report 必须包含：
+real model provider、real model tool、live read、live write 和 skip report 必须包含：
 
 - command / scenario。
-- selected tool。
-- sanitized args summary。
+- provider-only 报告包含 provider kind、model label、脱敏配置摘要和 redaction checks。
+- tool/live 报告包含 selected tool、sanitized args summary 和 tool card rendering status。
 - latency 或 safe duration summary。
 - failure category。
 - screenshot/report path。

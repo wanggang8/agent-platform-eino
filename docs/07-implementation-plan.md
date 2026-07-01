@@ -453,6 +453,32 @@ bash scripts/eino_workbench_server_smoke.sh --scenario context-projection
 
 ## Phase 4：Tools、Provider、Safety
 
+### Task 4.0 Phase 4 technical gate
+
+读取：
+
+- `docs/adr/2026-07-01-phase-4-tool-loop-before-real-llm.md`
+- `docs/capability-provider-contract.md`
+- `docs/facts-contract.md`
+- `docs/llm-provider-safety.md`
+- `docs/intent-and-capability-selection.md`
+- 本地 Eino `v0.9.12` API：`components/tool/interface.go`、`schema/tool.go`、`adk/chatmodel.go`
+
+要求：
+
+- Phase 4 必须先证明本地 mock tool loop 的 Product Facts 链路，再接真实 LLM provider。
+- 不得让真实 provider 网络、凭据或模型选择不稳定性成为 StructuredResult / Safety Gate / tool-card 的前置依赖。
+- Eino tool 只作为执行编排入口；Workbench、ActionResult、SSE、Replay 和 Audit 仍只能从 Product Facts 投影。
+- `tool-card` smoke 打开前，必须已有 StructuredResult Safety Gate、mock capability adapter 和 Eino tool loop 单元测试。
+
+任务级检查：
+
+```bash
+go list -m github.com/cloudwego/eino
+test -f docs/adr/2026-07-01-phase-4-tool-loop-before-real-llm.md
+rg -n 'StructuredResult|Safety Gate|ToolInfo|InvokableTool|tool-card' docs/07-implementation-plan.md docs/capability-provider-contract.md docs/facts-contract.md
+```
+
 ### Task 4.1 StructuredResult and Safety Gate
 
 创建：
@@ -460,95 +486,79 @@ bash scripts/eino_workbench_server_smoke.sh --scenario context-projection
 - `internal/einoapp/product/structured_result.go`
 - `internal/einoapp/product/safety.go`
 - `internal/einoapp/product/assistant_safety.go`
+- `internal/einoapp/product/structured_result_test.go`
+- `internal/einoapp/product/safety_test.go`
+
+范围：
+
+- 定义 StructuredResult candidate 与 Safety Gate 通过后的安全 StructuredResult。
+- candidate 可以来自 provider/tool adapter；只有 Safety Gate 通过后的结果能写入 Product Facts。
+- Safety Gate 必须拒绝 Authorization、API key、token、password、raw credential ref、raw provider body、checkpoint id、interrupt id。
+- Assistant 输出进入 Product Facts 前也必须经过 assistant safety；Phase 4 可以先在单元测试中覆盖，不要求重写前端。
+- 不把 provider raw payload、Eino raw event 或模型 raw message 放入 `facts.ToolResult`。
 
 任务级检查：
 
 ```bash
 go test ./internal/einoapp/product -run 'StructuredResult|Safety|AssistantSafety' -count=1
+go test ./internal/einoapp/facts ./internal/einoapp/store/sqlite -run 'StructuredResult|Unsafe' -count=1
 ```
 
-### Task 4.2 Production LLM provider implementation
+### Task 4.2 Mock capability adapter and Eino tool loop
+
+创建：
+
+- `internal/einoapp/capabilities/tool_adapter.go`
+- `internal/einoapp/capabilities/mock_provider.go`
+- `internal/einoapp/capabilities/provider_contract_test.go`
+- `internal/einoapp/execution/tools.go`
+- `internal/einoapp/execution/tool_loop_test.go`
+
+范围：
+
+- 先用配置驱动的 mock read capability 跑通 Eino `tool.BaseTool` / `tool.InvokableTool`。
+- `Info()` 只能从 Capability Registry metadata 生成 `schema.ToolInfo`；tool name 不得按 Fobrain 名称、自然语言关键词或旧工具名分支。
+- `InvokableRun(ctx, argumentsInJSON)` 必须校验参数、写 `ToolCall`、把 provider candidate 交给 Safety Gate、写 `ToolResult`，并只向 Eino 返回安全 tool message。
+- tool call、tool result、safe args summary、safe audit 必须先进入 Product Facts，再由 product projection 生成 Workbench/ActionResult/SSE。
+- 写域或 `approval_required=true` capability 在 Phase 6 前不能执行 mutation；Phase 4 只验证 read-only mock tool loop。
+- `tool-card` smoke 必须启动服务，用临时配置注册 mock capability，生成 tool card、ActionResult result card、SSE tool patch 和 audit。
+
+任务级检查：
+
+```bash
+go test ./internal/einoapp/capabilities -run 'ProviderContract|StructuredResultConversion|ToolSelectionMetadata|EinoToolAdapter' -count=1
+go test ./internal/einoapp/execution -run 'AgentToolLoop|ToolFacts|ToolSafety' -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario tool-card
+```
+
+### Task 4.3 Production LLM provider implementation
 
 创建：
 
 - `internal/einoapp/llm/openai_compatible.go`
 - `internal/einoapp/llm/network_policy.go`
 - `internal/einoapp/llm/openai_compatible_test.go`
+- `scripts/eino_workbench_real_model_smoke.sh` 或扩展 `scripts/eino_workbench_server_smoke.sh`
 
 范围：
 
 - 基于 Phase 1.6 的 `llm.Provider` 和 `llm.Config` 接入 OpenAI-compatible ChatModel。
-- 禁止把 API key、Authorization、raw provider body 写入 Product Facts、Workbench、ActionResult、audit 或 replay。
+- 真实 provider 只替换模型边界，不改变 Product Facts、tool adapter、product projection 或 HTTP handler。
+- API key、Authorization、base_url、model、timeout、network policy 只来自 ignored 本地配置文件。
+- 禁止把 API key、Authorization、raw provider body 写入 Product Facts、Workbench、ActionResult、audit、replay、日志或验收记录。
 - provider non-2xx、timeout、malformed response 和 network blocked 必须转换为安全错误。
+- 无本地凭据时 real model smoke 只能生成 skipped report，不能作为 passed。
+- `real-model-chat` 归属 P1 真实模型 smoke，不是 P0 `tool-card` 的前置条件。
 
 任务级检查：
 
 ```bash
 go test ./internal/einoapp/llm -run 'OpenAICompatible|NetworkPolicy|RedactedError' -count=1
+# P1 真实模型 smoke；无 ignored 本地凭据时必须生成 skipped report，不能作为 P0 passed。
+bash scripts/eino_workbench_server_smoke.sh --scenario real-model-chat --config configs/eino-workbench.local.yaml
 ```
 
-### Task 4.3 Capability adapters and Eino tool conversion
-
-创建：
-
-- `internal/einoapp/capabilities/tool_adapter.go`
-- `internal/einoapp/capabilities/provider_contract_test.go`
-
-范围：
-
-- Local Tool Provider：P0/P1 必须实现。
-- Connector Provider：P1 通过 Fobrain PoC 验证 metadata、risk、timeout、display name。
-- Skill Provider：P1 可只保留接口，实际 skill registry 接入进入 P2。
-- 所有 provider 原始结果都必须先转 StructuredResult candidate，再经过 Safety Gate。
-- Capability description、input schema、risk、side effect 和 approval metadata 必须足以支撑 Eino native tool selection。
-
-任务级检查：
-
-```bash
-go test ./internal/einoapp/capabilities -run 'ProviderContract|StructuredResultConversion|ToolSelectionMetadata|EinoToolAdapter' -count=1
-```
-
-### Task 4.4 MCP adapter
-
-创建：
-
-- `internal/einoapp/capabilities/mcp_adapter.go`
-- `internal/einoapp/capabilities/mcp_session.go`
-- `internal/einoapp/capabilities/mcp_schema.go`
-- `internal/einoapp/capabilities/mcp_mock_test.go`
-
-范围：
-
-- P0 只完成 mock MCP adapter contract，不接生产 MCP server。
-- P1 可接入受控 MCP server 做 adapter smoke。
-- 生产 MCP server、复杂 auth 和多 server catalog 可在 P2 扩展。
-
-契约要求：
-
-- 先满足 `docs/capability-provider-contract.md`，再接入具体业务 provider。
-- provider 原始结果不得直接进入 Workbench、ActionResult、audit 或 replay。
-- MCP 输出必须先转 StructuredResult candidate，再经过 Safety Gate。
-
-MCP adapter 任务拆分：
-
-- transport / server catalog config。
-- lifecycle / initialize。
-- session auth / reconnect / shutdown。
-- tools/list pagination。
-- listChanged reload。
-- inputSchema conversion。
-- outputSchema / structuredContent / isError conversion。
-- Safety Gate integration。
-- annotations + project risk policy merge。
-- minimal mock MCP server。
-
-任务级检查：
-
-```bash
-go test ./internal/einoapp/capabilities -run 'ProviderRegistry|MCPLifecycle|MCPToolListPagination|MCPListChanged|MCPSchemaConversion|MCPSafety|MCPRiskPolicy' -count=1
-```
-
-### Task 4.5 Provider policy and credentials
+### Task 4.4 Provider policy and credentials
 
 创建：
 
@@ -561,6 +571,7 @@ go test ./internal/einoapp/capabilities -run 'ProviderRegistry|MCPLifecycle|MCPT
 - risk、side_effect、workspace scope、permission、credential binding、approval_required 决策。
 - credential missing、scope denied、connector unavailable 必须产生安全 ActionResult / Workbench 状态。
 - 任何 `credential_ref`、secret 或 token hash 不得进入 JSON 输出。
+- 该任务只增强 policy 与 credential 边界；Phase 6 前不实现真实 approval resume。
 
 任务级检查：
 
@@ -568,18 +579,36 @@ go test ./internal/einoapp/capabilities -run 'ProviderRegistry|MCPLifecycle|MCPT
 go test ./internal/einoapp/capabilities -run 'ProviderPolicy|CredentialBinding|CredentialLeak' -count=1
 ```
 
-### Task 4.6 Eino tool loop
+### Task 4.5 MCP adapter contract
 
-修改：
+创建：
 
-- `internal/einoapp/execution/tools.go`
-- `internal/einoapp/execution/runner.go`
+- `internal/einoapp/capabilities/mcp_adapter.go`
+- `internal/einoapp/capabilities/mcp_session.go`
+- `internal/einoapp/capabilities/mcp_schema.go`
+- `internal/einoapp/capabilities/mcp_mock_test.go`
+
+范围：
+
+- Phase 4 只完成 MCP adapter contract，不接生产 MCP server。
+- MCP 具体生命周期、复杂 auth、多 server catalog 和 live MCP smoke 后移到 P1/P2。
+- 先满足 `docs/capability-provider-contract.md`，再接入具体业务 provider。
+- MCP 输出必须先转 StructuredResult candidate，再经过 Safety Gate。
+
+MCP adapter contract 任务拆分：
+
+- transport / server catalog config shape。
+- lifecycle / initialize mock。
+- tools/list pagination mock。
+- inputSchema conversion。
+- outputSchema / structuredContent / isError conversion。
+- Safety Gate integration。
+- annotations + project risk policy merge。
 
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/execution -run AgentToolLoop -count=1
-bash scripts/eino_workbench_server_smoke.sh --scenario tool-card
+go test ./internal/einoapp/capabilities -run 'MCPLifecycle|MCPToolListPagination|MCPSchemaConversion|MCPSafety|MCPRiskPolicy' -count=1
 ```
 
 ## Phase 5：Fobrain provider PoC
