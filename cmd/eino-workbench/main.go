@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -32,10 +33,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer repository.Close()
-	if cfg.LLM.Provider != "mock" {
-		log.Fatalf("unsupported llm provider %q before Phase 4", cfg.LLM.Provider)
+	provider, err := llmProviderFromConfig(cfg.LLM)
+	if err != nil {
+		log.Fatal(err)
 	}
-	runner := execution.NewChatModelRunner(repository, llm.NewMockProvider("已收到请求。"), llm.Config{
+	runner := execution.NewChatModelRunner(repository, provider, llm.Config{
 		Provider:          cfg.LLM.Provider,
 		BaseURL:           cfg.LLM.BaseURL,
 		Model:             cfg.LLM.Model,
@@ -70,6 +72,18 @@ func main() {
 	log.Printf("eino-workbench listening on http://%s", cfg.Server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
+	}
+}
+
+// llmProviderFromConfig 创建模型 provider；真实密钥只传入 provider 私有边界，不进入 llm.Config。
+func llmProviderFromConfig(cfg bootstrap.LLMConfig) (llm.Provider, error) {
+	switch cfg.Provider {
+	case "mock":
+		return llm.NewMockProvider("已收到请求。"), nil
+	case "openai_compatible":
+		return llm.NewOpenAICompatibleProvider(llm.OpenAICompatibleProviderConfig{APIKey: cfg.APIKey}), nil
+	default:
+		return nil, fmt.Errorf("unsupported llm provider %q", cfg.Provider)
 	}
 }
 

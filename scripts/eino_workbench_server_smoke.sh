@@ -1,10 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-scenario="${1:-}"
-if [[ "$scenario" == "--scenario" ]]; then
-  scenario="${2:-}"
-fi
+scenario=""
+provided_config=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --scenario)
+      scenario="${2:-}"
+      shift 2
+      ;;
+    --config)
+      provided_config="${2:-}"
+      shift 2
+      ;;
+    *)
+      if [[ -z "${scenario}" ]]; then
+        scenario="$1"
+        shift
+      else
+        echo "unsupported argument: $1" >&2
+        exit 2
+      fi
+      ;;
+  esac
+done
 
 not_implemented() {
   local phase="$1"
@@ -13,10 +32,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card)
-    ;;
-  real-model-chat)
-    not_implemented "Phase 4.3"
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|real-model-chat)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
@@ -43,6 +59,40 @@ esac
 
 cd "$(dirname "$0")/.."
 
+write_skip_report() {
+  local reason="$1"
+  mkdir -p test-results
+  python3 - "${reason}" "${provided_config:-configs/eino-workbench.local.yaml}" <<'PY'
+import datetime, json, sys
+reason, config_path = sys.argv[1], sys.argv[2]
+report = {
+    "schema_version": "eino.skip_report.v1",
+    "command": f"bash scripts/eino_workbench_server_smoke.sh --scenario real-model-chat --config {config_path}",
+    "missing_env": ["local_llm_config_or_api_key"],
+    "credential_scope": "llm",
+    "reason": reason,
+    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with llm.provider=openai_compatible and llm.api_key.",
+    "blocks_claims": ["real-model-chat", "P1 real model provider"],
+    "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-skip-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  echo "real-model-chat smoke skipped: ${reason}"
+}
+
+if [[ "${scenario}" == "real-model-chat" ]]; then
+  config_for_real="${provided_config:-configs/eino-workbench.local.yaml}"
+  if [[ ! -f "${config_for_real}" ]]; then
+    write_skip_report "本地 LLM 配置文件不存在"
+    exit 0
+  fi
+  if ! go run ./scripts/eino_workbench_config_prepare.go --check-llm-api-key --source "${config_for_real}" >/dev/null 2>&1; then
+    write_skip_report "本地 LLM api_key 未配置"
+    exit 0
+  fi
+fi
+
 port="$(python3 - <<'PY'
 import socket
 with socket.socket() as s:
@@ -55,6 +105,8 @@ base_url="http://${addr}"
 tmp_dir="$(mktemp -d)"
 server_log="${tmp_dir}/server.log"
 config_file="${tmp_dir}/eino-workbench.yaml"
+real_model_source_config="${provided_config:-configs/eino-workbench.local.yaml}"
+real_model_summary_json="${tmp_dir}/real-model-summary.json"
 
 cleanup() {
   if [[ -n "${server_pid:-}" ]]; then
@@ -65,6 +117,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if [[ "${scenario}" != "real-model-chat" ]]; then
 cat >"${config_file}" <<YAML
 server:
   addr: "${addr}"
@@ -107,6 +160,17 @@ capabilities:
     approval_required: true
     timeout: "5s"
 YAML
+fi
+
+if [[ "${scenario}" == "real-model-chat" ]]; then
+  go run ./scripts/eino_workbench_config_prepare.go \
+    --source "${real_model_source_config}" \
+    --target "${config_file}" \
+    --addr "${addr}" \
+    --dsn "${tmp_dir}/eino-workbench.db" \
+    --summary "${real_model_summary_json}"
+  base_url="http://${addr}"
+fi
 
 go run ./cmd/eino-workbench --config "${config_file}" >"${server_log}" 2>&1 &
 server_pid="$!"
@@ -141,11 +205,22 @@ assert isinstance(body["timeline"], list)
 assert isinstance(body["inspector"], dict)
 PY
 
-curl -fsS \
-  -H "Content-Type: application/json" \
-  -d '{"schema_version":"eino_action_request.v1","action_id":"action-smoke","client_request_id":"client-smoke-action","input":{"text":"hello"}}' \
-  "${base_url}/api/workspaces/ws_smoke/agent/actions" \
-  -o "${action_json}"
+action_status="200"
+if [[ "${scenario}" == "real-model-chat" ]]; then
+  action_status="$(curl -sS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-smoke","client_request_id":"client-smoke-action","input":{"text":"hello"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${action_json}" \
+    -w "%{http_code}")"
+else
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-smoke","client_request_id":"client-smoke-action","input":{"text":"hello"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${action_json}"
+fi
+if [[ "${scenario}" != "real-model-chat" ]]; then
 python3 - "${action_json}" <<'PY'
 import json, sys
 body = json.load(open(sys.argv[1]))
@@ -155,7 +230,9 @@ assert body["status"] in ("accepted", "completed")
 assert isinstance(body["result_cards"], list)
 assert isinstance(body["audit_refs"], list)
 PY
+fi
 
+if [[ "${scenario}" != "real-model-chat" ]]; then
 contract_run_id="$(python3 - "${action_json}" <<'PY'
 import json, sys
 body = json.load(open(sys.argv[1]))
@@ -164,6 +241,7 @@ PY
 )"
 curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/${contract_run_id}/stream" >/dev/null
 grep -qi '^Content-Type: text/event-stream' "${stream_headers}"
+fi
 
 if [[ "${scenario}" == "chat-stream" ]]; then
   curl -fsS \
@@ -235,6 +313,150 @@ with sqlite3.connect(db_path) as conn:
 assert count >= 1
 PY
   echo "action-basic smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "real-model-chat" ]]; then
+  mkdir -p test-results
+  run_id="$(python3 - "${action_json}" "${real_model_summary_json}" "${action_status}" <<'PY'
+import datetime, json, sys
+
+action_path, summary_path, action_status = sys.argv[1:]
+summary = json.load(open(summary_path, encoding="utf-8"))
+try:
+    body = json.load(open(action_path, encoding="utf-8"))
+except Exception:
+    body = {}
+
+def write_report(status, provider_error_category, failure_category, assistant_final_answer="", run_id=""):
+    report = {
+        "schema_version": "eino.real_model_provider_report.v1",
+        "scenario": "real-model-chat",
+        "status": status,
+        "prompt_id": "real-model-smoke-basic",
+        "prompt": "hello",
+        "provider_kind": summary["provider"],
+        "model_label": summary["model"],
+        "redacted_config_summary": summary,
+        "assistant_final_answer": assistant_final_answer,
+        "provider_error_category": provider_error_category,
+        "redaction_checks": [
+            "authorization_not_present",
+            "api_key_not_present",
+            "token_not_present",
+            "raw_prompt_not_present",
+            "raw_provider_body_not_present"
+        ],
+        "run_id": run_id,
+        "report_created_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        "failure_category": failure_category
+    }
+    with open("test-results/eino-workbench-real-model-provider-report.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
+encoded = json.dumps(body, ensure_ascii=False).lower()
+for forbidden in ("authorization", "bearer ", "api_key", "raw provider", "raw body", "token"):
+    if forbidden in encoded:
+        write_report("failed", "redaction_failed", "redaction_failed")
+        sys.exit(1)
+
+if action_status != "200":
+    code = body.get("error", {}).get("code") or f"http_{action_status}"
+    write_report("failed", code, "provider_error")
+    sys.exit(1)
+
+if body.get("schema_version") != "eino_action_result.v1" or body.get("status") != "completed" or not body.get("final_answer", "").strip():
+    code = body.get("error", {}).get("code", "unexpected_action_result")
+    write_report("failed", code, "unexpected_action_result", body.get("final_answer", ""), body.get("run_id", ""))
+    sys.exit(1)
+
+print(body["run_id"])
+PY
+  )" || {
+    echo "real-model-chat smoke failed; report written to test-results/eino-workbench-real-model-provider-report.json"
+    exit 1
+  }
+  if ! curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"; then
+    python3 - "${action_json}" "${real_model_summary_json}" "${run_id}" <<'PY'
+import datetime, json, sys
+action_path, summary_path, run_id = sys.argv[1:]
+body = json.load(open(action_path, encoding="utf-8"))
+summary = json.load(open(summary_path, encoding="utf-8"))
+# snapshot 失败也必须写 failed report，避免真实模型验收只留下 shell 退出码。
+report = {
+    "schema_version": "eino.real_model_provider_report.v1",
+    "scenario": "real-model-chat",
+    "status": "failed",
+    "prompt_id": "real-model-smoke-basic",
+    "prompt": "hello",
+    "provider_kind": summary["provider"],
+    "model_label": summary["model"],
+    "redacted_config_summary": summary,
+    "assistant_final_answer": body.get("final_answer", ""),
+    "provider_error_category": "snapshot_unavailable",
+    "redaction_checks": ["authorization_not_present", "api_key_not_present", "token_not_present", "raw_prompt_not_present", "raw_provider_body_not_present"],
+    "run_id": run_id,
+    "report_created_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+    "failure_category": "snapshot_unavailable"
+}
+with open("test-results/eino-workbench-real-model-provider-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+    echo "real-model-chat smoke failed; report written to test-results/eino-workbench-real-model-provider-report.json"
+    exit 1
+  fi
+  python3 - "${action_json}" "${snapshot_json}" "${real_model_summary_json}" "${run_id}" <<'PY'
+import datetime, json, sys
+
+action_path, snapshot_path, summary_path, run_id = sys.argv[1:]
+body = json.load(open(action_path, encoding="utf-8"))
+snapshot = json.load(open(snapshot_path, encoding="utf-8"))
+summary = json.load(open(summary_path, encoding="utf-8"))
+failure_category = "none"
+provider_error_category = "none"
+status = "passed"
+encoded = json.dumps({"action": body, "snapshot": snapshot}, ensure_ascii=False).lower()
+for forbidden in ("authorization", "bearer ", "api_key", "raw provider", "raw body", "token"):
+    if forbidden in encoded:
+        status = "failed"
+        failure_category = "redaction_failed"
+        provider_error_category = "redaction_failed"
+if snapshot.get("schema_version") != "eino_workbench_view.v1" or snapshot.get("run_id") != run_id:
+    status = "failed"
+    failure_category = "snapshot_mismatch"
+    provider_error_category = "snapshot_mismatch"
+if not any(item.get("kind") == "assistant_message" and item.get("content", "").strip() for item in snapshot.get("timeline", [])):
+    status = "failed"
+    failure_category = "missing_assistant_message"
+    provider_error_category = "missing_assistant_message"
+report = {
+    "schema_version": "eino.real_model_provider_report.v1",
+    "scenario": "real-model-chat",
+    "status": status,
+    "prompt_id": "real-model-smoke-basic",
+    "prompt": "hello",
+    "provider_kind": summary["provider"],
+    "model_label": summary["model"],
+    "redacted_config_summary": summary,
+    "assistant_final_answer": body.get("final_answer", ""),
+    "provider_error_category": provider_error_category,
+    "redaction_checks": [
+        "authorization_not_present",
+        "api_key_not_present",
+        "token_not_present",
+        "raw_prompt_not_present",
+        "raw_provider_body_not_present"
+    ],
+    "run_id": run_id,
+    "report_created_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+    "failure_category": failure_category
+}
+with open("test-results/eino-workbench-real-model-provider-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+if status != "passed":
+    sys.exit(1)
+PY
+  echo "real-model-chat smoke passed"
   exit 0
 fi
 

@@ -573,6 +573,15 @@ go test ./internal/einoapp/llm -run 'OpenAICompatible|NetworkPolicy|RedactedErro
 bash scripts/eino_workbench_server_smoke.sh --scenario real-model-chat --config configs/eino-workbench.local.yaml
 ```
 
+完成状态：
+
+- 已实现 OpenAI-compatible 非流式 `/chat/completions` provider，启动路径支持 `mock` 与 `openai_compatible`。
+- API key 只进入 provider 私有边界；`llm.Config`、Product Facts、Workbench、ActionResult、audit 和报告只使用脱敏配置摘要。
+- 网络策略已覆盖 userinfo 拒绝、host allowlist、非 HTTPS 阻断、redirect 阻断/重校验，以及 DNS/dial 后私网、loopback、link-local、metadata 目标阻断。
+- `real-model-chat` smoke 已接入统一 smoke 脚本：无 ignored 本地配置或缺 `api_key` 时生成 `test-results/eino-workbench-skip-report.json`；有凭据时生成 `test-results/eino-workbench-real-model-provider-report.json`，成功写 `passed`，provider/action/snapshot/redaction 失败写 `failed`。
+- smoke 运行配置由 `scripts/eino_workbench_config_prepare.go` 结构化生成，只覆写临时 server addr 和 SQLite DSN，并输出脱敏 LLM 摘要。
+- 真实 streaming provider 尚未启用，`Stream` 当前返回安全错误；后续如接入 streaming，必须先补 streaming delta safety gate 和 SSE 映射验收。
+
 ### Task 4.4 Provider policy and credentials
 
 创建：

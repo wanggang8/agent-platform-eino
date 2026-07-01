@@ -18,6 +18,13 @@
 
 `model_label`、`credential_binding` 和 `network_safety` 由系统从最小配置派生，不要求用户手写。credential binding 只能展示安全 `display_ref`。密钥、Authorization 和 provider raw error 不得进入产品输出、日志、验收记录或截图。
 
+## 当前实现边界
+
+- `openai_compatible` 当前使用非流式 `POST /chat/completions`，读取 `choices[0].message.content` 作为 assistant 候选。
+- 真实 provider 只替换模型边界，不改变 Product Facts、tool adapter、product projection 或 HTTP handler。
+- API key 只传入 provider 私有配置，不进入 `llm.Config`、Product Facts、Workbench、ActionResult、audit、replay 或 smoke report。
+- streaming 暂不启用；接入前必须补齐 streaming delta safety gate、SSE 映射和脱敏验收。
+
 ## Network Safety
 
 Provider 初始化和请求必须校验：
