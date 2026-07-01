@@ -8,10 +8,15 @@ import (
 	"strings"
 	"time"
 
+	"agent-platform-eino/internal/einoapp/capabilities"
 	"agent-platform-eino/internal/einoapp/facts"
 )
 
+// ErrRunNotFound 表示 resume 请求引用了不存在的 run。
 var ErrRunNotFound = errors.New("run not found")
+
+// ErrCapabilityNotRegistered 表示 Action API 请求的 capability hint 未通过注册表门禁。
+var ErrCapabilityNotRegistered = errors.New("capability not registered")
 
 // AcceptedRun 是 HTTP/API 边界可以返回的最小接收结果，不包含执行事件。
 type AcceptedRun struct {
@@ -81,6 +86,7 @@ type StaticCommands struct {
 	repository facts.Repository
 	newRunID   func() (string, error)
 	runner     Runner
+	registry   *capabilities.Registry
 }
 
 // NewStaticCommands 创建不落 Product Facts 的静态命令替身。
@@ -105,6 +111,16 @@ func NewRunnerCommands(repository facts.Repository, runner Runner) StaticCommand
 	}
 }
 
+// NewRunnerCommandsWithRegistry 创建带 capability registry 的命令实现，用于 Action API 选择门禁。
+func NewRunnerCommandsWithRegistry(repository facts.Repository, runner Runner, registry *capabilities.Registry) StaticCommands {
+	return StaticCommands{
+		repository: repository,
+		newRunID:   randomRunID,
+		runner:     runner,
+		registry:   registry,
+	}
+}
+
 // StartMessage 接收 Workbench 消息并创建 run。
 func (commands StaticCommands) StartMessage(ctx context.Context, command MessageCommand) (AcceptedRun, error) {
 	accepted, err := commands.acceptRun(ctx, command.WorkspaceID, command.RunID, command.Message)
@@ -116,9 +132,23 @@ func (commands StaticCommands) StartMessage(ctx context.Context, command Message
 
 // StartAction 接收 Action API 请求并创建 run。
 func (commands StaticCommands) StartAction(ctx context.Context, command ActionCommand) (AcceptedRun, error) {
+	selection := SelectCapability(commands.registry, SelectionRequest{
+		InputText:      command.InputText,
+		CapabilityHint: command.CapabilityHint,
+		ProductAction:  command.ActionID,
+	})
+	if selection.Mode == SelectionModeRejected {
+		return AcceptedRun{}, ErrCapabilityNotRegistered
+	}
 	accepted, err := commands.acceptRun(ctx, command.WorkspaceID, "", command.InputText)
 	if err != nil {
 		return AcceptedRun{}, err
+	}
+	if err := commands.recordSelection(ctx, accepted.RunID, selection); err != nil {
+		return AcceptedRun{}, err
+	}
+	if selection.RequiresApproval {
+		return accepted, nil
 	}
 	return commands.runIfConfigured(ctx, accepted)
 }
@@ -181,6 +211,21 @@ func (commands StaticCommands) acceptRun(ctx context.Context, workspaceID string
 		}
 	}
 	return AcceptedRun{RunID: runID, Status: "accepted"}, nil
+}
+
+// recordSelection 将 capability 选择结果写成安全审计事实，后续 tool execution 只能读取该事实链路。
+func (commands StaticCommands) recordSelection(ctx context.Context, runID string, selection SelectionResult) error {
+	if commands.repository == nil || selection.Mode != SelectionModeCapability {
+		return nil
+	}
+	return commands.repository.AppendAuditEvent(ctx, facts.AuditEvent{
+		AuditID:     runID + ":audit:capability:1",
+		RunID:       runID,
+		EventType:   "tool",
+		SafeSummary: "capability selected: " + selection.CapabilityID + "; policy: " + selection.PolicyReason,
+		Actor:       "system",
+		CreatedAt:   time.Now().UTC(),
+	})
 }
 
 // runIfConfigured 在生产路径触发 runner；测试替身可不配置 runner。

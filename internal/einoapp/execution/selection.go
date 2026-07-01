@@ -36,6 +36,12 @@ func SelectCapability(registry *capabilities.Registry, request SelectionRequest)
 			PolicyReason: "chat_default",
 		}
 	}
+	if registry == nil {
+		return SelectionResult{
+			Mode:         SelectionModeRejected,
+			PolicyReason: "capability_registry_unavailable",
+		}
+	}
 
 	capability, ok := registry.Get(request.CapabilityHint)
 	if !ok {

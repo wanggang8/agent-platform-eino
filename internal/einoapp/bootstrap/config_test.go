@@ -46,6 +46,16 @@ observability:
 budgets:
   default_timeout: "11s"
   max_tool_timeout: "22s"
+capabilities:
+  - id: "cap.smoke.read"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_read"
+    display_name: "Phase 3 只读验证"
+    description: "验证配置驱动的能力注册"
+    result_schema: "structured_result.v1"
+    risk_level: "read_only"
+    approval_required: false
+    timeout: "5s"
 `)
 	cfg, err := bootstrap.LoadConfig(path)
 	if err != nil {
@@ -60,6 +70,9 @@ budgets:
 	}
 	if cfg.LLM.CredentialBinding.DisplayRef != "bound:llm:local" {
 		t.Fatalf("credential binding was not loaded from local config")
+	}
+	if len(cfg.Capabilities) != 1 || cfg.Capabilities[0].ID != "cap.smoke.read" {
+		t.Fatalf("capabilities were not loaded from local config: %+v", cfg.Capabilities)
 	}
 }
 
@@ -82,6 +95,52 @@ llm:
 	_, err := bootstrap.LoadConfig(path)
 	if err == nil {
 		t.Fatal("LoadConfig with missing required sections error = nil")
+	}
+}
+
+func TestConfigValidationRejectsInvalidCapability(t *testing.T) {
+	// capability 元数据缺失时必须在启动前失败，不能让未知工具进入运行期选择。
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+  timeout_ms: 8000
+  credential_binding:
+    schema_version: "eino.provider_credential_binding.v1"
+    workspace_id: "ws-demo"
+    system: "llm"
+    status: "bound"
+    display_ref: "bound:llm:local"
+  network_safety:
+    require_https: true
+    allow_local_http: false
+    block_private_networks: true
+    allow_redirects: false
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+capabilities:
+  - id: "cap.invalid"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_read"
+    risk_level: "medium"
+`)
+
+	_, err := bootstrap.LoadConfig(path)
+	if err == nil || !strings.Contains(err.Error(), "risk_level") {
+		t.Fatalf("LoadConfig invalid capability err = %v", err)
 	}
 }
 
@@ -185,6 +244,61 @@ budgets:
 	encoded := cfg.RedactedSummary().String()
 	if !strings.Contains(encoded, "default_timeout: 11s") || !strings.Contains(encoded, "max_tool_timeout: 22s") {
 		t.Fatalf("redacted summary missing budgets: %s", encoded)
+	}
+}
+
+func TestRedactedSummaryIncludesCapabilityMetadataOnly(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+  timeout_ms: 8000
+  credential_binding:
+    schema_version: "eino.provider_credential_binding.v1"
+    workspace_id: "ws-demo"
+    system: "llm"
+    status: "bound"
+    display_ref: "bound:llm:local"
+  network_safety:
+    require_https: true
+    allow_local_http: false
+    block_private_networks: true
+    allow_redirects: false
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+capabilities:
+  - id: "cap.smoke.read"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_read"
+    description: "contains no secret"
+    result_schema: "structured_result.v1"
+    risk_level: "read_only"
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	encoded := cfg.RedactedSummary().String()
+	if !strings.Contains(encoded, "cap.smoke.read") || !strings.Contains(encoded, "phase3-smoke") {
+		t.Fatalf("redacted summary missing capability metadata: %s", encoded)
+	}
+	if strings.Contains(encoded, "phase3_smoke_read") || strings.Contains(encoded, "contains no secret") {
+		t.Fatalf("redacted summary leaked detailed capability internals: %s", encoded)
 	}
 }
 

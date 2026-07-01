@@ -63,7 +63,7 @@ GOTOOLCHAIN=local go list -m -versions github.com/eino-contrib/jsonschema
 | 风险 | 处理 |
 | --- | --- |
 | Phase 3 Runner 目前只覆盖 mock ChatModelAgent assistant 输出 | 允许作为 Phase 3 P0 执行链路；工具 loop、real provider、StructuredResult conversion 进入 Phase 4。 |
-| `chat-stream` / `action-basic` smoke 可能假阳性 | 已要求断言 assistant message、completed ActionResult 和 SQLite context snapshot。 |
+| `chat-stream` / `action-basic` / `capability-selection` / `context-projection` smoke 可能假阳性 | 已要求断言 assistant message、completed ActionResult、配置驱动 registry/policy audit、未知 capability 400 且不新增 run、写域审批不触发 context snapshot，以及 SQLite context snapshot 不含 raw/credential/checkpoint/interrupt 标记。 |
 | SSE event id 当前由 projection 重算 | Phase 3 可作为静态 snapshot cursor；Phase 7 replay/reconnect 前必须持久化 facts cursor 或扩展 sequence 事实。 |
 | Missing run 合成空视图可能掩盖事实缺失 | 当前仅用于 current view/未创建 run 空态；具体 run 的严格 404 可在后续 API hardening 中收紧。 |
 

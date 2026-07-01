@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"agent-platform-eino/internal/einoapp/capabilities"
 	"agent-platform-eino/internal/einoapp/execution"
 	"agent-platform-eino/internal/einoapp/facts"
 )
@@ -136,6 +137,104 @@ func TestRunnerCommandsExecuteChatModelRunnerAfterRunCreated(t *testing.T) {
 	}
 	if runner.runID != accepted.RunID {
 		t.Fatalf("runner runID = %q, want %q", runner.runID, accepted.RunID)
+	}
+}
+
+func TestRunnerCommandsRejectUnknownCapabilityHintBeforeRunCreated(t *testing.T) {
+	// 未注册 capability hint 不能创建 run，避免未知工具名绕过注册表进入执行链路。
+	repository := facts.NewMemoryRepository()
+	commands := execution.NewRunnerCommandsWithRegistry(repository, &recordingRunner{}, capabilities.NewRegistry())
+
+	_, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "missing.capability",
+		InputText:       "hello",
+	})
+	if !errors.Is(err, execution.ErrCapabilityNotRegistered) {
+		t.Fatalf("err = %v, want ErrCapabilityNotRegistered", err)
+	}
+	if _, latestErr := repository.LatestRun(context.Background(), "ws_123"); !errors.Is(latestErr, facts.ErrNotFound) {
+		t.Fatalf("latest run err = %v, want ErrNotFound", latestErr)
+	}
+}
+
+func TestRunnerCommandsRecordRegisteredCapabilitySelection(t *testing.T) {
+	// 已注册能力只写入安全选择摘要；Phase 4 前不在命令层按工具名执行 provider。
+	repository := facts.NewMemoryRepository()
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(capabilities.Capability{
+		ID:          "safe.read",
+		ProviderID:  "demo",
+		ToolName:    "safe_read",
+		DisplayName: "只读查询",
+		RiskLevel:   capabilities.RiskReadOnly,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewRunnerCommandsWithRegistry(repository, &recordingRunner{}, registry)
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "safe.read",
+		InputText:       "hello",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := repository.GetSnapshot(context.Background(), accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, event := range snapshot.AuditEvents {
+		if event.EventType == "tool" && strings.Contains(event.SafeSummary, "safe.read") && strings.Contains(event.SafeSummary, "allowed") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("selection audit not found: %+v", snapshot.AuditEvents)
+	}
+}
+
+func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T) {
+	// 写域能力在 Phase 6 前只能留下选择审计，不能继续进入 runner 或 provider 执行。
+	repository := facts.NewMemoryRepository()
+	runner := &recordingRunner{}
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(capabilities.Capability{
+		ID:          "danger.write",
+		ProviderID:  "demo",
+		ToolName:    "danger_write",
+		DisplayName: "写入",
+		RiskLevel:   capabilities.RiskWrite,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewRunnerCommandsWithRegistry(repository, runner, registry)
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "danger.write",
+		InputText:       "write something",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runner.runID != "" {
+		t.Fatalf("runner should not run approval-required capability, got %q", runner.runID)
+	}
+	run, err := repository.GetRun(context.Background(), accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if run.Status != facts.RunStatusCreated {
+		t.Fatalf("run status = %q, want created", run.Status)
 	}
 }
 

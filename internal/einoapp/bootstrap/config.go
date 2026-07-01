@@ -19,6 +19,7 @@ type Config struct {
 	Security      SecurityConfig      `yaml:"security"`
 	Observability ObservabilityConfig `yaml:"observability"`
 	Budgets       BudgetConfig        `yaml:"budgets"`
+	Capabilities  []CapabilityConfig  `yaml:"capabilities"`
 }
 
 // ServerConfig 定义 HTTP 服务监听地址和超时。
@@ -82,6 +83,19 @@ type ObservabilityConfig struct {
 type BudgetConfig struct {
 	DefaultTimeout time.Duration `yaml:"default_timeout"`
 	MaxToolTimeout time.Duration `yaml:"max_tool_timeout"`
+}
+
+// CapabilityConfig 定义由配置文件注册的能力元数据，不包含 provider raw payload。
+type CapabilityConfig struct {
+	ID               string        `yaml:"id"`
+	ProviderID       string        `yaml:"provider_id"`
+	ToolName         string        `yaml:"tool_name"`
+	DisplayName      string        `yaml:"display_name"`
+	Description      string        `yaml:"description"`
+	ResultSchema     string        `yaml:"result_schema"`
+	RiskLevel        string        `yaml:"risk_level"`
+	ApprovalRequired bool          `yaml:"approval_required"`
+	Timeout          time.Duration `yaml:"timeout"`
 }
 
 // RedactedSummary 是可打印的配置摘要，必须保证不泄漏密钥。
@@ -158,6 +172,20 @@ func (cfg Config) Validate() error {
 	if cfg.Budgets.MaxToolTimeout <= 0 {
 		return errors.New("budgets.max_tool_timeout must be positive")
 	}
+	for index, capability := range cfg.Capabilities {
+		if strings.TrimSpace(capability.ID) == "" {
+			return fmt.Errorf("capabilities[%d].id is required", index)
+		}
+		if strings.TrimSpace(capability.ProviderID) == "" {
+			return fmt.Errorf("capabilities[%d].provider_id is required", index)
+		}
+		if strings.TrimSpace(capability.ToolName) == "" {
+			return fmt.Errorf("capabilities[%d].tool_name is required", index)
+		}
+		if capability.RiskLevel != "read_only" && capability.RiskLevel != "write" {
+			return fmt.Errorf("capabilities[%d].risk_level must be read_only or write", index)
+		}
+	}
 	return nil
 }
 
@@ -208,7 +236,25 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 			"default_timeout":  cfg.Budgets.DefaultTimeout.String(),
 			"max_tool_timeout": cfg.Budgets.MaxToolTimeout.String(),
 		},
+		"capabilities": redactedCapabilitySummaries(cfg.Capabilities),
 	}
+}
+
+// redactedCapabilitySummaries 只输出 capability 元数据摘要，不输出 schema 或 provider 参数。
+func redactedCapabilitySummaries(capabilities []CapabilityConfig) []map[string]any {
+	if len(capabilities) == 0 {
+		return nil
+	}
+	summaries := make([]map[string]any, 0, len(capabilities))
+	for _, capability := range capabilities {
+		summaries = append(summaries, map[string]any{
+			"id":                capability.ID,
+			"provider_id":       capability.ProviderID,
+			"risk_level":        capability.RiskLevel,
+			"approval_required": capability.ApprovalRequired,
+		})
+	}
+	return summaries
 }
 
 // String 将脱敏摘要编码为 YAML，便于人工审查。

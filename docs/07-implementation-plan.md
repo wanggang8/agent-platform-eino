@@ -436,13 +436,19 @@ go test ./internal/einoapp/execution -run 'Chat|RunnerEvent|FactsWrite|Capabilit
 - SSE event id 必须来自 Product Facts cursor/sequence。
 - Action API 必须复用 Workbench 同一套命令、facts 和 projection 路径。
 - 服务启动路径必须使用配置文件指定的 SQLite Product Facts repository；memory repository 只允许作为单元测试替身。
+- Phase 3 capability registry 只能由配置文件或后续 provider 注册填充；不得在生产启动路径内置 smoke、Fobrain 或业务能力 ID。
 - `chat-stream` 和 `action-basic` smoke 必须创建真实 run，读取 snapshot/stream，并断言输出来自 Product Facts。
+- `capability-selection` smoke 必须验证显式 capability hint 经过配置驱动的 registry/policy，未知 hint 在创建 run 前被拒绝，需要审批的 hint 不触发 runner/context snapshot。
+- `context-projection` smoke 必须验证模型输入前已写入 safe context snapshot，且不包含 raw provider payload、credential、token、checkpoint 或 interrupt 信息。
+- Phase 3 当前只证明 mock ChatModelAgent assistant 路径、capability 选择门禁和 context projection；真实 tool loop、StructuredResult 转换、真实 LLM provider、HITL/checkpoint/resume 仍属于后续 Phase。
 
 任务级检查：
 
 ```bash
 bash scripts/eino_workbench_server_smoke.sh --scenario chat-stream
 bash scripts/eino_workbench_server_smoke.sh --scenario action-basic
+bash scripts/eino_workbench_server_smoke.sh --scenario capability-selection
+bash scripts/eino_workbench_server_smoke.sh --scenario context-projection
 ```
 
 ## Phase 4：Tools、Provider、Safety

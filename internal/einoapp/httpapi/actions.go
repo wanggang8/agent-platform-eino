@@ -145,6 +145,10 @@ func (api api) handleAgentAction(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
+		if errors.Is(err, execution.ErrCapabilityNotRegistered) {
+			WriteError(w, r, http.StatusBadRequest, product.NewSafeError("capability_not_registered", "请求的能力未注册", false))
+			return
+		}
 		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("execution_failed", "操作暂无法执行", true))
 		return
 	}

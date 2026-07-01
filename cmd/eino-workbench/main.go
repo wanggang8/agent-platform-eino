@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"agent-platform-eino/internal/einoapp/bootstrap"
+	"agent-platform-eino/internal/einoapp/capabilities"
 	"agent-platform-eino/internal/einoapp/execution"
 	"agent-platform-eino/internal/einoapp/httpapi"
 	"agent-platform-eino/internal/einoapp/llm"
@@ -38,11 +39,15 @@ func main() {
 		Provider: cfg.LLM.Provider,
 		Model:    cfg.LLM.Model,
 	}, execution.ChatModelRunnerConfig{})
+	registry, err := capabilityRegistryFromConfig(cfg.Capabilities)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// 服务路径使用 SQLite Product Facts，确保 Workbench、Action API、Replay 和 SSE 同源。
 	deps := httpapi.Dependencies{
 		Projection: product.NewFactsProjection(repository),
-		Commands:   execution.NewRunnerCommands(repository, runner),
+		Commands:   execution.NewRunnerCommandsWithRegistry(repository, runner, registry),
 	}
 	server := &http.Server{
 		Addr:         cfg.Server.Addr,
@@ -55,4 +60,25 @@ func main() {
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+}
+
+// capabilityRegistryFromConfig 从配置文件注册能力，避免在启动路径硬编码工具名或业务 provider。
+func capabilityRegistryFromConfig(configs []bootstrap.CapabilityConfig) (*capabilities.Registry, error) {
+	registry := capabilities.NewRegistry()
+	for _, cfg := range configs {
+		if err := registry.Register(capabilities.Capability{
+			ID:               cfg.ID,
+			ProviderID:       cfg.ProviderID,
+			ToolName:         cfg.ToolName,
+			DisplayName:      cfg.DisplayName,
+			Description:      cfg.Description,
+			ResultSchema:     cfg.ResultSchema,
+			RiskLevel:        capabilities.RiskLevel(cfg.RiskLevel),
+			ApprovalRequired: cfg.ApprovalRequired,
+			Timeout:          cfg.Timeout,
+		}); err != nil {
+			return nil, err
+		}
+	}
+	return registry, nil
 }

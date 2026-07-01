@@ -15,6 +15,7 @@ Phase 1.6 开始补齐后端基础骨架。需要先固定 HTTP 响应形态和�
 - 启动服务必须通过 `--config <path>` 指定配置；测试和 smoke 使用临时配置文件。
 - 本地配置文件可以包含密钥，但日志、错误、验收记录和截图必须脱敏。
 - 配置摘要必须清理 DSN、URL userinfo、URL query 和 fragment；LLM base URL 只允许保留安全的 scheme/host/path。
+- Phase 3 允许配置文件声明 capability metadata，用于填充 registry；生产启动路径不得内置 smoke、Fobrain 或业务 capability ID。
 - 不使用环境变量覆盖服务配置；环境变量只允许用于前端测试工具自身的运行参数，不作为后端服务配置来源。
 - HTTP 成功响应保持业务 schema 直出，例如 `eino_workbench_view.v1`、`eino_action_result.v1`。
 - HTTP 错误响应统一使用 `eino_error_envelope.v1`。
@@ -27,7 +28,7 @@ Phase 1.6 开始补齐后端基础骨架。需要先固定 HTTP 响应形态和�
 - Product Facts projection 输出的业务 schema 应该直接成为成功响应，避免 HTTP 层产生第二套事实包装。
 - 错误响应有共同安全需求：request id、safe detail、retryable、错误码和脱敏，因此需要统一 envelope。
 - SSE 已经有协议级 envelope，再包一层 API envelope 会增加 reducer 和 replay 复杂度。
-- 配置文件比环境变量更适合本项目需要的多段配置、credential binding、provider policy、预算和安全开关审查。
+- 配置文件比环境变量更适合本项目需要的多段配置、credential binding、capability metadata、provider policy、预算和安全开关审查。
 
 ## 备选方案
 

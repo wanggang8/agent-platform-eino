@@ -28,7 +28,7 @@ skip 必须写入验收记录，包含命令、原因、缺少的环境变量或
 
 | 阶段 | 范围 | 必跑门禁 | 可 skip 项 | 阻断条件 |
 | --- | --- | --- | --- | --- |
-| P0 | 最小产品闭环，实施 Phase 1-4 | 开发前复核、基础、Contract、前端、服务 smoke `contract/chat-stream/action-basic/tool-card`、安全门禁 | 无 | pre-development validation、contract、视觉、安全、Action API 任一失败 |
+| P0 | 最小产品闭环，实施 Phase 1-4 | 开发前复核、基础、Contract、前端、服务 smoke `contract/chat-stream/action-basic/capability-selection/context-projection/tool-card`、安全门禁 | 无 | pre-development validation、contract、视觉、安全、Action API 任一失败 |
 | P1 | 产品级运行能力，实施 Phase 5-7 | P0 全部、开发前复核更新、HITL、clarification、Fobrain PoC、real model smoke、projection/replay | 无 Fobrain/LLM 凭据时 real model smoke 可 skip 但必须记录 | approval、clarification、projection、Action/Workbench 同源任一失败 |
 | P2 | 既有业务能力恢复，实施 Phase 8 | P1 全部、开发前复核更新、24 只读、connector、credential binding、disambiguation、write approval、live read/write | 无 live 凭据时 live read/write 可 skip 但不能声明能力可比 | Fobrain 恢复门禁未过时不能声明重构完成 |
 
@@ -157,7 +157,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario clarification
 bash scripts/eino_workbench_server_smoke.sh --scenario replay
 ```
 
-Phase 3 完成后，`chat-stream` 和 `action-basic` 不得再返回 `exit 2`；必须启动服务、创建 run、读取 snapshot/stream，并验证消息或 Action 入口写入 Product Facts。
+Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 `context-projection` 不得再返回 `exit 2`；必须启动服务、创建 run、读取 snapshot/stream 或 SQLite Product Facts，并验证消息、Action、capability 选择和模型上下文都从 Product Facts 同源读写。
 
 脚本必须自动完成：
 
@@ -167,8 +167,8 @@ Phase 3 完成后，`chat-stream` 和 `action-basic` 不得再返回 `exit 2`；
 - 创建 run。
 - 抽取 run_id。
 - 校验 schema。
-- 对 `capability-selection`，断言普通自然语言默认进入 ChatModelAgent，显式 action/capability_hint 通过 registry 和 policy，未知或无权限 hint 不会直接执行。
-- 对 `context-projection`，断言模型输入上下文只来自 safe Product Facts / StructuredResult，并生成 context snapshot。
+- 对 `capability-selection`，断言普通自然语言默认进入 ChatModelAgent，显式 action/capability_hint 通过配置驱动的 registry 和 policy，未知 hint 在创建 run 前被拒绝，需要审批的 hint 不会触发 runner 或 context snapshot。
+- 对 `context-projection`，断言模型输入上下文只来自 safe Product Facts / StructuredResult，并生成不含 raw、credential、token、checkpoint、interrupt 的 context snapshot。
 - 对 `run-lifecycle`，断言 cancel、stop、timeout、retry 和终态幂等符合 `run-lifecycle.md`。
 - 对 `action-consistency`，提交 Action 后用同一 run_id 拉取 run、views/current、replay，并断言 assistant/tool/pending/audit 字段同源。
 - 清理进程。

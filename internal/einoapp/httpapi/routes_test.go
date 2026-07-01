@@ -425,6 +425,31 @@ func TestInvalidActionRequestReturnsUnifiedErrorEnvelope(t *testing.T) {
 	assertErrorEnvelope(t, resp, http.StatusBadRequest, "invalid_request")
 }
 
+func TestUnknownCapabilityHintReturnsUnifiedErrorEnvelope(t *testing.T) {
+	// Action API 不暴露内部执行错误；未知 capability 作为调用方请求错误返回。
+	projection := recordingProjection{}
+	commands := recordingCommands{actionErr: execution.ErrCapabilityNotRegistered}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/agent/actions", "application/json", strings.NewReader(`{
+		"schema_version": "eino_action_request.v1",
+		"action_id": "action-from-request",
+		"client_request_id": "client-1",
+		"capability_hint": "missing.capability",
+		"input": {"text": "hello"}
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertErrorEnvelope(t, resp, http.StatusBadRequest, "capability_not_registered")
+	if projection.actionID != "" {
+		t.Fatalf("projection should not run after rejected capability, got %q", projection.actionID)
+	}
+}
+
 func TestResumeRequestParsesIntoExecutionCommand(t *testing.T) {
 	// resume 请求必须保留 decision/comment，但最终结果仍从 projection 读取。
 	projection := recordingProjection{}
@@ -593,6 +618,7 @@ type recordingCommands struct {
 	message       execution.MessageCommand
 	action        execution.ActionCommand
 	resume        execution.ResumeCommand
+	actionErr     error
 	resumeErr     error
 }
 
@@ -604,6 +630,9 @@ func (commands *recordingCommands) StartMessage(_ context.Context, command execu
 
 func (commands *recordingCommands) StartAction(_ context.Context, command execution.ActionCommand) (execution.AcceptedRun, error) {
 	commands.action = command
+	if commands.actionErr != nil {
+		return execution.AcceptedRun{}, commands.actionErr
+	}
 	return execution.AcceptedRun{RunID: commands.acceptedRunID, Status: "accepted"}, nil
 }
 

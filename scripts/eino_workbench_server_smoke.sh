@@ -13,10 +13,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic)
-    ;;
-  capability-selection|context-projection)
-    not_implemented "Phase 3"
+  contract|chat-stream|action-basic|capability-selection|context-projection)
     ;;
   tool-card)
     not_implemented "Phase 4"
@@ -105,6 +102,25 @@ observability:
 budgets:
   default_timeout: "60s"
   max_tool_timeout: "120s"
+capabilities:
+  - id: "cap.smoke.read"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_read"
+    display_name: "Phase 3 read smoke"
+    description: "Smoke-only read capability registered from temporary config"
+    result_schema: "structured_result.v1"
+    risk_level: "read_only"
+    approval_required: false
+    timeout: "5s"
+  - id: "cap.smoke.write"
+    provider_id: "phase3-smoke"
+    tool_name: "phase3_smoke_write"
+    display_name: "Phase 3 write smoke"
+    description: "Smoke-only write capability registered from temporary config"
+    result_schema: "structured_result.v1"
+    risk_level: "write"
+    approval_required: true
+    timeout: "5s"
 YAML
 
 go run ./cmd/eino-workbench --config "${config_file}" >"${server_log}" 2>&1 &
@@ -121,6 +137,9 @@ curl -fsS "${base_url}/healthz" >/dev/null
 
 view_json="${tmp_dir}/view.json"
 action_json="${tmp_dir}/action.json"
+capability_json="${tmp_dir}/capability.json"
+capability_write_json="${tmp_dir}/capability-write.json"
+capability_error_json="${tmp_dir}/capability-error.json"
 message_json="${tmp_dir}/message.json"
 snapshot_json="${tmp_dir}/snapshot.json"
 stream_headers="${tmp_dir}/stream.headers"
@@ -231,6 +250,141 @@ with sqlite3.connect(db_path) as conn:
 assert count >= 1
 PY
   echo "action-basic smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "capability-selection" ]]; then
+  python3 - "${action_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["status"] == "completed"
+assert body["final_answer"] == "已收到请求。"
+PY
+  python3 - "${tmp_dir}/eino-workbench.db" "${contract_run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute("select safe_summary from audit_events where run_id = ?", (run_id,)).fetchall()
+assert not any("capability selected:" in summary for (summary,) in rows), rows
+PY
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-capability-smoke","client_request_id":"client-smoke-capability","capability_hint":"cap.smoke.read","input":{"text":"capability smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "completed"
+assert body["final_answer"] == "已收到请求。"
+print(body["run_id"])
+PY
+)"
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute(
+        "select event_type, safe_summary from audit_events where run_id = ? order by created_at",
+        (run_id,),
+    ).fetchall()
+assert any(event_type == "tool" and "capability selected: cap.smoke.read" in summary and "allowed" in summary for event_type, summary in rows), rows
+PY
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-capability-write","client_request_id":"client-smoke-capability-write","capability_hint":"cap.smoke.write","input":{"text":"write smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_write_json}"
+  write_run_id="$(python3 - "${capability_write_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "accepted"
+assert body.get("final_answer", "") == ""
+print(body["run_id"])
+PY
+)"
+  python3 - "${tmp_dir}/eino-workbench.db" "${write_run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute(
+        "select event_type, safe_summary from audit_events where run_id = ? order by created_at",
+        (run_id,),
+    ).fetchall()
+    context_count = conn.execute("select count(*) from context_snapshots where run_id = ?", (run_id,)).fetchone()[0]
+assert any(event_type == "tool" and "capability selected: cap.smoke.write" in summary and "write_requires_approval" in summary for event_type, summary in rows), rows
+assert context_count == 0, context_count
+PY
+  run_count_before_missing="$(python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, sys
+with sqlite3.connect(sys.argv[1]) as conn:
+    print(conn.execute("select count(*) from runs").fetchone()[0])
+PY
+)"
+  status_code="$(curl -sS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-capability-missing","client_request_id":"client-smoke-capability-missing","capability_hint":"cap.missing","input":{"text":"capability smoke"}}' \
+    -o "${capability_error_json}" \
+    -w "%{http_code}" \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions")"
+  [[ "${status_code}" == "400" ]]
+  python3 - "${capability_error_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_error_envelope.v1"
+assert body["error"]["code"] == "capability_not_registered"
+PY
+  run_count_after_missing="$(python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, sys
+with sqlite3.connect(sys.argv[1]) as conn:
+    print(conn.execute("select count(*) from runs").fetchone()[0])
+PY
+)"
+  [[ "${run_count_after_missing}" == "${run_count_before_missing}" ]]
+  echo "capability-selection smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "context-projection" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_workbench_message_request.v1","message":"context projection smoke","client_request_id":"client-smoke-context"}' \
+    "${base_url}/api/workspaces/ws_smoke/messages" \
+    -o "${message_json}"
+  run_id="$(python3 - "${message_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_message_response.v1"
+assert body["status"] == "accepted"
+print(body["run_id"])
+PY
+)"
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute(
+        "select safe_summary from context_snapshots where run_id = ? order by created_at",
+        (run_id,),
+    ).fetchall()
+assert rows, "missing context snapshot"
+joined = "\n".join(summary for (summary,) in rows)
+assert "safe context messages=1" in joined, joined
+for forbidden in ("Authorization", "credential", "raw", "provider payload", "token", "checkpoint", "interrupt"):
+    assert forbidden not in joined, joined
+PY
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+assert body["inspector"]["runtime"]["status"] == "succeeded"
+assert any(item["kind"] == "assistant_message" and item["content"] == "已收到请求。" for item in body["timeline"])
+PY
+  echo "context-projection smoke passed"
   exit 0
 fi
 
