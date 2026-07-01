@@ -22,6 +22,8 @@ Use local module source and pinned ADR as implementation truth. Online docs are 
 
 ## Mandatory Order
 
+Phase 3.2 SQLite and facts implementation decisions are fixed in `docs/adr/2026-07-01-phase-3-facts-sqlite-decisions.md`.
+
 ### 1. Version Gate
 
 Confirm `go.mod` still pins Eino `v0.9.12`. Remove `internal/einoapp/execution/eino_version_pin.go` only when real execution code imports Eino in the same change. Do not introduce `eino-ext` until a real provider implementation needs it.

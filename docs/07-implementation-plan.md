@@ -382,6 +382,7 @@ go test ./internal/einoapp/execution -run 'EinoVersion|ChatModelVersion' -count=
 
 要求：
 
+- 技术决策按 `docs/adr/2026-07-01-phase-3-facts-sqlite-decisions.md` 执行。
 - 先补 facts 模型和 repository interface，再做 SQLite 实现。
 - SQLite repository 必须覆盖 run/turn/tool/pending/audit/context/lifecycle/idempotency 的事务边界。
 - memory repository 只能作为测试替身，不作为 Phase 3 产品事实来源。
@@ -390,7 +391,8 @@ go test ./internal/einoapp/execution -run 'EinoVersion|ChatModelVersion' -count=
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/store/sqlite -run 'RunTurnEvent|ToolCallResult|ContextSnapshot|LifecycleTransition' -count=1
+go test ./internal/einoapp/facts -run 'RunStatus|StructuredResult|MemoryRepository' -count=1
+go test ./internal/einoapp/store/sqlite -run 'RunTurnEvent|ToolCallResult|ContextSnapshot|LifecycleTransition|PendingResume|Idempotency|Unsafe' -count=1
 ```
 
 ### Task 3.3 ChatModel and Runner

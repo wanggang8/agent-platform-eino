@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 var ErrNotFound = errors.New("facts not found")
+var ErrResumeAlreadyConsumed = errors.New("resume ref already consumed")
+var ErrUnsafeFactMaterial = errors.New("unsafe fact material")
+var ErrIdempotencyConflict = errors.New("idempotency key conflict")
 
 type MemoryRepository struct {
 	mu       sync.RWMutex
@@ -52,6 +56,36 @@ func (repo *MemoryRepository) LatestRun(_ context.Context, workspaceID string) (
 	return repo.runs[runID], nil
 }
 
+func (repo *MemoryRepository) GetSnapshot(_ context.Context, runID string) (Snapshot, error) {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+
+	run, ok := repo.runs[runID]
+	if !ok {
+		return Snapshot{}, ErrNotFound
+	}
+	return Snapshot{Run: run}, nil
+}
+
+func (repo *MemoryRepository) UpdateRunStatus(_ context.Context, runID string, status RunStatus, safeError string, updatedAt time.Time) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	run, ok := repo.runs[runID]
+	if !ok {
+		return ErrNotFound
+	}
+	run.Status = status
+	run.SafeError = safeError
+	run.UpdatedAt = updatedAt
+	repo.runs[runID] = run
+	return nil
+}
+
+func (repo *MemoryRepository) RecordIdempotency(_ context.Context, record IdempotencyRecord) (IdempotencyRecord, bool, error) {
+	return record, false, nil
+}
+
 func (repo *MemoryRepository) AppendTurn(context.Context, Turn) error {
 	return nil
 }
@@ -66,6 +100,14 @@ func (repo *MemoryRepository) AppendToolResult(context.Context, ToolResult) erro
 
 func (repo *MemoryRepository) AppendPendingInteraction(context.Context, PendingInteraction) error {
 	return nil
+}
+
+func (repo *MemoryRepository) ConsumeResumeRef(context.Context, string, PendingStatus) (PendingInteraction, error) {
+	return PendingInteraction{}, ErrNotFound
+}
+
+func (repo *MemoryRepository) ConsumeResumeRefWithIdempotency(context.Context, string, PendingStatus, IdempotencyRecord) (PendingInteraction, IdempotencyRecord, bool, error) {
+	return PendingInteraction{}, IdempotencyRecord{}, false, ErrNotFound
 }
 
 func (repo *MemoryRepository) AppendAuditEvent(context.Context, AuditEvent) error {

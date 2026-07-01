@@ -25,6 +25,33 @@ func TestRunFactHasStableProductIdentity(t *testing.T) {
 	}
 }
 
+func TestRunStatusMatchesProductFactsContract(t *testing.T) {
+	statuses := []facts.RunStatus{
+		facts.RunStatusCreated,
+		facts.RunStatusRunning,
+		facts.RunStatusWaiting,
+		facts.RunStatusSucceeded,
+		facts.RunStatusFailed,
+		facts.RunStatusCancelled,
+		facts.RunStatusStopped,
+	}
+
+	for _, status := range statuses {
+		if !status.Valid() {
+			t.Fatalf("status %q must be valid", status)
+		}
+	}
+	if facts.RunStatus("done").Valid() {
+		t.Fatal("done must not be a valid run status")
+	}
+	if !facts.RunStatusSucceeded.Terminal() || !facts.RunStatusCancelled.Terminal() || !facts.RunStatusStopped.Terminal() {
+		t.Fatal("terminal run statuses must be terminal")
+	}
+	if facts.RunStatusRunning.Terminal() || facts.RunStatusWaiting.Terminal() {
+		t.Fatal("active run statuses must not be terminal")
+	}
+}
+
 func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
 	result := facts.ToolResult{
 		ResultID:   "result-1",
@@ -39,6 +66,34 @@ func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
 
 	if result.StructuredResult.SchemaVersion != "tool.structured_result.v1" {
 		t.Fatalf("structured result schema = %q", result.StructuredResult.SchemaVersion)
+	}
+}
+
+func TestFactsCarrySequenceAndSafeResumeReferences(t *testing.T) {
+	turn := facts.Turn{
+		TurnID:   "turn-1",
+		RunID:    "run-1",
+		Role:     facts.TurnRoleAssistant,
+		Content:  "完成",
+		Sequence: 7,
+	}
+	if turn.Sequence != 7 {
+		t.Fatalf("sequence = %d", turn.Sequence)
+	}
+
+	pending := facts.PendingInteraction{
+		PendingID:     "pending-1",
+		RunID:         "run-1",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-1",
+		CheckpointRef: "checkpoint-safe-1",
+	}
+	if pending.ResumeRef == "" || pending.CheckpointRef == "" {
+		t.Fatalf("pending safe refs must be present: %+v", pending)
+	}
+	if pending.CheckpointRef == "checkpoint-raw-eino-id" {
+		t.Fatal("checkpoint ref must not expose a raw Eino checkpoint id")
 	}
 }
 
