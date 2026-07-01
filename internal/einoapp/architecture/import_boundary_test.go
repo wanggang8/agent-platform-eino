@@ -112,6 +112,41 @@ func TestImportBoundaryPreservesLayering(t *testing.T) {
 	}
 }
 
+func TestProductLayersDoNotImportEino(t *testing.T) {
+	root := filepath.Join("..")
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() || !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+
+		layer := packageLayer(root, path)
+		if !mustStayEinoFree(layer) {
+			return nil
+		}
+
+		file, err := parser.ParseFile(token.NewFileSet(), path, nil, parser.ImportsOnly)
+		if err != nil {
+			return err
+		}
+		for _, spec := range file.Imports {
+			importPath, err := strconv.Unquote(spec.Path.Value)
+			if err != nil {
+				t.Fatalf("%s has invalid import %s", path, spec.Path.Value)
+			}
+			if strings.HasPrefix(importPath, "github.com/cloudwego/eino") {
+				t.Fatalf("%s layer %q must not import Eino package %q directly", path, layer, importPath)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func checkImport(t *testing.T, filePath string, spec *ast.ImportSpec, forbidden []string) {
 	t.Helper()
 
@@ -168,6 +203,15 @@ func checkLayerImport(t *testing.T, filePath, layer string, spec *ast.ImportSpec
 		if importedLayer == blocked {
 			t.Fatalf("%s layer %q must not import %q via %q", filePath, layer, blocked, importPath)
 		}
+	}
+}
+
+func mustStayEinoFree(layer string) bool {
+	switch layer {
+	case "httpapi", "facts", "product", "providers/fobrain":
+		return true
+	default:
+		return false
 	}
 }
 

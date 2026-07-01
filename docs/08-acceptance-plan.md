@@ -42,8 +42,6 @@ skip 必须写入验收记录，包含命令、原因、缺少的环境变量或
 test -f docs/pre-development-validation.md
 rg -n "pre-development-validation" docs/acceptance-records docs || true
 go list -m github.com/cloudwego/eino
-go list -m -versions github.com/cloudwego/eino-ext/components/model/openai
-go list -m -versions github.com/eino-contrib/jsonschema
 ```
 
 通过标准：
@@ -51,6 +49,7 @@ go list -m -versions github.com/eino-contrib/jsonschema
 - 本次 Phase 有对应 `acceptance-records/pre-development-validation-YYYY-MM-DD.md`。
 - 外部资料访问日期、版本命令摘要、当前架构复核结论均已记录。
 - 记录结论允许进入对应 Phase。
+- 尚未引入的集成模块只在对应 Phase 前调研版本：`eino-ext/components/model/openai` 放在 Phase 4，`github.com/eino-contrib/jsonschema` 放在 contract generator 首次真实引入前。
 
 ```bash
 go test ./... -count=1
@@ -77,6 +76,22 @@ bash scripts/eino_workbench_server_smoke.sh --scenario contract
 - 工具注册和选择只通过 `capabilities.Registry`、metadata 和 policy；不得按自然语言关键词或工具名硬编码生产分支。
 - Workbench、ActionResult、SSE、Replay、Inspector 只能从 Product Facts / product projection 读取事实，不直接消费 execution event 或 provider payload。
 - 不存在通用 `utils` 包承载跨层逻辑。
+
+## Phase 3 技术门禁
+
+进入 Eino chat、Product Facts 持久化、SSE 或 Action API 编码前，必须先通过 Phase 3 技术门禁：
+
+```bash
+rg -n 'phase-3-execution-and-facts-plan|Product Facts|ResumeWithParams|StructuredResult' docs
+go list -m github.com/cloudwego/eino
+go test ./internal/einoapp/architecture -run ImportBoundary -count=1
+```
+
+通过标准：
+
+- `docs/phase-3-execution-and-facts-plan.md` 已明确 facts model -> SQLite repository -> product projection -> execution event mapper -> ChatModelAgent Runner -> HTTP/SSE/Action API 的顺序。
+- Eino 版本、Runner API、resume/checkpoint 边界和 callback 诊断边界与 `go.mod` 锁定版本一致。
+- 当前 import boundary 仍阻止 HTTP、product、facts、Fobrain provider 层直接依赖 Eino 包；provider raw payload 外泄由 schema、projection、redaction 和 provider 安全测试覆盖。
 
 ## Contract 门禁
 

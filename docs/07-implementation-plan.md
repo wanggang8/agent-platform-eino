@@ -318,6 +318,32 @@ npm run eino-workbench:visual-test
 
 ## Phase 3：Eino chat、facts、Action API
 
+### Task 3.0 Phase 3 technical gate
+
+读取：
+
+- `docs/phase-3-execution-and-facts-plan.md`
+- `docs/facts-contract.md`
+- `docs/run-lifecycle.md`
+- `docs/conversation-context.md`
+- `docs/intent-and-capability-selection.md`
+- `docs/observability-and-budgets.md`
+- `docs/adr/2026-06-30-pin-eino-version.md`
+
+要求：
+
+- 开发前确认 Phase 3 仍按 facts model -> SQLite repository -> product projection -> execution event mapper -> ChatModelAgent Runner -> HTTP/SSE/Action API 的顺序执行。
+- 如果文档、schema、fixture 或当前代码边界冲突，先修文档或新增 ADR，不得直接编码。
+- Eino API 以 `go.mod` 锁定版本和本地 module source 为准；在线资料只作概念参考。
+
+任务级检查：
+
+```bash
+rg -n 'phase-3-execution-and-facts-plan|Product Facts|ResumeWithParams|StructuredResult' docs
+go list -m github.com/cloudwego/eino
+go test ./internal/einoapp/architecture -run ImportBoundary -count=1
+```
+
 ### Task 3.1 Pin Eino versions
 
 修改：
@@ -330,7 +356,6 @@ npm run eino-workbench:visual-test
 
 ```bash
 go list -m github.com/cloudwego/eino
-go list -m -versions github.com/cloudwego/eino-ext/components/model/openai
 go test ./internal/einoapp/execution -run 'EinoVersion|ChatModelVersion' -count=1
 ```
 
@@ -338,6 +363,7 @@ go test ./internal/einoapp/execution -run 'EinoVersion|ChatModelVersion' -count=
 
 - 固定版本写入 ADR。
 - `eino-ext` 模型 provider 只在实际引入 provider 代码时固定到 `go.mod`，不得要求未引入模块通过 `go list -m`。
+- `eino-ext/components/model/openai` 版本调研和固定放到 Phase 4 真实 LLM provider 任务执行。
 - 升级版本必须新增 ADR，并重跑 Chat、Runner、tool loop 门禁；HITL、checkpoint 门禁在 Phase 6 引入后纳入升级回归。
 
 ### Task 3.2 Product facts
@@ -353,6 +379,13 @@ go test ./internal/einoapp/execution -run 'EinoVersion|ChatModelVersion' -count=
 - `internal/einoapp/facts/lifecycle.go`
 - `internal/einoapp/store/sqlite/repository.go`
 - `internal/einoapp/store/sqlite/migrations.go`
+
+要求：
+
+- 先补 facts 模型和 repository interface，再做 SQLite 实现。
+- SQLite repository 必须覆盖 run/turn/tool/pending/audit/context/lifecycle/idempotency 的事务边界。
+- memory repository 只能作为测试替身，不作为 Phase 3 产品事实来源。
+- raw checkpoint id、interrupt id、credential ref、raw provider payload 和 reusable resume token 不进入 Product Facts；`checkpoint_ref` 只能是内部安全引用。
 
 任务级检查：
 
@@ -371,6 +404,7 @@ go test ./internal/einoapp/store/sqlite -run 'RunTurnEvent|ToolCallResult|Contex
 
 要求：
 
+- 先实现 execution event mapper 测试，再接真实 Runner。
 - Runner event 只能写入 Product Facts，不能直接暴露给 Workbench、ActionResult 或 replay。
 - assistant delta、tool call、tool result、run state 必须先落入 facts，再由投影层读取。
 - 普通自然语言默认进入 ChatModelAgent；不得按关键词硬编码 Fobrain 工具路由。
@@ -391,6 +425,12 @@ go test ./internal/einoapp/execution -run 'Chat|RunnerEvent|FactsWrite|Capabilit
 - `internal/einoapp/httpapi/routes.go`
 - `internal/einoapp/httpapi/sse.go`
 - `internal/einoapp/httpapi/actions.go`
+
+要求：
+
+- HTTP handler 只能调用 execution command 和 product projection，不读取 Eino event 或 provider payload。
+- SSE event id 必须来自 Product Facts cursor/sequence。
+- Action API 必须复用 Workbench 同一套命令、facts 和 projection 路径。
 
 任务级检查：
 
