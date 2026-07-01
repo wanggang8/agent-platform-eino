@@ -9,6 +9,7 @@ type InspectorProps = {
   readonly fallbackStructuredResult: StructuredResult | undefined;
 };
 
+// Inspector 只展示后端投影后的证据、结构化结果、运行摘要和审计摘要。
 export function Inspector({ inspector, fallbackStructuredResult }: InspectorProps) {
   const activeInspectorTab = useWorkbenchUiStore((state) => state.activeInspectorTab);
   const setActiveInspectorTab = useWorkbenchUiStore((state) => state.setActiveInspectorTab);
@@ -36,6 +37,7 @@ export function Inspector({ inspector, fallbackStructuredResult }: InspectorProp
   );
 }
 
+// EvidencePanel 展示安全证据摘要，不读取 provider 原始字段。
 function EvidencePanel({ inspector, fallbackStructuredResult }: InspectorProps) {
   const evidence = inspector.evidence ?? [];
   const summary = getStructuredSummary(fallbackStructuredResult);
@@ -64,6 +66,7 @@ function EvidencePanel({ inspector, fallbackStructuredResult }: InspectorProps) 
   );
 }
 
+// StructuredPanel 展示 StructuredResult 投影，缺失时保持空态。
 function StructuredPanel({ inspector, fallbackStructuredResult }: InspectorProps) {
   const structured = inspector.structured;
   const result = structured?.structured_result ?? fallbackStructuredResult;
@@ -78,6 +81,7 @@ function StructuredPanel({ inspector, fallbackStructuredResult }: InspectorProps
   );
 }
 
+// RuntimePanel 展示运行状态和安全错误，不展示 checkpoint 或 resume token。
 function RuntimePanel({ inspector }: InspectorProps) {
   const runtime = inspector.runtime;
   return (
@@ -99,6 +103,7 @@ function RuntimePanel({ inspector }: InspectorProps) {
   );
 }
 
+// AuditPanel 展示脱敏审计事件。
 function AuditPanel({ inspector }: InspectorProps) {
   const audit = inspector.audit ?? [];
   if (audit.length === 0) return <EmptyPanel title="暂无审计事件" />;
@@ -115,10 +120,12 @@ function AuditPanel({ inspector }: InspectorProps) {
   );
 }
 
+// EmptyPanel 保持各 tab 的空态尺寸稳定。
 function EmptyPanel({ title }: { readonly title: string }) {
   return <div className="empty-panel">{title}</div>;
 }
 
+// tabLabel 将 contract 中的 tab id 映射为中文展示。
 function tabLabel(tab: InspectorTab) {
   const labels: Record<InspectorTab, string> = {
     evidence: "证据链",
@@ -129,6 +136,7 @@ function tabLabel(tab: InspectorTab) {
   return labels[tab];
 }
 
+// getStructuredSummary 从 StructuredResult 中提取安全摘要，不展开 raw data。
 function getStructuredSummary(result: StructuredResult | undefined) {
   if (!result) return undefined;
   return result.data.summary ?? result.schema_version;

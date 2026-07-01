@@ -17,6 +17,7 @@
 - Agent APIs: `adk.ChatModelAgentConfig`, `adk.ToolsConfig`, `adk.WithAfterToolCallsHook`.
 - HITL APIs: `adk.InterruptInfo`, `adk.InterruptCtx`, checkpoint-backed `ResumeInfo`.
 - Callback APIs are diagnostics only; callback output must not become Product Facts.
+- Phase 3 uses the existing mock `llm.Provider` through an Eino `BaseChatModel` adapter; production OpenAI-compatible provider stays in Phase 4.
 
 Use local module source and pinned ADR as implementation truth. Online docs are secondary concept references.
 
@@ -27,6 +28,8 @@ Phase 3.2 SQLite and facts implementation decisions are fixed in `docs/adr/2026-
 ### 1. Version Gate
 
 Confirm `go.mod` still pins Eino `v0.9.12`. Remove `internal/einoapp/execution/eino_version_pin.go` only when real execution code imports Eino in the same change. Do not introduce `eino-ext` until a real provider implementation needs it.
+
+Current implementation note: after `internal/einoapp/execution/runner.go` imports Eino `adk/schema/model`, the version pin placeholder must stay removed; `go.mod`, `go.sum`, and `TestEinoVersionPinnedInGoMod` are the version gate.
 
 ### 2. Product Facts Model
 
@@ -120,6 +123,7 @@ HTTP handlers call execution commands and product projections only:
 - SSE reads Product Facts cursor projections and never streams raw Runner events.
 - Action API uses the same command path and projection path as Workbench.
 - Errors use the existing unified error envelope.
+- `cmd/eino-workbench` must open the configured SQLite repository and inject the same repository into execution commands and product projection.
 
 ## Required Test Shape
 

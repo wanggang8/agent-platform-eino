@@ -7,6 +7,7 @@ const root = path.resolve(scriptDir, "..");
 const matrixPath = path.join(root, "docs/fixtures/fobrain/tool-matrix-24.json");
 const matrix = JSON.parse(fs.readFileSync(matrixPath, "utf8"));
 
+// dataFor 根据工具展示类型生成安全 fixture 数据，不使用旧项目 raw payload。
 function dataFor(tool) {
   const title = tool.display_name_zh;
   if (tool.display_type === "entity_collection") {
@@ -57,6 +58,7 @@ function dataFor(tool) {
   };
 }
 
+// fixtureFor 生成符合 fobrain.tool_result.v2 的 StructuredResult fixture。
 function fixtureFor(tool) {
   return {
     "schema_version": "fobrain.tool_result.v2",
@@ -75,6 +77,7 @@ function fixtureFor(tool) {
 }
 
 let written = 0;
+// 只补缺失 fixture，避免覆盖已经人工验收过的样例。
 for (const tool of matrix.tools) {
   const target = path.join(root, tool.fixture);
   if (fs.existsSync(target)) continue;

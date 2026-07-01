@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Config 是后端服务的文件化配置根对象，禁止用环境变量替代这些部署参数。
 type Config struct {
 	Server        ServerConfig        `yaml:"server"`
 	Database      DatabaseConfig      `yaml:"database"`
@@ -20,17 +21,20 @@ type Config struct {
 	Budgets       BudgetConfig        `yaml:"budgets"`
 }
 
+// ServerConfig 定义 HTTP 服务监听地址和超时。
 type ServerConfig struct {
 	Addr         string        `yaml:"addr"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
+// DatabaseConfig 定义 Product Facts 等持久化配置。
 type DatabaseConfig struct {
 	Driver string `yaml:"driver"`
 	DSN    string `yaml:"dsn"`
 }
 
+// LLMConfig 定义模型 provider 配置和凭据绑定的安全展示信息。
 type LLMConfig struct {
 	Provider          string              `yaml:"provider"`
 	BaseURL           string              `yaml:"base_url"`
@@ -41,6 +45,7 @@ type LLMConfig struct {
 	CredentialBinding CredentialBinding   `yaml:"credential_binding"`
 }
 
+// NetworkSafetyConfig 定义模型 provider 出站网络策略。
 type NetworkSafetyConfig struct {
 	RequireHTTPS         bool     `yaml:"require_https"`
 	AllowLocalHTTP       bool     `yaml:"allow_local_http"`
@@ -49,6 +54,7 @@ type NetworkSafetyConfig struct {
 	AllowedHosts         []string `yaml:"allowed_hosts"`
 }
 
+// CredentialBinding 是可展示的凭据绑定摘要，不包含真实密钥。
 type CredentialBinding struct {
 	SchemaVersion string `yaml:"schema_version"`
 	WorkspaceID   string `yaml:"workspace_id"`
@@ -60,23 +66,28 @@ type CredentialBinding struct {
 	AuditRef      string `yaml:"audit_ref"`
 }
 
+// SecurityConfig 定义本服务的安全开关。
 type SecurityConfig struct {
 	RedactSecrets       bool `yaml:"redact_secrets"`
 	AllowPrivateNetwork bool `yaml:"allow_private_network"`
 }
 
+// ObservabilityConfig 定义日志和诊断开关。
 type ObservabilityConfig struct {
 	LogLevel         string `yaml:"log_level"`
 	EnableRequestLog bool   `yaml:"enable_request_log"`
 }
 
+// BudgetConfig 定义默认执行预算，供后续 run/tool 超时使用。
 type BudgetConfig struct {
 	DefaultTimeout time.Duration `yaml:"default_timeout"`
 	MaxToolTimeout time.Duration `yaml:"max_tool_timeout"`
 }
 
+// RedactedSummary 是可打印的配置摘要，必须保证不泄漏密钥。
 type RedactedSummary map[string]any
 
+// LoadConfig 从本地配置文件读取服务配置并执行校验。
 func LoadConfig(path string) (Config, error) {
 	if strings.TrimSpace(path) == "" {
 		return Config{}, errors.New("config path is required")
@@ -97,6 +108,7 @@ func LoadConfig(path string) (Config, error) {
 	return cfg, nil
 }
 
+// Validate 校验启动必需项，避免服务以半配置状态运行。
 func (cfg Config) Validate() error {
 	if strings.TrimSpace(cfg.Server.Addr) == "" {
 		return errors.New("server.addr is required")
@@ -149,6 +161,7 @@ func (cfg Config) Validate() error {
 	return nil
 }
 
+// RedactedSummary 返回可写入日志或诊断的脱敏配置摘要。
 func (cfg Config) RedactedSummary() RedactedSummary {
 	return RedactedSummary{
 		"server": map[string]any{
@@ -198,6 +211,7 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 	}
 }
 
+// String 将脱敏摘要编码为 YAML，便于人工审查。
 func (summary RedactedSummary) String() string {
 	encoded, err := yaml.Marshal(map[string]any(summary))
 	if err != nil {
@@ -206,6 +220,7 @@ func (summary RedactedSummary) String() string {
 	return string(encoded)
 }
 
+// redactValue 对普通敏感字符串做完全遮蔽。
 func redactValue(value string) string {
 	if value == "" {
 		return ""
@@ -213,6 +228,7 @@ func redactValue(value string) string {
 	return "***"
 }
 
+// redactURL 保留 URL 的安全 origin/path，移除 userinfo、query 和 fragment。
 func redactURL(value string) string {
 	parsed, err := url.Parse(value)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {

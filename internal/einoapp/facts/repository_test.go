@@ -53,6 +53,7 @@ func TestRunStatusMatchesProductFactsContract(t *testing.T) {
 }
 
 func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
+	// 工具结果测试只断言 StructuredResult 引用，避免把 raw provider payload 固化进契约。
 	result := facts.ToolResult{
 		ResultID:   "result-1",
 		ToolCallID: "call-1",
@@ -70,6 +71,7 @@ func TestToolResultFactRequiresStructuredResultOnly(t *testing.T) {
 }
 
 func TestFactsCarrySequenceAndSafeResumeReferences(t *testing.T) {
+	// sequence、resume_ref、checkpoint_ref 是 replay/resume 的公共事实边界。
 	turn := facts.Turn{
 		TurnID:   "turn-1",
 		RunID:    "run-1",
@@ -98,6 +100,7 @@ func TestFactsCarrySequenceAndSafeResumeReferences(t *testing.T) {
 }
 
 func TestMemoryRepositoryTracksLatestRunByWorkspace(t *testing.T) {
+	// 内存仓库是 HTTP 默认依赖和早期测试替身，必须和 SQLite 仓库保持同源语义。
 	repository := facts.NewMemoryRepository()
 	ctx := context.Background()
 

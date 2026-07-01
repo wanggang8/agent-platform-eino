@@ -4,6 +4,7 @@ type ComposerProps = {
   readonly disabled: boolean;
 };
 
+// Composer 是消息输入区；disabled 时只表示等待审批/澄清，不在前端推进 run 状态。
 export function Composer({ disabled }: ComposerProps) {
   return (
     <form className="chat-composer" data-testid="chat-composer">

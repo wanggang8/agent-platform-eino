@@ -11,6 +11,7 @@ const conversations = [
   { title: "域名枚举与暴露面分析", meta: "已完成 · 发现域名 12 个", time: "11:35" }
 ];
 
+// WorkspaceSidebar 是 fixture 阶段的会话导航壳，真实会话列表后续仍从产品投影读取。
 export function WorkspaceSidebar({ activeRunId }: WorkspaceSidebarProps) {
   return (
     <aside className="workspace-sidebar" data-testid="workspace-sidebar" aria-label="Workspace navigation">

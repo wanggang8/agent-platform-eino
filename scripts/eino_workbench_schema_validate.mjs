@@ -53,10 +53,12 @@ const visualBlockIds = [
   "inspector"
 ];
 
+// readJSON 统一从仓库根目录读取 JSON 文件。
 function readJSON(filePath) {
   return JSON.parse(fs.readFileSync(path.join(root, filePath), "utf8"));
 }
 
+// walk 收集目标目录下的文件，确保校验顺序稳定。
 function walk(dir, predicate = () => true) {
   const out = [];
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
@@ -67,10 +69,12 @@ function walk(dir, predicate = () => true) {
   return out.sort();
 }
 
+// schemaKey 使用相对路径注册 schema，支持本地 $ref。
 function schemaKey(filePath) {
   return path.relative("docs/schemas", filePath).replaceAll(path.sep, "/");
 }
 
+// loadAjv 装载 JSON Schema 2020-12 校验器和所有 schema。
 function loadAjv() {
   const ajv = new Ajv2020({ allErrors: true, strict: true, validateFormats: true });
   addFormats(ajv);
@@ -82,6 +86,7 @@ function loadAjv() {
   return { ajv, schemaFiles };
 }
 
+// assertNoOpenObjects 禁止 schema 打开 additionalProperties，避免契约漂移。
 function assertNoOpenObjects(schemaFiles) {
   const failures = [];
   for (const file of schemaFiles) {
@@ -95,6 +100,7 @@ function assertNoOpenObjects(schemaFiles) {
   }
 }
 
+// assertNoForbiddenMarkers 防止 fixture 泄漏 token、raw provider 或 resume token。
 function assertNoForbiddenMarkers(filePath, value) {
   const encoded = JSON.stringify(value).toLowerCase();
   const hit = forbiddenMarkers.find((marker) => encoded.includes(marker));
@@ -103,6 +109,7 @@ function assertNoForbiddenMarkers(filePath, value) {
   }
 }
 
+// validateFixtures 校验 manifest 中声明的 fixture 与 schema 一致。
 function validateFixtures(ajv) {
   const manifest = readJSON("docs/fixtures/manifest.json");
   if (manifest.schema_version !== "eino_fixture_manifest.v1") {
@@ -119,6 +126,7 @@ function validateFixtures(ajv) {
   }
 }
 
+// validateFobrainToolMatrix 确认 24 个 Fobrain 只读能力 fixture 完整。
 function validateFobrainToolMatrix(ajv) {
   const matrix = readJSON("docs/fixtures/fobrain/tool-matrix-24.json");
   const expected = new Set(fobrainReadonlyToolIds);
@@ -151,6 +159,7 @@ function validateFobrainToolMatrix(ajv) {
   }
 }
 
+// validateVisualEvidenceMatrix 确认视觉验收 block 和状态 fixture 完整。
 function validateVisualEvidenceMatrix() {
   const matrix = readJSON("docs/fixtures/visual-evidence-matrix.json");
   const expected = new Set(visualBlockIds);
@@ -176,6 +185,7 @@ function validateVisualEvidenceMatrix() {
   }
 }
 
+// lintOpenAPI 做轻量 OpenAPI 引用和 operationId 校验。
 function lintOpenAPI() {
   const doc = readJSON("docs/api/eino-workbench.openapi.json");
   if (doc.openapi !== "3.1.2") throw new Error("OpenAPI version must be 3.1.2");
@@ -198,6 +208,7 @@ function lintOpenAPI() {
   }
 }
 
+// main 汇总执行所有 contract/schema/fixture 门禁。
 function main() {
   const { ajv, schemaFiles } = loadAjv();
   for (const file of schemaFiles) {

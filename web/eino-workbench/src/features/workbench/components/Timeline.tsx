@@ -6,6 +6,7 @@ type TimelineProps = {
   readonly items: readonly TimelineItem[];
 };
 
+// Timeline 渲染后端投影的时间线，不在前端重建 Product Facts。
 export function Timeline({ items }: TimelineProps) {
   return (
     <section className="chat-timeline" data-testid="chat-timeline" aria-label="对话时间线">
@@ -22,6 +23,7 @@ export function Timeline({ items }: TimelineProps) {
   );
 }
 
+// TimelineEntry 按 contract kind 选择展示组件。
 function TimelineEntry({ item }: { readonly item: TimelineItem }) {
   switch (item.kind) {
     case "user_message":
@@ -44,6 +46,7 @@ function TimelineEntry({ item }: { readonly item: TimelineItem }) {
   }
 }
 
+// MessageBubble 展示用户/assistant 消息。
 function MessageBubble({ role, content }: { readonly role: "user" | "assistant"; readonly content: string }) {
   return (
     <article className={`message-row ${role}`}>

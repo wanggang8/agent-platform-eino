@@ -2,12 +2,25 @@ package facts
 
 import "time"
 
+// RunStatus 是产品层 run 生命周期状态，必须与 docs/facts-contract.md 保持一致。
 type RunStatus string
+
+// ToolResultStatus 表示工具结果是否形成了安全结构化结果。
 type ToolResultStatus string
+
+// TurnRole 是 Workbench/replay 可展示的消息角色集合。
 type TurnRole string
+
+// ToolCallStatus 表示工具调用在 Product Facts 中的产品状态。
 type ToolCallStatus string
+
+// PendingKind 区分需要用户介入的审批和澄清场景。
 type PendingKind string
+
+// PendingStatus 表示 approval/clarification 的可恢复状态。
 type PendingStatus string
+
+// IdempotencyScope 区分 resume 和 mutation 的幂等键空间。
 type IdempotencyScope string
 
 const (
@@ -47,6 +60,7 @@ const (
 	IdempotencyScopeMutation IdempotencyScope = "mutation"
 )
 
+// Valid 校验 run 状态是否属于产品契约允许集合。
 func (status RunStatus) Valid() bool {
 	switch status {
 	case RunStatusCreated, RunStatusRunning, RunStatusWaiting, RunStatusSucceeded, RunStatusFailed, RunStatusCancelled, RunStatusStopped:
@@ -56,6 +70,7 @@ func (status RunStatus) Valid() bool {
 	}
 }
 
+// Terminal 判断 run 状态是否已经不可继续执行。
 func (status RunStatus) Terminal() bool {
 	switch status {
 	case RunStatusSucceeded, RunStatusFailed, RunStatusCancelled, RunStatusStopped:
@@ -65,6 +80,7 @@ func (status RunStatus) Terminal() bool {
 	}
 }
 
+// Run 是 Product Facts 的运行根事实，Workbench、Action API 和 replay 均从这里投影状态。
 type Run struct {
 	RunID       string
 	WorkspaceID string
@@ -75,6 +91,7 @@ type Run struct {
 	SafeError   string
 }
 
+// Turn 是用户、assistant 或系统提示在同一 run 内的有序消息事实。
 type Turn struct {
 	TurnID    string
 	RunID     string
@@ -84,6 +101,7 @@ type Turn struct {
 	CreatedAt time.Time
 }
 
+// ToolCall 记录模型选择的能力调用，不包含 raw provider 参数。
 type ToolCall struct {
 	ToolCallID  string
 	RunID       string
@@ -96,6 +114,7 @@ type ToolCall struct {
 	EndedAt     time.Time
 }
 
+// ToolResult 只引用 StructuredResult 安全材料，不保存 provider 原始响应。
 type ToolResult struct {
 	ResultID         string
 	ToolCallID       string
@@ -103,12 +122,15 @@ type ToolResult struct {
 	StructuredResult StructuredResultRef
 }
 
+// StructuredResultRef 是工具结果事实的安全引用和摘要。
 type StructuredResultRef struct {
 	SchemaVersion string
 	ResultRef     string
 	SafeSummary   string
 }
 
+// PendingInteraction 是 approval/clarification 的产品级等待事实。
+// CheckpointRef 只能是内部安全引用，不能是 raw Eino checkpoint id。
 type PendingInteraction struct {
 	PendingID     string
 	RunID         string
@@ -121,6 +143,7 @@ type PendingInteraction struct {
 	ExpiresAt     time.Time
 }
 
+// AuditEvent 是可回放、可审计的安全摘要事件。
 type AuditEvent struct {
 	AuditID     string
 	RunID       string
@@ -130,6 +153,7 @@ type AuditEvent struct {
 	CreatedAt   time.Time
 }
 
+// ContextSnapshot 记录模型调用前的安全上下文摘要，不保存 raw prompt 或 provider payload。
 type ContextSnapshot struct {
 	SnapshotID  string
 	RunID       string
@@ -137,6 +161,7 @@ type ContextSnapshot struct {
 	CreatedAt   time.Time
 }
 
+// Snapshot 是按 run 读取的完整 Product Facts 视图，供投影层同源消费。
 type Snapshot struct {
 	Run                 Run
 	Turns               []Turn
@@ -147,6 +172,7 @@ type Snapshot struct {
 	ContextSnapshots    []ContextSnapshot
 }
 
+// IdempotencyRecord 记录 resume/mutation 请求幂等性，ResourceRef 用于防止同 key 误绑其他资源。
 type IdempotencyRecord struct {
 	Scope       IdempotencyScope
 	Key         string

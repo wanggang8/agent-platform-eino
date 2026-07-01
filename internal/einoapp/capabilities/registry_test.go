@@ -8,6 +8,7 @@ import (
 )
 
 func TestRegistryRegistersAndListsCapabilitiesByMetadata(t *testing.T) {
+	// capability metadata 是工具选择和审批策略的依据，不能退化为工具名硬编码。
 	registry := capabilities.NewRegistry()
 	capability := capabilities.Capability{
 		ID:          "cap.asset.search",
@@ -51,6 +52,7 @@ func TestRegistryRejectsDuplicateCapabilityID(t *testing.T) {
 }
 
 func TestPolicyRequiresApprovalForWriteRisk(t *testing.T) {
+	// 写域能力默认需要 approval，provider 或前端不能绕过 policy。
 	decision := capabilities.EvaluatePolicy(capabilities.Capability{
 		ID:               "cap.ticket.close",
 		ToolName:         "ticket_close",

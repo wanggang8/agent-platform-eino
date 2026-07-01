@@ -5,8 +5,10 @@ import (
 	"database/sql"
 )
 
+// schemaVersion 是当前内置 SQLite schema 版本。
 const schemaVersion = 1
 
+// migrations 按顺序声明 Phase 3 Product Facts 所需表结构。
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS schema_versions (
 		version INTEGER PRIMARY KEY,
@@ -92,6 +94,7 @@ var migrations = []string{
 	);`,
 }
 
+// migrate 执行内置 migration，并记录当前 schema 版本。
 func migrate(ctx context.Context, db *sql.DB) error {
 	for _, stmt := range migrations {
 		if _, err := db.ExecContext(ctx, stmt); err != nil {

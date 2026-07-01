@@ -7,12 +7,13 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"agent-platform-eino/internal/einoapp/execution"
+	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/product"
 )
 
+// messageRequest 对应 Workbench 消息入口，只接受契约字段。
 type messageRequest struct {
 	SchemaVersion   string `json:"schema_version"`
 	Message         string `json:"message"`
@@ -21,6 +22,7 @@ type messageRequest struct {
 	WorkspaceID     string `json:"workspace_id,omitempty"`
 }
 
+// actionRequest 对应外部 Action API，请求体不会直接进入 provider。
 type actionRequest struct {
 	SchemaVersion   string        `json:"schema_version"`
 	ActionID        string        `json:"action_id"`
@@ -47,6 +49,7 @@ type actionContext struct {
 	SafeUserLabel string `json:"safe_user_label,omitempty"`
 }
 
+// resumeRequest 对应 approval/clarification 恢复入口，resume_ref 必须是一次性安全引用。
 type resumeRequest struct {
 	SchemaVersion         string   `json:"schema_version"`
 	ResumeRef             string   `json:"resume_ref"`
@@ -57,6 +60,7 @@ type resumeRequest struct {
 	Comment               string   `json:"comment,omitempty"`
 }
 
+// messageResponse 是消息入口的接收结果，后续事件仍通过 Product Facts/SSE 投影读取。
 type messageResponse struct {
 	SchemaVersion string `json:"schema_version"`
 	RunID         string `json:"run_id"`
@@ -65,21 +69,7 @@ type messageResponse struct {
 	SnapshotURL   string `json:"snapshot_url,omitempty"`
 }
 
-type streamEvent struct {
-	SchemaVersion string    `json:"schema_version"`
-	EventID       string    `json:"event_id"`
-	RunID         string    `json:"run_id"`
-	Type          string    `json:"type"`
-	Sequence      int       `json:"sequence"`
-	CreatedAt     time.Time `json:"created_at"`
-	Run           runPatch  `json:"run"`
-}
-
-type runPatch struct {
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
+// handleHealth 返回服务健康状态，不触碰业务依赖。
 func (api api) handleHealth(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, r, http.StatusOK, map[string]string{
 		"schema_version": "eino_workbench_health.v1",
@@ -87,6 +77,7 @@ func (api api) handleHealth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleCurrentView 从 product projection 读取当前 Workbench 视图。
 func (api api) handleCurrentView(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	view, err := api.projection.WorkbenchView(r.Context(), workspaceID)
@@ -97,6 +88,7 @@ func (api api) handleCurrentView(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, r, http.StatusOK, view)
 }
 
+// handleMessage 校验 Workbench 消息契约并交给 execution command。
 func (api api) handleMessage(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	var req messageRequest
@@ -127,6 +119,7 @@ func (api api) handleMessage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleAgentAction 校验 Action API 请求，并复用 Workbench 同源 facts/projection。
 func (api api) handleAgentAction(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	var req actionRequest
@@ -163,6 +156,7 @@ func (api api) handleAgentAction(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, r, http.StatusOK, result)
 }
 
+// handleResume 校验 resume 请求，完整恢复语义由 execution/facts 层控制。
 func (api api) handleResume(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
@@ -201,55 +195,66 @@ func (api api) handleResume(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, r, http.StatusOK, result)
 }
 
+// handleRunSnapshot 返回指定 run 的产品快照视图。
 func (api api) handleRunSnapshot(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
 	view, err := api.projection.RunSnapshot(r.Context(), workspaceID, runID)
 	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在", false))
+			return
+		}
 		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "运行快照暂不可用", true))
 		return
 	}
 	WriteJSON(w, r, http.StatusOK, view)
 }
 
+// handleReplay 返回基于 Product Facts 的回放视图。
 func (api api) handleReplay(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
 	replay, err := api.projection.ReplayView(r.Context(), workspaceID, runID)
 	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在", false))
+			return
+		}
 		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "回放暂不可用", true))
 		return
 	}
 	WriteJSON(w, r, http.StatusOK, replay)
 }
 
+// handleRunStream 从产品投影读取 SSE 事件，HTTP 层不接触 Eino event 或 provider payload。
 func (api api) handleRunStream(w http.ResponseWriter, r *http.Request) {
-	now := time.Now().UTC()
+	workspaceID := r.PathValue("workspace_id")
 	runID := r.PathValue("run_id")
-	event := streamEvent{
-		SchemaVersion: "eino_workbench_stream_event.v1",
-		EventID:       runID + ":000001",
-		RunID:         runID,
-		Type:          "run.updated",
-		Sequence:      1,
-		CreatedAt:     now,
-		Run: runPatch{
-			Status:    "created",
-			UpdatedAt: now,
-		},
+	events, err := api.projection.StreamEvents(r.Context(), workspaceID, runID)
+	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在", false))
+			return
+		}
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "事件暂不可用", true))
+		return
 	}
 
 	w.Header().Set(requestIDHeader, requestID(r))
-	if err := WriteSSEEvent(w, SSEEvent{
-		ID:    event.EventID,
-		Event: event.Type,
-		Data:  event,
-	}); err != nil {
-		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("sse_encode_failed", "事件编码失败", true))
-		return
+	for _, event := range events {
+		if err := WriteSSEEvent(w, SSEEvent{
+			ID:    event.EventID,
+			Event: event.Type,
+			Data:  event,
+		}); err != nil {
+			WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("sse_encode_failed", "事件编码失败", true))
+			return
+		}
 	}
 }
 
+// decodeJSONRequest 使用 DisallowUnknownFields 防止静默接受未知契约字段。
 func decodeJSONRequest(r *http.Request, dst any) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()

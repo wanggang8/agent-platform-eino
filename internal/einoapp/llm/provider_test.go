@@ -31,6 +31,7 @@ func TestMockProviderReturnsConfiguredResponse(t *testing.T) {
 }
 
 func TestRedactedProviderErrorDoesNotExposeSecretsOrRawBody(t *testing.T) {
+	// provider 错误进入产品层前必须脱敏，不能泄露 token、鉴权头或 raw body。
 	err := llm.RedactProviderError(errors.New("Authorization: Bearer sk-secret raw body: forbidden"), llm.RedactionInput{
 		Category:       "auth",
 		ReasonCode:     "provider_config_invalid",

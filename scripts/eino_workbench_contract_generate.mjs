@@ -9,6 +9,7 @@ const schemasDir = path.join(root, "docs/schemas");
 const outFile = path.join(root, "web/eino-workbench/src/contracts/generated.ts");
 const checkOnly = process.argv.includes("--check");
 
+// walk 收集 schema 文件，保证 contract 生成顺序稳定。
 function walk(dir) {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -19,6 +20,7 @@ function walk(dir) {
   return out.sort();
 }
 
+// readSchema 只读取 schema 的公开标识，不把 schema 内容复制进前端。
 function readSchema(file) {
   const schema = JSON.parse(fs.readFileSync(file, "utf8"));
   if (!schema.$id || !schema.title) {
@@ -32,6 +34,7 @@ function readSchema(file) {
 }
 
 const schemas = walk(schemasDir).map(readSchema);
+// typeDefinitions 是前端 contract 类型的集中生成模板，避免组件手写平行 DTO。
 const typeDefinitions = `
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | { readonly [key: string]: JsonValue } | readonly JsonValue[];
@@ -233,6 +236,7 @@ export const contractSchemas = ${JSON.stringify(schemas, null, 2)} as const sati
 ${typeDefinitions.trimEnd()}
 `;
 
+// --check 用于 CI/验收确认生成文件没有落后。
 if (checkOnly) {
   const current = fs.existsSync(outFile) ? fs.readFileSync(outFile, "utf8") : "";
   if (current !== body) {
@@ -240,6 +244,7 @@ if (checkOnly) {
   }
   console.log(`contract index is current for ${schemas.length} schemas`);
 } else {
+  // 非 check 模式才写入 generated.ts，生成文件本身不手工编辑。
   fs.writeFileSync(outFile, body);
   console.log(`generated ${path.relative(root, outFile)} from ${schemas.length} schemas`);
 }

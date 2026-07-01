@@ -8,16 +8,19 @@ import (
 	"agent-platform-eino/internal/einoapp/product"
 )
 
+// Dependencies 是 HTTP 层的依赖集合，必须同时提供命令和投影以保持同源事实。
 type Dependencies struct {
 	Projection product.Projection
 	Commands   execution.Commands
 }
 
+// api 保存 HTTP handler 需要的边界依赖，不直接依赖 provider、LLM 或 Eino event。
 type api struct {
 	projection product.Projection
 	commands   execution.Commands
 }
 
+// DefaultDependencies 创建内存 facts 版本的默认依赖，供本地 smoke 和早期 Phase 使用。
 func DefaultDependencies() Dependencies {
 	repository := facts.NewMemoryRepository()
 	return Dependencies{
@@ -26,6 +29,7 @@ func DefaultDependencies() Dependencies {
 	}
 }
 
+// NewRouter 构建 HTTP 路由；部分依赖缺失时直接 panic，避免半注入导致双事实来源。
 func NewRouter(deps Dependencies) http.Handler {
 	if deps.Projection == nil && deps.Commands == nil {
 		deps = DefaultDependencies()
@@ -55,6 +59,7 @@ func NewRouter(deps Dependencies) http.Handler {
 	return mux
 }
 
+// handleNotFound 使用统一错误 envelope 返回 404。
 func (api api) handleNotFound(w http.ResponseWriter, r *http.Request) {
 	WriteError(w, r, http.StatusNotFound, product.NewSafeError("not_found", "请求的资源不存在", false))
 }

@@ -3,6 +3,7 @@ import { useWorkbenchView } from "../api/workbenchQueries";
 import { useWorkbenchUiStore } from "../state/useWorkbenchUiStore";
 import { WorkbenchShell } from "../components/WorkbenchShell";
 
+// WorkbenchPage 负责从路由读取 workspace，并把 contract view 交给 shell。
 export function WorkbenchPage() {
   const { workspaceId = "ws-demo" } = useParams();
   const activeFixture = useWorkbenchUiStore((state) => state.activeFixture);

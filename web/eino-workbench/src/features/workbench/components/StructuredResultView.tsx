@@ -4,6 +4,7 @@ type StructuredResultViewProps = {
   readonly result: StructuredResult;
 };
 
+// StructuredResultView 是工具结果的唯一展示入口，避免前端直接解释 raw provider payload。
 export function StructuredResultView({ result }: StructuredResultViewProps) {
   if (result.schema_version === "tool.structured_result.v1") {
     return (
@@ -37,6 +38,7 @@ export function StructuredResultView({ result }: StructuredResultViewProps) {
   );
 }
 
+// ResultTable 渲染 fobrain 结构化集合结果，列定义来自 contract。
 function ResultTable({
   columns,
   items
@@ -58,6 +60,7 @@ function ResultTable({
   );
 }
 
+// FactGrid 展示安全事实键值对。
 function FactGrid({ facts }: { readonly facts: readonly { readonly label: string; readonly value: JsonValue }[] }) {
   if (facts.length === 0) return null;
   return (
@@ -72,11 +75,13 @@ function FactGrid({ facts }: { readonly facts: readonly { readonly label: string
   );
 }
 
+// readValue 只从 StructuredItem 安全字段中取值。
 function readValue(item: StructuredItem, key: string): JsonValue {
   const value = (item as Readonly<Record<string, JsonValue | undefined>>)[key];
   return value ?? "";
 }
 
+// formatValue 将 JSON 值转换为可读文本，不做业务推断。
 function formatValue(value: JsonValue): string {
   if (value === null) return "-";
   if (Array.isArray(value)) return value.map(formatValue).join(", ");
@@ -84,6 +89,7 @@ function formatValue(value: JsonValue): string {
   return String(value);
 }
 
+// displayTypeLabel 将结构化展示类型映射为中文标签。
 function displayTypeLabel(displayType: string) {
   const labels: Record<string, string> = {
     entity_collection: "对象列表",
@@ -96,6 +102,7 @@ function displayTypeLabel(displayType: string) {
   return labels[displayType] ?? "结构化结果";
 }
 
+// statusLabel 将结构化状态映射为中文标签。
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     resolved: "已解析",

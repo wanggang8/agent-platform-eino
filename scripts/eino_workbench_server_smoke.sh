@@ -13,12 +13,9 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract)
+  contract|chat-stream|action-basic)
     ;;
   capability-selection|context-projection)
-    not_implemented "Phase 3"
-    ;;
-  chat-stream|action-basic)
     not_implemented "Phase 3"
     ;;
   tool-card)
@@ -124,7 +121,10 @@ curl -fsS "${base_url}/healthz" >/dev/null
 
 view_json="${tmp_dir}/view.json"
 action_json="${tmp_dir}/action.json"
+message_json="${tmp_dir}/message.json"
+snapshot_json="${tmp_dir}/snapshot.json"
 stream_headers="${tmp_dir}/stream.headers"
+stream_body="${tmp_dir}/stream.body"
 
 curl -fsS "${base_url}/api/workspaces/ws_smoke/views/current" -o "${view_json}"
 python3 - "${view_json}" <<'PY'
@@ -147,12 +147,91 @@ import json, sys
 body = json.load(open(sys.argv[1]))
 assert body["schema_version"] == "eino_action_result.v1"
 assert body["workspace_id"] == "ws_smoke"
-assert body["status"] == "accepted"
+assert body["status"] in ("accepted", "completed")
 assert isinstance(body["result_cards"], list)
 assert isinstance(body["audit_refs"], list)
 PY
 
-curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/run_smoke/stream" >/dev/null
+contract_run_id="$(python3 - "${action_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+print(body["run_id"])
+PY
+)"
+curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/${contract_run_id}/stream" >/dev/null
 grep -qi '^Content-Type: text/event-stream' "${stream_headers}"
+
+if [[ "${scenario}" == "chat-stream" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_workbench_message_request.v1","message":"hello smoke","client_request_id":"client-smoke-message"}' \
+    "${base_url}/api/workspaces/ws_smoke/messages" \
+    -o "${message_json}"
+  run_id="$(python3 - "${message_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_message_response.v1"
+assert body["status"] == "accepted"
+assert body["run_id"]
+print(body["run_id"])
+PY
+)"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+assert any(item["kind"] == "user_message" and item["content"] == "hello smoke" for item in body["timeline"])
+assert any(item["kind"] == "assistant_message" and item["content"] == "已收到请求。" for item in body["timeline"])
+PY
+  curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/stream" -o "${stream_body}"
+  grep -qi '^Content-Type: text/event-stream' "${stream_headers}"
+  grep -q "event: message.updated" "${stream_body}"
+  grep -q "hello smoke" "${stream_body}"
+  grep -q "已收到请求。" "${stream_body}"
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    count = conn.execute("select count(*) from context_snapshots where run_id = ?", (run_id,)).fetchone()[0]
+assert count >= 1
+PY
+  echo "chat-stream smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "action-basic" ]]; then
+  run_id="$(python3 - "${action_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["run_id"]
+assert body["status"] == "completed"
+assert body["final_answer"] == "已收到请求。"
+assert body["snapshot_url"].endswith("/runs/" + body["run_id"])
+assert body["events_url"].endswith("/runs/" + body["run_id"] + "/stream")
+print(body["run_id"])
+PY
+)"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+assert any(item["kind"] == "user_message" and item["content"] == "hello" for item in body["timeline"])
+assert any(item["kind"] == "assistant_message" and item["content"] == "已收到请求。" for item in body["timeline"])
+assert body["inspector"]["runtime"]["status"] == "succeeded"
+PY
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    count = conn.execute("select count(*) from context_snapshots where run_id = ?", (run_id,)).fetchone()[0]
+assert count >= 1
+PY
+  echo "action-basic smoke passed"
+  exit 0
+fi
 
 echo "contract smoke passed"

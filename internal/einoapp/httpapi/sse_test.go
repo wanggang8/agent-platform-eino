@@ -75,6 +75,7 @@ func TestWriteSSEEventSetsHeadersAndFlushes(t *testing.T) {
 }
 
 func TestWriteSSEEventReturnsEncodeErrorBeforeWritingStatus(t *testing.T) {
+	// 编码失败时不能先写 200，否则客户端会把坏事件当作正常 stream。
 	writer := newSSETestWriter()
 
 	err := httpapi.WriteSSEEvent(writer, httpapi.SSEEvent{
@@ -97,6 +98,7 @@ type sseTestWriter struct {
 	flushed bool
 }
 
+// sseTestWriter 强制先写 status 再写 body，用来捕获 SSE 响应顺序问题。
 func newSSETestWriter() *sseTestWriter {
 	return &sseTestWriter{header: make(http.Header)}
 }

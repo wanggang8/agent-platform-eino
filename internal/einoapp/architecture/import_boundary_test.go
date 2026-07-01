@@ -13,6 +13,7 @@ import (
 
 const modulePrefix = "agent-platform-eino/internal/einoapp/"
 
+// TestImportBoundaryDoesNotUseLegacyProjectPackages 防止新项目重新依赖旧项目内部包。
 func TestImportBoundaryDoesNotUseLegacyProjectPackages(t *testing.T) {
 	forbidden := []string{
 		"ai-agent",
@@ -50,6 +51,7 @@ func TestImportBoundaryDoesNotUseLegacyProjectPackages(t *testing.T) {
 	}
 }
 
+// shouldSkipProjectDir 跳过不会参与 Go import 边界检查的目录。
 func shouldSkipProjectDir(name string) bool {
 	switch name {
 	case ".git", "node_modules", "test-results":
@@ -59,6 +61,7 @@ func shouldSkipProjectDir(name string) bool {
 	}
 }
 
+// TestPhaseOnePackageSkeletonExists 确认 Phase 1 固定的分层目录仍然存在。
 func TestPhaseOnePackageSkeletonExists(t *testing.T) {
 	requiredDirs := []string{
 		"architecture",
@@ -87,6 +90,7 @@ func TestPhaseOnePackageSkeletonExists(t *testing.T) {
 	}
 }
 
+// TestImportBoundaryPreservesLayering 防止低层包反向依赖 HTTP/provider 等边界。
 func TestImportBoundaryPreservesLayering(t *testing.T) {
 	root := filepath.Join("..")
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
@@ -112,6 +116,7 @@ func TestImportBoundaryPreservesLayering(t *testing.T) {
 	}
 }
 
+// TestProductLayersDoNotImportEino 防止产品层直接消费 Eino 内部事件。
 func TestProductLayersDoNotImportEino(t *testing.T) {
 	root := filepath.Join("..")
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
@@ -147,6 +152,7 @@ func TestProductLayersDoNotImportEino(t *testing.T) {
 	}
 }
 
+// checkImport 检查单个 import 是否命中旧项目禁用标记。
 func checkImport(t *testing.T, filePath string, spec *ast.ImportSpec, forbidden []string) {
 	t.Helper()
 
@@ -161,6 +167,7 @@ func checkImport(t *testing.T, filePath string, spec *ast.ImportSpec, forbidden 
 	}
 }
 
+// packageLayer 从文件路径推导 internal/einoapp 下的逻辑层。
 func packageLayer(root, filePath string) string {
 	rel, err := filepath.Rel(root, filepath.Dir(filePath))
 	if err != nil {
@@ -179,6 +186,7 @@ func packageLayer(root, filePath string) string {
 	return parts[0]
 }
 
+// checkLayerImport 校验当前层是否导入了禁止的内部层。
 func checkLayerImport(t *testing.T, filePath, layer string, spec *ast.ImportSpec) {
 	t.Helper()
 
@@ -206,6 +214,7 @@ func checkLayerImport(t *testing.T, filePath, layer string, spec *ast.ImportSpec
 	}
 }
 
+// mustStayEinoFree 标记不能直接依赖 Eino 的产品出口层。
 func mustStayEinoFree(layer string) bool {
 	switch layer {
 	case "httpapi", "facts", "product", "providers/fobrain":
@@ -215,6 +224,7 @@ func mustStayEinoFree(layer string) bool {
 	}
 }
 
+// forbiddenImportsForLayer 定义各层禁止依赖的内部层。
 func forbiddenImportsForLayer(layer string) []string {
 	switch layer {
 	case "httpapi":

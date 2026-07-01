@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.EINO_WORKBENCH_BASE_URL ?? "http://127.0.0.1:8081";
+// visual 报告单独落目录，避免普通 smoke 和视觉验收产物互相覆盖。
 const reportDir =
   process.env.EINO_WORKBENCH_REPORT_KIND === "visual"
     ? "../../test-results/eino-workbench-visual-report"
@@ -30,12 +31,14 @@ export default defineConfig({
     }
   },
   webServer: {
+    // Playwright 统一拉起 Vite dev server，保证本地和 CI 使用同一入口。
     command: "npm --workspace @agent-platform-eino/eino-workbench run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000
   },
   projects: [
+    // desktop/mobile 两个视口是 Workbench 首轮视觉门禁的固定基线。
     {
       name: "desktop",
       use: {

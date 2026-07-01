@@ -4,6 +4,7 @@ import type { TimelineItem } from "../../../contracts/generated";
 import { useWorkbenchUiStore } from "../state/useWorkbenchUiStore";
 import { StructuredResultView } from "./StructuredResultView";
 
+// ToolCard 展示工具调用的安全摘要和 StructuredResult，不展示工具内部 raw payload。
 export function ToolCard({ item }: { readonly item: TimelineItem }) {
   const collapsed = useWorkbenchUiStore((state) => state.collapsedToolCards.has(item.item_id));
   const toggleToolCard = useWorkbenchUiStore((state) => state.toggleToolCard);
@@ -30,6 +31,7 @@ export function ToolCard({ item }: { readonly item: TimelineItem }) {
   );
 }
 
+// ApprovalCard 展示写域审批等待态，前端不直接决定写域执行。
 export function ApprovalCard({ item }: { readonly item: TimelineItem }) {
   return (
     <article className="pending-card approval" data-testid="approval-card">
@@ -47,6 +49,7 @@ export function ApprovalCard({ item }: { readonly item: TimelineItem }) {
   );
 }
 
+// ClarificationCard 展示澄清等待态，提交后的状态由后端 Product Facts 决定。
 export function ClarificationCard({ item }: { readonly item: TimelineItem }) {
   return (
     <article className="pending-card clarification" data-testid="clarification-card">
@@ -64,6 +67,7 @@ export function ClarificationCard({ item }: { readonly item: TimelineItem }) {
   );
 }
 
+// statusLabel 将工具/pending 状态映射为中文标签。
 function statusLabel(status: string | undefined) {
   if (!status) return "未知";
   const labels: Record<string, string> = {

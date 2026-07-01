@@ -399,16 +399,18 @@ go test ./internal/einoapp/store/sqlite -run 'RunTurnEvent|ToolCallResult|Contex
 
 创建：
 
-- `internal/einoapp/execution/agent.go`
 - `internal/einoapp/execution/runner.go`
 - `internal/einoapp/execution/events.go`
 - `internal/einoapp/execution/selection.go`
+- `internal/einoapp/execution/context.go`
 
 要求：
 
 - 先实现 execution event mapper 测试，再接真实 Runner。
 - Runner event 只能写入 Product Facts，不能直接暴露给 Workbench、ActionResult 或 replay。
 - assistant delta、tool call、tool result、run state 必须先落入 facts，再由投影层读取。
+- Phase 3 可用 mock `llm.Provider` 适配 Eino `BaseChatModel` 跑通 ChatModelAgent Runner；真实 OpenAI-compatible provider 仍在 Phase 4。
+- 引入真实 Eino Runner 代码后，必须移除 `internal/einoapp/execution/eino_version_pin.go` 占位导入，版本锁定由 `go.mod` 和测试保证。
 - 普通自然语言默认进入 ChatModelAgent；不得按关键词硬编码 Fobrain 工具路由。
 - capability_hint / intent_hint 只作为候选入口，必须通过 registry 和 policy。
 - 每次模型调用前必须使用 `conversation-context.md` 生成 safe context snapshot。
@@ -433,6 +435,8 @@ go test ./internal/einoapp/execution -run 'Chat|RunnerEvent|FactsWrite|Capabilit
 - HTTP handler 只能调用 execution command 和 product projection，不读取 Eino event 或 provider payload。
 - SSE event id 必须来自 Product Facts cursor/sequence。
 - Action API 必须复用 Workbench 同一套命令、facts 和 projection 路径。
+- 服务启动路径必须使用配置文件指定的 SQLite Product Facts repository；memory repository 只允许作为单元测试替身。
+- `chat-stream` 和 `action-basic` smoke 必须创建真实 run，读取 snapshot/stream，并断言输出来自 Product Facts。
 
 任务级检查：
 

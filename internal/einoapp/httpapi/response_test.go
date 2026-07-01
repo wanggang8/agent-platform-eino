@@ -10,6 +10,7 @@ import (
 )
 
 func TestWriteJSONAddsRequestIDHeaderWithoutWrappingSuccessBody(t *testing.T) {
+	// 成功响应保持业务 schema 直出，避免 Workbench/Action API 再套一层 data 造成契约分叉。
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/ok", nil)
 
@@ -35,6 +36,7 @@ func TestWriteJSONAddsRequestIDHeaderWithoutWrappingSuccessBody(t *testing.T) {
 }
 
 func TestWriteErrorUsesUnifiedSafeEnvelope(t *testing.T) {
+	// 只有错误响应统一封装，并且只能包含脱敏后的 safe_detail。
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/bad", nil)
 

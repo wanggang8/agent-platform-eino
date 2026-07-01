@@ -13,6 +13,7 @@ type WorkbenchShellProps = {
   readonly view: WorkbenchView;
 };
 
+// WorkbenchShell 负责三栏布局和响应式面板切换，业务事实只来自 WorkbenchView。
 export function WorkbenchShell({ view }: WorkbenchShellProps) {
   const activeFixture = useWorkbenchUiStore((state) => state.activeFixture);
   const setActiveFixture = useWorkbenchUiStore((state) => state.setActiveFixture);
@@ -82,6 +83,7 @@ export function WorkbenchShell({ view }: WorkbenchShellProps) {
   );
 }
 
+// findLatestStructuredResult 为 Inspector 提供最近的结构化结果兜底展示。
 function findLatestStructuredResult(view: WorkbenchView): StructuredResult | undefined {
   for (let index = view.timeline.length - 1; index >= 0; index -= 1) {
     const item = view.timeline[index];
@@ -90,6 +92,7 @@ function findLatestStructuredResult(view: WorkbenchView): StructuredResult | und
   return undefined;
 }
 
+// statusLabel 将 run status 映射为中文展示。
 function statusLabel(status: WorkbenchView["status"]) {
   const labels: Record<WorkbenchView["status"], string> = {
     created: "已创建",

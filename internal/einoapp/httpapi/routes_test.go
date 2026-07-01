@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -108,6 +109,39 @@ func TestStreamEndpointUsesSSEWithStableEventID(t *testing.T) {
 	}
 }
 
+func TestStreamEndpointUsesProjectionEvents(t *testing.T) {
+	// SSE handler 必须读取 product projection，不能在 HTTP 层自行制造 run 事件。
+	projection := recordingProjection{
+		streamEvents: []product.StreamEvent{{
+			SchemaVersion: "eino_workbench_stream_event.v1",
+			EventID:       "run_projected:000007",
+			RunID:         "run_projected",
+			Type:          "run.updated",
+			Sequence:      7,
+			Run:           &product.RunPatch{Status: "running"},
+		}},
+	}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: execution.NewStaticCommands()}))
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/api/workspaces/ws_123/runs/run_projected/stream")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "id: run_projected:000007") {
+		t.Fatalf("stream body = %q", string(body))
+	}
+	if projection.streamWorkspaceID != "ws_123" || projection.streamRunID != "run_projected" {
+		t.Fatalf("stream projection args workspace=%q run=%q", projection.streamWorkspaceID, projection.streamRunID)
+	}
+}
+
 func TestLegacyWorkbenchRoutesAreNotMounted(t *testing.T) {
 	server := httptest.NewServer(httpapi.NewRouter(emptyProjectionDeps()))
 	defer server.Close()
@@ -199,6 +233,7 @@ func TestDefaultDependenciesProvideProjection(t *testing.T) {
 }
 
 func TestDefaultDependenciesShareFactsBetweenCommandsAndProjection(t *testing.T) {
+	// 默认依赖必须共用同一个 facts repository，否则 current view 会读不到刚创建的 run。
 	server := httptest.NewServer(httpapi.NewRouter(httpapi.DefaultDependencies()))
 	defer server.Close()
 
@@ -268,6 +303,7 @@ func TestEmptyDependenciesUseSharedDefaultFacts(t *testing.T) {
 }
 
 func TestPartialDependenciesPanicToAvoidSplitFacts(t *testing.T) {
+	// 禁止只替换 Projection 或 Commands 的半注入模式，防止测试和生产出现双事实源。
 	t.Run("projection only", func(t *testing.T) {
 		defer func() {
 			if recover() == nil {
@@ -288,6 +324,7 @@ func TestPartialDependenciesPanicToAvoidSplitFacts(t *testing.T) {
 }
 
 func TestActionRequestParsesActionIDBeforeProjection(t *testing.T) {
+	// Action API 先进入 execution command，再由同一 run_id 投影结果，保证出口同源。
 	projection := recordingProjection{}
 	commands := recordingCommands{acceptedRunID: "run-from-command"}
 	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
@@ -389,6 +426,7 @@ func TestInvalidActionRequestReturnsUnifiedErrorEnvelope(t *testing.T) {
 }
 
 func TestResumeRequestParsesIntoExecutionCommand(t *testing.T) {
+	// resume 请求必须保留 decision/comment，但最终结果仍从 projection 读取。
 	projection := recordingProjection{}
 	commands := recordingCommands{acceptedRunID: "run-resume-command"}
 	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
@@ -500,13 +538,17 @@ func assertErrorEnvelope(t *testing.T, resp *http.Response, wantStatus int, want
 }
 
 type recordingProjection struct {
-	view        product.WorkbenchView
-	workspaceID string
-	actionID    string
-	runID       string
-	resumeCalls int
+	view              product.WorkbenchView
+	streamEvents      []product.StreamEvent
+	workspaceID       string
+	actionID          string
+	runID             string
+	streamWorkspaceID string
+	streamRunID       string
+	resumeCalls       int
 }
 
+// recordingProjection 只记录 HTTP 层传参，避免测试依赖真实投影实现细节。
 func (projection *recordingProjection) WorkbenchView(_ context.Context, workspaceID string) (product.WorkbenchView, error) {
 	projection.workspaceID = workspaceID
 	if projection.view.SchemaVersion != "" {
@@ -537,6 +579,15 @@ func (projection *recordingProjection) ReplayView(_ context.Context, workspaceID
 	return product.NewEmptyProjection().ReplayView(context.Background(), workspaceID, runID)
 }
 
+func (projection *recordingProjection) StreamEvents(_ context.Context, workspaceID string, runID string) ([]product.StreamEvent, error) {
+	projection.streamWorkspaceID = workspaceID
+	projection.streamRunID = runID
+	if projection.streamEvents != nil {
+		return projection.streamEvents, nil
+	}
+	return product.NewEmptyProjection().StreamEvents(context.Background(), workspaceID, runID)
+}
+
 type recordingCommands struct {
 	acceptedRunID string
 	message       execution.MessageCommand
@@ -545,6 +596,7 @@ type recordingCommands struct {
 	resumeErr     error
 }
 
+// recordingCommands 只验证 HTTP 请求解析后的 command 边界，不模拟执行链路。
 func (commands *recordingCommands) StartMessage(_ context.Context, command execution.MessageCommand) (execution.AcceptedRun, error) {
 	commands.message = command
 	return execution.AcceptedRun{RunID: commands.acceptedRunID, Status: "accepted"}, nil

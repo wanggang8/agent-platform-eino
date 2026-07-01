@@ -11,6 +11,7 @@ import (
 )
 
 func TestLoadConfigReadsYAMLFile(t *testing.T) {
+	// 后端配置必须来自本地 YAML 文件，避免把密钥和部署参数散落在环境变量或代码中。
 	path := writeConfig(t, `
 server:
   addr: "127.0.0.1:19091"
@@ -85,6 +86,7 @@ llm:
 }
 
 func TestRedactedSummaryDoesNotExposeSecrets(t *testing.T) {
+	// 配置摘要只允许进入日志的安全字段，URL 中的鉴权信息和查询密钥必须被移除。
 	path := writeConfig(t, `
 server:
   addr: "127.0.0.1:19091"
@@ -189,6 +191,7 @@ budgets:
 func writeConfig(t *testing.T, body string) string {
 	t.Helper()
 
+	// 测试配置使用 0600，模拟本地密钥配置文件的最小权限约束。
 	path := filepath.Join(t.TempDir(), "eino-workbench.yaml")
 	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
 		t.Fatal(err)

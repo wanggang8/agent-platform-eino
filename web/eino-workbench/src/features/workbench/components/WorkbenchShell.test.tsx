@@ -6,6 +6,7 @@ import { WorkbenchShell } from "./WorkbenchShell";
 
 describe("WorkbenchShell", () => {
   it("renders the fixture-driven workbench without exposing raw tool ids", () => {
+    // shell 测试以 fixture 契约为输入，确保 UI 不直接暴露 provider/tool 内部 id。
     renderWithClient(<WorkbenchShell view={workbenchFixtures.success} />);
 
     expect(screen.getByTestId("workbench-shell")).toBeInTheDocument();

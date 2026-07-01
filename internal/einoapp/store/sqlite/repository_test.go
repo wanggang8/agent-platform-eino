@@ -111,6 +111,7 @@ func TestToolCallResultContextSnapshotAndAuditPersist(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// 读回完整 snapshot，确认 Workbench/Action/Replay 后续可从同一组事实投影。
 	snapshot, err := repository.GetSnapshot(ctx, "run-1")
 	if err != nil {
 		t.Fatal(err)
@@ -198,6 +199,7 @@ func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// resume 消费和幂等记录必须同事务提交，避免恢复成功但幂等记录丢失。
 	pending, record, existed, err := repository.ConsumeResumeRefWithIdempotency(ctx, "resume-safe-1", facts.PendingStatusApproved, facts.IdempotencyRecord{
 		Scope:       facts.IdempotencyScopeResume,
 		Key:         "resume-request-1",
@@ -228,6 +230,7 @@ func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 		t.Fatalf("resume idempotency record was not committed with consume: %+v existed=%v", duplicate, existed)
 	}
 
+	// 同一幂等 key 不能绑定到其他 resume_ref。
 	_, _, _, err = repository.ConsumeResumeRefWithIdempotency(ctx, "resume-other", facts.PendingStatusApproved, facts.IdempotencyRecord{
 		Scope:       facts.IdempotencyScopeResume,
 		Key:         "resume-request-1",
@@ -250,6 +253,7 @@ func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	// 即使另一个 resume_ref 存在，也不能用旧 idempotency key 返回错误 pending。
 	_, _, _, err = repository.ConsumeResumeRefWithIdempotency(ctx, "resume-other-existing", facts.PendingStatusApproved, facts.IdempotencyRecord{
 		Scope:       facts.IdempotencyScopeResume,
 		Key:         "resume-request-1",
@@ -313,6 +317,7 @@ func TestUnsafeFactMaterialIsRejected(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	// checkpoint_ref 只能是安全引用，raw Eino checkpoint marker 必须被拒绝。
 	err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
 		PendingID:     "pending-1",
 		RunID:         "run-1",
@@ -325,6 +330,7 @@ func TestUnsafeFactMaterialIsRejected(t *testing.T) {
 		t.Fatalf("raw checkpoint ref err = %v", err)
 	}
 
+	// args_preview 是安全摘要字段，常见密钥和 raw payload marker 都不能入库。
 	for _, testCase := range []struct {
 		name    string
 		preview string

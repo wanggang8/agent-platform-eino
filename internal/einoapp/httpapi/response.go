@@ -11,8 +11,10 @@ import (
 
 const requestIDHeader = "X-Request-Id"
 
+// APIError 是 HTTP 层对产品安全错误的别名，避免引入第二套错误模型。
 type APIError = product.SafeError
 
+// errorEnvelope 是唯一错误响应包裹，成功响应保持业务 schema 直出。
 type errorEnvelope struct {
 	SchemaVersion string      `json:"schema_version"`
 	RequestID     string      `json:"request_id"`
@@ -27,6 +29,7 @@ type errorDetail struct {
 	CorrelationRef string `json:"correlation_ref,omitempty"`
 }
 
+// WriteJSON 写成功业务响应，不额外包一层 data。
 func WriteJSON(w http.ResponseWriter, r *http.Request, status int, body any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set(requestIDHeader, requestID(r))
@@ -34,6 +37,7 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, status int, body any) {
 	_ = json.NewEncoder(w).Encode(body)
 }
 
+// WriteError 写统一安全错误 envelope，确保对外只暴露 safe detail。
 func WriteError(w http.ResponseWriter, r *http.Request, status int, apiErr APIError) {
 	if apiErr.Code == "" {
 		apiErr.Code = "internal_error"
@@ -61,6 +65,7 @@ func WriteError(w http.ResponseWriter, r *http.Request, status int, apiErr APIEr
 	})
 }
 
+// requestID 复用入站 request id；没有时生成 opaque id。
 func requestID(r *http.Request) string {
 	if r == nil {
 		return newRequestID()
@@ -71,6 +76,7 @@ func requestID(r *http.Request) string {
 	return newRequestID()
 }
 
+// newRequestID 生成不包含业务信息的请求关联 id。
 func newRequestID() string {
 	var raw [12]byte
 	if _, err := rand.Read(raw[:]); err != nil {

@@ -13,6 +13,7 @@ type WorkbenchUiState = {
   readonly setMobilePanel: (panel: "chat" | "inspector") => void;
 };
 
+// useWorkbenchUiStore 只保存前端 UI 状态，不保存 Product Facts、run lifecycle 或 provider 事实。
 export const useWorkbenchUiStore = create<WorkbenchUiState>((set) => ({
   activeFixture: "success",
   activeInspectorTab: "evidence",

@@ -7,24 +7,46 @@ import (
 	"time"
 )
 
+// ErrNotFound 表示指定 Product Facts 不存在。
 var ErrNotFound = errors.New("facts not found")
+
+// ErrResumeAlreadyConsumed 表示 resume_ref 已被消费，不能再次驱动执行。
 var ErrResumeAlreadyConsumed = errors.New("resume ref already consumed")
+
+// ErrUnsafeFactMaterial 表示待入库材料包含明显不安全内容。
 var ErrUnsafeFactMaterial = errors.New("unsafe fact material")
+
+// ErrIdempotencyConflict 表示同一幂等键绑定到了不同资源。
 var ErrIdempotencyConflict = errors.New("idempotency key conflict")
 
+// MemoryRepository 是测试用 Product Facts 替身，不作为 Phase 3 产品事实来源。
 type MemoryRepository struct {
-	mu       sync.RWMutex
-	runs     map[string]Run
-	latestBy map[string]string
+	mu          sync.RWMutex
+	runs        map[string]Run
+	latestBy    map[string]string
+	turns       map[string][]Turn
+	toolCalls   map[string][]ToolCall
+	toolResults map[string][]ToolResult
+	pending     map[string][]PendingInteraction
+	audit       map[string][]AuditEvent
+	contexts    map[string][]ContextSnapshot
 }
 
+// NewMemoryRepository 创建内存 facts repository，主要用于 execution/product 单元测试。
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		runs:     map[string]Run{},
-		latestBy: map[string]string{},
+		runs:        map[string]Run{},
+		latestBy:    map[string]string{},
+		turns:       map[string][]Turn{},
+		toolCalls:   map[string][]ToolCall{},
+		toolResults: map[string][]ToolResult{},
+		pending:     map[string][]PendingInteraction{},
+		audit:       map[string][]AuditEvent{},
+		contexts:    map[string][]ContextSnapshot{},
 	}
 }
 
+// CreateRun 写入 run 根事实，并更新 workspace 最新 run 索引。
 func (repo *MemoryRepository) CreateRun(_ context.Context, run Run) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
@@ -34,6 +56,7 @@ func (repo *MemoryRepository) CreateRun(_ context.Context, run Run) error {
 	return nil
 }
 
+// GetRun 按 run id 读取内存 run。
 func (repo *MemoryRepository) GetRun(_ context.Context, runID string) (Run, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
@@ -45,6 +68,7 @@ func (repo *MemoryRepository) GetRun(_ context.Context, runID string) (Run, erro
 	return run, nil
 }
 
+// LatestRun 读取 workspace 内最近写入的 run。
 func (repo *MemoryRepository) LatestRun(_ context.Context, workspaceID string) (Run, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
@@ -56,6 +80,7 @@ func (repo *MemoryRepository) LatestRun(_ context.Context, workspaceID string) (
 	return repo.runs[runID], nil
 }
 
+// GetSnapshot 返回内存中按 run 聚合的 facts 快照。
 func (repo *MemoryRepository) GetSnapshot(_ context.Context, runID string) (Snapshot, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
@@ -64,9 +89,18 @@ func (repo *MemoryRepository) GetSnapshot(_ context.Context, runID string) (Snap
 	if !ok {
 		return Snapshot{}, ErrNotFound
 	}
-	return Snapshot{Run: run}, nil
+	return Snapshot{
+		Run:                 run,
+		Turns:               append([]Turn(nil), repo.turns[runID]...),
+		ToolCalls:           append([]ToolCall(nil), repo.toolCalls[runID]...),
+		ToolResults:         append([]ToolResult(nil), repo.toolResults[runID]...),
+		PendingInteractions: append([]PendingInteraction(nil), repo.pending[runID]...),
+		AuditEvents:         append([]AuditEvent(nil), repo.audit[runID]...),
+		ContextSnapshots:    append([]ContextSnapshot(nil), repo.contexts[runID]...),
+	}, nil
 }
 
+// UpdateRunStatus 更新内存 run 生命周期。
 func (repo *MemoryRepository) UpdateRunStatus(_ context.Context, runID string, status RunStatus, safeError string, updatedAt time.Time) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
@@ -82,38 +116,78 @@ func (repo *MemoryRepository) UpdateRunStatus(_ context.Context, runID string, s
 	return nil
 }
 
+// RecordIdempotency 是测试替身的最小幂等实现，不验证 SQLite 事务语义。
 func (repo *MemoryRepository) RecordIdempotency(_ context.Context, record IdempotencyRecord) (IdempotencyRecord, bool, error) {
 	return record, false, nil
 }
 
-func (repo *MemoryRepository) AppendTurn(context.Context, Turn) error {
+// AppendTurn 追加内存消息事实。
+func (repo *MemoryRepository) AppendTurn(_ context.Context, turn Turn) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	repo.turns[turn.RunID] = append(repo.turns[turn.RunID], turn)
 	return nil
 }
 
-func (repo *MemoryRepository) AppendToolCall(context.Context, ToolCall) error {
+// AppendToolCall 追加内存工具调用事实。
+func (repo *MemoryRepository) AppendToolCall(_ context.Context, call ToolCall) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	repo.toolCalls[call.RunID] = append(repo.toolCalls[call.RunID], call)
 	return nil
 }
 
-func (repo *MemoryRepository) AppendToolResult(context.Context, ToolResult) error {
+// AppendToolResult 将工具结果关联到已有工具调用对应的 run。
+func (repo *MemoryRepository) AppendToolResult(_ context.Context, result ToolResult) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	for runID, calls := range repo.toolCalls {
+		for _, call := range calls {
+			if call.ToolCallID == result.ToolCallID {
+				repo.toolResults[runID] = append(repo.toolResults[runID], result)
+				return nil
+			}
+		}
+	}
 	return nil
 }
 
-func (repo *MemoryRepository) AppendPendingInteraction(context.Context, PendingInteraction) error {
+// AppendPendingInteraction 追加内存 pending 事实。
+func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pending PendingInteraction) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	repo.pending[pending.RunID] = append(repo.pending[pending.RunID], pending)
 	return nil
 }
 
+// ConsumeResumeRef 是测试替身占位；生产幂等语义由 SQLite repository 覆盖。
 func (repo *MemoryRepository) ConsumeResumeRef(context.Context, string, PendingStatus) (PendingInteraction, error) {
 	return PendingInteraction{}, ErrNotFound
 }
 
+// ConsumeResumeRefWithIdempotency 是测试替身占位；不用于验证 resume 事务。
 func (repo *MemoryRepository) ConsumeResumeRefWithIdempotency(context.Context, string, PendingStatus, IdempotencyRecord) (PendingInteraction, IdempotencyRecord, bool, error) {
 	return PendingInteraction{}, IdempotencyRecord{}, false, ErrNotFound
 }
 
-func (repo *MemoryRepository) AppendAuditEvent(context.Context, AuditEvent) error {
+// AppendAuditEvent 追加内存审计事实。
+func (repo *MemoryRepository) AppendAuditEvent(_ context.Context, event AuditEvent) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	repo.audit[event.RunID] = append(repo.audit[event.RunID], event)
 	return nil
 }
 
-func (repo *MemoryRepository) SaveContextSnapshot(context.Context, ContextSnapshot) error {
+// SaveContextSnapshot 追加内存安全上下文快照。
+func (repo *MemoryRepository) SaveContextSnapshot(_ context.Context, snapshot ContextSnapshot) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	repo.contexts[snapshot.RunID] = append(repo.contexts[snapshot.RunID], snapshot)
 	return nil
 }

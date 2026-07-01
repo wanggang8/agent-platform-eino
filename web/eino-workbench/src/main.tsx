@@ -12,6 +12,7 @@ if (!root) {
   throw new Error("root element missing");
 }
 
+// 应用入口只挂载路由，业务状态由各 feature 自己管理。
 createRoot(root).render(
   <StrictMode>
     <RouterProvider router={router} />

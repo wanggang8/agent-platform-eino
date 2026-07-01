@@ -157,6 +157,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario clarification
 bash scripts/eino_workbench_server_smoke.sh --scenario replay
 ```
 
+Phase 3 完成后，`chat-stream` 和 `action-basic` 不得再返回 `exit 2`；必须启动服务、创建 run、读取 snapshot/stream，并验证消息或 Action 入口写入 Product Facts。
+
 脚本必须自动完成：
 
 - 选择端口。

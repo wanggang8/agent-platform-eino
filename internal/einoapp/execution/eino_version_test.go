@@ -9,6 +9,7 @@ import (
 )
 
 func TestEinoVersionPinnedInGoMod(t *testing.T) {
+	// Eino 版本固定是架构 ADR 的一部分，升级必须先更新计划和验收门禁。
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("runtime caller unavailable")

@@ -4,6 +4,7 @@ import visualFixtures from "./visual-fixtures/workbench-blocks.json" assert { ty
 type VisualBlockId = keyof typeof visualFixtures.blocks;
 type VisualState = (typeof visualFixtures.states)[number];
 
+// 视觉用例从验收 fixture 驱动，避免把旧项目 DOM 或截图尺寸硬编码进测试逻辑。
 test.describe("@visual Workbench block baselines", () => {
   for (const state of visualFixtures.states) {
     test(`@visual ${state.state_id} required blocks`, async ({ page }, testInfo) => {
@@ -33,10 +34,12 @@ test.describe("@visual Workbench block baselines", () => {
 });
 
 async function selectFixture(page: Page, state: VisualState) {
+  // fixture label 是验收配置，不参与业务判断。
   await page.getByRole("button", { name: state.fixture_label }).click();
 }
 
 async function prepareState(page: Page, state: VisualState, projectName: string) {
+  // 只做截图前的 UI 展开/切换，不修改 Product Facts fixture。
   if (state.state_id === "tool-collapsed") {
     await page.getByTestId("tool-card").locator(".tool-card-header").click();
   }
@@ -49,6 +52,7 @@ async function prepareState(page: Page, state: VisualState, projectName: string)
 }
 
 function screenshotMasks(page: Page, scope: Locator) {
+  // mask 动态时间和页脚信息，保留真正的视觉结构差异。
   return [
     scope.locator(".conversation-time"),
     scope.locator(".sidebar-footer"),

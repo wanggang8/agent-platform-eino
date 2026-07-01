@@ -7,9 +7,11 @@ import successView from "../../../../docs/fixtures/workbench-view-success.json";
 
 export type WorkbenchFixtureKey = "success" | "empty" | "failed" | "approval" | "clarification";
 
+// approval/clarification fixture 复用 ActionResult 契约，保证等待态不手写平行 DTO。
 const approvalResult = actionApproval as ActionResult;
 const clarificationResult = actionClarification as ActionResult;
 
+// approvalView 用于视觉验收写域审批卡，不表示写域操作已经执行。
 const approvalView: WorkbenchView = {
   ...(successView as WorkbenchView),
   run_id: approvalResult.run_id,
@@ -33,6 +35,7 @@ const approvalView: WorkbenchView = {
   }
 };
 
+// clarificationView 用于视觉验收澄清卡，候选提交仍由后端 resume 决定。
 const clarificationView: WorkbenchView = {
   ...(successView as WorkbenchView),
   run_id: clarificationResult.run_id,
@@ -56,6 +59,7 @@ const clarificationView: WorkbenchView = {
   }
 };
 
+// workbenchFixtures 是 Phase 2 前端的唯一 fixture 数据入口。
 export const workbenchFixtures = {
   success: successView as WorkbenchView,
   empty: emptyView as WorkbenchView,
@@ -64,6 +68,7 @@ export const workbenchFixtures = {
   clarification: clarificationView
 } as const satisfies Record<WorkbenchFixtureKey, WorkbenchView>;
 
+// fixtureLabels 是 fixture 切换器展示文案，不参与业务状态判断。
 export const fixtureLabels: Record<WorkbenchFixtureKey, string> = {
   success: "工具完成",
   empty: "空态",
