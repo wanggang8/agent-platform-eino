@@ -1,0 +1,25 @@
+{
+  "schema_version": "eino.fobrain_provider_poc_report.v1",
+  "scenario": "fobrain-poc",
+  "status": "passed",
+  "provider_mode": "mock",
+  "capability_id": "tool.fobrain.current_user_context",
+  "structured_result_schema": "tool.structured_result.v1",
+  "business_result_schema": "fobrain.tool_result.v2",
+  "result_ref": "result:fobrain:current-user-context:fixture",
+  "safe_summary": "Fobrain 当前用户信息读取完成",
+  "policy_decision": "allowed",
+  "credential_binding_status": "bound",
+  "connector_status": "available",
+  "redaction_checks": [
+    "no_token",
+    "no_auth_header",
+    "no_secret_ref",
+    "no_raw_body",
+    "no_checkpoint",
+    "no_interrupt"
+  ],
+  "failure_category": "none",
+  "run_id": "run-fobrain-poc-fixture",
+  "report_created_at": "2026-07-02T00:00:00Z"
+}

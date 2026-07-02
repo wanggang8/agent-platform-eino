@@ -656,21 +656,48 @@ go test ./internal/einoapp/capabilities -run 'MCPLifecycle|MCPToolListPagination
 
 ## Phase 5：Fobrain provider PoC
 
+设计与执行依据：
+
+- `docs/fobrain-provider-poc-design.md`
+- `docs/fobrain-provider-config.md`
+- `docs/adr/2026-07-02-fobrain-provider-poc-boundary.md`
+- `docs/superpowers/plans/2026-07-02-fobrain-provider-poc.md`
+
 创建：
 
 - `internal/einoapp/providers/fobrain/provider.go`
+- `internal/einoapp/providers/fobrain/catalog.go`
 - `internal/einoapp/providers/fobrain/client.go`
 - `internal/einoapp/providers/fobrain/credentials.go`
 - `internal/einoapp/providers/fobrain/tools.go`
 - `internal/einoapp/providers/fobrain/result.go`
-- `scripts/eino_workbench_real_model_tool_suite.mjs`
+- `internal/einoapp/providers/fobrain/errors.go`
+- `scripts/eino_workbench_server_smoke.sh` 的 `fobrain-poc` 分支和报告生成逻辑。
+
+任务顺序：
+
+1. 先补 provider catalog contract test，固定 `tool.fobrain.current_user_context` PoC capability 元数据。
+2. 实现 `Provider/ListCapabilities`，所有 tool id、policy ref、schema ref 集中在 catalog。
+3. 先补 Fobrain YAML 配置契约测试，再实现 `bootstrap.Config` 的 Fobrain 配置、派生安全摘要和 no-secret example。
+4. 补 client/credential 边界测试，覆盖缺凭据、workspace scope denied、connector unavailable 和错误脱敏。
+5. 实现 `FobrainClient`、`CredentialResolver` 和 provider safe error，不让 raw provider payload 离开 client 边界。
+6. 补 StructuredResult mapper 测试，覆盖成功 candidate、Safety Gate 通过、`tool.structured_result.v1` / `fobrain.tool_result.v2` 关系和 unsafe material 拒绝。
+7. 实现 `capabilities.Invoker`，通过 catalog operation 分发，不在 execution/httpapi 中按 Fobrain 工具名分支。
+8. 通过配置/catalog 接入启动路径；默认配置未声明时不得内置 Fobrain provider。
+9. 先补 `fobrain-poc` provider report / skip report schema 检查，再实现 smoke 分支。
+10. `fobrain-poc` 必须生成 provider PoC report；真实模型工具选择仅在 LLM/Fobrain 凭据齐全时生成 real-model report，缺凭据时生成 skip report 并用 `blocks_claims` 阻断对应声明。
 
 任务级检查：
 
 ```bash
-go test ./internal/einoapp/providers/fobrain -run 'Provider|Client|ReadonlyPoC' -count=1
-bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc
+go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|CredentialLeak' -count=1
+go test ./internal/einoapp/providers/fobrain -run 'Provider|Client|ReadonlyPoC|StructuredResult|Credential|Unsafe' -count=1
+go test ./cmd/eino-workbench ./internal/einoapp/bootstrap ./internal/einoapp/capabilities ./internal/einoapp/product ./internal/einoapp/execution -run 'Fobrain|Capability|Config|Policy|StructuredResult|ToolSafety|ToolFacts' -count=1
+npm run eino-workbench:schema-test
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc --config configs/eino-workbench.local.yaml
 ```
+
+完成后只允许声明 Fobrain provider PoC 已接入新能力链路；不得声明 24 只读恢复、live read 覆盖、实体消歧、写域审批可用或可替换旧项目。
 
 ## Phase 6：HITL approval / clarification / resume
 

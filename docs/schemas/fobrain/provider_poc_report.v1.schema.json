@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/provider_poc_report.v1.schema.json",
+  "title": "Fobrain Provider PoC Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scenario",
+    "status",
+    "provider_mode",
+    "capability_id",
+    "structured_result_schema",
+    "business_result_schema",
+    "result_ref",
+    "safe_summary",
+    "policy_decision",
+    "credential_binding_status",
+    "connector_status",
+    "redaction_checks",
+    "failure_category",
+    "report_created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "eino.fobrain_provider_poc_report.v1"},
+    "scenario": {"const": "fobrain-poc"},
+    "status": {"enum": ["passed", "failed"]},
+    "provider_mode": {"enum": ["mock", "live"]},
+    "capability_id": {"const": "tool.fobrain.current_user_context"},
+    "structured_result_schema": {"const": "tool.structured_result.v1"},
+    "business_result_schema": {"const": "fobrain.tool_result.v2"},
+    "result_ref": {"type": "string", "pattern": "^result:fobrain:[a-z0-9_.:-]+$"},
+    "safe_summary": {"type": "string", "minLength": 1},
+    "policy_decision": {"enum": ["allowed", "credential_missing", "credential_scope_denied", "connector_transport_unavailable", "connector_execution_failed"]},
+    "credential_binding_status": {"enum": ["configured", "missing", "unbound", "bound"]},
+    "connector_status": {"enum": ["available", "unavailable"]},
+    "redaction_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["no_token", "no_auth_header", "no_secret_ref", "no_raw_body", "no_checkpoint", "no_interrupt"]}
+    },
+    "failure_category": {"type": "string"},
+    "run_id": {"type": "string"},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {"properties": {"failure_category": {"const": "none"}}}
+    }
+  ],
+  "additionalProperties": false
+}

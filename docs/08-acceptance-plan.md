@@ -230,7 +230,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 - callback 只用于 tracing、metrics、diagnostics，不作为主 SSE 来源。
 - audit 与 replay 仍从 Product Facts 投影。
 
-## 真实模型 smoke
+## 真实模型与 Fobrain PoC smoke
 
 真实模型和 Fobrain smoke 使用本地 ignored 配置文件，不使用环境变量作为服务配置来源：
 
@@ -257,7 +257,21 @@ smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清�
 - provider error category 或 success status。
 - redaction checks。
 
-`fobrain-poc` 工具选择报告必须包含：
+`fobrain-poc` provider PoC 报告必须通过 `schemas/fobrain/provider_poc_report.v1.schema.json`，且必须包含：
+
+- provider mode。
+- capability id。
+- StructuredResult schema。
+- Fobrain business result schema。
+- result ref。
+- safe summary。
+- policy decision。
+- credential binding status。
+- connector status。
+- redaction checks。
+- failure category。
+
+`fobrain-poc` 真实模型工具选择报告只在 LLM 和 Fobrain 本地凭据齐全时生成，必须包含：
 
 - prompt。
 - selected tool。
@@ -271,7 +285,7 @@ smoke 脚本负责启动服务、选择端口、运行真实模型 suite、清�
 
 Fobrain 真实模型工具选择必须符合 `intent-and-capability-selection.md`：不按后端关键词路由；资产/漏洞、单 IP 查询/IP 统计、connector status/业务读取、写域审批等场景不得误选。误选、未写入 selected tool 或未写入 safe args summary 均为 failed。
 
-`fobrain-poc` 已执行报告必须通过 `schemas/real-model-report.schema.json`，状态只允许 passed/failed。无凭据时不生成 real model report，改为生成 skipped report；skipped report 必须通过 `schemas/skip-report.schema.json`，且 `blocks_claims` 明确标记阻断项。
+`fobrain-poc` provider PoC 报告状态只允许 passed/failed。真实模型工具选择报告必须通过 `schemas/real-model-report.schema.json`，状态只允许 passed/failed。无 LLM 或 Fobrain 凭据时不生成 real model report，改为生成 skipped report；skipped report 必须通过 `schemas/skip-report.schema.json`，且 `blocks_claims` 明确标记阻断项。
 
 ## Fobrain live 门禁
 
