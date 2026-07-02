@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"agent-platform-eino/internal/einoapp/bootstrap"
 	"agent-platform-eino/internal/einoapp/capabilities"
 	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/llm"
+	"agent-platform-eino/internal/einoapp/providers/fobrain"
 )
 
 func TestCapabilityRegistryFromConfigDoesNotRegisterImplicitCapabilities(t *testing.T) {
@@ -130,5 +132,73 @@ func TestCapabilityRuntimeFromConfigRegistersAndInvokesMockMCP(t *testing.T) {
 	}
 	if candidate.SchemaVersion != facts.StructuredResultSchemaVersion || candidate.SafeSummary != "MCP 资产查询完成" {
 		t.Fatalf("mcp candidate mismatch: %+v", candidate)
+	}
+}
+
+func TestCapabilityRuntimeFromConfigRegistersFobrainOnlyWhenEnabled(t *testing.T) {
+	// 默认启动路径不能内置 Fobrain；只有配置显式启用时才注册 provider。
+	registry, _, err := capabilityRuntimeFromConfig(bootstrap.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := registry.Get(fobrain.CapabilityCurrentUserContext); ok {
+		t.Fatalf("fobrain capability should not be registered without config: %+v", registry.List())
+	}
+
+	cfg := bootstrap.Config{
+		Fobrain: bootstrap.FobrainConfig{
+			Enabled:     true,
+			ConnectorID: "fobrain",
+			WorkspaceID: "ws_fobrain",
+			BaseURL:     "https://fobrain.example.test/api",
+			Timeout:     9 * time.Second,
+			Credential: bootstrap.FobrainCredentialConfig{
+				Status:     "bound",
+				DisplayRef: "bound:fobrain:local",
+				OwnerScope: "workspace",
+				APIToken:   "local-secret",
+			},
+			ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: "mock", Available: true},
+			CredentialBinding: bootstrap.CredentialBinding{
+				SchemaVersion: "eino.provider_credential_binding.v1",
+				WorkspaceID:   "ws_fobrain",
+				System:        "fobrain",
+				Status:        "bound",
+				DisplayRef:    "bound:fobrain:local",
+				OwnerScope:    "workspace",
+			},
+		},
+	}
+	policyContexts := policyContextsFromConfig(cfg)
+	if policyContexts[fobrain.CapabilityCurrentUserContext].CredentialBinding.Status != capabilities.CredentialStatusBound {
+		t.Fatalf("fobrain policy context missing bound credential: %+v", policyContexts)
+	}
+
+	registry, invoker, err := capabilityRuntimeFromConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	capability, ok := registry.Get(fobrain.CapabilityCurrentUserContext)
+	if !ok {
+		t.Fatalf("fobrain capability was not registered: %+v", registry.List())
+	}
+	if capability.ProviderID != fobrain.ProviderID || capability.CredentialBindingPolicy != capabilities.CredentialBindingRequired {
+		t.Fatalf("fobrain capability metadata mismatch: %+v", capability)
+	}
+
+	candidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
+		CapabilityID: fobrain.CapabilityCurrentUserContext,
+		PolicyContext: capabilities.PolicyContext{
+			WorkspaceID:       "ws_fobrain",
+			CredentialBinding: fobrainCredentialBindingFromConfig(cfg.Fobrain.CredentialBinding),
+			ConnectorStatus:   capabilities.ConnectorStatusAvailable,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if candidate.SchemaVersion != facts.StructuredResultSchemaVersion || candidate.SafeSummary == "" {
+		t.Fatalf("fobrain candidate mismatch: %+v", candidate)
 	}
 }

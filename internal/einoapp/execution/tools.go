@@ -23,15 +23,17 @@ var ErrCapabilityRequiresApproval = errors.New("capability requires approval")
 
 // ToolLoopRunnerConfig 提供可替换时间源，保证工具事实测试稳定。
 type ToolLoopRunnerConfig struct {
-	Now func() time.Time
+	Now            func() time.Time
+	PolicyContexts map[string]capabilities.PolicyContext
 }
 
 // ToolLoopRunner 执行只读 capability 的 Eino tool adapter，并把结果写入 Product Facts。
 type ToolLoopRunner struct {
-	repository facts.Repository
-	registry   *capabilities.Registry
-	invoker    capabilities.Invoker
-	now        func() time.Time
+	repository     facts.Repository
+	registry       *capabilities.Registry
+	invoker        capabilities.Invoker
+	now            func() time.Time
+	policyContexts map[string]capabilities.PolicyContext
 }
 
 // NewToolLoopRunner 创建 Phase 4 mock tool loop runner。
@@ -40,7 +42,7 @@ func NewToolLoopRunner(repository facts.Repository, registry *capabilities.Regis
 	if now == nil {
 		now = func() time.Time { return time.Now().UTC() }
 	}
-	return ToolLoopRunner{repository: repository, registry: registry, invoker: invoker, now: now}
+	return ToolLoopRunner{repository: repository, registry: registry, invoker: invoker, now: now, policyContexts: copyPolicyContexts(config.PolicyContexts)}
 }
 
 // RunCapability 执行显式选择的只读能力；工具选择本身必须来自 registry/policy。
@@ -49,7 +51,16 @@ func (runner ToolLoopRunner) RunCapability(ctx context.Context, runID string, ca
 	if !ok {
 		return ErrCapabilityNotRegistered
 	}
-	decision := capabilities.EvaluatePolicy(capability)
+	// 写域审批不依赖 run 或凭据，必须先短路，避免缺失 run 掩盖 HITL 门禁。
+	preflightDecision := capabilities.EvaluatePolicy(capability)
+	if preflightDecision.RequiresApproval {
+		return ErrCapabilityRequiresApproval
+	}
+	policyContext, err := runner.policyContextForRun(ctx, runID, capabilityID)
+	if err != nil {
+		return err
+	}
+	decision := capabilities.EvaluatePolicy(capability, policyContext)
 	if !decision.Allowed || decision.RequiresApproval {
 		return ErrCapabilityRequiresApproval
 	}
@@ -58,8 +69,9 @@ func (runner ToolLoopRunner) RunCapability(ctx context.Context, runID string, ca
 	}
 
 	tool := NewEinoCapabilityTool(runner.repository, capability, runner.invoker, EinoCapabilityToolConfig{
-		RunID: runID,
-		Now:   runner.now,
+		RunID:         runID,
+		PolicyContext: policyContext,
+		Now:           runner.now,
 	})
 	arguments, err := json.Marshal(argumentsFromCapabilityInput(capability, inputText))
 	if err != nil {
@@ -72,19 +84,48 @@ func (runner ToolLoopRunner) RunCapability(ctx context.Context, runID string, ca
 	return runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusSucceeded, "", runner.now())
 }
 
+// policyContextForRun 将配置派生的 policy context 绑定到实际 run workspace。
+// 配置只提供凭据摘要，不能覆盖 Product Facts 中的 run 归属。
+func (runner ToolLoopRunner) policyContextForRun(ctx context.Context, runID string, capabilityID string) (capabilities.PolicyContext, error) {
+	policyContext := runner.policyContexts[capabilityID]
+	if runner.repository == nil {
+		return policyContext, nil
+	}
+	run, err := runner.repository.GetRun(ctx, runID)
+	if err != nil {
+		return capabilities.PolicyContext{}, err
+	}
+	policyContext.WorkspaceID = run.WorkspaceID
+	return policyContext, nil
+}
+
+// copyPolicyContexts 防止调用方在 runner 创建后修改策略上下文。
+func copyPolicyContexts(contexts map[string]capabilities.PolicyContext) map[string]capabilities.PolicyContext {
+	if len(contexts) == 0 {
+		return nil
+	}
+	out := make(map[string]capabilities.PolicyContext, len(contexts))
+	for capabilityID, context := range contexts {
+		out[capabilityID] = context
+	}
+	return out
+}
+
 // EinoCapabilityToolConfig 绑定单次 run 的工具执行上下文。
 type EinoCapabilityToolConfig struct {
-	RunID string
-	Now   func() time.Time
+	RunID         string
+	PolicyContext capabilities.PolicyContext
+	Now           func() time.Time
 }
 
 // EinoCapabilityTool 将 capability provider 包装为 Eino InvokableTool，并负责 Product Facts 写入。
 type EinoCapabilityTool struct {
-	repository facts.Repository
-	capability capabilities.Capability
-	invoker    capabilities.Invoker
-	runID      string
-	now        func() time.Time
+	repository    facts.Repository
+	capability    capabilities.Capability
+	invoker       capabilities.Invoker
+	runID         string
+	policyContext capabilities.PolicyContext
+	now           func() time.Time
 }
 
 var _ einotool.InvokableTool = (*EinoCapabilityTool)(nil)
@@ -96,11 +137,12 @@ func NewEinoCapabilityTool(repository facts.Repository, capability capabilities.
 		now = func() time.Time { return time.Now().UTC() }
 	}
 	return &EinoCapabilityTool{
-		repository: repository,
-		capability: capability,
-		invoker:    invoker,
-		runID:      config.RunID,
-		now:        now,
+		repository:    repository,
+		capability:    capability,
+		invoker:       invoker,
+		runID:         config.RunID,
+		policyContext: config.PolicyContext,
+		now:           now,
 	}
 }
 
@@ -120,8 +162,9 @@ func (tool *EinoCapabilityTool) InvokableRun(ctx context.Context, argumentsInJSO
 	}
 
 	candidate, err := tool.invoker.Invoke(ctx, capabilities.InvocationRequest{
-		CapabilityID: tool.capability.ID,
-		Arguments:    arguments,
+		CapabilityID:  tool.capability.ID,
+		Arguments:     arguments,
+		PolicyContext: tool.policyContext,
 	})
 	if err != nil {
 		return "", err

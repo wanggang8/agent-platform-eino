@@ -38,10 +38,10 @@ fobrain:
 | `credential.display_ref` | 是 | 安全展示引用，不得包含 raw credential ref、token 或 URL。 |
 | `credential.owner_scope` | 是 | Phase 5 固定 `workspace`。 |
 | `credential.api_token` | 本地可选 | 只允许 local ignored 配置使用；不得进入 RedactedSummary、Product Facts、日志、报告。 |
-| `connector_status.mode` | 是 | `mock` / `live`，决定 smoke 使用 mock client 还是真实 client。 |
+| `connector_status.mode` | 是 | Phase 5 只允许 `mock`；`live` 保留给真实 HTTP client 阶段。 |
 | `connector_status.available` | 是 | policy 输入，不替代业务读取工具。 |
 
-`connector_status.mode=mock` 时可以缺少 `credential.api_token`。`connector_status.mode=live` 且 `credential.status` 为 `configured` 或 `bound` 时，local 配置必须包含 `credential.api_token`；缺失时按 `credential_missing` 或 skip report 处理，不能静默降级成 mock live。
+`connector_status.mode=mock` 时可以缺少 `credential.api_token`。Phase 5 服务启动配置不接受 `live` mode，避免真实配置静默降级成 mock 结果；`fobrain-poc` provider report 的 `provider_mode` 只能是 `mock`。真实模型工具选择或 Fobrain live read 在 Phase 5 只能写 skip report，不能声明通过。
 
 ## 派生对象
 

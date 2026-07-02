@@ -567,6 +567,255 @@ capabilities:
 	}
 }
 
+func TestFobrainConfigDerivesSafeConnectorFields(t *testing.T) {
+	// Fobrain provider 配置必须从 YAML 派生安全摘要，真实 token 只留在 provider 边界。
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+fobrain:
+  enabled: true
+  connector_id: "fobrain"
+  workspace_id: "ws_fobrain"
+  base_url: "https://fobrain.example.test/api"
+  timeout: "9s"
+  credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    api_token: "fobrain-local-secret"
+  connector_status:
+    mode: "mock"
+    available: true
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cfg.Fobrain.Enabled || cfg.Fobrain.ConnectorID != "fobrain" || cfg.Fobrain.WorkspaceID != "ws_fobrain" {
+		t.Fatalf("fobrain config not loaded: %+v", cfg.Fobrain)
+	}
+	if cfg.Fobrain.Timeout != 9*time.Second {
+		t.Fatalf("fobrain timeout = %s", cfg.Fobrain.Timeout)
+	}
+	if cfg.Fobrain.CredentialBinding.System != "fobrain" ||
+		cfg.Fobrain.CredentialBinding.Status != "bound" ||
+		cfg.Fobrain.CredentialBinding.DisplayRef != "bound:fobrain:local" ||
+		cfg.Fobrain.CredentialBinding.OwnerScope != "workspace" {
+		t.Fatalf("fobrain safe credential binding mismatch: %+v", cfg.Fobrain.CredentialBinding)
+	}
+	if cfg.Fobrain.ConnectorStatus.Mode != "mock" || !cfg.Fobrain.ConnectorStatus.Available {
+		t.Fatalf("fobrain connector status mismatch: %+v", cfg.Fobrain.ConnectorStatus)
+	}
+}
+
+func TestFobrainConfigValidationRejectsInvalidFields(t *testing.T) {
+	for _, testCase := range []struct {
+		name        string
+		fobrainBody string
+		wantErr     string
+	}{
+		{name: "missing base url", fobrainBody: defaultFobrainConfigBody(`base_url: ""`), wantErr: "fobrain.base_url"},
+		{name: "invalid base url", fobrainBody: defaultFobrainConfigBody(`base_url: "not-a-url"`), wantErr: "fobrain.base_url"},
+		{name: "missing workspace", fobrainBody: defaultFobrainConfigBody(`workspace_id: ""`), wantErr: "fobrain.workspace_id"},
+		{name: "invalid credential status", fobrainBody: defaultFobrainConfigBody(`credential:
+    status: "ready"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"`), wantErr: "credential.status"},
+		{name: "invalid connector mode", fobrainBody: defaultFobrainConfigBody(`connector_status:
+    mode: "auto"
+    available: true`), wantErr: "connector_status.mode"},
+		{name: "live bound missing token", fobrainBody: `
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "https://fobrain.example.test/api"
+timeout: "9s"
+credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+connector_status:
+    mode: "live"
+    available: true`, wantErr: "credential.api_token"},
+		{name: "live mode rejects http base url", fobrainBody: `
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "http://fobrain.example.test/api"
+timeout: "9s"
+credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    api_token: "fobrain-local-secret"
+connector_status:
+    mode: "live"
+    available: true`, wantErr: "fobrain.base_url"},
+		{name: "live mode unsupported in phase 5", fobrainBody: `
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "https://fobrain.example.test/api"
+timeout: "9s"
+credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    api_token: "fobrain-local-secret"
+connector_status:
+    mode: "live"
+    available: true`, wantErr: "live mode is not supported"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := writeConfig(t, fobrainConfigYAML(testCase.fobrainBody))
+			_, err := bootstrap.LoadConfig(path)
+			if err == nil || !strings.Contains(err.Error(), testCase.wantErr) {
+				t.Fatalf("LoadConfig err = %v, want containing %q", err, testCase.wantErr)
+			}
+		})
+	}
+}
+
+func TestFobrainConfigAllowsDisabledWithoutConnectorFields(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+fobrain:
+  enabled: false
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Fobrain.Enabled {
+		t.Fatalf("fobrain should remain disabled: %+v", cfg.Fobrain)
+	}
+}
+
+func TestFobrainRedactedSummaryDoesNotExposeCredentialLeak(t *testing.T) {
+	path := writeConfig(t, fobrainConfigYAML(defaultFobrainConfigBody(`base_url: "https://user:fobrain-url-secret@fobrain.example.test/api?api_key=query-secret"`)))
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	encoded := cfg.RedactedSummary().String()
+	for _, forbidden := range []string{"fobrain-local-secret", "fobrain-url-secret", "query-secret", "api_key", "api_token", "token"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("fobrain redacted summary leaked %q: %s", forbidden, encoded)
+		}
+	}
+	for _, expected := range []string{"enabled: true", "connector_id: fobrain", "workspace_id: ws_fobrain", "base_url: https://fobrain.example.test/api", "credential_status: bound", "connector_mode: mock"} {
+		if !strings.Contains(encoded, expected) {
+			t.Fatalf("fobrain redacted summary missing %q: %s", expected, encoded)
+		}
+	}
+}
+
+func fobrainConfigYAML(override string) string {
+	if strings.TrimSpace(override) == "" {
+		override = defaultFobrainConfigBody("")
+	}
+	return `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+fobrain:
+` + indentYAML(override)
+}
+
+func defaultFobrainConfigBody(overrides string) string {
+	values := map[string]string{
+		"enabled":      `enabled: true`,
+		"connector_id": `connector_id: "fobrain"`,
+		"workspace_id": `workspace_id: "ws_fobrain"`,
+		"base_url":     `base_url: "https://fobrain.example.test/api"`,
+		"timeout":      `timeout: "9s"`,
+		"credential": `credential:
+  status: "bound"
+  display_ref: "bound:fobrain:local"
+  owner_scope: "workspace"
+  api_token: "fobrain-local-secret"`,
+		"connector_status": `connector_status:
+  mode: "mock"
+  available: true`,
+	}
+	for _, block := range strings.Split(strings.TrimSpace(overrides), "\n") {
+		key := strings.TrimSpace(strings.SplitN(block, ":", 2)[0])
+		if _, ok := values[key]; ok {
+			values[key] = strings.TrimSpace(overrides)
+			break
+		}
+	}
+	return strings.Join([]string{
+		values["enabled"],
+		values["connector_id"],
+		values["workspace_id"],
+		values["base_url"],
+		values["timeout"],
+		values["credential"],
+		values["connector_status"],
+	}, "\n")
+}
+
+func indentYAML(body string) string {
+	lines := strings.Split(strings.TrimSpace(body), "\n")
+	for index, line := range lines {
+		lines[index] = "  " + line
+	}
+	return strings.Join(lines, "\n")
+}
+
 func writeConfig(t *testing.T, body string) string {
 	t.Helper()
 

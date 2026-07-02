@@ -13,6 +13,7 @@ import (
 	"agent-platform-eino/internal/einoapp/httpapi"
 	"agent-platform-eino/internal/einoapp/llm"
 	"agent-platform-eino/internal/einoapp/product"
+	"agent-platform-eino/internal/einoapp/providers/fobrain"
 	"agent-platform-eino/internal/einoapp/store/sqlite"
 )
 
@@ -50,17 +51,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	policyContexts := policyContextsFromConfig(cfg)
 	toolRunner := execution.NewToolLoopRunner(
 		repository,
 		registry,
 		capabilityInvoker,
-		execution.ToolLoopRunnerConfig{},
+		execution.ToolLoopRunnerConfig{PolicyContexts: policyContexts},
 	)
 
 	// 服务路径使用 SQLite Product Facts，确保 Workbench、Action API、Replay 和 SSE 同源。
 	deps := httpapi.Dependencies{
 		Projection: product.NewFactsProjection(repository),
-		Commands:   execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry),
+		Commands:   execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).WithPolicyContexts(policyContexts),
 	}
 	server := &http.Server{
 		Addr:         cfg.Server.Addr,
@@ -119,6 +121,12 @@ func capabilityRuntimeFromConfig(cfg bootstrap.Config) (*capabilities.Registry, 
 		if _, err := provider.Initialize(context.Background()); err != nil {
 			return nil, nil, err
 		}
+		if err := mux.RegisterProvider(registry, provider, provider); err != nil {
+			return nil, nil, err
+		}
+	}
+	if cfg.Fobrain.Enabled {
+		provider := fobrainProviderFromConfig(cfg.Fobrain)
 		if err := mux.RegisterProvider(registry, provider, provider); err != nil {
 			return nil, nil, err
 		}
@@ -198,6 +206,59 @@ func mcpMockProviderFromConfig(config bootstrap.MCPMockServerConfig) *capabiliti
 		Tools:    tools,
 		Results:  results,
 	})
+}
+
+// fobrainProviderFromConfig 把文件化 Fobrain 配置转成 provider 边界对象。
+// API token 只进入 CredentialResolver，不进入 capability metadata 或 Product Facts。
+func fobrainProviderFromConfig(config bootstrap.FobrainConfig) *fobrain.Provider {
+	connectorStatus := capabilities.ConnectorStatusUnavailable
+	if config.ConnectorStatus.Available {
+		connectorStatus = capabilities.ConnectorStatusAvailable
+	}
+	providerConfig := fobrain.ProviderConfig{
+		WorkspaceID:       config.WorkspaceID,
+		CredentialBinding: fobrainCredentialBindingFromConfig(config.CredentialBinding),
+		ConnectorStatus:   connectorStatus,
+		Client:            fobrain.MockClient{},
+	}
+	if config.Credential.APIToken != "" {
+		providerConfig.CredentialResolver = fobrain.StaticCredentialResolver{
+			WorkspaceID: config.WorkspaceID,
+			APIToken:    config.Credential.APIToken,
+		}
+	}
+	return fobrain.NewProvider(providerConfig)
+}
+
+// policyContextsFromConfig 把 provider 配置中的安全凭据摘要传给 policy gate。
+func policyContextsFromConfig(config bootstrap.Config) map[string]capabilities.PolicyContext {
+	contexts := map[string]capabilities.PolicyContext{}
+	if config.Fobrain.Enabled {
+		status := capabilities.ConnectorStatusUnavailable
+		if config.Fobrain.ConnectorStatus.Available {
+			status = capabilities.ConnectorStatusAvailable
+		}
+		contexts[fobrain.CapabilityCurrentUserContext] = capabilities.PolicyContext{
+			WorkspaceID:       config.Fobrain.WorkspaceID,
+			CredentialBinding: fobrainCredentialBindingFromConfig(config.Fobrain.CredentialBinding),
+			ConnectorStatus:   status,
+		}
+	}
+	return contexts
+}
+
+// fobrainCredentialBindingFromConfig 转换安全凭据摘要，不包含真实 token。
+func fobrainCredentialBindingFromConfig(config bootstrap.CredentialBinding) capabilities.CredentialBinding {
+	return capabilities.CredentialBinding{
+		SchemaVersion: config.SchemaVersion,
+		WorkspaceID:   config.WorkspaceID,
+		System:        config.System,
+		Status:        capabilities.CredentialStatus(config.Status),
+		DisplayRef:    config.DisplayRef,
+		OwnerScope:    capabilities.PermissionScope(config.OwnerScope),
+		UpdatedAt:     config.UpdatedAt,
+		AuditRef:      config.AuditRef,
+	}
 }
 
 // mcpJSONSchemaFromConfig 转换 Phase 4.5 支持的 MCP JSON Schema 子集。

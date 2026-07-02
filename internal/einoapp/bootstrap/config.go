@@ -16,6 +16,7 @@ type Config struct {
 	Server         ServerConfig          `yaml:"server"`
 	Database       DatabaseConfig        `yaml:"database"`
 	LLM            LLMConfig             `yaml:"llm"`
+	Fobrain        FobrainConfig         `yaml:"fobrain"`
 	Security       SecurityConfig        `yaml:"security"`
 	Observability  ObservabilityConfig   `yaml:"observability"`
 	Budgets        BudgetConfig          `yaml:"budgets"`
@@ -47,6 +48,33 @@ type LLMConfig struct {
 	TimeoutMillis     int                 `yaml:"-"`
 	NetworkSafety     NetworkSafetyConfig `yaml:"-"`
 	CredentialBinding CredentialBinding   `yaml:"-"`
+}
+
+// FobrainConfig 定义 Phase 5 provider PoC 的本地文件配置。
+// 真实 token 只能在 provider/client 边界内使用，不进入产品事实或日志摘要。
+type FobrainConfig struct {
+	Enabled           bool                         `yaml:"enabled"`
+	ConnectorID       string                       `yaml:"connector_id"`
+	WorkspaceID       string                       `yaml:"workspace_id"`
+	BaseURL           string                       `yaml:"base_url"`
+	Timeout           time.Duration                `yaml:"timeout"`
+	Credential        FobrainCredentialConfig      `yaml:"credential"`
+	ConnectorStatus   FobrainConnectorStatusConfig `yaml:"connector_status"`
+	CredentialBinding CredentialBinding            `yaml:"-"`
+}
+
+// FobrainCredentialConfig 保存本机 Fobrain 凭据配置；API token 不得进入 RedactedSummary。
+type FobrainCredentialConfig struct {
+	Status     string `yaml:"status"`
+	DisplayRef string `yaml:"display_ref"`
+	OwnerScope string `yaml:"owner_scope"`
+	APIToken   string `yaml:"api_token"`
+}
+
+// FobrainConnectorStatusConfig 是 Fobrain connector 的安全状态输入，不替代业务读取工具。
+type FobrainConnectorStatusConfig struct {
+	Mode      string `yaml:"mode"`
+	Available bool   `yaml:"available"`
 }
 
 // NetworkSafetyConfig 定义模型 provider 出站网络策略。
@@ -216,6 +244,9 @@ func (cfg Config) Validate() error {
 	if cfg.LLM.Timeout <= 0 {
 		return errors.New("llm.timeout must be positive")
 	}
+	if err := cfg.Fobrain.validate(); err != nil {
+		return err
+	}
 	if cfg.Server.ReadTimeout <= 0 {
 		return errors.New("server.read_timeout must be positive")
 	}
@@ -330,6 +361,7 @@ func validateMCPProjectPolicy(policy MCPProjectPolicyConfig, serverIndex int, to
 // applyDerivedDefaults 从最小本地配置派生运行时安全字段，避免要求用户维护内部状态。
 func (cfg *Config) applyDerivedDefaults() {
 	cfg.LLM.applyDerivedDefaults()
+	cfg.Fobrain.applyDerivedDefaults()
 }
 
 // applyDerivedDefaults 派生 model label、timeout_ms、credential binding 和网络安全默认值。
@@ -344,6 +376,102 @@ func (cfg *LLMConfig) applyDerivedDefaults() {
 	cfg.TimeoutMillis = int(cfg.Timeout / time.Millisecond)
 	cfg.CredentialBinding = derivedCredentialBinding(cfg.Provider, cfg.APIKey)
 	cfg.NetworkSafety = derivedNetworkSafety(cfg.BaseURL)
+}
+
+// applyDerivedDefaults 归一化 Fobrain 配置，并派生安全 credential binding 摘要。
+func (cfg *FobrainConfig) applyDerivedDefaults() {
+	cfg.ConnectorID = strings.TrimSpace(cfg.ConnectorID)
+	cfg.WorkspaceID = strings.TrimSpace(cfg.WorkspaceID)
+	cfg.BaseURL = strings.TrimSpace(cfg.BaseURL)
+	cfg.Credential.Status = strings.TrimSpace(cfg.Credential.Status)
+	cfg.Credential.DisplayRef = strings.TrimSpace(cfg.Credential.DisplayRef)
+	cfg.Credential.OwnerScope = strings.TrimSpace(cfg.Credential.OwnerScope)
+	cfg.Credential.APIToken = strings.TrimSpace(cfg.Credential.APIToken)
+	cfg.ConnectorStatus.Mode = strings.TrimSpace(cfg.ConnectorStatus.Mode)
+	if !cfg.Enabled {
+		return
+	}
+	if cfg.ConnectorID == "" {
+		cfg.ConnectorID = "fobrain"
+	}
+	if cfg.Timeout <= 0 {
+		cfg.Timeout = 10 * time.Second
+	}
+	cfg.CredentialBinding = CredentialBinding{
+		SchemaVersion: "eino.provider_credential_binding.v1",
+		WorkspaceID:   safeConfigIdentifierOrDefault(cfg.WorkspaceID, "workspace"),
+		System:        "fobrain",
+		Status:        cfg.Credential.Status,
+		DisplayRef:    cfg.Credential.DisplayRef,
+		OwnerScope:    cfg.Credential.OwnerScope,
+		AuditRef:      "audit:fobrain:credential",
+	}
+}
+
+// validate 校验 Fobrain connector 配置，避免 provider 实现期硬编码 endpoint 或 token 规则。
+func (cfg FobrainConfig) validate() error {
+	if !cfg.Enabled {
+		return nil
+	}
+	if cfg.ConnectorID != "fobrain" {
+		return errors.New("fobrain.connector_id must be fobrain")
+	}
+	if cfg.WorkspaceID == "" || !validSummaryIdentifier(cfg.WorkspaceID) {
+		return errors.New("fobrain.workspace_id is required")
+	}
+	if cfg.BaseURL == "" {
+		return errors.New("fobrain.base_url is required")
+	}
+	if err := validateFobrainBaseURL(cfg.BaseURL); err != nil {
+		return err
+	}
+	if cfg.Timeout <= 0 {
+		return errors.New("fobrain.timeout must be positive")
+	}
+	if !validFobrainCredentialStatus(cfg.Credential.Status) {
+		return errors.New("fobrain.credential.status is invalid")
+	}
+	if cfg.Credential.DisplayRef == "" || unsafeConfigSummaryText(cfg.Credential.DisplayRef) {
+		return errors.New("fobrain.credential.display_ref is invalid")
+	}
+	if cfg.Credential.OwnerScope != "workspace" {
+		return errors.New("fobrain.credential.owner_scope must be workspace")
+	}
+	if cfg.ConnectorStatus.Mode != "mock" && cfg.ConnectorStatus.Mode != "live" {
+		return errors.New("fobrain.connector_status.mode must be mock or live")
+	}
+	if cfg.ConnectorStatus.Mode == "live" &&
+		(cfg.Credential.Status == "configured" || cfg.Credential.Status == "bound") &&
+		cfg.Credential.APIToken == "" {
+		return errors.New("fobrain.credential.api_token is required for live mode")
+	}
+	if cfg.ConnectorStatus.Mode == "live" {
+		parsed, _ := url.Parse(cfg.BaseURL)
+		if parsed == nil || parsed.Scheme != "https" {
+			return errors.New("fobrain.base_url must use https in live mode")
+		}
+		return errors.New("fobrain.connector_status.mode live mode is not supported in Phase 5")
+	}
+	return nil
+}
+
+// validateFobrainBaseURL 只要求绝对 URL；敏感 userinfo/query 会在摘要中移除。
+func validateFobrainBaseURL(value string) error {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return errors.New("fobrain.base_url must be an absolute URL")
+	}
+	return nil
+}
+
+// validFobrainCredentialStatus 固定 provider credential 状态枚举。
+func validFobrainCredentialStatus(status string) bool {
+	switch status {
+	case "missing", "unbound", "configured", "bound":
+		return true
+	default:
+		return false
+	}
 }
 
 // validateBaseURL 校验本地 YAML 中的 LLM 地址，避免派生出空网络策略。
@@ -453,6 +581,7 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 				"allowed_hosts":          cfg.LLM.NetworkSafety.AllowedHosts,
 			},
 		},
+		"fobrain": redactedFobrainSummary(cfg.Fobrain),
 		"security": map[string]any{
 			"redact_secrets":        cfg.Security.RedactSecrets,
 			"allow_private_network": cfg.Security.AllowPrivateNetwork,
@@ -467,6 +596,48 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 		},
 		"capabilities": redactedCapabilitySummaries(cfg.Capabilities),
 	}
+}
+
+// redactedFobrainSummary 输出 Fobrain provider 的安全配置摘要，不能包含 token 或 raw payload。
+func redactedFobrainSummary(config FobrainConfig) map[string]any {
+	if !config.Enabled {
+		return map[string]any{"enabled": false}
+	}
+	return map[string]any{
+		"enabled":             true,
+		"connector_id":        safeSummaryIdentifier(config.ConnectorID),
+		"workspace_id":        safeSummaryIdentifier(config.WorkspaceID),
+		"base_url":            redactURL(config.BaseURL),
+		"timeout":             config.Timeout.String(),
+		"credential_status":   config.CredentialBinding.Status,
+		"display_ref":         safeCredentialDisplay(config.CredentialBinding.DisplayRef),
+		"credential_scope":    config.CredentialBinding.OwnerScope,
+		"connector_mode":      config.ConnectorStatus.Mode,
+		"connector_available": config.ConnectorStatus.Available,
+	}
+}
+
+// safeCredentialDisplay 只允许安全 display_ref 进入摘要，非法内容折叠。
+func safeCredentialDisplay(value string) string {
+	if unsafeConfigSummaryText(value) {
+		return "redacted"
+	}
+	if value == "configured" || value == "missing" || value == "unbound" {
+		return value
+	}
+	parts := strings.Split(value, ":")
+	if len(parts) == 3 && parts[0] == "bound" && validSummaryIdentifier(parts[1]) && validSummaryIdentifier(parts[2]) {
+		return value
+	}
+	return "redacted"
+}
+
+// safeConfigIdentifierOrDefault 给派生安全摘要提供稳定 fallback。
+func safeConfigIdentifierOrDefault(value string, fallback string) string {
+	if validSummaryIdentifier(value) && !unsafeConfigSummaryText(value) {
+		return value
+	}
+	return fallback
 }
 
 // redactedCapabilitySummaries 只输出 capability 元数据摘要，不输出 schema 或 provider 参数。

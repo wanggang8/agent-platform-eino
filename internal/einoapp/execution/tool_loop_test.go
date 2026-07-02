@@ -177,6 +177,87 @@ func TestToolLoopRejectsApprovalRequiredCapabilityBeforeHITL(t *testing.T) {
 	}
 }
 
+func TestToolLoopUsesDefaultPolicyContextForCredentialRequiredCapability(t *testing.T) {
+	// 凭据型能力必须使用配置派生的安全 policy context 才能进入工具执行。
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	now := time.Unix(795, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-tool", WorkspaceID: "ws-tool", Status: facts.RunStatusCreated, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	registry := capabilities.NewRegistry()
+	capability := mockReadCapability()
+	capability.ID = "tool.fobrain.current_user_context"
+	capability.ProviderID = "fobrain"
+	capability.CredentialBindingPolicy = capabilities.CredentialBindingRequired
+	capability.ConnectorID = "fobrain"
+	if err := registry.Register(capability); err != nil {
+		t.Fatal(err)
+	}
+	provider := capabilities.NewMockProvider("fobrain", []capabilities.Capability{capability})
+	runner := execution.NewToolLoopRunner(repository, registry, provider, execution.ToolLoopRunnerConfig{
+		Now: func() time.Time { return now.Add(time.Second) },
+		PolicyContexts: map[string]capabilities.PolicyContext{
+			capability.ID: {
+				WorkspaceID: "ws-tool",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+			},
+		},
+	})
+
+	if err := runner.RunCapability(ctx, "run-tool", capability.ID, "current user"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestToolLoopRejectsDefaultPolicyContextForDifferentRunWorkspace(t *testing.T) {
+	// run workspace 必须覆盖配置 workspace，避免复用其他工作区的凭据绑定。
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	now := time.Unix(796, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-tool", WorkspaceID: "ws-other", Status: facts.RunStatusCreated, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	registry := capabilities.NewRegistry()
+	capability := mockReadCapability()
+	capability.ID = "tool.fobrain.current_user_context"
+	capability.ProviderID = "fobrain"
+	capability.CredentialBindingPolicy = capabilities.CredentialBindingRequired
+	capability.ConnectorID = "fobrain"
+	if err := registry.Register(capability); err != nil {
+		t.Fatal(err)
+	}
+	provider := capabilities.NewMockProvider("fobrain", []capabilities.Capability{capability})
+	runner := execution.NewToolLoopRunner(repository, registry, provider, execution.ToolLoopRunnerConfig{
+		Now: func() time.Time { return now.Add(time.Second) },
+		PolicyContexts: map[string]capabilities.PolicyContext{
+			capability.ID: {
+				WorkspaceID: "ws-tool",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+			},
+		},
+	})
+
+	err := runner.RunCapability(ctx, "run-tool", capability.ID, "current user")
+	if !errors.Is(err, execution.ErrCapabilityRequiresApproval) {
+		t.Fatalf("cross-workspace policy err = %v", err)
+	}
+}
+
 func mockReadCapability() capabilities.Capability {
 	return capabilities.Capability{
 		ID:          "cap.mock.asset.read",

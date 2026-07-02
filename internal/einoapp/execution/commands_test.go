@@ -374,6 +374,89 @@ func TestRunnerCommandsRecordPolicyContextBlocksAsSafeFailedRun(t *testing.T) {
 	}
 }
 
+func TestRunnerCommandsUseDefaultPolicyContextForConfiguredProvider(t *testing.T) {
+	// 文件配置派生的 provider policy context 应允许 Action API 无需传递真实凭据。
+	repository := facts.NewMemoryRepository()
+	toolRunner := &recordingCapabilityRunner{}
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(fobrainReadCapabilityForPolicyTest()); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, &recordingRunner{}, toolRunner, registry).
+		WithPolicyContexts(map[string]capabilities.PolicyContext{
+			"tool.fobrain.asset.read": {
+				WorkspaceID: "ws_123",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws_123",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+			},
+		})
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_123",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "tool.fobrain.asset.read",
+		InputText:       "asset",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if toolRunner.runID != accepted.RunID || toolRunner.capabilityID != "tool.fobrain.asset.read" {
+		t.Fatalf("tool runner mismatch: %+v accepted=%+v", toolRunner, accepted)
+	}
+}
+
+func TestRunnerCommandsRejectConfiguredPolicyContextForDifferentWorkspace(t *testing.T) {
+	// 请求 workspace 必须是 policy 判断的归属，不能复用配置中其他 workspace 的凭据摘要。
+	repository := facts.NewMemoryRepository()
+	toolRunner := &recordingCapabilityRunner{}
+	registry := capabilities.NewRegistry()
+	if err := registry.Register(fobrainReadCapabilityForPolicyTest()); err != nil {
+		t.Fatal(err)
+	}
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, &recordingRunner{}, toolRunner, registry).
+		WithPolicyContexts(map[string]capabilities.PolicyContext{
+			"tool.fobrain.asset.read": {
+				WorkspaceID: "ws_123",
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws_123",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+			},
+		})
+
+	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
+		WorkspaceID:     "ws_other",
+		ActionID:        "action-demo",
+		ClientRequestID: "client-action",
+		CapabilityHint:  "tool.fobrain.asset.read",
+		InputText:       "asset",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if toolRunner.runID != "" {
+		t.Fatalf("tool runner must not execute cross-workspace credential: %+v", toolRunner)
+	}
+	run, err := repository.GetRun(context.Background(), accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if run.Status != facts.RunStatusFailed || run.SafeError != "provider_policy_blocked" {
+		t.Fatalf("cross-workspace policy failure mismatch: %+v", run)
+	}
+}
+
 func TestFactCommandsResumeRequiresExistingRun(t *testing.T) {
 	// resume 不能凭前端传参创建隐式 run，必须绑定已存在的 run 生命周期。
 	repository := facts.NewMemoryRepository()

@@ -94,6 +94,7 @@ type StaticCommands struct {
 	runner           Runner
 	capabilityRunner CapabilityRunner
 	registry         *capabilities.Registry
+	policyContexts   map[string]capabilities.PolicyContext
 }
 
 // NewStaticCommands 创建不落 Product Facts 的静态命令替身。
@@ -139,6 +140,18 @@ func NewToolRunnerCommandsWithRegistry(repository facts.Repository, runner Runne
 	}
 }
 
+// WithPolicyContexts 绑定配置派生的安全 policy context，避免 HTTP 请求携带真实凭据。
+func (commands StaticCommands) WithPolicyContexts(contexts map[string]capabilities.PolicyContext) StaticCommands {
+	if len(contexts) == 0 {
+		return commands
+	}
+	commands.policyContexts = make(map[string]capabilities.PolicyContext, len(contexts))
+	for capabilityID, context := range contexts {
+		commands.policyContexts[capabilityID] = context
+	}
+	return commands
+}
+
 // StartMessage 接收 Workbench 消息并创建 run。
 func (commands StaticCommands) StartMessage(ctx context.Context, command MessageCommand) (AcceptedRun, error) {
 	accepted, err := commands.acceptRun(ctx, command.WorkspaceID, command.RunID, command.Message)
@@ -154,7 +167,7 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 		InputText:      command.InputText,
 		CapabilityHint: command.CapabilityHint,
 		ProductAction:  command.ActionID,
-		PolicyContext:  policyContextForAction(command),
+		PolicyContext:  commands.policyContextForAction(command),
 	})
 	if selection.Mode == SelectionModeRejected {
 		return AcceptedRun{}, ErrCapabilityNotRegistered
@@ -185,12 +198,28 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 }
 
 // policyContextForAction 只传递安全策略上下文；真实凭据仍由 provider 边界解析。
-func policyContextForAction(command ActionCommand) capabilities.PolicyContext {
-	context := command.PolicyContext
-	if context.WorkspaceID == "" {
-		context.WorkspaceID = command.WorkspaceID
-	}
+func (commands StaticCommands) policyContextForAction(command ActionCommand) capabilities.PolicyContext {
+	context := commands.policyContexts[command.CapabilityHint]
+	context = mergePolicyContext(context, command.PolicyContext)
+	context.WorkspaceID = command.WorkspaceID
 	return context
+}
+
+// mergePolicyContext 让请求显式安全上下文覆盖配置默认值，但不要求请求携带真实凭据。
+func mergePolicyContext(base capabilities.PolicyContext, override capabilities.PolicyContext) capabilities.PolicyContext {
+	if override.WorkspaceID != "" {
+		base.WorkspaceID = override.WorkspaceID
+	}
+	if override.CredentialBinding.Status != "" || override.CredentialBinding.WorkspaceID != "" {
+		base.CredentialBinding = override.CredentialBinding
+	}
+	if override.ConnectorStatus != capabilities.ConnectorStatusUnknown {
+		base.ConnectorStatus = override.ConnectorStatus
+	}
+	if override.CallerID != "" {
+		base.CallerID = override.CallerID
+	}
+	return base
 }
 
 // Resume 校验 run 存在后接收恢复请求；完整 HITL 执行在后续 Phase 接入。

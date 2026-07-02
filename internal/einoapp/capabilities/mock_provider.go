@@ -14,8 +14,9 @@ var ErrCapabilityInvocationUnavailable = errors.New("capability invocation unava
 
 // InvocationRequest 是 tool adapter 传给 provider 的安全调用请求。
 type InvocationRequest struct {
-	CapabilityID string
-	Arguments    map[string]any
+	CapabilityID  string
+	Arguments     map[string]any
+	PolicyContext PolicyContext
 }
 
 // Invoker 是 execution 调用业务 provider 的最小接口。

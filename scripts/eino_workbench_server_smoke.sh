@@ -32,16 +32,13 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
     ;;
   action-consistency|replay|budget)
     not_implemented "Phase 7"
-    ;;
-  fobrain-poc)
-    not_implemented "Phase 5"
     ;;
   fobrain-readonly|fobrain-clarification|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
     not_implemented "Phase 8"
@@ -79,6 +76,34 @@ with open("test-results/eino-workbench-skip-report.json", "w", encoding="utf-8")
     json.dump(report, f, ensure_ascii=False, indent=2)
 PY
   echo "real-model-chat smoke skipped: ${reason}"
+}
+
+write_fobrain_skip_report() {
+  local reason="$1"
+  local category="${2:-missing_live_prerequisite}"
+  mkdir -p test-results
+  python3 - "${reason}" "${provided_config:-configs/eino-workbench.local.yaml}" "${category}" <<'PY'
+import datetime, json, sys
+reason, config_path, category = sys.argv[1], sys.argv[2], sys.argv[3]
+missing_env = []
+rerun_condition = "Implement and verify the later Fobrain live HTTP client phase."
+if category != "phase_unsupported":
+    missing_env = ["local_llm_or_fobrain_live_credential"]
+    rerun_condition = "Create ignored configs/eino-workbench.local.yaml with LLM api_key and fobrain live api_token."
+report = {
+    "schema_version": "eino.skip_report.v1",
+    "command": f"bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc --config {config_path}",
+    "missing_env": missing_env,
+    "credential_scope": "fobrain-real-model",
+    "reason": reason,
+    "rerun_condition": rerun_condition,
+    "blocks_claims": ["fobrain-poc real-model tool selection", "Fobrain live read"],
+    "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-fobrain-skip-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  echo "fobrain-poc real-model selection skipped: ${reason}"
 }
 
 if [[ "${scenario}" == "real-model-chat" ]]; then
@@ -190,6 +215,23 @@ mcp_mock_servers:
           result_ref: "result:mcp:asset_lookup"
           safe_summary: "MCP 资产查询完成"
 YAML
+if [[ "${scenario}" == "fobrain-poc" ]]; then
+cat >>"${config_file}" <<YAML
+fobrain:
+  enabled: true
+  connector_id: "fobrain"
+  workspace_id: "ws_smoke"
+  base_url: "https://fobrain.example.local/api"
+  timeout: "10s"
+  credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+  connector_status:
+    mode: "mock"
+    available: true
+YAML
+fi
 fi
 
 if [[ "${scenario}" == "real-model-chat" ]]; then
@@ -687,6 +729,94 @@ with sqlite3.connect(db_path) as conn:
 assert any(tool_id == "mcp.mock.tool.asset_lookup" and summary == "MCP 资产查询完成" for tool_id, summary in rows), rows
 PY
   echo "mcp-mock smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "fobrain-poc" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-fobrain-poc","client_request_id":"client-smoke-fobrain-poc","capability_hint":"tool.fobrain.current_user_context","input":{"text":"查看当前 Fobrain 用户信息"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "completed", body
+assert len(body["result_cards"]) == 1, body
+card = body["result_cards"][0]
+assert card["title"] == "读取当前 Fobrain 用户信息", card
+assert "Fobrain 当前用户" in card["safe_summary"], card
+assert card["structured_result"]["schema_version"] == "tool.structured_result.v1", card
+print(body["run_id"])
+PY
+)"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+tool_cards = [item for item in body["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1, body["timeline"]
+assert "Fobrain 当前用户" in tool_cards[0]["safe_summary"], tool_cards[0]
+encoded = json.dumps(body, ensure_ascii=False).lower()
+for forbidden in ("authorization", "bearer ", "api_key", "api_token", "token", "credential_ref", "raw provider", "raw body", "checkpoint-raw", "interrupt-raw"):
+    assert forbidden not in encoded, forbidden
+PY
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute(
+        "select tc.tool_id, tr.structured_schema_version, tr.safe_summary from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchall()
+assert any(tool_id == "tool.fobrain.current_user_context" and schema == "tool.structured_result.v1" and "Fobrain 当前用户" in summary for tool_id, schema, summary in rows), rows
+PY
+  mkdir -p test-results
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import datetime, json, sys
+import sqlite3
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    row = conn.execute(
+        "select tr.result_ref, tr.safe_summary from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ? and tc.tool_id = ?",
+        (run_id, "tool.fobrain.current_user_context"),
+    ).fetchone()
+assert row, "missing fobrain tool result"
+result_ref, safe_summary = row
+report = {
+    "schema_version": "eino.fobrain_provider_poc_report.v1",
+    "scenario": "fobrain-poc",
+    "status": "passed",
+    "provider_mode": "mock",
+    "capability_id": "tool.fobrain.current_user_context",
+    "structured_result_schema": "tool.structured_result.v1",
+    "business_result_schema": "fobrain.tool_result.v2",
+    "result_ref": result_ref,
+    "safe_summary": safe_summary,
+    "policy_decision": "allowed",
+    "credential_binding_status": "bound",
+    "connector_status": "available",
+    "redaction_checks": ["no_token", "no_auth_header", "no_secret_ref", "no_raw_body", "no_checkpoint", "no_interrupt"],
+    "failure_category": "none",
+    "run_id": run_id,
+    "report_created_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-fobrain-provider-poc-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  if [[ ! -f "${provided_config:-configs/eino-workbench.local.yaml}" ]]; then
+    write_fobrain_skip_report "本地 LLM/Fobrain live 配置文件不存在"
+  elif ! go run ./scripts/eino_workbench_config_prepare.go --check-llm-api-key --source "${provided_config:-configs/eino-workbench.local.yaml}" >/dev/null 2>&1; then
+    write_fobrain_skip_report "本地 LLM api_key 未配置"
+  elif ! go run ./scripts/eino_workbench_config_prepare.go --check-fobrain-live-credential --source "${provided_config:-configs/eino-workbench.local.yaml}" >/dev/null 2>&1; then
+    write_fobrain_skip_report "本地 Fobrain live 凭据未配置"
+  else
+    write_fobrain_skip_report "Phase 5 不支持 Fobrain live read 或真实模型工具选择声明" "phase_unsupported"
+  fi
+  echo "fobrain-poc smoke passed"
   exit 0
 fi
 

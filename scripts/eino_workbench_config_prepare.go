@@ -33,10 +33,18 @@ func main() {
 	dsn := flag.String("dsn", "", "sqlite dsn override")
 	summary := flag.String("summary", "", "redacted llm summary json")
 	checkLLMAPIKey := flag.Bool("check-llm-api-key", false, "check whether llm.api_key is configured")
+	checkFobrainLiveCredential := flag.Bool("check-fobrain-live-credential", false, "check whether fobrain live credential is configured")
 	flag.Parse()
 
 	if *checkLLMAPIKey {
 		if err := checkLLMAPIKeyConfigured(*source); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if *checkFobrainLiveCredential {
+		if err := checkFobrainLiveCredentialConfigured(*source); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -99,6 +107,34 @@ func checkLLMAPIKeyConfigured(source string) error {
 	llm, _ := root["llm"].(map[string]any)
 	if strings.TrimSpace(stringValue(llm["api_key"], "")) == "" {
 		return fmt.Errorf("llm.api_key is missing")
+	}
+	return nil
+}
+
+// checkFobrainLiveCredentialConfigured 结构化读取 Fobrain live 凭据，避免跨 block 字段误判。
+func checkFobrainLiveCredentialConfigured(source string) error {
+	if source == "" {
+		return fmt.Errorf("source is required")
+	}
+	data, err := os.ReadFile(source)
+	if err != nil {
+		return fmt.Errorf("read source config: %w", err)
+	}
+	var root map[string]any
+	if err := yaml.Unmarshal(data, &root); err != nil {
+		return fmt.Errorf("parse source config: %w", err)
+	}
+	fobrain, _ := root["fobrain"].(map[string]any)
+	if enabled, ok := fobrain["enabled"].(bool); !ok || !enabled {
+		return fmt.Errorf("fobrain.enabled is not true")
+	}
+	status, _ := fobrain["connector_status"].(map[string]any)
+	if stringValue(status["mode"], "") != "live" {
+		return fmt.Errorf("fobrain.connector_status.mode is not live")
+	}
+	credential, _ := fobrain["credential"].(map[string]any)
+	if strings.TrimSpace(stringValue(credential["api_token"], "")) == "" {
+		return fmt.Errorf("fobrain.credential.api_token is missing")
 	}
 	return nil
 }
