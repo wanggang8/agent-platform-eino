@@ -15,6 +15,15 @@ type ParameterizedQueryClient interface {
 	ParameterizedQuery(context.Context, ResolvedCredential, string, ParameterizedQuery) (ParameterizedQueryResult, error)
 }
 
+// DetailRiskClient 是 Batch E 详情和风险关联只读能力的可选 client 能力。
+// 该接口只返回安全业务结果，不能把 raw provider payload 传出 provider 边界。
+type DetailRiskClient interface {
+	AssetDetail(context.Context, ResolvedCredential, AssetDetailQuery) (DetailRiskResult, error)
+	VulnerabilityDetail(context.Context, ResolvedCredential, VulnerabilityDetailQuery) (DetailRiskResult, error)
+	BusinessRiskSummary(context.Context, ResolvedCredential, BusinessRiskQuery) (DetailRiskResult, error)
+	ThreatRelevanceList(context.Context, ResolvedCredential, ThreatRelevanceQuery) (DetailRiskResult, error)
+}
+
 // CurrentUserContextResult 是当前用户 PoC 的安全业务结果。
 type CurrentUserContextResult struct {
 	DisplayName string
@@ -78,5 +87,62 @@ func (client MockClient) ParameterizedQuery(_ context.Context, _ ResolvedCredent
 				Affected:    1,
 			},
 		},
+	}, nil
+}
+
+// AssetDetail 返回 Batch E 资产详情 mock 结果，用于固定详情 StructuredResult 边界。
+func (client MockClient) AssetDetail(_ context.Context, _ ResolvedCredential, query AssetDetailQuery) (DetailRiskResult, error) {
+	return DetailRiskResult{
+		ToolID: CapabilityGetAssetDetail,
+		Target: query.AssetID,
+		Items: []QueryResultItem{{
+			EntityRef:   "asset:fobrain:" + safeRefPart(query.AssetID, "mock-asset"),
+			DisplayName: "Fobrain mock 资产",
+			Status:      "resolved",
+			Summary:     query.NetworkType,
+			Affected:    1,
+		}},
+	}, nil
+}
+
+// VulnerabilityDetail 返回 Batch E 漏洞详情 mock 结果。
+func (client MockClient) VulnerabilityDetail(_ context.Context, _ ResolvedCredential, query VulnerabilityDetailQuery) (DetailRiskResult, error) {
+	return DetailRiskResult{
+		ToolID: CapabilityGetVulnerabilityDetail,
+		Target: query.VulnerabilityID,
+		Items: []QueryResultItem{{
+			EntityRef:   "vuln:fobrain:" + safeRefPart(query.VulnerabilityID, "mock-vuln"),
+			DisplayName: "Fobrain mock 漏洞",
+			Severity:    "high",
+			Status:      "open",
+			Affected:    1,
+		}},
+	}, nil
+}
+
+// BusinessRiskSummary 返回 Batch E 业务风险聚合 mock 结果。
+func (client MockClient) BusinessRiskSummary(_ context.Context, _ ResolvedCredential, query BusinessRiskQuery) (DetailRiskResult, error) {
+	return DetailRiskResult{
+		ToolID: CapabilityBusinessRiskSummary,
+		Target: query.BusinessName,
+		Metrics: []RiskMetric{{
+			Label: query.BusinessName,
+			Count: 1,
+		}},
+	}, nil
+}
+
+// ThreatRelevanceList 返回 Batch E 威胁关联 mock 结果。
+func (client MockClient) ThreatRelevanceList(_ context.Context, _ ResolvedCredential, query ThreatRelevanceQuery) (DetailRiskResult, error) {
+	return DetailRiskResult{
+		ToolID: CapabilityThreatRelevanceList,
+		Target: query.VulnerabilityName,
+		Items: []QueryResultItem{{
+			EntityRef:   "vuln:fobrain:mock-relevance",
+			DisplayName: query.VulnerabilityName,
+			Severity:    "high",
+			Affected:    1,
+			Summary:     firstNonEmptyLiveText(query.IP, query.BusinessName),
+		}},
 	}, nil
 }

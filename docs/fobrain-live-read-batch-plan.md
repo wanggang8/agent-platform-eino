@@ -98,6 +98,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-d --config 
 
 Batch E 开发前必须先完成 `docs/fobrain-batch-e-interface-plan.md` 的接口矩阵和样本策略。资产详情不能只按 `asset_id` 猜测路径：`network_type` 可选，缺省按旧 adapter 走 internal fallback；实现必须集中归一化 `1/2`、中英文内外网和 device/domain alias。详情 ID 只能来自 ignored local samples 或新的脱敏 discovery sidecar，不能从可提交 Batch D live report 反推，也不能回读 raw provider payload。Batch E live report 必须区分 resolved、empty/not_found、provider failure，并且不得把真实详情 ID、raw payload、POST body、auth header 或本地配置写入可提交报告。
 
+当前代码进展：Batch E 四个工具已进入可选 `DetailRiskClient` catalog 和 provider 调用链，mock client 可返回 StructuredResult 候选，HTTP client 已实现当前私有 `/api/...` 优先、`/api/v1/...` fallback 的详情和聚合 mapper。已覆盖的安全边界包括 `network_type` 中央归一、必填参数校验、敏感字段拒绝、业务风险 raw POST body 不进入 StructuredResult、威胁关联参数映射。Batch E sample discovery、live smoke/report schema、真实 ID 脱敏报告、Workbench 视觉和 replay/audit 证据仍未完成。
+
 ## 每批完成标准
 
 每批必须同时满足：

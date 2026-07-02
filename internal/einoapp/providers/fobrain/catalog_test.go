@@ -82,4 +82,7 @@ func TestProviderCatalogRegistersBatchACapabilities(t *testing.T) {
 	if _, ok := byID[fobrain.CapabilityListAssetsByOwner]; ok {
 		t.Fatalf("Batch D capability must not be advertised without parameterized client: %+v", byID[fobrain.CapabilityListAssetsByOwner])
 	}
+	if _, ok := byID[fobrain.CapabilityGetAssetDetail]; ok {
+		t.Fatalf("Batch E capability must not be advertised without detail risk client: %+v", byID[fobrain.CapabilityGetAssetDetail])
+	}
 }

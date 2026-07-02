@@ -722,3 +722,343 @@ func TestHTTPClientMyPermissionsIgnoresRawAPIPolicyFields(t *testing.T) {
 		t.Fatalf("permissions summary missing safe fields: %s", candidate.SafeSummary)
 	}
 }
+
+func TestHTTPClientAssetDetailUsesCanonicalNetworkTypePath(t *testing.T) {
+	// Batch E 资产详情必须集中归一 network_type，避免在业务分支里散落数字、中文和别名判断。
+	tests := []struct {
+		name        string
+		networkType string
+		wantPath    string
+	}{
+		{name: "internal chinese", networkType: "内网", wantPath: "/api/internal_asset/asset-1"},
+		{name: "external numeric", networkType: "2", wantPath: "/api/external_ip_asset/asset-1"},
+		{name: "device alias", networkType: "device", wantPath: "/api/device/asset-1"},
+		{name: "domain alias", networkType: "domain", wantPath: "/api/domain_asset/asset-1"},
+		{name: "default internal", networkType: "", wantPath: "/api/internal_asset/asset-1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gotPath string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"code": 0,
+					"data": map[string]any{
+						"id":           "asset-1",
+						"ip":           "10.10.11.12",
+						"hostname":     "prod-web-01",
+						"status":       "online",
+						"network_type": tt.networkType,
+						"poc_num":      3,
+					},
+				})
+			}))
+			defer server.Close()
+
+			client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+				BaseURL:    server.URL + "/api",
+				Timeout:    time.Second,
+				HTTPClient: server.Client(),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, err := client.AssetDetail(context.Background(), fobrain.ResolvedCredential{
+				WorkspaceID: "ws_fobrain",
+				AuthParam:   "authorization",
+				APIToken:    "workspace-token",
+			}, fobrain.AssetDetailQuery{AssetID: "asset-1", NetworkType: tt.networkType})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gotPath != tt.wantPath {
+				t.Fatalf("path = %q, want %q", gotPath, tt.wantPath)
+			}
+			if len(result.Items) != 1 || result.Items[0].EntityRef != "asset:fobrain:asset-1" || result.Items[0].DisplayName != "prod-web-01" || result.Items[0].Affected != 3 {
+				t.Fatalf("asset detail result mismatch: %+v", result)
+			}
+		})
+	}
+}
+
+func TestHTTPClientVulnerabilityDetailFallsBackToLegacyPath(t *testing.T) {
+	// 私有部署优先 /api/threat_center/:id，不存在时再退回标准 /api/v1/threat_center/:id。
+	var gotPaths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		if r.URL.Path == "/api/threat_center/vuln-1" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.URL.Path != "/api/v1/threat_center/vuln-1" {
+			t.Fatalf("unexpected path = %s", r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": map[string]any{
+				"id":          "vuln-1",
+				"name":        "高危组件漏洞",
+				"level":       3,
+				"status_code": 10,
+				"risk_num":    4,
+				"person_info": []map[string]any{{"name": "李四"}},
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.VulnerabilityDetail(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.VulnerabilityDetailQuery{VulnerabilityID: "vuln-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(gotPaths, ",") != "/api/threat_center/vuln-1,/api/v1/threat_center/vuln-1" {
+		t.Fatalf("paths = %+v", gotPaths)
+	}
+	if len(result.Items) != 1 || result.Items[0].EntityRef != "vuln:fobrain:vuln-1" || result.Items[0].Severity != "high" || result.Items[0].Status != "open" {
+		t.Fatalf("vulnerability detail result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientBusinessRiskSummaryPostsCountAggregation(t *testing.T) {
+	// business_risk_summary 必须走 threat_center/count 聚合接口，输出只保留安全统计 bucket。
+	var gotPath string
+	var gotBody []map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		if r.Method != http.MethodPost {
+			t.Fatalf("method = %s, want POST", r.Method)
+		}
+		if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+			t.Fatalf("body is not json: %v", err)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": []map[string]any{
+				{"name": "核心业务", "count": 7},
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.BusinessRiskSummary(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.BusinessRiskQuery{BusinessName: "核心业务"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/threat_center/count" {
+		t.Fatalf("path = %q, want /api/threat_center/count", gotPath)
+	}
+	if len(gotBody) != 1 ||
+		gotBody[0]["count_name"] != "business_risk" ||
+		gotBody[0]["aggregation_field"] != "business.name.keyword" ||
+		gotBody[0]["data_range"] != float64(4) {
+		t.Fatalf("count body mismatch: %+v", gotBody)
+	}
+	if len(result.Metrics) != 1 || result.Metrics[0].Label != "核心业务" || result.Metrics[0].Count != 7 {
+		t.Fatalf("business risk result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientThreatRelevanceMapsVulnerabilityNameToKeywordAndVulName(t *testing.T) {
+	// relevance/list 需要同时写 keyword 与 vul_name，兼容旧 adapter 和真实 Fobrain 查询实现。
+	var gotPath string
+	var gotQuery string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotQuery = r.URL.RawQuery
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": map[string]any{
+				"items": []map[string]any{
+					{
+						"id":            "rel-1",
+						"vul_name":      "高危组件漏洞",
+						"level":         4,
+						"relevance_num": 2,
+					},
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.ThreatRelevanceList(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.ThreatRelevanceQuery{VulnerabilityName: "高危组件漏洞", IP: "10.10.11.12", BusinessName: "核心业务", Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/threat_center/relevance/list" {
+		t.Fatalf("path = %q, want /api/threat_center/relevance/list", gotPath)
+	}
+	for _, want := range []string{"keyword=", "vul_name=", "ip=10.10.11.12", "business_name=", "page=1", "per_page=20"} {
+		if !strings.Contains(gotQuery, want) {
+			t.Fatalf("query %q missing %q", gotQuery, want)
+		}
+	}
+	if len(result.Items) != 1 || result.Items[0].DisplayName != "高危组件漏洞" || result.Items[0].Severity != "critical" || result.Items[0].Affected != 2 {
+		t.Fatalf("threat relevance result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientBatchEAuthFailureDoesNotFallbackOrLeak(t *testing.T) {
+	// Batch E 认证失败必须立即返回，不能 fallback 掩盖凭据问题，也不能泄漏响应 body。
+	var gotPaths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		http.Error(w, "workspace-token authorization raw body", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.AssetDetail(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.AssetDetailQuery{AssetID: "asset-1", NetworkType: "internal"})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorAuthFailure) {
+		t.Fatalf("err = %v, want auth failure", err)
+	}
+	if strings.Join(gotPaths, ",") != "/api/internal_asset/asset-1" {
+		t.Fatalf("paths = %+v, want no fallback after auth failure", gotPaths)
+	}
+	for _, forbidden := range []string{"workspace-token", "authorization raw", "raw body"} {
+		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower(forbidden)) {
+			t.Fatalf("safe error leaked %q: %s", forbidden, err.Error())
+		}
+	}
+}
+
+func TestHTTPClientBatchEBusinessErrorDoesNotLeakRawMaterial(t *testing.T) {
+	// Fobrain 业务错误 message 不能进入 provider error；POST body 也不能被拼入错误。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code":    50001,
+			"message": "workspace-token authorization raw payload business.name.keyword",
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.BusinessRiskSummary(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.BusinessRiskQuery{BusinessName: "核心业务"})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorExecutionFailed) {
+		t.Fatalf("err = %v, want connector execution failed", err)
+	}
+	for _, forbidden := range []string{"workspace-token", "authorization", "raw payload", "business.name.keyword"} {
+		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower(forbidden)) {
+			t.Fatalf("safe error leaked %q: %s", forbidden, err.Error())
+		}
+	}
+}
+
+func TestHTTPClientBatchEMalformedJSONDoesNotLeakBody(t *testing.T) {
+	// 非法 JSON 响应只能折叠成固定安全错误，不能把响应片段拼出去。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`workspace-token Authorization raw payload`))
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.VulnerabilityDetail(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.VulnerabilityDetailQuery{VulnerabilityID: "vuln-1"})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorExecutionFailed) {
+		t.Fatalf("err = %v, want connector execution failed", err)
+	}
+	for _, forbidden := range []string{"workspace-token", "Authorization", "raw payload"} {
+		if strings.Contains(err.Error(), forbidden) {
+			t.Fatalf("safe error leaked %q: %s", forbidden, err.Error())
+		}
+	}
+}
+
+func TestHTTPClientBatchETimeoutIsSafe(t *testing.T) {
+	// Batch E 超时只暴露稳定原因码和安全摘要，不包含 URL query、token 或 raw request。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(30 * time.Millisecond)
+		_ = json.NewEncoder(w).Encode(map[string]any{"code": 0})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Millisecond,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ThreatRelevanceList(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.ThreatRelevanceQuery{VulnerabilityName: "高危组件漏洞"})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorTimeout) {
+		t.Fatalf("err = %v, want timeout", err)
+	}
+	for _, forbidden := range []string{"workspace-token", "vul_name", "keyword"} {
+		if strings.Contains(strings.ToLower(err.Error()), strings.ToLower(forbidden)) {
+			t.Fatalf("safe timeout error leaked %q: %s", forbidden, err.Error())
+		}
+	}
+}

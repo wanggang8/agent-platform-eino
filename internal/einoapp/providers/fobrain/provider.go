@@ -37,7 +37,7 @@ func (provider *Provider) ID() string {
 
 // ListCapabilities 返回当前 provider client 可执行的 Fobrain capability。
 func (provider *Provider) ListCapabilities() ([]capabilities.Capability, error) {
-	catalog := providerCatalog(provider.supportsParameterizedQuery())
+	catalog := providerCatalog(provider.supportsParameterizedQuery(), provider.supportsDetailRisk())
 	out := make([]capabilities.Capability, len(catalog))
 	copy(out, catalog)
 	return out, nil
@@ -104,13 +104,64 @@ func (provider *Provider) Invoke(ctx context.Context, request capabilities.Invoc
 			candidate, _ := BuildParameterizedQueryStructuredResult(result)
 			return candidate, nil
 		}
+		if batchEDetailRiskCapabilityByID(request.CapabilityID) {
+			detailClient, ok := client.(DetailRiskClient)
+			if !ok {
+				return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 详情风险 client 未配置")
+			}
+			return provider.invokeBatchEDetailRisk(ctx, detailClient, credential, request)
+		}
 		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain capability 未注册")
 	}
 }
 
+// invokeBatchEDetailRisk 统一执行 Batch E 参数校验、client 调用和 StructuredResult 构建。
+func (provider *Provider) invokeBatchEDetailRisk(ctx context.Context, client DetailRiskClient, credential ResolvedCredential, request capabilities.InvocationRequest) (product.StructuredResultCandidate, error) {
+	var result DetailRiskResult
+	var err error
+	switch request.CapabilityID {
+	case CapabilityGetAssetDetail:
+		query, parseErr := assetDetailQueryFromArguments(request.Arguments)
+		if parseErr != nil {
+			return product.StructuredResultCandidate{}, parseErr
+		}
+		result, err = client.AssetDetail(ctx, credential, query)
+		result.Target = query.AssetID
+	case CapabilityGetVulnerabilityDetail:
+		query, parseErr := vulnerabilityDetailQueryFromArguments(request.Arguments)
+		if parseErr != nil {
+			return product.StructuredResultCandidate{}, parseErr
+		}
+		result, err = client.VulnerabilityDetail(ctx, credential, query)
+		result.Target = query.VulnerabilityID
+	case CapabilityBusinessRiskSummary:
+		query, parseErr := businessRiskQueryFromArguments(request.Arguments)
+		if parseErr != nil {
+			return product.StructuredResultCandidate{}, parseErr
+		}
+		result, err = client.BusinessRiskSummary(ctx, credential, query)
+		result.Target = query.BusinessName
+	case CapabilityThreatRelevanceList:
+		query, parseErr := threatRelevanceQueryFromArguments(request.Arguments)
+		if parseErr != nil {
+			return product.StructuredResultCandidate{}, parseErr
+		}
+		result, err = client.ThreatRelevanceList(ctx, credential, query)
+		result.Target = query.VulnerabilityName
+	default:
+		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 详情风险能力未注册")
+	}
+	if err != nil {
+		return product.StructuredResultCandidate{}, foldProviderError(err)
+	}
+	result.ToolID = request.CapabilityID
+	candidate, _ := BuildDetailRiskStructuredResult(result)
+	return candidate, nil
+}
+
 // capabilityByID 从 provider catalog 查找能力元数据，避免 execution/httpapi 写 provider 分支。
 func (provider *Provider) capabilityByID(capabilityID string) (capabilities.Capability, bool) {
-	for _, capability := range providerCatalog(provider.supportsParameterizedQuery()) {
+	for _, capability := range providerCatalog(provider.supportsParameterizedQuery(), provider.supportsDetailRisk()) {
 		if capability.ID == capabilityID {
 			return capability, true
 		}
@@ -123,6 +174,14 @@ func (provider *Provider) supportsParameterizedQuery() bool {
 		return false
 	}
 	_, ok := provider.config.Client.(ParameterizedQueryClient)
+	return ok
+}
+
+func (provider *Provider) supportsDetailRisk() bool {
+	if provider == nil || provider.config.Client == nil {
+		return false
+	}
+	_, ok := provider.config.Client.(DetailRiskClient)
 	return ok
 }
 

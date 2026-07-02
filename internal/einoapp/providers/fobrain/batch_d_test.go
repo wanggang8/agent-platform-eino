@@ -54,8 +54,8 @@ func TestProviderCatalogRegistersBatchDParameterizedQueries(t *testing.T) {
 			properties: map[string]string{"ip": "string", "page": "integer", "page_size": "integer", "severity": "string", "status": "string"},
 		},
 	}
-	if len(catalog) != 9 {
-		t.Fatalf("mock parameterized catalog length = %d, want Batch A plus six Batch D capabilities: %+v", len(catalog), catalog)
+	if len(catalog) != 13 {
+		t.Fatalf("mock catalog length = %d, want Batch A plus Batch D/E capabilities: %+v", len(catalog), catalog)
 	}
 	batchDCount := 0
 	for _, capability := range catalog {

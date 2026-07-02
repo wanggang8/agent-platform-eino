@@ -36,6 +36,7 @@ type HTTPClient struct {
 
 var _ FobrainClient = (*HTTPClient)(nil)
 var _ ParameterizedQueryClient = (*HTTPClient)(nil)
+var _ DetailRiskClient = (*HTTPClient)(nil)
 
 // NewHTTPClient 创建 live HTTP client；只校验连接入口形态，不持有 token。
 func NewHTTPClient(config HTTPClientConfig) (*HTTPClient, error) {

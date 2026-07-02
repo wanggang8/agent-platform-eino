@@ -36,6 +36,17 @@ const (
 	CapabilityListVulnerabilitiesByIP = "tool.fobrain.list_vulnerabilities_by_ip"
 )
 
+const (
+	// CapabilityGetAssetDetail 查询资产详情。
+	CapabilityGetAssetDetail = "tool.fobrain.get_asset_detail"
+	// CapabilityGetVulnerabilityDetail 查询漏洞详情。
+	CapabilityGetVulnerabilityDetail = "tool.fobrain.get_vulnerability_detail"
+	// CapabilityBusinessRiskSummary 查询业务系统风险聚合。
+	CapabilityBusinessRiskSummary = "tool.fobrain.business_risk_summary"
+	// CapabilityThreatRelevanceList 查询漏洞/威胁关联资产列表。
+	CapabilityThreatRelevanceList = "tool.fobrain.threat_relevance_list"
+)
+
 // PolicyRead 是 Fobrain 只读能力的稳定策略引用。
 const PolicyRead = "policy:fobrain:read:v1"
 
@@ -49,7 +60,7 @@ const currentUserContextTimeout = 10 * time.Second
 
 // providerCatalog 返回当前阶段允许注册的 Fobrain 能力目录。
 // 后续恢复只读工具时只能扩展目录数据和 provider mapper，不能在 execution/httpapi 写工具名分支。
-func providerCatalog(includeBatchD bool) []capabilities.Capability {
+func providerCatalog(includeBatchD bool, includeBatchE bool) []capabilities.Capability {
 	catalog := []capabilities.Capability{
 		{
 			ID:          CapabilityCurrentUserContext,
@@ -120,6 +131,9 @@ func providerCatalog(includeBatchD bool) []capabilities.Capability {
 	if includeBatchD {
 		catalog = append(catalog, batchDParameterizedCatalog()...)
 	}
+	if includeBatchE {
+		catalog = append(catalog, batchEDetailRiskCatalog()...)
+	}
 	return catalog
 }
 
@@ -135,6 +149,40 @@ func batchDParameterizedCatalog() []capabilities.Capability {
 }
 
 func batchDParameterizedCapability(id string, displayName string, description string, properties map[string]string, required []string) capabilities.Capability {
+	return capabilities.Capability{
+		ID:          id,
+		ProviderID:  ProviderID,
+		ToolName:    id,
+		DisplayName: displayName,
+		Description: description,
+		InputSchema: capabilities.JSONSchema{
+			SchemaVersion: "json_schema.v1",
+			Properties:    properties,
+			Required:      required,
+		},
+		ResultSchema:            BusinessResultSchemaVersion,
+		RiskLevel:               capabilities.RiskLow,
+		SideEffect:              capabilities.SideEffectReadExternal,
+		PolicyRef:               PolicyRead,
+		PermissionScope:         capabilities.PermissionScopeWorkspace,
+		CredentialBindingPolicy: capabilities.CredentialBindingRequired,
+		ConnectorID:             ConnectorID,
+		ApprovalRequired:        false,
+		IdempotencyRequired:     false,
+		Timeout:                 currentUserContextTimeout,
+	}
+}
+
+func batchEDetailRiskCatalog() []capabilities.Capability {
+	return []capabilities.Capability{
+		fobrainReadCapability(CapabilityGetAssetDetail, "查询资产详情", "按资产 ID 查询资产安全详情。", map[string]string{"asset_id": "string", "network_type": "string"}, []string{"asset_id"}),
+		fobrainReadCapability(CapabilityGetVulnerabilityDetail, "查询漏洞详情", "按漏洞 ID 查询漏洞安全详情。", map[string]string{"vulnerability_id": "string"}, []string{"vulnerability_id"}),
+		fobrainReadCapability(CapabilityBusinessRiskSummary, "查询业务风险摘要", "按业务系统名称聚合关联漏洞风险。", map[string]string{"business_name": "string"}, []string{"business_name"}),
+		fobrainReadCapability(CapabilityThreatRelevanceList, "查询威胁关联列表", "按漏洞或威胁名称查询关联资产。", map[string]string{"vulnerability_name": "string", "ip": "string", "business_name": "string", "page": "integer", "page_size": "integer"}, []string{"vulnerability_name"}),
+	}
+}
+
+func fobrainReadCapability(id string, displayName string, description string, properties map[string]string, required []string) capabilities.Capability {
 	return capabilities.Capability{
 		ID:          id,
 		ProviderID:  ProviderID,

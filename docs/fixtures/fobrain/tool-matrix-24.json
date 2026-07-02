@@ -282,7 +282,7 @@
     {
       "tool_id": "tool.fobrain.business_risk_summary",
       "display_name_zh": "汇总业务风险",
-      "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/business_query",
+      "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/business_risk_query",
       "required_fields": [
         "business_name"
       ],
