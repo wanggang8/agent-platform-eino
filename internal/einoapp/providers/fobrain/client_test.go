@@ -18,7 +18,7 @@ func TestClientReceivesResolvedCredentialOnlyAfterPolicyAllowed(t *testing.T) {
 		WorkspaceID:        "ws_fobrain",
 		CredentialBinding:  boundFobrainCredential("ws_fobrain"),
 		ConnectorStatus:    capabilities.ConnectorStatusAvailable,
-		CredentialResolver: fobrain.StaticCredentialResolver{WorkspaceID: "ws_fobrain", APIToken: "local-secret"},
+		CredentialResolver: fobrain.StaticCredentialResolver{WorkspaceID: "ws_fobrain", AuthParam: "authorization", APIToken: "local-secret"},
 		Client:             client,
 	})
 
@@ -29,7 +29,9 @@ func TestClientReceivesResolvedCredentialOnlyAfterPolicyAllowed(t *testing.T) {
 	if client.calls != 1 {
 		t.Fatalf("client calls = %d, want 1", client.calls)
 	}
-	if client.lastCredential.APIToken != "local-secret" || client.lastCredential.WorkspaceID != "ws_fobrain" {
+	if client.lastCredential.APIToken != "local-secret" ||
+		client.lastCredential.AuthParam != "authorization" ||
+		client.lastCredential.WorkspaceID != "ws_fobrain" {
 		t.Fatalf("client did not receive resolved credential: %+v", client.lastCredential)
 	}
 }

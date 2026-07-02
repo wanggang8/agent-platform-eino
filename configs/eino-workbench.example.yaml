@@ -40,6 +40,7 @@ fobrain:
     status: "missing"
     display_ref: "missing"
     owner_scope: "workspace"
+    auth_param: "authorization"
   connector_status:
     mode: "mock"
     available: false

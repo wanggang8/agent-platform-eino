@@ -224,6 +224,7 @@ func fobrainProviderFromConfig(config bootstrap.FobrainConfig) *fobrain.Provider
 	if config.Credential.APIToken != "" {
 		providerConfig.CredentialResolver = fobrain.StaticCredentialResolver{
 			WorkspaceID: config.WorkspaceID,
+			AuthParam:   config.Credential.AuthParam,
 			APIToken:    config.Credential.APIToken,
 		}
 	}

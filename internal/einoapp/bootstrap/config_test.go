@@ -598,6 +598,7 @@ fobrain:
     status: "bound"
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
+    auth_param: "authorization"
     api_token: "fobrain-local-secret"
   connector_status:
     mode: "mock"
@@ -624,6 +625,9 @@ fobrain:
 	if cfg.Fobrain.ConnectorStatus.Mode != "mock" || !cfg.Fobrain.ConnectorStatus.Available {
 		t.Fatalf("fobrain connector status mismatch: %+v", cfg.Fobrain.ConnectorStatus)
 	}
+	if cfg.Fobrain.Credential.AuthParam != "authorization" {
+		t.Fatalf("fobrain auth param = %q, want authorization", cfg.Fobrain.Credential.AuthParam)
+	}
 }
 
 func TestFobrainConfigValidationRejectsInvalidFields(t *testing.T) {
@@ -642,6 +646,12 @@ func TestFobrainConfigValidationRejectsInvalidFields(t *testing.T) {
 		{name: "invalid connector mode", fobrainBody: defaultFobrainConfigBody(`connector_status:
     mode: "auto"
     available: true`), wantErr: "connector_status.mode"},
+		{name: "invalid auth param", fobrainBody: defaultFobrainConfigBody(`credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    auth_param: "Authorization: Bearer"
+    api_token: "fobrain-local-secret"`), wantErr: "credential.auth_param"},
 		{name: "live bound missing token", fobrainBody: `
 enabled: true
 connector_id: "fobrain"
@@ -740,7 +750,7 @@ func TestFobrainRedactedSummaryDoesNotExposeCredentialLeak(t *testing.T) {
 			t.Fatalf("fobrain redacted summary leaked %q: %s", forbidden, encoded)
 		}
 	}
-	for _, expected := range []string{"enabled: true", "connector_id: fobrain", "workspace_id: ws_fobrain", "base_url: https://fobrain.example.test/api", "credential_status: bound", "connector_mode: mock"} {
+	for _, expected := range []string{"enabled: true", "connector_id: fobrain", "workspace_id: ws_fobrain", "base_url: https://fobrain.example.test/api", "credential_status: bound", "auth_param: authorization", "connector_mode: mock"} {
 		if !strings.Contains(encoded, expected) {
 			t.Fatalf("fobrain redacted summary missing %q: %s", expected, encoded)
 		}
@@ -785,6 +795,7 @@ func defaultFobrainConfigBody(overrides string) string {
   status: "bound"
   display_ref: "bound:fobrain:local"
   owner_scope: "workspace"
+  auth_param: "authorization"
   api_token: "fobrain-local-secret"`,
 		"connector_status": `connector_status:
   mode: "mock"

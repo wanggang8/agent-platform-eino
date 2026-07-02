@@ -68,6 +68,7 @@ type FobrainCredentialConfig struct {
 	Status     string `yaml:"status"`
 	DisplayRef string `yaml:"display_ref"`
 	OwnerScope string `yaml:"owner_scope"`
+	AuthParam  string `yaml:"auth_param"`
 	APIToken   string `yaml:"api_token"`
 }
 
@@ -386,6 +387,7 @@ func (cfg *FobrainConfig) applyDerivedDefaults() {
 	cfg.Credential.Status = strings.TrimSpace(cfg.Credential.Status)
 	cfg.Credential.DisplayRef = strings.TrimSpace(cfg.Credential.DisplayRef)
 	cfg.Credential.OwnerScope = strings.TrimSpace(cfg.Credential.OwnerScope)
+	cfg.Credential.AuthParam = strings.TrimSpace(cfg.Credential.AuthParam)
 	cfg.Credential.APIToken = strings.TrimSpace(cfg.Credential.APIToken)
 	cfg.ConnectorStatus.Mode = strings.TrimSpace(cfg.ConnectorStatus.Mode)
 	if !cfg.Enabled {
@@ -396,6 +398,9 @@ func (cfg *FobrainConfig) applyDerivedDefaults() {
 	}
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 10 * time.Second
+	}
+	if cfg.Credential.AuthParam == "" {
+		cfg.Credential.AuthParam = "authorization"
 	}
 	cfg.CredentialBinding = CredentialBinding{
 		SchemaVersion: "eino.provider_credential_binding.v1",
@@ -437,6 +442,9 @@ func (cfg FobrainConfig) validate() error {
 	if cfg.Credential.OwnerScope != "workspace" {
 		return errors.New("fobrain.credential.owner_scope must be workspace")
 	}
+	if !validAuthParamName(cfg.Credential.AuthParam) {
+		return errors.New("fobrain.credential.auth_param is invalid")
+	}
 	if cfg.ConnectorStatus.Mode != "mock" && cfg.ConnectorStatus.Mode != "live" {
 		return errors.New("fobrain.connector_status.mode must be mock or live")
 	}
@@ -453,6 +461,21 @@ func (cfg FobrainConfig) validate() error {
 		return errors.New("fobrain.connector_status.mode live mode is not supported in Phase 5")
 	}
 	return nil
+}
+
+// validAuthParamName 只允许安全 HTTP 参数名，值本身仍只能留在 provider 边界。
+func validAuthParamName(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" || unsafeConfigSummaryText(value) || strings.ContainsAny(value, " \t\r\n:") {
+		return false
+	}
+	for _, char := range value {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '_' || char == '-' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // validateFobrainBaseURL 只要求绝对 URL；敏感 userinfo/query 会在摘要中移除。
@@ -610,6 +633,7 @@ func redactedFobrainSummary(config FobrainConfig) map[string]any {
 		"base_url":            redactURL(config.BaseURL),
 		"timeout":             config.Timeout.String(),
 		"credential_status":   config.CredentialBinding.Status,
+		"auth_param":          safeSummaryIdentifier(config.Credential.AuthParam),
 		"display_ref":         safeCredentialDisplay(config.CredentialBinding.DisplayRef),
 		"credential_scope":    config.CredentialBinding.OwnerScope,
 		"connector_mode":      config.ConnectorStatus.Mode,

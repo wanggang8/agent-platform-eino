@@ -12,6 +12,7 @@
 - 将配置派生的安全 policy context 注入 Action selection 和 ToolLoopRunner。
 - 打开 `fobrain-poc` smoke，生成 mock provider PoC report；缺少 live 前置条件或 Phase 5 不支持 live 时生成 skip report。
 - Phase 5 服务启动只允许 Fobrain `mock` mode；`live` mode 在真实 HTTP client 阶段前会被配置校验拒绝。
+- 后续认证更正：真实 Fobrain 环境使用 `credential.auth_param=authorization` 搭配本地 `credential.api_token`；真实 token 只允许出现在 ignored local 配置中。
 
 ## 验证命令
 

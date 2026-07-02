@@ -17,13 +17,14 @@ fobrain:
     status: "bound"
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
+    auth_param: "authorization"
     api_token: "local-only-secret"
   connector_status:
     mode: "mock"
     available: true
 ```
 
-`configs/eino-workbench.example.yaml` 只能展示无 secret 示例；真实 `api_token` 只能写入已 ignored 的 `configs/eino-workbench.local.yaml`。
+`configs/eino-workbench.example.yaml` 只能展示无 secret 示例；真实 `api_token` 只能写入已 ignored 的 `configs/eino-workbench.local.yaml`。当前真实 Fobrain 环境使用名为 `authorization` 的认证参数，值为原始 token；不得把 token 写入仓库。
 
 ## 字段要求
 
@@ -37,6 +38,7 @@ fobrain:
 | `credential.status` | 是 | `missing` / `unbound` / `configured` / `bound`。 |
 | `credential.display_ref` | 是 | 安全展示引用，不得包含 raw credential ref、token 或 URL。 |
 | `credential.owner_scope` | 是 | Phase 5 固定 `workspace`。 |
+| `credential.auth_param` | 是 | Fobrain HTTP client 使用的认证参数名；当前真实环境为 `authorization`。只允许安全 header/query 参数名，不包含 token 值。 |
 | `credential.api_token` | 本地可选 | 只允许 local ignored 配置使用；不得进入 RedactedSummary、Product Facts、日志、报告。 |
 | `connector_status.mode` | 是 | Phase 5 只允许 `mock`；`live` 保留给真实 HTTP client 阶段。 |
 | `connector_status.available` | 是 | policy 输入，不替代业务读取工具。 |
@@ -50,11 +52,12 @@ fobrain:
 - `capabilities.CredentialBinding`：只包含 `schema_version`、`workspace_id`、`system=fobrain`、`status`、`display_ref`、`owner_scope`、`audit_ref`。
 - `capabilities.ConnectorStatus`：只表达 available/unavailable。
 - `FobrainClientConfig`：只在 provider client 内部持有 `base_url`、`timeout`、secret token。
+- `auth_param`：只作为 provider client 认证参数名，当前 live client 应发送 `authorization: <api_token>`；不要硬编码旧项目默认 header。
 
 ## 脱敏规则
 
 - `api_token`、Authorization、cookie、raw credential ref、连接串和 raw provider payload 不得进入 Product Facts、ActionResult、Workbench、SSE、audit、replay、report 或日志。
-- RedactedSummary 只能展示 provider enabled、connector id、workspace id、base url host、timeout、credential status、connector mode 和 available。
+- RedactedSummary 只能展示 provider enabled、connector id、workspace id、base url host、timeout、credential status、auth parameter name、connector mode 和 available。
 - workspace 不匹配必须返回 `credential_scope_denied`，不能回显配置里的 workspace/token。
 
 ## 验收
@@ -65,4 +68,4 @@ fobrain:
 go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|CredentialLeak' -count=1
 ```
 
-测试必须覆盖：最小合法配置、缺必填字段、非法 URL、非法 credential status、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider。
+测试必须覆盖：最小合法配置、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider。

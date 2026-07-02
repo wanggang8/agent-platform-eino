@@ -10,6 +10,7 @@ import (
 // APIToken 不得进入 Product Facts、日志、报告或 Workbench 投影。
 type ResolvedCredential struct {
 	WorkspaceID string
+	AuthParam   string
 	APIToken    string
 }
 
@@ -21,6 +22,7 @@ type CredentialResolver interface {
 // StaticCredentialResolver 是本地配置和测试使用的最小凭据解析器。
 type StaticCredentialResolver struct {
 	WorkspaceID string
+	AuthParam   string
 	APIToken    string
 }
 
@@ -35,5 +37,9 @@ func (resolver StaticCredentialResolver) ResolveFobrainCredential(_ context.Cont
 	if resolver.APIToken == "" {
 		return ResolvedCredential{}, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 凭据未配置")
 	}
-	return ResolvedCredential{WorkspaceID: workspaceID, APIToken: resolver.APIToken}, nil
+	authParam := resolver.AuthParam
+	if authParam == "" {
+		authParam = "authorization"
+	}
+	return ResolvedCredential{WorkspaceID: workspaceID, AuthParam: authParam, APIToken: resolver.APIToken}, nil
 }

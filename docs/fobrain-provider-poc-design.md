@@ -69,6 +69,7 @@ Fobrain provider 配置必须按 `docs/fobrain-provider-config.md` 实现。Phas
 
 - `configs/eino-workbench.example.yaml` 只能展示无 secret 示例。
 - `configs/eino-workbench.local.yaml` 可以保存本机 `api_token`，但必须保持 ignored。
+- 真实 Fobrain 认证参数名必须来自配置，当前环境使用 `authorization`，不能硬编码旧项目默认 header。
 - `enabled=false` 或缺少 Fobrain 配置时不得注册 Fobrain provider。
 - RedactedSummary 只能展示安全摘要，不展示 token、Authorization、raw credential ref 或 raw provider payload。
 

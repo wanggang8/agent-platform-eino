@@ -156,6 +156,7 @@ func TestCapabilityRuntimeFromConfigRegistersFobrainOnlyWhenEnabled(t *testing.T
 				Status:     "bound",
 				DisplayRef: "bound:fobrain:local",
 				OwnerScope: "workspace",
+				AuthParam:  "authorization",
 				APIToken:   "local-secret",
 			},
 			ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: "mock", Available: true},
