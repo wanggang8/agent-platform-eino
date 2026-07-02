@@ -73,6 +73,14 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 当前代码进展：Batch D 六个参数化只读工具已进入 mock/参数化 client 可执行 catalog，并具备 mock 参数解析、必填字段校验和 `StructuredResult` 安全摘要 mapper。HTTP live mapper 已按当前真实接口返回重新归一化：资产优先 `/api/asset`，漏洞优先 `/api/threat_center`，并兼容旧 `/api/v1/...` fallback；真实返回包装为 `{code,data,message}`，列表位于 `data.items`。该切片只证明 capability metadata、输入契约、HTTP mapper 和 Product Facts 结果边界；Batch D 专用 live report、真实分页批量验收、实体消歧接入和视觉证据仍需后续批次验收。
 
+Batch D live smoke/report 命令：
+
+```bash
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-d --config configs/eino-workbench.local.yaml --owner "<负责人>" --department "<部门>" --ip "<IP>"
+```
+
+未提供稳定 `owner`、`department`、`ip` 样本时，脚本必须生成 `blocked` report，并通过 `blocks_claims` 阻止 Batch D live pass 声明。当前本地配置可从当前用户派生 owner，但缺少 department/IP 样本，因此 `test-results/eino-workbench-fobrain-batch-d-live-report.json` 是 blocking report。
+
 ### Batch E：详情与风险关联
 
 范围：
