@@ -69,6 +69,7 @@ type Capability struct {
 type JSONSchema struct {
 	SchemaVersion string
 	Properties    map[string]string
+	Required      []string
 }
 
 // Provider 定义能力提供方的注册入口，具体业务 provider 不能反向依赖 execution/httpapi。

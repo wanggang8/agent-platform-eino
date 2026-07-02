@@ -46,14 +46,14 @@ func main() {
 		NetworkSafety:     llm.NetworkSafety(cfg.LLM.NetworkSafety),
 		CredentialBinding: llm.CredentialBinding(cfg.LLM.CredentialBinding),
 	}, execution.ChatModelRunnerConfig{})
-	registry, err := capabilityRegistryFromConfig(cfg.Capabilities)
+	registry, capabilityInvoker, err := capabilityRuntimeFromConfig(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 	toolRunner := execution.NewToolLoopRunner(
 		repository,
 		registry,
-		capabilities.NewMockProvider("config-mock", registry.List()),
+		capabilityInvoker,
 		execution.ToolLoopRunnerConfig{},
 	)
 
@@ -91,25 +91,138 @@ func llmProviderFromConfig(cfg bootstrap.LLMConfig) (llm.Provider, error) {
 func capabilityRegistryFromConfig(configs []bootstrap.CapabilityConfig) (*capabilities.Registry, error) {
 	registry := capabilities.NewRegistry()
 	for _, cfg := range configs {
-		if err := registry.Register(capabilities.Capability{
-			ID:                      cfg.ID,
-			ProviderID:              cfg.ProviderID,
-			ToolName:                cfg.ToolName,
-			DisplayName:             cfg.DisplayName,
-			Description:             cfg.Description,
-			ResultSchema:            cfg.ResultSchema,
-			RiskLevel:               capabilities.RiskLevel(cfg.RiskLevel),
-			SideEffect:              capabilities.SideEffect(cfg.SideEffect),
-			PolicyRef:               cfg.PolicyRef,
-			PermissionScope:         capabilities.PermissionScope(cfg.PermissionScope),
-			CredentialBindingPolicy: capabilities.CredentialBindingPolicy(cfg.CredentialBindingPolicy),
-			ConnectorID:             cfg.ConnectorID,
-			ApprovalRequired:        cfg.ApprovalRequired,
-			IdempotencyRequired:     cfg.IdempotencyRequired,
-			Timeout:                 cfg.Timeout,
-		}); err != nil {
+		if err := registry.Register(capabilityFromConfig(cfg)); err != nil {
 			return nil, err
 		}
 	}
 	return registry, nil
+}
+
+// capabilityRuntimeFromConfig 构建 capability registry 和 provider invoker 路由。
+// 本地配置能力与 mock MCP server 都通过 Provider/Invoker 接口接入，execution 不按工具名分支。
+func capabilityRuntimeFromConfig(cfg bootstrap.Config) (*capabilities.Registry, capabilities.Invoker, error) {
+	registry := capabilities.NewRegistry()
+	mux := capabilities.NewInvokerMux()
+
+	configuredCapabilities, err := capabilitiesFromConfig(cfg.Capabilities)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(configuredCapabilities) > 0 {
+		localProvider := capabilities.NewMockProvider("config-mock", configuredCapabilities)
+		if err := mux.RegisterProvider(registry, localProvider, localProvider); err != nil {
+			return nil, nil, err
+		}
+	}
+	for _, serverConfig := range cfg.MCPMockServers {
+		provider := mcpMockProviderFromConfig(serverConfig)
+		if _, err := provider.Initialize(context.Background()); err != nil {
+			return nil, nil, err
+		}
+		if err := mux.RegisterProvider(registry, provider, provider); err != nil {
+			return nil, nil, err
+		}
+	}
+	return registry, mux, nil
+}
+
+// capabilitiesFromConfig 将 YAML capability 元数据转换为运行期契约对象。
+func capabilitiesFromConfig(configs []bootstrap.CapabilityConfig) ([]capabilities.Capability, error) {
+	out := make([]capabilities.Capability, 0, len(configs))
+	for _, cfg := range configs {
+		capability := capabilityFromConfig(cfg)
+		if capability.ID == "" || capability.ProviderID == "" || capability.ToolName == "" {
+			return nil, fmt.Errorf("invalid capability config %q", cfg.ID)
+		}
+		out = append(out, capability)
+	}
+	return out, nil
+}
+
+// capabilityFromConfig 保持旧测试入口和新 runtime 入口共用同一份字段映射。
+func capabilityFromConfig(cfg bootstrap.CapabilityConfig) capabilities.Capability {
+	return capabilities.Capability{
+		ID:                      cfg.ID,
+		ProviderID:              cfg.ProviderID,
+		ToolName:                cfg.ToolName,
+		DisplayName:             cfg.DisplayName,
+		Description:             cfg.Description,
+		ResultSchema:            cfg.ResultSchema,
+		RiskLevel:               capabilities.RiskLevel(cfg.RiskLevel),
+		SideEffect:              capabilities.SideEffect(cfg.SideEffect),
+		PolicyRef:               cfg.PolicyRef,
+		PermissionScope:         capabilities.PermissionScope(cfg.PermissionScope),
+		CredentialBindingPolicy: capabilities.CredentialBindingPolicy(cfg.CredentialBindingPolicy),
+		ConnectorID:             cfg.ConnectorID,
+		ApprovalRequired:        cfg.ApprovalRequired,
+		IdempotencyRequired:     cfg.IdempotencyRequired,
+		Timeout:                 cfg.Timeout,
+	}
+}
+
+// mcpMockProviderFromConfig 把文件化 mock MCP catalog 转成可运行 provider。
+func mcpMockProviderFromConfig(config bootstrap.MCPMockServerConfig) *capabilities.MockMCPProvider {
+	tools := make([]capabilities.MCPToolDefinition, 0, len(config.Tools))
+	for _, tool := range config.Tools {
+		tools = append(tools, capabilities.MCPToolDefinition{
+			Name:         tool.Name,
+			Title:        tool.Title,
+			Description:  tool.Description,
+			InputSchema:  mcpJSONSchemaFromConfig(tool.InputSchema),
+			OutputSchema: mcpJSONSchemaFromConfig(tool.OutputSchema),
+			Annotations: capabilities.MCPToolAnnotations{
+				ReadOnlyHint:    tool.Annotations.ReadOnlyHint,
+				DestructiveHint: tool.Annotations.DestructiveHint,
+				IdempotentHint:  tool.Annotations.IdempotentHint,
+			},
+			ProjectPolicy: capabilities.MCPProjectPolicy{
+				RiskLevel:           capabilities.RiskLevel(tool.ProjectPolicy.RiskLevel),
+				SideEffect:          capabilities.SideEffect(tool.ProjectPolicy.SideEffect),
+				PolicyRef:           tool.ProjectPolicy.PolicyRef,
+				PermissionScope:     capabilities.PermissionScope(tool.ProjectPolicy.PermissionScope),
+				ApprovalRequired:    tool.ProjectPolicy.ApprovalRequired,
+				IdempotencyRequired: tool.ProjectPolicy.IdempotencyRequired,
+			},
+		})
+	}
+	results := make(map[string]capabilities.MCPToolResult, len(config.Results))
+	for name, result := range config.Results {
+		results[name] = capabilities.MCPToolResult{
+			Content:           mcpContentFromConfig(result.Content),
+			StructuredContent: mcpStructuredContentFromConfig(result.StructuredContent),
+			IsError:           result.IsError,
+		}
+	}
+	return capabilities.NewMockMCPProvider(capabilities.MCPMockConfig{
+		ServerID: config.ServerID,
+		Tools:    tools,
+		Results:  results,
+	})
+}
+
+// mcpJSONSchemaFromConfig 转换 Phase 4.5 支持的 MCP JSON Schema 子集。
+func mcpJSONSchemaFromConfig(config bootstrap.MCPJSONSchemaConfig) capabilities.MCPJSONSchema {
+	return capabilities.MCPJSONSchema{
+		Type:       config.Type,
+		Properties: config.Properties,
+		Required:   config.Required,
+	}
+}
+
+// mcpContentFromConfig 转换 mock MCP result content，生产输出仍只使用 StructuredResult。
+func mcpContentFromConfig(config []bootstrap.MCPContentConfig) []capabilities.MCPContent {
+	out := make([]capabilities.MCPContent, 0, len(config))
+	for _, content := range config {
+		out = append(out, capabilities.MCPContent{Type: content.Type, Text: content.Text})
+	}
+	return out
+}
+
+// mcpStructuredContentFromConfig 转换 structuredContent，值只作为 candidate 字段输入。
+func mcpStructuredContentFromConfig(config map[string]string) map[string]any {
+	out := make(map[string]any, len(config))
+	for key, value := range config {
+		out[key] = value
+	}
+	return out
 }

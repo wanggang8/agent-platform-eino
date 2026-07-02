@@ -84,6 +84,16 @@ MCP Provider 必须额外处理：
 
 MCP 返回的 `structuredContent` 仍然只是 StructuredResult candidate，必须经过 Safety Gate。
 
+Phase 4.5 当前实现边界：
+
+- 只支持 `mcp_mock_servers` 配置驱动的可运行 mock MCP provider。
+- mock provider 覆盖 initialize、tools/list pagination、tools/call input schema 校验、`structuredContent`、`isError`、annotations 和项目 policy merge。
+- mock `tools/call` 必须在 initialize 后执行；MCP required 字段必须进入 ToolInfo 和 Action 输入字段选择。
+- mock project policy 配置必须通过 risk、side_effect、permission_scope 和写域幂等校验。
+- MCP destructive annotation 触发写域默认策略时也必须同时要求审批和幂等。
+- mock provider 通过 capability id 注册到 invoker 路由；execution 不按 MCP tool name 或 server id 分支。
+- 不接生产 MCP transport、auth、真实 server catalog、长连接 listChanged 订阅或 live MCP smoke。
+
 ## Connector Provider
 
 Connector Provider 负责真实外部系统适配。

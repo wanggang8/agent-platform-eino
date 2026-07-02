@@ -13,13 +13,14 @@ import (
 
 // Config 是后端服务的文件化配置根对象，禁止用环境变量替代这些部署参数。
 type Config struct {
-	Server        ServerConfig        `yaml:"server"`
-	Database      DatabaseConfig      `yaml:"database"`
-	LLM           LLMConfig           `yaml:"llm"`
-	Security      SecurityConfig      `yaml:"security"`
-	Observability ObservabilityConfig `yaml:"observability"`
-	Budgets       BudgetConfig        `yaml:"budgets"`
-	Capabilities  []CapabilityConfig  `yaml:"capabilities"`
+	Server         ServerConfig          `yaml:"server"`
+	Database       DatabaseConfig        `yaml:"database"`
+	LLM            LLMConfig             `yaml:"llm"`
+	Security       SecurityConfig        `yaml:"security"`
+	Observability  ObservabilityConfig   `yaml:"observability"`
+	Budgets        BudgetConfig          `yaml:"budgets"`
+	Capabilities   []CapabilityConfig    `yaml:"capabilities"`
+	MCPMockServers []MCPMockServerConfig `yaml:"mcp_mock_servers"`
 }
 
 // ServerConfig 定义 HTTP 服务监听地址和超时。
@@ -104,6 +105,61 @@ type CapabilityConfig struct {
 	ApprovalRequired        bool          `yaml:"approval_required"`
 	IdempotencyRequired     bool          `yaml:"idempotency_required"`
 	Timeout                 time.Duration `yaml:"timeout"`
+}
+
+// MCPMockServerConfig 定义 Phase 4.5 可运行 mock MCP server catalog，不用于生产 MCP 连接。
+type MCPMockServerConfig struct {
+	ServerID string                             `yaml:"server_id"`
+	Tools    []MCPMockToolConfig                `yaml:"tools"`
+	Results  map[string]MCPMockToolResultConfig `yaml:"results"`
+}
+
+// MCPMockToolConfig 定义 mock MCP tools/list 中单个工具的安全元数据。
+type MCPMockToolConfig struct {
+	Name          string                   `yaml:"name"`
+	Title         string                   `yaml:"title"`
+	Description   string                   `yaml:"description"`
+	InputSchema   MCPJSONSchemaConfig      `yaml:"input_schema"`
+	OutputSchema  MCPJSONSchemaConfig      `yaml:"output_schema"`
+	Annotations   MCPToolAnnotationsConfig `yaml:"annotations"`
+	ProjectPolicy MCPProjectPolicyConfig   `yaml:"project_policy"`
+}
+
+// MCPJSONSchemaConfig 是配置文件中的 MCP JSON Schema 子集。
+type MCPJSONSchemaConfig struct {
+	Type       string            `yaml:"type"`
+	Properties map[string]string `yaml:"properties"`
+	Required   []string          `yaml:"required"`
+}
+
+// MCPToolAnnotationsConfig 是配置文件中的 MCP annotations 子集。
+type MCPToolAnnotationsConfig struct {
+	ReadOnlyHint    bool `yaml:"read_only_hint"`
+	DestructiveHint bool `yaml:"destructive_hint"`
+	IdempotentHint  bool `yaml:"idempotent_hint"`
+}
+
+// MCPProjectPolicyConfig 是项目可信 policy 覆盖，不能由 MCP server 自行决定。
+type MCPProjectPolicyConfig struct {
+	RiskLevel           string `yaml:"risk_level"`
+	SideEffect          string `yaml:"side_effect"`
+	PolicyRef           string `yaml:"policy_ref"`
+	PermissionScope     string `yaml:"permission_scope"`
+	ApprovalRequired    bool   `yaml:"approval_required"`
+	IdempotencyRequired bool   `yaml:"idempotency_required"`
+}
+
+// MCPMockToolResultConfig 定义 mock tools/call 的固定安全结果。
+type MCPMockToolResultConfig struct {
+	Content           []MCPContentConfig `yaml:"content"`
+	StructuredContent map[string]string  `yaml:"structured_content"`
+	IsError           bool               `yaml:"is_error"`
+}
+
+// MCPContentConfig 是 mock MCP result content 的配置形态。
+type MCPContentConfig struct {
+	Type string `yaml:"type"`
+	Text string `yaml:"text"`
 }
 
 // RedactedSummary 是可打印的配置摘要，必须保证不泄漏密钥。
@@ -220,6 +276,53 @@ func (cfg Config) Validate() error {
 		if capability.SideEffect == "write_external" && (!capability.ApprovalRequired || !capability.IdempotencyRequired) {
 			return fmt.Errorf("capabilities[%d].write_external requires approval and idempotency", index)
 		}
+	}
+	for index, server := range cfg.MCPMockServers {
+		if strings.TrimSpace(server.ServerID) == "" {
+			return fmt.Errorf("mcp_mock_servers[%d].server_id is required", index)
+		}
+		for toolIndex, tool := range server.Tools {
+			if strings.TrimSpace(tool.Name) == "" {
+				return fmt.Errorf("mcp_mock_servers[%d].tools[%d].name is required", index, toolIndex)
+			}
+			if strings.TrimSpace(tool.Description) == "" {
+				return fmt.Errorf("mcp_mock_servers[%d].tools[%d].description is required", index, toolIndex)
+			}
+			if strings.TrimSpace(tool.InputSchema.Type) != "object" {
+				return fmt.Errorf("mcp_mock_servers[%d].tools[%d].input_schema.type must be object", index, toolIndex)
+			}
+			if err := validateMCPProjectPolicy(tool.ProjectPolicy, index, toolIndex); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// validateMCPProjectPolicy 校验 mock MCP 的项目可信策略覆盖，避免拼写错误静默降低风险等级。
+func validateMCPProjectPolicy(policy MCPProjectPolicyConfig, serverIndex int, toolIndex int) error {
+	if policy.RiskLevel != "" &&
+		policy.RiskLevel != "none" &&
+		policy.RiskLevel != "low" &&
+		policy.RiskLevel != "medium" &&
+		policy.RiskLevel != "high" {
+		return fmt.Errorf("mcp_mock_servers[%d].tools[%d].project_policy.risk_level is invalid", serverIndex, toolIndex)
+	}
+	if policy.SideEffect != "" &&
+		policy.SideEffect != "none" &&
+		policy.SideEffect != "read_external" &&
+		policy.SideEffect != "write_external" &&
+		policy.SideEffect != "local_runtime" {
+		return fmt.Errorf("mcp_mock_servers[%d].tools[%d].project_policy.side_effect is invalid", serverIndex, toolIndex)
+	}
+	if policy.PermissionScope != "" &&
+		policy.PermissionScope != "workspace" &&
+		policy.PermissionScope != "caller" &&
+		policy.PermissionScope != "system" {
+		return fmt.Errorf("mcp_mock_servers[%d].tools[%d].project_policy.permission_scope is invalid", serverIndex, toolIndex)
+	}
+	if policy.SideEffect == "write_external" && (!policy.ApprovalRequired || !policy.IdempotencyRequired) {
+		return fmt.Errorf("mcp_mock_servers[%d].tools[%d].project_policy.write_external requires approval and idempotency", serverIndex, toolIndex)
 	}
 	return nil
 }

@@ -41,6 +41,39 @@ func TestEinoToolAdapterBuildsToolInfoFromCapabilityMetadata(t *testing.T) {
 	}
 }
 
+func TestEinoToolAdapterPreservesRequiredFields(t *testing.T) {
+	capability := capabilities.Capability{
+		ID:          "cap.mock.asset.read",
+		ProviderID:  "mock",
+		ToolName:    "mock_asset_read",
+		DisplayName: "资产查询",
+		Description: "按授权范围读取资产",
+		InputSchema: capabilities.JSONSchema{
+			SchemaVersion: "json_schema.v1",
+			Properties: map[string]string{
+				"asset_type": "string",
+				"query":      "string",
+			},
+			Required: []string{"query"},
+		},
+		ResultSchema: facts.StructuredResultSchemaVersion,
+		RiskLevel:    capabilities.RiskReadOnly,
+		Timeout:      5 * time.Second,
+	}
+
+	info, err := capabilities.ToolInfoFromCapability(context.Background(), capability)
+	if err != nil {
+		t.Fatal(err)
+	}
+	jsonSchema, err := info.ParamsOneOf.ToJSONSchema()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(jsonSchema.Required) != 1 || jsonSchema.Required[0] != "query" {
+		t.Fatalf("required fields = %+v", jsonSchema.Required)
+	}
+}
+
 func TestProviderContractConvertsReadResultToStructuredResultCandidate(t *testing.T) {
 	provider := capabilities.NewMockProvider("mock", []capabilities.Capability{
 		{

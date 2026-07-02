@@ -29,6 +29,7 @@ func ToolInfoFromCapability(_ context.Context, capability Capability) (*schema.T
 	}
 	if len(capability.InputSchema.Properties) > 0 {
 		params := make(map[string]*schema.ParameterInfo, len(capability.InputSchema.Properties))
+		required := requiredSchemaFields(capability.InputSchema)
 		for name, dataType := range capability.InputSchema.Properties {
 			parameterType, err := toEinoDataType(dataType)
 			if err != nil {
@@ -36,12 +37,29 @@ func ToolInfoFromCapability(_ context.Context, capability Capability) (*schema.T
 			}
 			params[name] = &schema.ParameterInfo{
 				Type:     parameterType,
-				Required: true,
+				Required: required[name],
 			}
 		}
 		info.ParamsOneOf = schema.NewParamsOneOfByParams(params)
 	}
 	return info, nil
+}
+
+// requiredSchemaFields 返回 schema required 集合；旧 capability 未声明 required 时保持全部必填兼容。
+func requiredSchemaFields(input JSONSchema) map[string]bool {
+	required := map[string]bool{}
+	if len(input.Required) == 0 {
+		for name := range input.Properties {
+			required[name] = true
+		}
+		return required
+	}
+	for _, name := range input.Required {
+		if _, ok := input.Properties[name]; ok {
+			required[name] = true
+		}
+	}
+	return required
 }
 
 // toEinoDataType 将项目轻量 schema 类型映射为 Eino 参数类型。

@@ -233,6 +233,147 @@ budgets:
 	}
 }
 
+func TestLoadConfigReadsMockMCPServers(t *testing.T) {
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+  timeout: "8s"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+mcp_mock_servers:
+  - server_id: "mock"
+    tools:
+      - name: "asset_lookup"
+        title: "MCP 资产查询"
+        description: "通过 mock MCP 查询资产"
+        input_schema:
+          type: "object"
+          properties:
+            query: "string"
+          required: ["query"]
+        output_schema:
+          type: "object"
+        annotations:
+          read_only_hint: true
+    results:
+      asset_lookup:
+        structured_content:
+          result_ref: "result:mcp:asset_lookup"
+          safe_summary: "MCP 资产查询完成"
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cfg.MCPMockServers) != 1 || cfg.MCPMockServers[0].ServerID != "mock" {
+		t.Fatalf("mcp mock servers not loaded: %+v", cfg.MCPMockServers)
+	}
+	tool := cfg.MCPMockServers[0].Tools[0]
+	if tool.InputSchema.Properties["query"] != "string" || !tool.Annotations.ReadOnlyHint {
+		t.Fatalf("mcp mock tool metadata mismatch: %+v", tool)
+	}
+	if cfg.MCPMockServers[0].Results["asset_lookup"].StructuredContent["safe_summary"] != "MCP 资产查询完成" {
+		t.Fatalf("mcp mock result mismatch: %+v", cfg.MCPMockServers[0].Results)
+	}
+}
+
+func TestConfigValidationRejectsInvalidMockMCPProjectPolicy(t *testing.T) {
+	for _, testCase := range []struct {
+		name    string
+		policy  string
+		wantErr string
+	}{
+		{
+			name: "invalid risk",
+			policy: `
+          risk_level: "unsafe"
+          side_effect: "read_external"
+          permission_scope: "workspace"`,
+			wantErr: "risk_level",
+		},
+		{
+			name: "invalid side effect",
+			policy: `
+          risk_level: "low"
+          side_effect: "network"
+          permission_scope: "workspace"`,
+			wantErr: "side_effect",
+		},
+		{
+			name: "invalid scope",
+			policy: `
+          risk_level: "low"
+          side_effect: "read_external"
+          permission_scope: "tenant"`,
+			wantErr: "permission_scope",
+		},
+		{
+			name: "write missing idempotency",
+			policy: `
+          risk_level: "high"
+          side_effect: "write_external"
+          permission_scope: "workspace"`,
+			wantErr: "write_external",
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+  timeout: "8s"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+mcp_mock_servers:
+  - server_id: "mock"
+    tools:
+      - name: "write_tool"
+        description: "mock write"
+        input_schema:
+          type: "object"
+          properties:
+            ticket: "string"
+        project_policy:
+`+testCase.policy+`
+`)
+
+			_, err := bootstrap.LoadConfig(path)
+			if err == nil || !strings.Contains(err.Error(), testCase.wantErr) {
+				t.Fatalf("LoadConfig invalid mcp project policy err = %v, want %q", err, testCase.wantErr)
+			}
+		})
+	}
+}
+
 func TestRedactedSummaryDoesNotExposeSecrets(t *testing.T) {
 	// 配置摘要只允许进入日志的安全字段，URL 中的鉴权信息和查询密钥必须被移除。
 	path := writeConfig(t, `

@@ -121,6 +121,44 @@ func TestToolSafetyRejectsUnsafeArgumentKeysAndNestedValues(t *testing.T) {
 	}
 }
 
+func TestToolLoopMapsActionTextToRequiredInputField(t *testing.T) {
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	now := time.Unix(790, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-tool", WorkspaceID: "ws-tool", Status: facts.RunStatusCreated, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	registry := capabilities.NewRegistry()
+	capability := mockReadCapability()
+	capability.InputSchema = capabilities.JSONSchema{
+		SchemaVersion: "json_schema.v1",
+		Properties: map[string]string{
+			"asset_type": "string",
+			"query":      "string",
+		},
+		Required: []string{"query"},
+	}
+	if err := registry.Register(capability); err != nil {
+		t.Fatal(err)
+	}
+	provider := capabilities.NewMockProvider("mock", []capabilities.Capability{capability})
+	runner := execution.NewToolLoopRunner(repository, registry, provider, execution.ToolLoopRunnerConfig{
+		Now: func() time.Time { return now.Add(time.Second) },
+	})
+
+	if err := runner.RunCapability(ctx, "run-tool", capability.ID, "asset query"); err != nil {
+		t.Fatal(err)
+	}
+
+	snapshot, err := repository.GetSnapshot(ctx, "run-tool")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.ToolCalls) != 1 || snapshot.ToolCalls[0].ArgsPreview != "query=present" {
+		t.Fatalf("required field was not used for action text: %+v", snapshot.ToolCalls)
+	}
+}
+
 func TestToolLoopRejectsApprovalRequiredCapabilityBeforeHITL(t *testing.T) {
 	repository := facts.NewMemoryRepository()
 	registry := capabilities.NewRegistry()

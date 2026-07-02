@@ -223,6 +223,13 @@ func argumentsFromCapabilityInput(capability capabilities.Capability, inputText 
 
 // firstInputField 返回 capability schema 中稳定排序后的第一个字段，避免固定 query 名称。
 func firstInputField(capability capabilities.Capability) string {
+	required := append([]string(nil), capability.InputSchema.Required...)
+	sort.Strings(required)
+	for _, key := range required {
+		if _, ok := capability.InputSchema.Properties[key]; ok {
+			return key
+		}
+	}
 	keys := make([]string, 0, len(capability.InputSchema.Properties))
 	for key := range capability.InputSchema.Properties {
 		keys = append(keys, key)

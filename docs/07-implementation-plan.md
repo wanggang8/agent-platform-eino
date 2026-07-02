@@ -643,6 +643,17 @@ MCP adapter contract 任务拆分：
 go test ./internal/einoapp/capabilities -run 'MCPLifecycle|MCPToolListPagination|MCPSchemaConversion|MCPSafety|MCPRiskPolicy' -count=1
 ```
 
+完成状态：
+
+- 已实现 `mcp_mock_servers` 配置形态，支持 mock server catalog、tools/list metadata、tools/call 固定结果和安全摘要。
+- 已实现 mock MCP initialize/session 状态、tools/list pagination、input schema 子集转换与 required/type 校验、structuredContent/isError 到 StructuredResult candidate 的转换。
+- 已实现 MCP annotations 与项目可信 risk policy 合并；annotations 不可信，不能覆盖项目写域审批和高风险策略。
+- MCP destructive annotation 触发写域默认策略时也会强制 `approval_required` 与 `idempotency_required`。
+- 已将 mock MCP provider 接入启动 runtime：registry 和 invoker 通过 capability id 路由，不按工具名或 provider 名称硬编码执行分支。
+- mock MCP `tools/call` 必须在 initialize 后执行；required 字段会传入 Eino ToolInfo，并用于 Action API 文本输入字段选择。
+- `mcp_mock_servers[].tools[].project_policy` 已按 capability policy 枚举和写域幂等规则做启动校验。
+- 已新增 `mcp-mock` smoke 场景；生产 MCP server、复杂 auth、多 server live catalog 和 live MCP smoke 仍后移。
+
 ## Phase 5：Fobrain provider PoC
 
 创建：

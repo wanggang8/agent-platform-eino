@@ -32,7 +32,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|real-model-chat)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
@@ -52,7 +52,7 @@ case "${scenario}" in
     ;;
   *)
     echo "unsupported scenario: ${scenario}" >&2
-    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
+    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
     exit 2
     ;;
 esac
@@ -169,6 +169,26 @@ capabilities:
     approval_required: true
     idempotency_required: true
     timeout: "5s"
+mcp_mock_servers:
+  - server_id: "mock"
+    tools:
+      - name: "asset_lookup"
+        title: "MCP 资产查询"
+        description: "Smoke-only MCP mock capability"
+        input_schema:
+          type: "object"
+          properties:
+            query: "string"
+          required: ["query"]
+        output_schema:
+          type: "object"
+        annotations:
+          read_only_hint: true
+    results:
+      asset_lookup:
+        structured_content:
+          result_ref: "result:mcp:asset_lookup"
+          safe_summary: "MCP 资产查询完成"
 YAML
 fi
 
@@ -185,7 +205,7 @@ fi
 go run ./cmd/eino-workbench --config "${config_file}" >"${server_log}" 2>&1 &
 server_pid="$!"
 
-for _ in {1..50}; do
+for _ in {1..150}; do
   if curl -fsS "${base_url}/healthz" >/dev/null 2>&1; then
     break
   fi
@@ -624,6 +644,49 @@ assert any(schema == "tool.structured_result.v1" and summary == "Phase 3 read sm
 assert any(event_type == "tool" and "tool completed: cap.smoke.read" in summary for event_type, summary in audit_rows), audit_rows
 PY
   echo "tool-card smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "mcp-mock" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-mcp-mock","client_request_id":"client-smoke-mcp-mock","capability_hint":"mcp.mock.tool.asset_lookup","input":{"text":"mcp asset smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "completed", body
+assert len(body["result_cards"]) == 1, body
+card = body["result_cards"][0]
+assert card["title"] == "MCP 资产查询", card
+assert card["safe_summary"] == "MCP 资产查询完成", card
+assert card["structured_result"]["schema_version"] == "tool.structured_result.v1", card
+print(body["run_id"])
+PY
+)"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_workbench_view.v1"
+assert body["run_id"] == sys.argv[2]
+tool_cards = [item for item in body["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1, body["timeline"]
+assert tool_cards[0]["safe_summary"] == "MCP 资产查询完成", tool_cards[0]
+PY
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    rows = conn.execute(
+        "select tc.tool_id, tr.safe_summary from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchall()
+assert any(tool_id == "mcp.mock.tool.asset_lookup" and summary == "MCP 资产查询完成" for tool_id, summary in rows), rows
+PY
+  echo "mcp-mock smoke passed"
   exit 0
 fi
 
