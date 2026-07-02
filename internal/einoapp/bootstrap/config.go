@@ -449,21 +449,27 @@ func (cfg FobrainConfig) validate() error {
 		return errors.New("fobrain.connector_status.mode must be mock or live")
 	}
 	if cfg.ConnectorStatus.Mode == "live" &&
-		(cfg.Credential.Status == "configured" || cfg.Credential.Status == "bound") &&
-		cfg.Credential.APIToken == "" {
+		cfg.Credential.AuthParam != "authorization" {
+		return errors.New("fobrain.credential.auth_param must be authorization in live mode")
+	}
+	if cfg.ConnectorStatus.Mode == "live" &&
+		cfg.Credential.Status != "configured" &&
+		cfg.Credential.Status != "bound" {
+		return errors.New("fobrain.credential.status must be configured or bound in live mode")
+	}
+	if cfg.ConnectorStatus.Mode == "live" && cfg.Credential.APIToken == "" {
 		return errors.New("fobrain.credential.api_token is required for live mode")
 	}
 	if cfg.ConnectorStatus.Mode == "live" {
 		parsed, _ := url.Parse(cfg.BaseURL)
-		if parsed == nil || parsed.Scheme != "https" {
-			return errors.New("fobrain.base_url must use https in live mode")
+		if parsed == nil || (parsed.Scheme != "https" && !(parsed.Scheme == "http" && isLocalHost(parsed.Hostname()))) {
+			return errors.New("fobrain.base_url must use https or local http in live mode")
 		}
-		return errors.New("fobrain.connector_status.mode live mode is not supported in Phase 5")
 	}
 	return nil
 }
 
-// validAuthParamName 只允许安全 HTTP 参数名，值本身仍只能留在 provider 边界。
+// validAuthParamName 只允许安全 HTTP header 名，值本身仍只能留在 provider 边界。
 func validAuthParamName(value string) bool {
 	value = strings.TrimSpace(value)
 	if value == "" || unsafeConfigSummaryText(value) || strings.ContainsAny(value, " \t\r\n:") {

@@ -907,6 +907,9 @@ git diff --check
 - `docs/fobrain-live-read-batch-plan.md`
 - `docs/fixtures/fobrain/*.json`
 - `docs/schemas/fobrain/*.schema.json`
+- `cmd/eino-workbench/main.go`
+- `internal/einoapp/bootstrap/config.go`
+- `internal/einoapp/providers/fobrain/http_client.go`
 - `internal/einoapp/providers/fobrain/tools.go`
 - `internal/einoapp/providers/fobrain/result.go`
 
@@ -918,10 +921,14 @@ git diff --check
 - 未补齐矩阵的工具不得进入实现。
 - 工具实现顺序必须遵循 Batch A-E；每个批次完成前不得把后续批次标记为可验收。
 - `batch_gate` 必须由 `tool_matrix.v1.schema.json` 校验，并与 `docs/fobrain-live-read-batch-plan.md` 一致。
+- Batch A 第一小步先允许 `connector_status.mode=live` 并完成 `tool.fobrain.current_user_context` 的 HTTP client；`connector.fobrain.security` 和 `tool.fobrain.my_permissions` 必须在后续小步补齐后，Batch A 才能声明完成。
 
 任务级检查：
 
 ```bash
+go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|CredentialLeak' -count=1
+go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|Provider|Client|Credential|StructuredResult|Unsafe' -count=1
+go test ./cmd/eino-workbench -run 'Fobrain' -count=1
 go test ./internal/einoapp/providers/fobrain -run ReadonlyToolMatrix -count=1
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 ```

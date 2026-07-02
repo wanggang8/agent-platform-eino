@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -201,5 +205,124 @@ func TestCapabilityRuntimeFromConfigRegistersFobrainOnlyWhenEnabled(t *testing.T
 	}
 	if candidate.SchemaVersion != facts.StructuredResultSchemaVersion || candidate.SafeSummary == "" {
 		t.Fatalf("fobrain candidate mismatch: %+v", candidate)
+	}
+}
+
+func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T) {
+	// live mode 必须走 provider HTTP client；token 仍只在 provider 边界内作为 header 使用。
+	var gotAuth string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAuth = r.Header.Get("authorization")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{
+				"display_name":    "王五",
+				"department_name": "安全部",
+				"role":            map[string]any{"name": "安全运营"},
+			},
+		})
+	}))
+	defer server.Close()
+
+	cfg := bootstrap.Config{
+		Fobrain: bootstrap.FobrainConfig{
+			Enabled:     true,
+			ConnectorID: "fobrain",
+			WorkspaceID: "ws_fobrain",
+			BaseURL:     server.URL,
+			Timeout:     time.Second,
+			Credential: bootstrap.FobrainCredentialConfig{
+				Status:     "bound",
+				DisplayRef: "bound:fobrain:local",
+				OwnerScope: "workspace",
+				AuthParam:  "authorization",
+				APIToken:   "workspace-token",
+			},
+			ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: "live", Available: true},
+			CredentialBinding: bootstrap.CredentialBinding{
+				SchemaVersion: "eino.provider_credential_binding.v1",
+				WorkspaceID:   "ws_fobrain",
+				System:        "fobrain",
+				Status:        "bound",
+				DisplayRef:    "bound:fobrain:local",
+				OwnerScope:    "workspace",
+			},
+		},
+	}
+
+	_, invoker, err := capabilityRuntimeFromConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
+		CapabilityID: fobrain.CapabilityCurrentUserContext,
+		PolicyContext: capabilities.PolicyContext{
+			WorkspaceID:       "ws_fobrain",
+			CredentialBinding: fobrainCredentialBindingFromConfig(cfg.Fobrain.CredentialBinding),
+			ConnectorStatus:   capabilities.ConnectorStatusAvailable,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotAuth != "workspace-token" {
+		t.Fatalf("authorization header = %q", gotAuth)
+	}
+	if !strings.Contains(candidate.SafeSummary, "王五") || !strings.Contains(candidate.SafeSummary, "安全运营") {
+		t.Fatalf("live fobrain candidate did not use HTTP result: %+v", candidate)
+	}
+}
+
+func TestCapabilityRuntimeFromConfigBlocksLiveFobrainWorkspaceMismatchBeforeHTTP(t *testing.T) {
+	// workspace scope 必须在 provider 边界先拦截，不能让错工作区请求触达真实 Fobrain。
+	requestCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requestCount++
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"display_name": "王五"}})
+	}))
+	defer server.Close()
+
+	cfg := bootstrap.Config{
+		Fobrain: bootstrap.FobrainConfig{
+			Enabled:     true,
+			ConnectorID: "fobrain",
+			WorkspaceID: "ws_fobrain",
+			BaseURL:     server.URL,
+			Timeout:     time.Second,
+			Credential: bootstrap.FobrainCredentialConfig{
+				Status:     "bound",
+				DisplayRef: "bound:fobrain:local",
+				OwnerScope: "workspace",
+				AuthParam:  "authorization",
+				APIToken:   "workspace-token",
+			},
+			ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: "live", Available: true},
+			CredentialBinding: bootstrap.CredentialBinding{
+				SchemaVersion: "eino.provider_credential_binding.v1",
+				WorkspaceID:   "ws_fobrain",
+				System:        "fobrain",
+				Status:        "bound",
+				DisplayRef:    "bound:fobrain:local",
+				OwnerScope:    "workspace",
+			},
+		},
+	}
+
+	_, invoker, err := capabilityRuntimeFromConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = invoker.Invoke(context.Background(), capabilities.InvocationRequest{
+		CapabilityID: fobrain.CapabilityCurrentUserContext,
+		PolicyContext: capabilities.PolicyContext{
+			WorkspaceID:       "ws_other",
+			CredentialBinding: fobrainCredentialBindingFromConfig(cfg.Fobrain.CredentialBinding),
+			ConnectorStatus:   capabilities.ConnectorStatusAvailable,
+		},
+	})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonCredentialScopeDenied) {
+		t.Fatalf("err = %v, want credential scope denied", err)
+	}
+	if requestCount != 0 {
+		t.Fatalf("live HTTP requests = %d, want blocked before HTTP", requestCount)
 	}
 }

@@ -652,6 +652,21 @@ func TestFobrainConfigValidationRejectsInvalidFields(t *testing.T) {
     owner_scope: "workspace"
     auth_param: "Authorization: Bearer"
     api_token: "fobrain-local-secret"`), wantErr: "credential.auth_param"},
+		{name: "live mode requires authorization auth param", fobrainBody: `
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "https://fobrain.example.test/api"
+timeout: "9s"
+credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    auth_param: "x-fobrain-auth"
+    api_token: "fobrain-local-secret"
+connector_status:
+    mode: "live"
+    available: true`, wantErr: "credential.auth_param must be authorization in live mode"},
 		{name: "live bound missing token", fobrainBody: `
 enabled: true
 connector_id: "fobrain"
@@ -665,6 +680,20 @@ credential:
 connector_status:
     mode: "live"
     available: true`, wantErr: "credential.api_token"},
+		{name: "live mode requires bound credential", fobrainBody: `
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "https://fobrain.example.test/api"
+timeout: "9s"
+credential:
+    status: "missing"
+    display_ref: "missing"
+    owner_scope: "workspace"
+    auth_param: "authorization"
+connector_status:
+    mode: "live"
+    available: true`, wantErr: "credential.status must be configured or bound in live mode"},
 		{name: "live mode rejects http base url", fobrainBody: `
 enabled: true
 connector_id: "fobrain"
@@ -679,7 +708,47 @@ credential:
 connector_status:
     mode: "live"
     available: true`, wantErr: "fobrain.base_url"},
-		{name: "live mode unsupported in phase 5", fobrainBody: `
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			path := writeConfig(t, fobrainConfigYAML(testCase.fobrainBody))
+			_, err := bootstrap.LoadConfig(path)
+			if err == nil || !strings.Contains(err.Error(), testCase.wantErr) {
+				t.Fatalf("LoadConfig err = %v, want containing %q", err, testCase.wantErr)
+			}
+		})
+	}
+}
+
+func TestFobrainConfigAllowsLiveModeWithLocalHTTP(t *testing.T) {
+	// 本地验收可以通过 loopback HTTP 访问 Fobrain mock/live 代理；非本地 live HTTP 仍被拒绝。
+	path := writeConfig(t, fobrainConfigYAML(`
+enabled: true
+connector_id: "fobrain"
+workspace_id: "ws_fobrain"
+base_url: "http://127.0.0.1:3001/api/v1"
+timeout: "9s"
+credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    auth_param: "authorization"
+    api_token: "fobrain-local-secret"
+connector_status:
+    mode: "live"
+    available: true`))
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Fobrain.BaseURL != "http://127.0.0.1:3001/api/v1" || cfg.Fobrain.ConnectorStatus.Mode != "live" {
+		t.Fatalf("local live fobrain config mismatch: %+v", cfg.Fobrain)
+	}
+}
+
+func TestFobrainConfigAllowsLiveModeWithWorkspaceToken(t *testing.T) {
+	// Phase 8 Batch A 允许 live mode，但仍必须使用 workspace scope 和本地 ignored token。
+	path := writeConfig(t, fobrainConfigYAML(`
 enabled: true
 connector_id: "fobrain"
 workspace_id: "ws_fobrain"
@@ -689,18 +758,20 @@ credential:
     status: "bound"
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
+    auth_param: "authorization"
     api_token: "fobrain-local-secret"
 connector_status:
     mode: "live"
-    available: true`, wantErr: "live mode is not supported"},
-	} {
-		t.Run(testCase.name, func(t *testing.T) {
-			path := writeConfig(t, fobrainConfigYAML(testCase.fobrainBody))
-			_, err := bootstrap.LoadConfig(path)
-			if err == nil || !strings.Contains(err.Error(), testCase.wantErr) {
-				t.Fatalf("LoadConfig err = %v, want containing %q", err, testCase.wantErr)
-			}
-		})
+    available: true`))
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Fobrain.ConnectorStatus.Mode != "live" ||
+		cfg.Fobrain.Credential.AuthParam != "authorization" ||
+		cfg.Fobrain.CredentialBinding.OwnerScope != "workspace" {
+		t.Fatalf("live fobrain config mismatch: %+v", cfg.Fobrain)
 	}
 }
 

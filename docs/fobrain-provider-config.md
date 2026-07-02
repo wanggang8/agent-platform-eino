@@ -1,10 +1,10 @@
 # Fobrain Provider 配置契约
 
-本文定义 Phase 5 Fobrain provider PoC 的本地配置形态。该契约只用于新项目实现，不复制旧项目配置结构。
+本文定义 Phase 5 Fobrain provider PoC 与 Phase 8 live read 的本地配置形态。该契约只用于新项目实现，不复制旧项目配置结构。
 
 ## YAML Shape
 
-Phase 5 实现必须在 `bootstrap.Config` 中增加 `fobrain` 根字段：
+实现必须在 `bootstrap.Config` 中增加 `fobrain` 根字段：
 
 ```yaml
 fobrain:
@@ -33,7 +33,7 @@ fobrain:
 | `enabled` | 是 | 未启用时不得注册 Fobrain provider。 |
 | `connector_id` | 是 | 固定安全标识，Phase 5 只允许 `fobrain`。 |
 | `workspace_id` | 是 | 凭据解析必须按 workspace scope 校验。 |
-| `base_url` | 是 | 真实 provider HTTP 入口；必须是绝对 URL，不能硬编码在业务代码。 |
+| `base_url` | 是 | 真实 provider HTTP 入口；必须是绝对 URL，不能硬编码在业务代码。live mode 默认要求 HTTPS，仅本地 loopback HTTP 可用于验收代理。 |
 | `timeout` | 是 | provider client 超时。 |
 | `credential.status` | 是 | `missing` / `unbound` / `configured` / `bound`。 |
 | `credential.display_ref` | 是 | 安全展示引用，不得包含 raw credential ref、token 或 URL。 |
@@ -43,7 +43,7 @@ fobrain:
 | `connector_status.mode` | 是 | Phase 5 只允许 `mock`；`live` 保留给真实 HTTP client 阶段。 |
 | `connector_status.available` | 是 | policy 输入，不替代业务读取工具。 |
 
-`connector_status.mode=mock` 时可以缺少 `credential.api_token`。Phase 5 服务启动配置不接受 `live` mode，避免真实配置静默降级成 mock 结果；`fobrain-poc` provider report 的 `provider_mode` 只能是 `mock`。真实模型工具选择或 Fobrain live read 在 Phase 5 只能写 skip report，不能声明通过。
+`connector_status.mode=mock` 时可以缺少 `credential.api_token`。Phase 5 的 `fobrain-poc` provider report 仍只能使用 `mock` 并声明 `provider_mode=mock`；Phase 8 Batch A 起，服务配置允许 `live` mode 进入真实 HTTP client。真实模型工具选择或 Fobrain live read 未完成对应批次验收时只能写 blocking skip report，不能声明通过。
 
 ## Live Read 边界
 
@@ -55,6 +55,8 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - live client 应把 `auth_param` 当作 header 名发送；如果后续确认真实 API 使用 query/body 参数，必须先新增 ADR。
 - Phase 8 live acceptance 配置必须设置 `auth_param: "authorization"`；其它认证参数名需要先新增 ADR。
 - `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
+- `connector_status.mode=live` 时 `base_url` 必须使用 HTTPS；只有 `127.0.0.1`、`localhost`、`::1` 的 HTTP URL 可作为本地验收代理入口。
+- 当前实现的第一步 live read 只覆盖 `tool.fobrain.current_user_context` 的 `/api/v1/user` 读取；`connector.fobrain.security` 和 `tool.fobrain.my_permissions` 仍需在 Batch A 后续小步补齐。
 
 ## 派生对象
 
@@ -73,10 +75,12 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 
 ## 验收
 
-实现前必须先补配置测试：
+实现必须配套配置和 provider 测试：
 
 ```bash
 go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|CredentialLeak' -count=1
+go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|Credential' -count=1
+go test ./cmd/eino-workbench -run 'Fobrain.*Live|FobrainOnlyWhenEnabled' -count=1
 ```
 
-测试必须覆盖：最小合法配置、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider。
+测试必须覆盖：最小合法配置、live mode workspace token、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider、workspace 不匹配不发起外部 HTTP。

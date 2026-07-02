@@ -126,7 +126,10 @@ func capabilityRuntimeFromConfig(cfg bootstrap.Config) (*capabilities.Registry, 
 		}
 	}
 	if cfg.Fobrain.Enabled {
-		provider := fobrainProviderFromConfig(cfg.Fobrain)
+		provider, err := fobrainProviderFromConfig(cfg.Fobrain)
+		if err != nil {
+			return nil, nil, err
+		}
 		if err := mux.RegisterProvider(registry, provider, provider); err != nil {
 			return nil, nil, err
 		}
@@ -210,16 +213,27 @@ func mcpMockProviderFromConfig(config bootstrap.MCPMockServerConfig) *capabiliti
 
 // fobrainProviderFromConfig 把文件化 Fobrain 配置转成 provider 边界对象。
 // API token 只进入 CredentialResolver，不进入 capability metadata 或 Product Facts。
-func fobrainProviderFromConfig(config bootstrap.FobrainConfig) *fobrain.Provider {
+func fobrainProviderFromConfig(config bootstrap.FobrainConfig) (*fobrain.Provider, error) {
 	connectorStatus := capabilities.ConnectorStatusUnavailable
 	if config.ConnectorStatus.Available {
 		connectorStatus = capabilities.ConnectorStatusAvailable
+	}
+	client := fobrain.FobrainClient(fobrain.MockClient{})
+	if config.ConnectorStatus.Mode == "live" {
+		httpClient, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+			BaseURL: config.BaseURL,
+			Timeout: config.Timeout,
+		})
+		if err != nil {
+			return nil, err
+		}
+		client = httpClient
 	}
 	providerConfig := fobrain.ProviderConfig{
 		WorkspaceID:       config.WorkspaceID,
 		CredentialBinding: fobrainCredentialBindingFromConfig(config.CredentialBinding),
 		ConnectorStatus:   connectorStatus,
-		Client:            fobrain.MockClient{},
+		Client:            client,
 	}
 	if config.Credential.APIToken != "" {
 		providerConfig.CredentialResolver = fobrain.StaticCredentialResolver{
@@ -228,7 +242,7 @@ func fobrainProviderFromConfig(config bootstrap.FobrainConfig) *fobrain.Provider
 			APIToken:    config.Credential.APIToken,
 		}
 	}
-	return fobrain.NewProvider(providerConfig)
+	return fobrain.NewProvider(providerConfig), nil
 }
 
 // policyContextsFromConfig 把 provider 配置中的安全凭据摘要传给 policy gate。

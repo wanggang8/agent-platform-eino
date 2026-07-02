@@ -8,6 +8,7 @@
 - token 来自 ignored 本地配置 `configs/eino-workbench.local.yaml` 的 `fobrain.credential.api_token`。
 - 当前只支持 workspace 共享 token；不做单用户 token、单工具 token 或前端传 token。
 - live client 只在 provider 边界持有 token；所有产品出口只能展示安全摘要。
+- live `base_url` 默认使用 HTTPS；本地验收代理可以使用 loopback HTTP。
 
 ## 批次顺序
 
@@ -20,6 +21,8 @@
 - `tool.fobrain.my_permissions`
 
 验收重点：认证成功/失败、connector 状态、workspace scope、当前用户安全摘要、权限空态和错误脱敏。
+
+第一小步只允许声明 `tool.fobrain.current_user_context` live HTTP 基础路径可用；Batch A 完成声明必须等 `connector.fobrain.security` 和 `tool.fobrain.my_permissions` 也具备 mock/live/脱敏证据。
 
 ### Batch B：我的范围
 
