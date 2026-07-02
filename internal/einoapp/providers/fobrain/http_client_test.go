@@ -295,6 +295,319 @@ func TestHTTPClientMyPermissionsUsesCurrentUserEndpoint(t *testing.T) {
 	}
 }
 
+func TestHTTPClientParameterizedAssetByIPUsesCurrentAPIPath(t *testing.T) {
+	// Batch D live 以当前真实接口 /api/asset 为优先路径，并只把安全字段映射为行摘要。
+	var gotPath string
+	var gotAuth string
+	var gotQuery string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("authorization")
+		gotQuery = r.URL.RawQuery
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": map[string]any{
+				"items": []map[string]any{
+					{
+						"id":           "asset-1",
+						"ip":           "10.10.11.12",
+						"hostname":     []any{"prod-web-01"},
+						"status":       "online",
+						"network_type": "internal",
+						"oper_info":    []map[string]any{{"name": "张三"}},
+						"poc_num":      2,
+					},
+				},
+				"page": 1, "per_page": 20, "total": 1,
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.ParameterizedQuery(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.CapabilityListAssetsByIP, fobrain.ParameterizedQuery{IP: "10.10.11.12", Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/asset" {
+		t.Fatalf("path = %q, want /api/asset", gotPath)
+	}
+	if gotAuth != "workspace-token" {
+		t.Fatalf("authorization header = %q", gotAuth)
+	}
+	if !strings.Contains(gotQuery, "page=1") || !strings.Contains(gotQuery, "per_page=20") || !strings.Contains(gotQuery, "keyword=10.10.11.12") {
+		t.Fatalf("query missing pagination or keyword: %s", gotQuery)
+	}
+	if len(result.Items) != 1 {
+		t.Fatalf("items = %+v", result.Items)
+	}
+	item := result.Items[0]
+	if item.EntityRef != "asset:fobrain:asset-1" ||
+		item.DisplayName != "prod-web-01" ||
+		item.OwnerName != "张三" ||
+		item.Status != "online" ||
+		item.Affected != 2 ||
+		!strings.Contains(item.Summary, "10.10.11.12") {
+		t.Fatalf("asset item mismatch: %+v", item)
+	}
+}
+
+func TestHTTPClientParameterizedVulnerabilityByIPUsesCurrentAPIPath(t *testing.T) {
+	// 漏洞 Batch D live 以 /api/threat_center 为当前路径，并归一化级别、状态和负责人字段。
+	var gotPath string
+	var gotIP string
+	var gotDataRange string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotIP = r.URL.Query().Get("ip")
+		gotDataRange = r.URL.Query().Get("data_range")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": map[string]any{
+				"items": []map[string]any{
+					{
+						"id":         "vuln-1",
+						"name":       "高危组件漏洞",
+						"level":      "3",
+						"statusCode": 10,
+						"risk_num":   4,
+						"describe":   "组件存在高危风险",
+						"person_info": map[string]any{
+							"name": "李四",
+						},
+					},
+				},
+				"page": 1, "per_page": 20, "total": 1,
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.ParameterizedQuery(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.CapabilityListVulnerabilitiesByIP, fobrain.ParameterizedQuery{IP: "10.10.11.12"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/threat_center" || gotIP != "10.10.11.12" || gotDataRange != "4" {
+		t.Fatalf("request mismatch path=%s ip=%s data_range=%s", gotPath, gotIP, gotDataRange)
+	}
+	if len(result.Items) != 1 {
+		t.Fatalf("items = %+v", result.Items)
+	}
+	item := result.Items[0]
+	if item.EntityRef != "vuln:fobrain:vuln-1" ||
+		item.DisplayName != "高危组件漏洞" ||
+		item.OwnerName != "李四" ||
+		item.Severity != "high" ||
+		item.Status != "open" ||
+		item.Affected != 4 {
+		t.Fatalf("vulnerability item mismatch: %+v", item)
+	}
+}
+
+func TestHTTPClientParameterizedQueryBuildsOwnerAndDepartmentFilters(t *testing.T) {
+	// owner/department 四个 Batch D 工具必须使用当前真实接口的 search_condition 参数形态。
+	tests := []struct {
+		name          string
+		capabilityID  string
+		query         fobrain.ParameterizedQuery
+		wantPath      string
+		wantCondition string
+		wantDataRange string
+	}{
+		{
+			name:          "asset owner",
+			capabilityID:  fobrain.CapabilityListAssetsByOwner,
+			query:         fobrain.ParameterizedQuery{PersonName: "张三"},
+			wantPath:      "/api/asset",
+			wantCondition: "oper_info.name",
+		},
+		{
+			name:          "vulnerability owner",
+			capabilityID:  fobrain.CapabilityListVulnerabilitiesByOwner,
+			query:         fobrain.ParameterizedQuery{PersonName: "张三"},
+			wantPath:      "/api/threat_center",
+			wantCondition: "person_info.name",
+			wantDataRange: "4",
+		},
+		{
+			name:          "asset department",
+			capabilityID:  fobrain.CapabilityListAssetsByDepartment,
+			query:         fobrain.ParameterizedQuery{DepartmentName: "安全部"},
+			wantPath:      "/api/asset",
+			wantCondition: "business_department.name.keyword",
+		},
+		{
+			name:          "vulnerability department",
+			capabilityID:  fobrain.CapabilityListVulnerabilitiesByDepartment,
+			query:         fobrain.ParameterizedQuery{DepartmentName: "安全部"},
+			wantPath:      "/api/threat_center",
+			wantCondition: "person_department.name.keyword",
+			wantDataRange: "4",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gotPath string
+			var gotConditions []string
+			var gotDataRange string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				gotDataRange = r.URL.Query().Get("data_range")
+				for _, encoded := range r.URL.Query()["search_condition"] {
+					var condition map[string]any
+					if err := json.Unmarshal([]byte(encoded), &condition); err != nil {
+						t.Fatalf("search_condition is not JSON: %v", err)
+					}
+					for key := range condition {
+						if key != "operation_type_string" {
+							gotConditions = append(gotConditions, key)
+						}
+					}
+				}
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"code": 0,
+					"data": map[string]any{"items": []map[string]any{}},
+				})
+			}))
+			defer server.Close()
+
+			client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+				BaseURL:    server.URL + "/api",
+				Timeout:    time.Second,
+				HTTPClient: server.Client(),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = client.ParameterizedQuery(context.Background(), fobrain.ResolvedCredential{
+				WorkspaceID: "ws_fobrain",
+				AuthParam:   "authorization",
+				APIToken:    "workspace-token",
+			}, tt.capabilityID, tt.query)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gotPath != tt.wantPath {
+				t.Fatalf("path = %q, want %q", gotPath, tt.wantPath)
+			}
+			if !containsString(gotConditions, tt.wantCondition) {
+				t.Fatalf("conditions = %+v, want %s", gotConditions, tt.wantCondition)
+			}
+			if gotDataRange != tt.wantDataRange {
+				t.Fatalf("data_range = %q, want %q", gotDataRange, tt.wantDataRange)
+			}
+		})
+	}
+}
+
+func TestHTTPClientParameterizedQueryFallsBackToLegacyV1Path(t *testing.T) {
+	// 真实环境优先 /api/asset；私有旧部署只暴露 /api/v1/asset 时允许 fallback。
+	var gotPaths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		if r.URL.Path == "/api/asset" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.URL.Path != "/api/v1/asset" {
+			t.Fatalf("unexpected path = %s", r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 0,
+			"data": map[string]any{"items": []map[string]any{}},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.ParameterizedQuery(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.CapabilityListAssetsByOwner, fobrain.ParameterizedQuery{PersonName: "张三"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(gotPaths, ",") != "/api/asset,/api/v1/asset" {
+		t.Fatalf("paths = %v", gotPaths)
+	}
+	if len(result.Items) != 0 {
+		t.Fatalf("empty result items = %+v", result.Items)
+	}
+}
+
+func containsString(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
+}
+
+func TestHTTPClientParameterizedQueryRejectsBusinessErrorWithoutRawLeak(t *testing.T) {
+	// 业务错误和 raw body 只能折叠成安全错误，不能把 token/header/raw 响应拼入错误。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code":    50001,
+			"message": "workspace-token authorization raw payload",
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ParameterizedQuery(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.CapabilityListAssetsByIP, fobrain.ParameterizedQuery{IP: "10.10.11.12"})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorExecutionFailed) {
+		t.Fatalf("err = %v, want connector execution failed", err)
+	}
+	for _, forbidden := range []string{"workspace-token", "authorization", "raw payload"} {
+		if strings.Contains(strings.ToLower(err.Error()), forbidden) {
+			t.Fatalf("safe error leaked %q: %s", forbidden, err.Error())
+		}
+	}
+}
+
 func TestHTTPClientMyPermissionsAllowsEmptyPermissionFields(t *testing.T) {
 	// Batch A 必须覆盖权限空态：真实当前用户接口可能只返回身份，不返回权限数组。
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

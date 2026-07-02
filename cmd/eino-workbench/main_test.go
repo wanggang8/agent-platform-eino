@@ -293,12 +293,9 @@ func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T
 		},
 	}
 
-	registry, invoker, err := capabilityRuntimeFromConfig(cfg)
+	_, invoker, err := capabilityRuntimeFromConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if _, ok := registry.Get(fobrain.CapabilityListAssetsByOwner); ok {
-		t.Fatalf("live HTTP fobrain must not register Batch D before live mapper is implemented: %+v", registry.List())
 	}
 	candidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
 		CapabilityID: fobrain.CapabilityCurrentUserContext,

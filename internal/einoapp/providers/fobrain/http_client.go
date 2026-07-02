@@ -35,6 +35,7 @@ type HTTPClient struct {
 }
 
 var _ FobrainClient = (*HTTPClient)(nil)
+var _ ParameterizedQueryClient = (*HTTPClient)(nil)
 
 // NewHTTPClient 创建 live HTTP client；只校验连接入口形态，不持有 token。
 func NewHTTPClient(config HTTPClientConfig) (*HTTPClient, error) {
@@ -179,11 +180,31 @@ func (client *HTTPClient) endpoint(path string) string {
 	} else if path == currentUserFallbackPath && strings.HasSuffix(basePath, "/api") {
 		endpoint.Path = basePath + "/user"
 	} else {
-		endpoint.Path = basePath + path
+		requestPath := strings.TrimLeft(strings.TrimSpace(path), "/")
+		if strings.HasSuffix(basePath, "/api/v1") && strings.HasPrefix(requestPath, "api/v1/") {
+			requestPath = strings.TrimPrefix(requestPath, "api/v1/")
+		} else if strings.HasSuffix(basePath, "/api") && strings.HasPrefix(requestPath, "api/") {
+			requestPath = strings.TrimPrefix(requestPath, "api/")
+		}
+		if basePath == "" {
+			endpoint.Path = "/" + requestPath
+		} else {
+			endpoint.Path = strings.TrimRight(basePath+"/"+requestPath, "/")
+		}
 	}
 	endpoint.RawQuery = ""
 	endpoint.Fragment = ""
 	return endpoint.String()
+}
+
+// endpointWithQuery 在统一路径归一化后附加查询参数，避免各工具手写 URL 拼接。
+func (client *HTTPClient) endpointWithQuery(path string, query url.Values) string {
+	parsed, err := url.Parse(client.endpoint(path))
+	if err != nil {
+		return client.endpoint(path)
+	}
+	parsed.RawQuery = query.Encode()
+	return parsed.String()
 }
 
 // unwrapPayloadMap 支持常见 {data:{...}} 包装，也支持顶层对象直接作为业务数据。
