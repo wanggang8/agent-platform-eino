@@ -891,6 +891,7 @@ Phase 8 是 P2 门禁，属于完整重构必做范围；未完成本阶段不�
 - 24 个只读工具必须按 Batch A-E 小批次恢复，每批先 mock contract，再 live pass report，再视觉和脱敏证据；无 live 环境时只能生成 blocking skip report，不能声明通过。
 - `docs/fixtures/fobrain/tool-matrix-24.json` 必须包含 `batch_gate`，schema 必须阻止未标批次的工具进入矩阵。
 - 每批都必须证明 Workbench 和 Action API 使用同源 Product Facts，StructuredResult 是唯一事实材料。
+- Batch E 开工前必须完成 `docs/fobrain-batch-e-interface-plan.md`，确认资产详情路径按 `network_type` 分流，业务风险走 `/threat_center/count`，威胁关联走 `/threat_center/relevance/list`，并明确 live 样本 ID 不进入提交物。
 
 任务级检查：
 

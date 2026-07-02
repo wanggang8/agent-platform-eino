@@ -47,7 +47,10 @@
     "asset_detail": {
       "type": "object",
       "required": ["asset_id"],
-      "properties": {"asset_id": {"type": "string"}},
+      "properties": {
+        "asset_id": {"type": "string"},
+        "network_type": {"enum": ["internal", "external", "device", "domain"]}
+      },
       "additionalProperties": false
     },
     "vulnerability_detail": {

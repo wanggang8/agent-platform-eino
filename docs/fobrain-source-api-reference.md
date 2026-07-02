@@ -51,6 +51,17 @@
 
 注意：旧源码 `ThreatListRequest.Ip` 会让 controller 在 `len(params.Ip)>0` 时强制 `data_range=1`，这是 IP 画像场景的历史行为。Batch D 验收要求查询非回收站完整范围，因此漏洞按 IP 查询不得发送 `ip=<ip>` query 参数，必须使用 `search_condition` 约束 `ip` 字段。
 
+## Batch E 查询映射
+
+Batch E 详情和风险关联的字段级计划见 `docs/fobrain-batch-e-interface-plan.md`。实现时必须遵循以下已确认接口证据：
+
+| 能力 | 标准接口 | 参数 | 说明 |
+| --- | --- | --- | --- |
+| `tool.fobrain.get_asset_detail` | `GET /api/v1/internal_asset/:id`、`/api/v1/external_ip_asset/:id`、`/api/v1/device/:id`、`/api/v1/domain_asset/:id` | path `id`，可选 `network_type` 决定路径 | 旧 adapter 默认未知类型走 internal；新实现不得只硬编码一种资产类型而不记录 fallback。 |
+| `tool.fobrain.get_vulnerability_detail` | `GET /api/v1/threat_center/:id` | path `id` | 成功响应为 `{code,message,data}`，不是分页列表。 |
+| `tool.fobrain.business_risk_summary` | `POST /api/v1/threat_center/count` | body 数组，`count_name=business_risk`、`aggregation_field=business.name.keyword`、`data_range=4`、`search_condition` | 输出只保留安全统计 bucket，不保留 raw request body。 |
+| `tool.fobrain.threat_relevance_list` | `GET /api/v1/threat_center/relevance/list` | `page`、`per_page`、`keyword`、`vul_name`，可选 `ip`、`business_name` | `vulnerability_name` 需同时映射为 `keyword` 与 `vul_name`。 |
+
 ## 字段与安全边界
 
 只允许把以下内容作为新项目 `StructuredResult` 的安全事实材料：
