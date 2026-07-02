@@ -112,6 +112,18 @@ func TestInvocationRequiresWorkspaceContext(t *testing.T) {
 	}
 }
 
+func TestStaticCredentialResolverRequiresExplicitAuthParam(t *testing.T) {
+	resolver := fobrain.StaticCredentialResolver{
+		WorkspaceID: "ws_fobrain",
+		APIToken:    "local-secret",
+	}
+
+	_, err := resolver.ResolveFobrainCredential(context.Background(), "ws_fobrain", boundFobrainCredential("ws_fobrain"))
+	if !fobrain.HasReason(err, capabilities.PolicyReasonCredentialMissing) {
+		t.Fatalf("err = %v, want credential missing for absent auth param", err)
+	}
+}
+
 func TestConnectorUnavailableBlocksClientCall(t *testing.T) {
 	client := &recordingCurrentUserClient{}
 	provider := fobrain.NewProvider(fobrain.ProviderConfig{

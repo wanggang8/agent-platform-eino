@@ -652,6 +652,11 @@ func TestFobrainConfigValidationRejectsInvalidFields(t *testing.T) {
     owner_scope: "workspace"
     auth_param: "Authorization: Bearer"
     api_token: "fobrain-local-secret"`), wantErr: "credential.auth_param"},
+		{name: "missing auth param", fobrainBody: defaultFobrainConfigBody(`credential:
+    status: "bound"
+    display_ref: "bound:fobrain:local"
+    owner_scope: "workspace"
+    api_token: "fobrain-local-secret"`), wantErr: "credential.auth_param"},
 		{name: "live mode requires authorization auth param", fobrainBody: `
 enabled: true
 connector_id: "fobrain"
@@ -677,6 +682,7 @@ credential:
     status: "bound"
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
+    auth_param: "authorization"
 connector_status:
     mode: "live"
     available: true`, wantErr: "credential.api_token"},
@@ -704,6 +710,7 @@ credential:
     status: "bound"
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
+    auth_param: "authorization"
     api_token: "fobrain-local-secret"
 connector_status:
     mode: "live"

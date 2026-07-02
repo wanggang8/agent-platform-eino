@@ -887,7 +887,7 @@ Phase 8 是 P2 门禁，属于完整重构必做范围；未完成本阶段不�
 
 - 固定 Fobrain live read 使用 workspace 共享 token，不实现 per-user/per-tool token。
 - 固定 `auth_param` 来自配置文件，当前真实环境参数名为 `authorization`，token 值只来自 ignored local config。
-- 明确 live client 默认把 `auth_param` 作为 header 名发送原始 token；如需 query/body 参数必须新增 ADR。
+- 明确 live client 只接受显式配置的 `auth_param`，并把它作为 header 名发送原始 token；缺失时必须阻断请求，不能在 provider 内默认；如需 query/body 参数必须新增 ADR。
 - 24 个只读工具必须按 Batch A-E 小批次恢复，每批先 mock contract，再 live pass report，再视觉和脱敏证据；无 live 环境时只能生成 blocking skip report，不能声明通过。
 - `docs/fixtures/fobrain/tool-matrix-24.json` 必须包含 `batch_gate`，schema 必须阻止未标批次的工具进入矩阵。
 - 每批都必须证明 Workbench 和 Action API 使用同源 Product Facts，StructuredResult 是唯一事实材料。

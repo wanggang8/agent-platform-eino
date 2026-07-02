@@ -12,7 +12,7 @@ Phase 5 已完成 Fobrain provider PoC，但仍只允许 mock connector mode。�
 - `auth_param` 只是参数名；真实 token 只允许写入已忽略的 `configs/eino-workbench.local.yaml` 的 `fobrain.credential.api_token`。
 - 当前阶段只支持 workspace 共享 token，不实现 per-user、per-tool 或 OAuth delegation。
 - workspace 请求必须与凭据绑定的 `workspace_id` 一致；不一致返回 `credential_scope_denied`。
-- live HTTP client 默认把 `auth_param` 作为请求 header 名，发送原始 token 值，不添加 `Bearer` 前缀。
+- live HTTP client 只接受显式配置的 `auth_param`，并把它作为请求 header 名发送原始 token 值，不添加 `Bearer` 前缀；缺失时必须阻断请求，不能在 provider 内默认成 `authorization`。
 - token、raw provider payload、Authorization 值不得进入 Product Facts、StructuredResult、Workbench、Action API、audit、replay、日志或验收报告。
 - 24 个只读工具按批次恢复；每批必须先通过 mock contract，再生成 live pass report。无 live 环境时只能生成 blocking skip report，最终 24/24 + connector 全部 live pass 后才可声明 Fobrain 产品能力恢复。
 

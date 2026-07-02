@@ -405,9 +405,6 @@ func (cfg *FobrainConfig) applyDerivedDefaults() {
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 10 * time.Second
 	}
-	if cfg.Credential.AuthParam == "" {
-		cfg.Credential.AuthParam = "authorization"
-	}
 	cfg.CredentialBinding = CredentialBinding{
 		SchemaVersion: "eino.provider_credential_binding.v1",
 		WorkspaceID:   safeConfigIdentifierOrDefault(cfg.WorkspaceID, "workspace"),

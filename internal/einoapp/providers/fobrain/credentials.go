@@ -2,6 +2,7 @@ package fobrain
 
 import (
 	"context"
+	"strings"
 
 	"agent-platform-eino/internal/einoapp/capabilities"
 )
@@ -37,9 +38,18 @@ func (resolver StaticCredentialResolver) ResolveFobrainCredential(_ context.Cont
 	if resolver.APIToken == "" {
 		return ResolvedCredential{}, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 凭据未配置")
 	}
-	authParam := resolver.AuthParam
+	authParam := strings.TrimSpace(resolver.AuthParam)
 	if authParam == "" {
-		authParam = "authorization"
+		return ResolvedCredential{}, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 认证参数未配置")
 	}
 	return ResolvedCredential{WorkspaceID: workspaceID, AuthParam: authParam, APIToken: resolver.APIToken}, nil
+}
+
+// explicitAuthParam 读取配置解析后的认证参数名；缺失时阻断请求，避免 provider 内部硬编码默认 header。
+func explicitAuthParam(credential ResolvedCredential) (string, error) {
+	authParam := strings.TrimSpace(credential.AuthParam)
+	if authParam == "" {
+		return "", NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 认证参数未配置")
+	}
+	return authParam, nil
 }

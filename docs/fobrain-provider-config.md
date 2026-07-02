@@ -55,7 +55,7 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - `credential.api_token` 只代表当前 workspace 的 Fobrain token。
 - 不从前端、Action API 请求或用户消息中接收 token。
 - 不按单个工具、单个用户或单次 run 生成独立 token。
-- live client 应把 `auth_param` 当作 header 名发送；如果后续确认真实 API 使用 query/body 参数，必须先新增 ADR。
+- live client 只接受显式配置的 `auth_param`，并把它当作 header 名发送；缺失时必须阻断请求，不能在 provider 内默认成 `authorization`；如果后续确认真实 API 使用 query/body 参数，必须先新增 ADR。
 - Phase 8 live acceptance 配置必须设置 `auth_param: "authorization"`；其它认证参数名需要先新增 ADR。
 - `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
 - `connector_status.mode=live` 时 `base_url` 必须使用 HTTPS；只有 `127.0.0.1`、`localhost`、`::1` 的 HTTP URL 可作为本地验收代理入口。
@@ -71,7 +71,7 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - `capabilities.CredentialBinding`：只包含 `schema_version`、`workspace_id`、`system=fobrain`、`status`、`display_ref`、`owner_scope`、`audit_ref`。
 - `capabilities.ConnectorStatus`：只表达 available/unavailable。
 - `FobrainClientConfig`：只在 provider client 内部持有 `base_url`、`timeout` 和 TLS 兼容开关；secret token 只由 `CredentialResolver` 解析成 `ResolvedCredential` 后进入单次请求。
-- `auth_param`：只作为 provider client 认证参数名，当前 live client 应发送 `authorization: <api_token>`；不要硬编码旧项目默认 header。
+- `auth_param`：只作为 provider client 认证参数名，当前 live client 应发送显式配置的 `authorization: <api_token>`；不要硬编码旧项目默认 header，也不要在缺失配置时自动补默认值。
 
 ## 脱敏规则
 

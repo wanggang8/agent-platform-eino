@@ -134,9 +134,9 @@ func (client *HTTPClient) firstSuccessfulBatchDPath(ctx context.Context, credent
 	if strings.TrimSpace(credential.APIToken) == "" {
 		return nil, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 凭据未配置")
 	}
-	authParam := strings.TrimSpace(credential.AuthParam)
-	if authParam == "" {
-		authParam = "authorization"
+	authParam, err := explicitAuthParam(credential)
+	if err != nil {
+		return nil, err
 	}
 	for _, path := range paths {
 		payload, ok, err := client.batchDGetAtPath(ctx, credential, authParam, path, query)

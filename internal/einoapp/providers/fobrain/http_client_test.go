@@ -250,6 +250,39 @@ func TestHTTPClientCurrentUserContextFoldsErrorsWithoutLeakingToken(t *testing.T
 	}
 }
 
+func TestHTTPClientRequiresExplicitAuthParamBeforeRequest(t *testing.T) {
+	// auth_param 必须来自配置解析后的凭据；缺失时不能静默默认 authorization，也不能触达网络。
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests++
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"display_name": "王五"}})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	credential := fobrain.ResolvedCredential{WorkspaceID: "ws_fobrain", APIToken: "workspace-token"}
+
+	_, currentErr := client.CurrentUserContext(context.Background(), credential)
+	_, batchDErr := client.ParameterizedQuery(context.Background(), credential, fobrain.CapabilityListAssetsByIP, fobrain.ParameterizedQuery{IP: "10.10.11.12"})
+	_, batchEErr := client.AssetDetail(context.Background(), credential, fobrain.AssetDetailQuery{AssetID: "asset-1", NetworkType: "internal"})
+
+	for name, err := range map[string]error{"current": currentErr, "batchD": batchDErr, "batchE": batchEErr} {
+		if !fobrain.HasReason(err, capabilities.PolicyReasonCredentialMissing) {
+			t.Fatalf("%s err = %v, want credential missing", name, err)
+		}
+	}
+	if requests != 0 {
+		t.Fatalf("missing auth_param must block before network, requests=%d", requests)
+	}
+}
+
 func TestHTTPClientMyPermissionsUsesCurrentUserEndpoint(t *testing.T) {
 	// my_permissions 从当前用户接口读取权限数组和数据范围摘要，不新增未经确认的外部 endpoint。
 	var gotPath string

@@ -5,6 +5,7 @@
 ## 认证与凭据
 
 - 认证参数名来自 `fobrain.credential.auth_param`，当前为 `authorization`。
+- `auth_param` 必须在配置文件中显式声明；provider、credential resolver 和 HTTP client 不得自动补默认值。
 - token 来自 ignored 本地配置 `configs/eino-workbench.local.yaml` 的 `fobrain.credential.api_token`。
 - 当前只支持 workspace 共享 token；不做单用户 token、单工具 token 或前端传 token。
 - live client 只在 provider 边界持有 token；所有产品出口只能展示安全摘要。
