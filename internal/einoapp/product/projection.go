@@ -32,14 +32,16 @@ type WorkbenchView struct {
 
 // TimelineItem 是主时间线条目，必须由 Product Facts 派生。
 type TimelineItem struct {
-	ItemID           string         `json:"item_id"`
-	Kind             string         `json:"kind"`
-	ToolCallID       string         `json:"tool_call_id,omitempty"`
-	PendingID        string         `json:"pending_id,omitempty"`
-	Content          string         `json:"content,omitempty"`
-	Status           string         `json:"status,omitempty"`
-	SafeSummary      string         `json:"safe_summary,omitempty"`
-	StructuredResult map[string]any `json:"structured_result,omitempty"`
+	ItemID           string                   `json:"item_id"`
+	Kind             string                   `json:"kind"`
+	ToolCallID       string                   `json:"tool_call_id,omitempty"`
+	PendingID        string                   `json:"pending_id,omitempty"`
+	Content          string                   `json:"content,omitempty"`
+	Status           string                   `json:"status,omitempty"`
+	SafeSummary      string                   `json:"safe_summary,omitempty"`
+	InputMode        string                   `json:"input_mode,omitempty"`
+	Candidates       []facts.PendingCandidate `json:"candidates,omitempty"`
+	StructuredResult map[string]any           `json:"structured_result,omitempty"`
 }
 
 // Inspector 是右侧证据/结构化/运行/审计面板摘要。
@@ -105,11 +107,13 @@ type ResultCard struct {
 
 // WaitingState 是 ActionResult 暴露给非 Workbench 客户端的等待态摘要。
 type WaitingState struct {
-	Kind         string   `json:"kind"`
-	Question     string   `json:"question"`
-	ApprovalRefs []string `json:"approval_refs,omitempty"`
-	ResumeRefs   []string `json:"resume_refs,omitempty"`
-	RiskSummary  string   `json:"risk_summary,omitempty"`
+	Kind         string                   `json:"kind"`
+	Question     string                   `json:"question"`
+	ApprovalRefs []string                 `json:"approval_refs,omitempty"`
+	ResumeRefs   []string                 `json:"resume_refs,omitempty"`
+	RiskSummary  string                   `json:"risk_summary,omitempty"`
+	InputMode    string                   `json:"input_mode,omitempty"`
+	Candidates   []facts.PendingCandidate `json:"candidates,omitempty"`
 }
 
 // ReplayView 是从 Product Facts 重建的回放视图。
@@ -431,11 +435,13 @@ func pendingTimelineItem(pending facts.PendingInteraction) TimelineItem {
 		content = pending.RiskSummary
 	}
 	return TimelineItem{
-		ItemID:    pending.PendingID,
-		Kind:      kind,
-		PendingID: pending.PendingID,
-		Content:   content,
-		Status:    string(pending.Status),
+		ItemID:     pending.PendingID,
+		Kind:       kind,
+		PendingID:  pending.PendingID,
+		Content:    content,
+		Status:     string(pending.Status),
+		InputMode:  string(pending.InputMode),
+		Candidates: pending.Candidates,
 	}
 }
 
@@ -688,6 +694,8 @@ func waitingState(pending facts.PendingInteraction) *WaitingState {
 		Kind:        string(pending.Kind),
 		Question:    pending.Question,
 		RiskSummary: pending.RiskSummary,
+		InputMode:   string(pending.InputMode),
+		Candidates:  pending.Candidates,
 	}
 	if state.Question == "" && pending.Kind == facts.PendingKindApproval {
 		state.Question = "是否批准继续执行？"
@@ -711,15 +719,23 @@ func waitingReason(pending facts.PendingInteraction) string {
 }
 
 func pendingPatch(pending facts.PendingInteraction) map[string]any {
-	return map[string]any{
+	patch := map[string]any{
 		"schema_version": "eino_workbench_pending_interaction.v1",
 		"pending_id":     pending.PendingID,
+		"run_id":         pending.RunID,
 		"kind":           string(pending.Kind),
 		"status":         string(pending.Status),
 		"question":       pending.Question,
 		"risk_summary":   pending.RiskSummary,
 		"resume_ref":     pending.ResumeRef,
 	}
+	if pending.InputMode != "" {
+		patch["input_mode"] = string(pending.InputMode)
+	}
+	if len(pending.Candidates) > 0 {
+		patch["candidates"] = pending.Candidates
+	}
+	return patch
 }
 
 func nonZeroTime(value time.Time, fallback time.Time) time.Time {

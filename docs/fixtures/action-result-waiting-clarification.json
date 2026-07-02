@@ -11,7 +11,30 @@
   "waiting": {
     "kind": "clarification",
     "question": "请选择要查询的人员",
-    "resume_refs": ["resume_ref_demo"]
+    "resume_refs": ["resume_ref_demo"],
+    "input_mode": "single_choice",
+    "candidates": [
+      {
+        "candidate_ref": "candidate:fobrain:person:1",
+        "label": "张三",
+        "description": "安全部 / 安全运营",
+        "entity_type": "person",
+        "safe_fields": [
+          {"label": "部门", "value": "安全部"},
+          {"label": "角色", "value": "安全运营"}
+        ]
+      },
+      {
+        "candidate_ref": "candidate:fobrain:person:2",
+        "label": "张三",
+        "description": "研发部 / 后端工程师",
+        "entity_type": "person",
+        "safe_fields": [
+          {"label": "部门", "value": "研发部"},
+          {"label": "角色", "value": "后端工程师"}
+        ]
+      }
+    ]
   },
   "approval_refs": [],
   "resume_refs": ["resume_ref_demo"],

@@ -174,6 +174,70 @@ func TestPendingResumeRefIsConsumedOnce(t *testing.T) {
 	}
 }
 
+func TestPendingClarificationCandidatesPersistThroughSnapshotAndResume(t *testing.T) {
+	repository := openTestRepository(t)
+	ctx := context.Background()
+	now := time.Unix(310, 0).UTC()
+
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-clarify",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusWaiting,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	candidates := []facts.PendingCandidate{
+		{
+			CandidateRef: "candidate:fobrain:person:1",
+			Label:        "张三",
+			Description:  "安全部 / 安全运营",
+			EntityType:   "person",
+			SafeFields: []facts.PendingCandidateField{
+				{Label: "部门", Value: "安全部"},
+				{Label: "角色", Value: "安全运营"},
+			},
+		},
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-clarify-1",
+		RunID:         "run-clarify",
+		Kind:          facts.PendingKindClarification,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-clarify-1",
+		CheckpointRef: "checkpoint-safe-clarify-1",
+		Question:      "请选择要查询的人员",
+		InputMode:     facts.PendingInputModeSingleChoice,
+		Candidates:    candidates,
+		ExpiresAt:     now.Add(time.Hour),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// SQLite 是 Product Facts 事实源，snapshot 和 resume 消费都不能丢失 clarification 候选。
+	snapshot, err := repository.GetSnapshot(ctx, "run-clarify")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.PendingInteractions) != 1 ||
+		snapshot.PendingInteractions[0].InputMode != facts.PendingInputModeSingleChoice ||
+		len(snapshot.PendingInteractions[0].Candidates) != 1 ||
+		snapshot.PendingInteractions[0].Candidates[0].SafeFields[0].Value != "安全部" {
+		t.Fatalf("snapshot pending candidates mismatch: %+v", snapshot.PendingInteractions)
+	}
+
+	pending, err := repository.ConsumeResumeRef(ctx, "resume-safe-clarify-1", facts.PendingStatusSubmitted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pending.Status != facts.PendingStatusConsumed ||
+		pending.InputMode != facts.PendingInputModeSingleChoice ||
+		len(pending.Candidates) != 1 {
+		t.Fatalf("consumed clarification candidates mismatch: %+v", pending)
+	}
+}
+
 func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 	repository := openTestRepository(t)
 	ctx := context.Background()

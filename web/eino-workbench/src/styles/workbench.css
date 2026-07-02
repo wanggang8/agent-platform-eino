@@ -419,6 +419,18 @@
   padding: 8px 10px;
 }
 
+.candidate-list button {
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+  text-align: left;
+}
+
+.candidate-list button span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .pending-actions .primary {
   border-color: var(--warning);
   background: rgb(245 166 35 / 18%);

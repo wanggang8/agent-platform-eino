@@ -163,6 +163,91 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 	}
 }
 
+func TestFactsProjectionProjectsClarificationCandidatesFromProductFacts(t *testing.T) {
+	// clarification 候选必须从 Product Facts 同源投影，不能由 Workbench 或 Action API 各自拼装。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	now := time.Unix(350, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-clarify",
+		WorkspaceID: "ws-demo",
+		Status:      facts.RunStatusWaiting,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	candidates := []facts.PendingCandidate{
+		{
+			CandidateRef: "candidate:fobrain:person:1",
+			Label:        "张三",
+			Description:  "安全部 / 安全运营",
+			EntityType:   "person",
+			SafeFields: []facts.PendingCandidateField{
+				{Label: "部门", Value: "安全部"},
+				{Label: "角色", Value: "安全运营"},
+			},
+		},
+		{
+			CandidateRef: "candidate:fobrain:person:2",
+			Label:        "张三",
+			Description:  "研发部 / 后端工程师",
+			EntityType:   "person",
+		},
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-clarify-1",
+		RunID:         "run-clarify",
+		Kind:          facts.PendingKindClarification,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-clarify-1",
+		CheckpointRef: "checkpoint-safe-clarify-1",
+		Question:      "请选择要查询的人员",
+		InputMode:     facts.PendingInputModeSingleChoice,
+		Candidates:    candidates,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	projection := product.NewFactsProjection(repository)
+	view, err := projection.RunSnapshot(ctx, "ws-demo", "run-clarify")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(view.Timeline) != 1 || view.Timeline[0].Kind != "clarification_card" || view.Timeline[0].InputMode != string(facts.PendingInputModeSingleChoice) || len(view.Timeline[0].Candidates) != 2 {
+		t.Fatalf("clarification card candidates mismatch: %+v", view.Timeline)
+	}
+
+	action, err := projection.ActionResult(ctx, "ws-demo", "action-clarify", "run-clarify")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if action.Waiting == nil || action.Waiting.InputMode != string(facts.PendingInputModeSingleChoice) || len(action.Waiting.Candidates) != 2 || len(action.ResumeRefs) != 1 {
+		t.Fatalf("action waiting candidates mismatch: %+v", action)
+	}
+
+	events, err := projection.StreamEvents(ctx, "ws-demo", "run-clarify")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pendingPatch map[string]any
+	for _, event := range events {
+		if event.Type == "pending.updated" {
+			pendingPatch = event.Pending
+		}
+	}
+	if pendingPatch == nil || pendingPatch["input_mode"] != string(facts.PendingInputModeSingleChoice) {
+		t.Fatalf("pending patch missing input mode: %+v", events)
+	}
+	if pendingPatch["run_id"] != "run-clarify" {
+		t.Fatalf("pending patch missing run_id: %+v", pendingPatch)
+	}
+	patchCandidates, ok := pendingPatch["candidates"].([]facts.PendingCandidate)
+	if !ok || len(patchCandidates) != 2 {
+		t.Fatalf("pending patch candidates mismatch: %#v", pendingPatch["candidates"])
+	}
+}
+
 func TestFactsProjectionDoesNotSynthesizeSpecificMissingRun(t *testing.T) {
 	// current view 可以有空态；指定 run 的 snapshot/action/stream 不能伪造不存在的 Product Facts。
 	projection := product.NewFactsProjection(facts.NewMemoryRepository())

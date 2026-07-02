@@ -178,6 +178,20 @@ export type InspectorTab = "evidence" | "structured" | "runtime" | "audit";
 export type DisplayType = "entity_collection" | "entity_detail" | "metrics_summary" | "operation_result" | "connector_status" | "entity_resolution";
 export type StructuredStatus = "resolved" | "waiting" | "pending_approval" | "not_found" | "empty" | "failed" | "partial";
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
+export type InputMode = "single_choice" | "multi_choice" | "free_text" | "mixed";
+
+export type PendingCandidateField = {
+  readonly label: string;
+  readonly value: string;
+};
+
+export type PendingCandidate = {
+  readonly candidate_ref: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly entity_type: "person" | "asset" | "vulnerability" | "department" | "business";
+  readonly safe_fields?: readonly PendingCandidateField[];
+};
 
 export type DisplayField = {
   readonly key?: string;
@@ -265,6 +279,8 @@ export type FobrainStructuredResult = {
     readonly actions?: readonly StructuredAction[];
     readonly resume_refs?: readonly string[];
     readonly candidate_refs?: readonly string[];
+    readonly resolved_entity?: PendingCandidate;
+    readonly candidates?: readonly PendingCandidate[];
   };
   readonly metadata: {
     readonly safe: true;
@@ -296,6 +312,8 @@ export type TimelineItem = {
   readonly structured_result?: StructuredResult;
   readonly status?: string;
   readonly safe_summary?: string;
+  readonly input_mode?: InputMode;
+  readonly candidates?: readonly PendingCandidate[];
 };
 
 export type WorkbenchInspector = {
@@ -353,6 +371,8 @@ export type ActionResult = {
     readonly target_summary?: string;
     readonly approval_refs?: readonly string[];
     readonly resume_refs?: readonly string[];
+    readonly input_mode?: InputMode;
+    readonly candidates?: readonly PendingCandidate[];
   };
   readonly audit_refs: readonly string[];
 };

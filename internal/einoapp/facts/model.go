@@ -20,6 +20,9 @@ type PendingKind string
 // PendingStatus 表示 approval/clarification 的可恢复状态。
 type PendingStatus string
 
+// PendingInputMode 表示 clarification 需要用户提供输入的交互形态。
+type PendingInputMode string
+
 // IdempotencyScope 区分 resume 和 mutation 的幂等键空间。
 type IdempotencyScope string
 
@@ -56,6 +59,11 @@ const (
 	PendingStatusExpired   PendingStatus = "expired"
 	PendingStatusConsumed  PendingStatus = "consumed"
 
+	PendingInputModeSingleChoice PendingInputMode = "single_choice"
+	PendingInputModeMultiChoice  PendingInputMode = "multi_choice"
+	PendingInputModeFreeText     PendingInputMode = "free_text"
+	PendingInputModeMixed        PendingInputMode = "mixed"
+
 	IdempotencyScopeResume   IdempotencyScope = "resume"
 	IdempotencyScopeMutation IdempotencyScope = "mutation"
 )
@@ -74,6 +82,16 @@ func (status RunStatus) Valid() bool {
 func (status RunStatus) Terminal() bool {
 	switch status {
 	case RunStatusSucceeded, RunStatusFailed, RunStatusCancelled, RunStatusStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Valid 校验 pending input mode 是否属于 JSON Schema 允许集合。
+func (mode PendingInputMode) Valid() bool {
+	switch mode {
+	case PendingInputModeSingleChoice, PendingInputModeMultiChoice, PendingInputModeFreeText, PendingInputModeMixed:
 		return true
 	default:
 		return false
@@ -129,6 +147,21 @@ type StructuredResultRef struct {
 	SafeSummary   string
 }
 
+// PendingCandidateField 是 clarification 候选可展示的安全字段，不包含 provider 原始字段名和值。
+type PendingCandidateField struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+// PendingCandidate 是 Product Facts 中可恢复的澄清候选，仅保存安全引用和安全展示字段。
+type PendingCandidate struct {
+	CandidateRef string                  `json:"candidate_ref"`
+	Label        string                  `json:"label"`
+	Description  string                  `json:"description,omitempty"`
+	EntityType   string                  `json:"entity_type"`
+	SafeFields   []PendingCandidateField `json:"safe_fields,omitempty"`
+}
+
 // PendingInteraction 是 approval/clarification 的产品级等待事实。
 // CheckpointRef 只能是内部安全引用，不能是 raw Eino checkpoint id。
 type PendingInteraction struct {
@@ -140,6 +173,8 @@ type PendingInteraction struct {
 	CheckpointRef string
 	Question      string
 	RiskSummary   string
+	InputMode     PendingInputMode
+	Candidates    []PendingCandidate
 	ExpiresAt     time.Time
 }
 

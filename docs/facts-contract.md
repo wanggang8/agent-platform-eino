@@ -111,10 +111,13 @@
 | `kind` | execution | 是 | approval / clarification |
 | `status` | Product Facts | 是 | 使用 PendingInteraction.status |
 | `question` / `risk_summary` | Safety Gate | 是 | 澄清问题或审批风险摘要 |
-| `options` | Product Mapper | 是 | 候选项或审批动作 |
+| `input_mode` | Product Mapper | 是 | clarification 输入形态：single_choice / multi_choice / free_text / mixed |
+| `candidates` | Product Mapper | 是 | 安全候选项，只包含 `candidate_ref`、label、description、entity_type、safe_fields |
 | `resume_ref` | secure ref store | 是 | 不可复用安全引用 |
 | `checkpoint_ref` | checkpoint store | 否 | 不暴露给前端/API |
 | `expires_at` | policy | 是 | 可选 |
+
+clarification 候选不得包含 raw provider id、手机号、邮箱、credential、token 或 provider 原始字段。Workbench timeline、ActionResult waiting、SSE pending patch、replay/audit 必须从同一个 `PendingInteraction` 投影候选。
 
 ### AuditEvent
 

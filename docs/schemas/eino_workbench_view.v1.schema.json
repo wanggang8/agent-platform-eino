@@ -29,7 +29,9 @@
           ]
         },
         "status": {"type": "string"},
-        "safe_summary": {"type": "string"}
+        "safe_summary": {"type": "string"},
+        "input_mode": {"enum": ["single_choice", "multi_choice", "free_text", "mixed"]},
+        "candidates": {"type": "array", "items": {"$ref": "eino_workbench_pending_interaction.v1.schema.json#/$defs/candidate"}}
       },
       "allOf": [
         {
@@ -53,9 +55,21 @@
             "properties": {
               "pending_id": true,
               "status": true,
-              "content": true
+              "content": true,
+              "input_mode": true,
+              "candidates": true
             },
             "required": ["pending_id", "status", "content"]
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"const": "clarification_card"}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "input_mode": true,
+              "candidates": true
+            },
+            "required": ["input_mode"]
           }
         },
         {

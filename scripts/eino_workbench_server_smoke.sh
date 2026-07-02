@@ -32,7 +32,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-clarification)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
@@ -40,7 +40,7 @@ case "${scenario}" in
   action-consistency|replay|budget)
     not_implemented "Phase 7"
     ;;
-  fobrain-readonly|fobrain-clarification|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
+  fobrain-readonly|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
     not_implemented "Phase 8"
     ;;
   "")
@@ -55,6 +55,16 @@ case "${scenario}" in
 esac
 
 cd "$(dirname "$0")/.."
+
+if [[ "${scenario}" == "fobrain-clarification" ]]; then
+  # Phase 8.4 先验证实体消歧和 clarification 同源投影，不声明 24 个真实只读工具已恢复。
+  go test ./internal/einoapp/providers/fobrain -run Disambiguation -count=1
+  go test ./internal/einoapp/execution -run Clarification -count=1
+  go test ./internal/einoapp/product -run ClarificationCandidates -count=1
+  npm run eino-workbench:contract-test
+  echo "fobrain-clarification smoke passed"
+  exit 0
+fi
 
 write_skip_report() {
   local reason="$1"

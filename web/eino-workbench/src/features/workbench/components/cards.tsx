@@ -51,6 +51,7 @@ export function ApprovalCard({ item }: { readonly item: TimelineItem }) {
 
 // ClarificationCard 展示澄清等待态，提交后的状态由后端 Product Facts 决定。
 export function ClarificationCard({ item }: { readonly item: TimelineItem }) {
+  const candidates = item.candidates ?? [];
   return (
     <article className="pending-card clarification" data-testid="clarification-card">
       <div className="pending-icon"><Hourglass size={18} /></div>
@@ -60,8 +61,12 @@ export function ClarificationCard({ item }: { readonly item: TimelineItem }) {
         <p>请确认候选对象后继续，提交后结果会变为只读记录。</p>
       </div>
       <div className="candidate-list" aria-label="候选对象">
-        <button type="button">生产网段资产</button>
-        <button type="button">办公网段资产</button>
+        {candidates.length > 0 ? candidates.map((candidate) => (
+          <button key={candidate.candidate_ref} type="button">
+            <strong>{candidate.label}</strong>
+            {candidate.description ? <span>{candidate.description}</span> : null}
+          </button>
+        )) : <button type="button">等待补充信息</button>}
       </div>
     </article>
   );

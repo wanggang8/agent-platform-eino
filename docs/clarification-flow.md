@@ -108,7 +108,11 @@ waiting
   "waiting": {
     "kind": "clarification",
     "question": "请选择要查询的人员",
-    "resume_refs": ["resume_ref_..."]
+    "resume_refs": ["resume_ref_..."],
+    "input_mode": "single_choice",
+    "candidates": [
+      {"candidate_ref": "candidate:fobrain:person:1", "label": "张三", "entity_type": "person"}
+    ]
   }
 }
 ```

@@ -42,7 +42,10 @@ type RunnerEvent struct {
 	PendingStatus string
 	ResumeRef     string
 	CheckpointRef string
+	Question      string
 	RiskSummary   string
+	InputMode     string
+	Candidates    []facts.PendingCandidate
 
 	Status string
 }
@@ -119,7 +122,10 @@ func (mapper EventMapper) Map(ctx context.Context, event RunnerEvent) error {
 			Status:        facts.PendingStatus(event.PendingStatus),
 			ResumeRef:     event.ResumeRef,
 			CheckpointRef: event.CheckpointRef,
+			Question:      event.Question,
 			RiskSummary:   event.RiskSummary,
+			InputMode:     facts.PendingInputMode(event.InputMode),
+			Candidates:    event.Candidates,
 		})
 	case RunnerEventLifecycle:
 		return mapper.repository.UpdateRunStatus(ctx, event.RunID, facts.RunStatus(event.Status), event.SafeSummary, mapper.now())

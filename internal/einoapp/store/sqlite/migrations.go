@@ -64,6 +64,8 @@ var migrations = []string{
 		checkpoint_ref TEXT NOT NULL,
 		question TEXT NOT NULL DEFAULT '',
 		risk_summary TEXT NOT NULL DEFAULT '',
+		input_mode TEXT NOT NULL DEFAULT '',
+		candidates_json TEXT NOT NULL DEFAULT '[]',
 		expires_at TEXT NOT NULL DEFAULT '',
 		FOREIGN KEY(run_id) REFERENCES runs(run_id)
 	);`,
@@ -101,6 +103,40 @@ func migrate(ctx context.Context, db *sql.DB) error {
 			return err
 		}
 	}
+	if err := addColumnIfMissing(ctx, db, "pending_interactions", "input_mode", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := addColumnIfMissing(ctx, db, "pending_interactions", "candidates_json", "TEXT NOT NULL DEFAULT '[]'"); err != nil {
+		return err
+	}
 	_, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO schema_versions(version) VALUES (?)`, schemaVersion)
+	return err
+}
+
+// addColumnIfMissing 兼容已有本地 SQLite 文件，避免 Product Facts 新字段只在全新库中存在。
+func addColumnIfMissing(ctx context.Context, db *sql.DB, tableName string, columnName string, columnDDL string) error {
+	rows, err := db.QueryContext(ctx, `PRAGMA table_info(`+tableName+`)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name string
+		var columnType string
+		var notNull int
+		var defaultValue sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &pk); err != nil {
+			return err
+		}
+		if name == columnName {
+			return rows.Err()
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	_, err = db.ExecContext(ctx, `ALTER TABLE `+tableName+` ADD COLUMN `+columnName+` `+columnDDL)
 	return err
 }

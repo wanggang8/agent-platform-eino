@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -231,12 +232,18 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 	if facts.ContainsUnsafeMaterial(pending.ResumeRef) ||
 		facts.ContainsUnsafeMaterial(pending.CheckpointRef) ||
 		facts.ContainsUnsafeMaterial(pending.Question) ||
-		facts.ContainsUnsafeMaterial(pending.RiskSummary) {
+		facts.ContainsUnsafeMaterial(pending.RiskSummary) ||
+		(pending.InputMode != "" && !pending.InputMode.Valid()) ||
+		facts.UnsafePendingCandidates(pending.Candidates) {
 		return facts.ErrUnsafeFactMaterial
 	}
-	_, err := repo.db.ExecContext(ctx, `
-		INSERT INTO pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, expires_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	candidatesJSON, err := marshalPendingCandidates(pending.Candidates)
+	if err != nil {
+		return err
+	}
+	_, err = repo.db.ExecContext(ctx, `
+		INSERT INTO pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		pending.PendingID,
 		pending.RunID,
 		string(pending.Kind),
@@ -245,6 +252,8 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 		pending.CheckpointRef,
 		pending.Question,
 		pending.RiskSummary,
+		string(pending.InputMode),
+		candidatesJSON,
 		formatTime(pending.ExpiresAt),
 	)
 	return err
@@ -405,13 +414,15 @@ func scanRun(row rowScanner) (facts.Run, error) {
 // getPendingForResume 在事务内读取 resume_ref 对应的 pending。
 func getPendingForResume(ctx context.Context, tx *sql.Tx, resumeRef string) (facts.PendingInteraction, error) {
 	row := tx.QueryRowContext(ctx, `
-		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, expires_at
+		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at
 		FROM pending_interactions
 		WHERE resume_ref = ?`, resumeRef)
 	var pending facts.PendingInteraction
 	var kind string
 	var status string
 	var expiresAt string
+	var inputMode string
+	var candidatesJSON string
 	err := row.Scan(
 		&pending.PendingID,
 		&pending.RunID,
@@ -421,6 +432,8 @@ func getPendingForResume(ctx context.Context, tx *sql.Tx, resumeRef string) (fac
 		&pending.CheckpointRef,
 		&pending.Question,
 		&pending.RiskSummary,
+		&inputMode,
+		&candidatesJSON,
 		&expiresAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -431,6 +444,11 @@ func getPendingForResume(ctx context.Context, tx *sql.Tx, resumeRef string) (fac
 	}
 	pending.Kind = facts.PendingKind(kind)
 	pending.Status = facts.PendingStatus(status)
+	pending.InputMode = facts.PendingInputMode(inputMode)
+	pending.Candidates, err = unmarshalPendingCandidates(candidatesJSON)
+	if err != nil {
+		return facts.PendingInteraction{}, err
+	}
 	pending.ExpiresAt, err = parseTime(expiresAt)
 	if err != nil {
 		return facts.PendingInteraction{}, err
@@ -585,7 +603,7 @@ func (repo *Repository) listToolResults(ctx context.Context, runID string) ([]fa
 
 func (repo *Repository) listPendingInteractions(ctx context.Context, runID string) ([]facts.PendingInteraction, error) {
 	rows, err := repo.db.QueryContext(ctx, `
-		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, expires_at
+		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at
 		FROM pending_interactions
 		WHERE run_id = ?
 		ORDER BY rowid ASC`, runID)
@@ -666,11 +684,19 @@ func scanPending(row rowScanner) (facts.PendingInteraction, error) {
 	var kind string
 	var status string
 	var expiresAt string
-	if err := row.Scan(&pending.PendingID, &pending.RunID, &kind, &status, &pending.ResumeRef, &pending.CheckpointRef, &pending.Question, &pending.RiskSummary, &expiresAt); err != nil {
+	var inputMode string
+	var candidatesJSON string
+	if err := row.Scan(&pending.PendingID, &pending.RunID, &kind, &status, &pending.ResumeRef, &pending.CheckpointRef, &pending.Question, &pending.RiskSummary, &inputMode, &candidatesJSON, &expiresAt); err != nil {
 		return facts.PendingInteraction{}, err
 	}
 	pending.Kind = facts.PendingKind(kind)
 	pending.Status = facts.PendingStatus(status)
+	pending.InputMode = facts.PendingInputMode(inputMode)
+	var err error
+	pending.Candidates, err = unmarshalPendingCandidates(candidatesJSON)
+	if err != nil {
+		return facts.PendingInteraction{}, err
+	}
 	parsed, err := parseTime(expiresAt)
 	if err != nil {
 		return facts.PendingInteraction{}, err
@@ -696,6 +722,33 @@ func scanIdempotencyRecord(row rowScanner) (facts.IdempotencyRecord, error) {
 		return facts.IdempotencyRecord{}, err
 	}
 	return record, nil
+}
+
+// marshalPendingCandidates 将候选安全材料保存为 JSON；空候选稳定保存为空数组。
+func marshalPendingCandidates(candidates []facts.PendingCandidate) (string, error) {
+	if len(candidates) == 0 {
+		return "[]", nil
+	}
+	data, err := json.Marshal(candidates)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// unmarshalPendingCandidates 从 Product Facts JSON 字段恢复候选，并再次执行安全校验。
+func unmarshalPendingCandidates(value string) ([]facts.PendingCandidate, error) {
+	if value == "" {
+		return nil, nil
+	}
+	var candidates []facts.PendingCandidate
+	if err := json.Unmarshal([]byte(value), &candidates); err != nil {
+		return nil, err
+	}
+	if facts.UnsafePendingCandidates(candidates) {
+		return nil, facts.ErrUnsafeFactMaterial
+	}
+	return candidates, nil
 }
 
 func formatTime(value time.Time) string {

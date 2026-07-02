@@ -49,7 +49,9 @@ const clarificationView: WorkbenchView = {
       kind: "clarification_card",
       pending_id: clarificationResult.resume_refs?.[0] ?? "resume:demo",
       status: "waiting",
-      content: clarificationResult.waiting?.question ?? "请选择需要继续处理的对象。"
+      content: clarificationResult.waiting?.question ?? "请选择需要继续处理的对象。",
+      input_mode: clarificationResult.waiting?.input_mode ?? "single_choice",
+      candidates: clarificationResult.waiting?.candidates ?? []
     }
   ],
   inspector: {

@@ -990,12 +990,17 @@ go test ./internal/einoapp/... -run CredentialLeak -count=1
 
 - `internal/einoapp/providers/fobrain/disambiguation.go`
 - `internal/einoapp/execution/clarification_tool.go`
-- `web/eino-workbench/src/components/ClarificationCard.tsx`
+- `internal/einoapp/product/projection.go`
+- `docs/schemas/eino_workbench_view.v1.schema.json`
+- `web/eino-workbench/src/features/workbench/components/cards.tsx`
 
 任务级检查：
 
 ```bash
 go test ./internal/einoapp/providers/fobrain -run Disambiguation -count=1
+go test ./internal/einoapp/execution -run Clarification -count=1
+go test ./internal/einoapp/product -run ClarificationCandidates -count=1
+npm run eino-workbench:contract-test
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-clarification
 ```
 
