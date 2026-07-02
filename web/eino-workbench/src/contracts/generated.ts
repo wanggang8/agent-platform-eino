@@ -102,6 +102,11 @@ export const contractSchemas = [
     "path": "docs/schemas/fobrain/provider_poc_report.v1.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/fobrain/sample_discovery_report.v1.schema.json",
+    "title": "Fobrain Sample Discovery Report",
+    "path": "docs/schemas/fobrain/sample_discovery_report.v1.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/fobrain/tool_inputs.v1.schema.json",
     "title": "Fobrain Tool Inputs",
     "path": "docs/schemas/fobrain/tool_inputs.v1.schema.json"

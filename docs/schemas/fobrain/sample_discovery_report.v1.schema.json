@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/sample_discovery_report.v1.schema.json",
+  "title": "Fobrain Sample Discovery Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scenario",
+    "status",
+    "provider_mode",
+    "workspace_id",
+    "tls_private_cert_mode",
+    "sample_presence",
+    "source_checks",
+    "verification_checks",
+    "sample_file",
+    "redaction_checks",
+    "failure_category",
+    "blocks_claims",
+    "report_created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "eino.fobrain_sample_discovery_report.v1"},
+    "scenario": {"const": "fobrain-sample-discovery"},
+    "status": {"enum": ["passed", "failed", "blocked"]},
+    "provider_mode": {"const": "live"},
+    "workspace_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]+$"},
+    "tls_private_cert_mode": {"type": "boolean"},
+    "sample_presence": {
+      "type": "object",
+      "required": ["owner_present", "department_present", "ip_present"],
+      "properties": {
+        "owner_present": {"type": "boolean"},
+        "department_present": {"type": "boolean"},
+        "ip_present": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "source_checks": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/check"}
+    },
+    "verification_checks": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/check"}
+    },
+    "sample_file": {
+      "type": "object",
+      "required": ["written"],
+      "properties": {
+        "written": {"type": "boolean"},
+        "path": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "redaction_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "secret_absent",
+          "auth_header_absent",
+          "raw_payload_absent",
+          "sample_values_absent",
+          "binding_reference_absent"
+        ]
+      }
+    },
+    "failure_category": {"type": "string"},
+    "blocks_claims": {"type": "array", "items": {"type": "string"}},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "required": ["check_id", "status", "path_family", "item_count", "failure_category"],
+      "properties": {
+        "check_id": {"type": "string", "pattern": "^[a-z0-9_.:-]+$"},
+        "status": {"enum": ["passed", "failed", "blocked"]},
+        "path_family": {
+          "enum": [
+            "current_user",
+            "staff_list",
+            "department_list",
+            "asset_list",
+            "threat_center"
+          ]
+        },
+        "item_count": {"type": "integer", "minimum": 0},
+        "failure_category": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "failure_category": {"const": "none"},
+          "blocks_claims": {"type": "array", "maxItems": 0},
+          "sample_presence": {
+            "type": "object",
+            "properties": {
+              "owner_present": {"type": "boolean", "const": true},
+              "department_present": {"type": "boolean", "const": true},
+              "ip_present": {"type": "boolean", "const": true}
+            },
+            "required": ["owner_present", "department_present", "ip_present"]
+          },
+          "verification_checks": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string", "const": "passed"},
+                "item_count": {"type": "integer", "minimum": 1},
+                "failure_category": {"type": "string", "const": "none"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["failed", "blocked"]}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "blocks_claims": {"type": "array", "minItems": 1}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}
