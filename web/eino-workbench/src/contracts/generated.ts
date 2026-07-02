@@ -82,9 +82,19 @@ export const contractSchemas = [
     "path": "docs/schemas/eino_workbench_view.v1.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_a_live_report.v1.schema.json",
+    "title": "Fobrain Batch A Live Report",
+    "path": "docs/schemas/fobrain/batch_a_live_report.v1.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/fobrain/my_assets.input.v1.schema.json",
     "title": "Fobrain My Assets Input",
     "path": "docs/schemas/fobrain/my_assets.input.v1.schema.json"
+  },
+  {
+    "id": "https://agent-platform-eino.local/schemas/fobrain/provider_poc_report.v1.schema.json",
+    "title": "Fobrain Provider PoC Report",
+    "path": "docs/schemas/fobrain/provider_poc_report.v1.schema.json"
   },
   {
     "id": "https://agent-platform-eino.local/schemas/fobrain/tool_inputs.v1.schema.json",

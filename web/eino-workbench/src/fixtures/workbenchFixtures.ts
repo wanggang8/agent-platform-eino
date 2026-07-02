@@ -4,8 +4,10 @@ import actionClarification from "../../../../docs/fixtures/action-result-waiting
 import emptyView from "../../../../docs/fixtures/workbench-view-empty.json";
 import failedView from "../../../../docs/fixtures/workbench-view-failed.json";
 import successView from "../../../../docs/fixtures/workbench-view-success.json";
+import { fobrainVisualFixtures, type FobrainVisualFixtureKey } from "./fobrainVisualFixtures";
 
-export type WorkbenchFixtureKey = "success" | "empty" | "failed" | "approval" | "clarification";
+// WorkbenchFixtureKey 枚举本地演示/视觉验收 fixture，不参与后端运行时事实选择。
+export type WorkbenchFixtureKey = "success" | "empty" | "failed" | "approval" | "clarification" | FobrainVisualFixtureKey;
 
 // approval/clarification fixture 复用 ActionResult 契约，保证等待态不手写平行 DTO。
 const approvalResult = actionApproval as ActionResult;
@@ -65,7 +67,8 @@ export const workbenchFixtures = {
   empty: emptyView as WorkbenchView,
   failed: failedView as WorkbenchView,
   approval: approvalView,
-  clarification: clarificationView
+  clarification: clarificationView,
+  ...fobrainVisualFixtures
 } as const satisfies Record<WorkbenchFixtureKey, WorkbenchView>;
 
 // fixtureLabels 是 fixture 切换器展示文案，不参与业务状态判断。
@@ -74,5 +77,7 @@ export const fixtureLabels: Record<WorkbenchFixtureKey, string> = {
   empty: "空态",
   failed: "失败态",
   approval: "审批等待",
-  clarification: "澄清等待"
+  clarification: "澄清等待",
+  fobrainCurrentUser: "Fobrain 当前用户",
+  fobrainMyPermissions: "Fobrain 我的权限"
 };

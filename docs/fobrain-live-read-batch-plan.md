@@ -30,6 +30,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 配置齐全且真实环境可用时，该命令必须生成 `test-results/eino-workbench-fobrain-batch-a-live-report.json`，并符合 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json`。配置缺失时只能生成 blocking skip report，不能声明 Batch A live pass。Batch A 最终完成声明仍必须补齐 Workbench 视觉证据和验收记录。
 
+视觉证据进展：`tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 已生成新项目 desktop/mobile Playwright baseline，每个工具覆盖 `main-chat`、`fresh-main-chat`、`process`、`evidence`、`audit`、`internal-details` 六区域。`connector.fobrain.security` 视觉证据仍在 Task 8.3 覆盖。
+
 ### Batch B：我的范围
 
 范围：

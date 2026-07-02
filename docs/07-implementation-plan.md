@@ -943,6 +943,12 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 - `web/eino-workbench/tests/fobrain-tool-visual.spec.ts`
 - `test-results/eino-workbench-fobrain-tool-acceptance/`
 
+当前进展：
+
+- Batch A 业务只读视觉切片已覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions`，每个工具在 desktop/mobile 下生成六区域 Playwright screenshot baseline。
+- 本切片只证明两个业务只读工具的 Workbench 安全投影、StructuredResult 展示和视觉区域覆盖；`connector.fobrain.security` 视觉证据仍按 Task 8.3 验收。
+- Phase 8.2 仍需继续扩展到 24 个只读工具矩阵，不得据此声明 Fobrain 24/24 恢复完成。
+
 要求：
 
 - 每个 Fobrain 场景必须保留旧最终验收中的六类截图区域要求：`main-chat`、`fresh-main-chat`、`process`、`evidence`、`audit`、`internal-details`。
