@@ -63,7 +63,9 @@ var migrations = []string{
 		resume_ref TEXT NOT NULL UNIQUE,
 		checkpoint_ref TEXT NOT NULL,
 		question TEXT NOT NULL DEFAULT '',
+		operation_name TEXT NOT NULL DEFAULT '',
 		risk_summary TEXT NOT NULL DEFAULT '',
+		target_summary TEXT NOT NULL DEFAULT '',
 		input_mode TEXT NOT NULL DEFAULT '',
 		candidates_json TEXT NOT NULL DEFAULT '[]',
 		expires_at TEXT NOT NULL DEFAULT '',
@@ -104,6 +106,12 @@ func migrate(ctx context.Context, db *sql.DB) error {
 		}
 	}
 	if err := addColumnIfMissing(ctx, db, "pending_interactions", "input_mode", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := addColumnIfMissing(ctx, db, "pending_interactions", "operation_name", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := addColumnIfMissing(ctx, db, "pending_interactions", "target_summary", "TEXT NOT NULL DEFAULT ''"); err != nil {
 		return err
 	}
 	if err := addColumnIfMissing(ctx, db, "pending_interactions", "candidates_json", "TEXT NOT NULL DEFAULT '[]'"); err != nil {

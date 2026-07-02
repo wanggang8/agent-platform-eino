@@ -172,7 +172,9 @@ type PendingInteraction struct {
 	ResumeRef     string
 	CheckpointRef string
 	Question      string
+	OperationName string
 	RiskSummary   string
+	TargetSummary string
 	InputMode     PendingInputMode
 	Candidates    []PendingCandidate
 	ExpiresAt     time.Time

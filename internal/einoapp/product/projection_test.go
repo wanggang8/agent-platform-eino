@@ -98,12 +98,14 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 		t.Fatal(err)
 	}
 	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
-		PendingID:   "pending-1",
-		RunID:       "run-rich",
-		Kind:        facts.PendingKindApproval,
-		Status:      facts.PendingStatusWaiting,
-		ResumeRef:   "resume-safe-1",
-		RiskSummary: "写域操作需要审批",
+		PendingID:     "pending-1",
+		RunID:         "run-rich",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-1",
+		OperationName: "更新工单状态",
+		RiskSummary:   "写域操作需要审批",
+		TargetSummary: "ticket:T-1001 -> fixed",
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -145,6 +147,9 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 	if len(action.ApprovalRefs) != 1 || action.ApprovalRefs[0] != "resume-safe-1" {
 		t.Fatalf("approval refs = %+v", action.ApprovalRefs)
 	}
+	if action.Waiting == nil || action.Waiting.TargetSummary != "ticket:T-1001 -> fixed" {
+		t.Fatalf("approval waiting target summary mismatch: %+v", action.Waiting)
+	}
 
 	replay, err := projection.ReplayView(ctx, "ws-demo", "run-rich")
 	if err != nil {
@@ -160,6 +165,15 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 	}
 	if len(events) == 0 || events[0].EventID != "run-rich:000001" {
 		t.Fatalf("stream events not facts cursor based: %+v", events)
+	}
+	var approvalPatch map[string]any
+	for _, event := range events {
+		if event.Type == "pending.updated" {
+			approvalPatch = event.Pending
+		}
+	}
+	if approvalPatch["operation_name"] != "更新工单状态" || approvalPatch["target_summary"] != "ticket:T-1001 -> fixed" {
+		t.Fatalf("approval pending patch missing schema fields: %+v", approvalPatch)
 	}
 }
 

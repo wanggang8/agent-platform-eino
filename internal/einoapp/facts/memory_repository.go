@@ -175,7 +175,9 @@ func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pendin
 	if ContainsUnsafeMaterial(pending.ResumeRef) ||
 		ContainsUnsafeMaterial(pending.CheckpointRef) ||
 		ContainsUnsafeMaterial(pending.Question) ||
+		ContainsUnsafeMaterial(pending.OperationName) ||
 		ContainsUnsafeMaterial(pending.RiskSummary) ||
+		ContainsUnsafeMaterial(pending.TargetSummary) ||
 		(pending.InputMode != "" && !pending.InputMode.Valid()) ||
 		UnsafePendingCandidates(pending.Candidates) {
 		return ErrUnsafeFactMaterial

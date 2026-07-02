@@ -43,7 +43,9 @@ type RunnerEvent struct {
 	ResumeRef     string
 	CheckpointRef string
 	Question      string
+	OperationName string
 	RiskSummary   string
+	TargetSummary string
 	InputMode     string
 	Candidates    []facts.PendingCandidate
 
@@ -123,7 +125,9 @@ func (mapper EventMapper) Map(ctx context.Context, event RunnerEvent) error {
 			ResumeRef:     event.ResumeRef,
 			CheckpointRef: event.CheckpointRef,
 			Question:      event.Question,
+			OperationName: event.OperationName,
 			RiskSummary:   event.RiskSummary,
+			TargetSummary: event.TargetSummary,
 			InputMode:     facts.PendingInputMode(event.InputMode),
 			Candidates:    event.Candidates,
 		})

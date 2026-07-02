@@ -107,13 +107,14 @@ type ResultCard struct {
 
 // WaitingState 是 ActionResult 暴露给非 Workbench 客户端的等待态摘要。
 type WaitingState struct {
-	Kind         string                   `json:"kind"`
-	Question     string                   `json:"question"`
-	ApprovalRefs []string                 `json:"approval_refs,omitempty"`
-	ResumeRefs   []string                 `json:"resume_refs,omitempty"`
-	RiskSummary  string                   `json:"risk_summary,omitempty"`
-	InputMode    string                   `json:"input_mode,omitempty"`
-	Candidates   []facts.PendingCandidate `json:"candidates,omitempty"`
+	Kind          string                   `json:"kind"`
+	Question      string                   `json:"question"`
+	ApprovalRefs  []string                 `json:"approval_refs,omitempty"`
+	ResumeRefs    []string                 `json:"resume_refs,omitempty"`
+	RiskSummary   string                   `json:"risk_summary,omitempty"`
+	TargetSummary string                   `json:"target_summary,omitempty"`
+	InputMode     string                   `json:"input_mode,omitempty"`
+	Candidates    []facts.PendingCandidate `json:"candidates,omitempty"`
 }
 
 // ReplayView 是从 Product Facts 重建的回放视图。
@@ -691,11 +692,12 @@ func actionStatus(status facts.RunStatus) string {
 
 func waitingState(pending facts.PendingInteraction) *WaitingState {
 	state := &WaitingState{
-		Kind:        string(pending.Kind),
-		Question:    pending.Question,
-		RiskSummary: pending.RiskSummary,
-		InputMode:   string(pending.InputMode),
-		Candidates:  pending.Candidates,
+		Kind:          string(pending.Kind),
+		Question:      pending.Question,
+		RiskSummary:   pending.RiskSummary,
+		TargetSummary: pending.TargetSummary,
+		InputMode:     string(pending.InputMode),
+		Candidates:    pending.Candidates,
 	}
 	if state.Question == "" && pending.Kind == facts.PendingKindApproval {
 		state.Question = "是否批准继续执行？"
@@ -726,7 +728,9 @@ func pendingPatch(pending facts.PendingInteraction) map[string]any {
 		"kind":           string(pending.Kind),
 		"status":         string(pending.Status),
 		"question":       pending.Question,
+		"operation_name": pending.OperationName,
 		"risk_summary":   pending.RiskSummary,
+		"target_summary": pending.TargetSummary,
 		"resume_ref":     pending.ResumeRef,
 	}
 	if pending.InputMode != "" {

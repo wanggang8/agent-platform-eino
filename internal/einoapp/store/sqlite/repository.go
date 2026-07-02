@@ -232,7 +232,9 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 	if facts.ContainsUnsafeMaterial(pending.ResumeRef) ||
 		facts.ContainsUnsafeMaterial(pending.CheckpointRef) ||
 		facts.ContainsUnsafeMaterial(pending.Question) ||
+		facts.ContainsUnsafeMaterial(pending.OperationName) ||
 		facts.ContainsUnsafeMaterial(pending.RiskSummary) ||
+		facts.ContainsUnsafeMaterial(pending.TargetSummary) ||
 		(pending.InputMode != "" && !pending.InputMode.Valid()) ||
 		facts.UnsafePendingCandidates(pending.Candidates) {
 		return facts.ErrUnsafeFactMaterial
@@ -242,8 +244,8 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 		return err
 	}
 	_, err = repo.db.ExecContext(ctx, `
-		INSERT INTO pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		INSERT INTO pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		pending.PendingID,
 		pending.RunID,
 		string(pending.Kind),
@@ -251,7 +253,9 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 		pending.ResumeRef,
 		pending.CheckpointRef,
 		pending.Question,
+		pending.OperationName,
 		pending.RiskSummary,
+		pending.TargetSummary,
 		string(pending.InputMode),
 		candidatesJSON,
 		formatTime(pending.ExpiresAt),
@@ -414,7 +418,7 @@ func scanRun(row rowScanner) (facts.Run, error) {
 // getPendingForResume 在事务内读取 resume_ref 对应的 pending。
 func getPendingForResume(ctx context.Context, tx *sql.Tx, resumeRef string) (facts.PendingInteraction, error) {
 	row := tx.QueryRowContext(ctx, `
-		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at
+		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at
 		FROM pending_interactions
 		WHERE resume_ref = ?`, resumeRef)
 	var pending facts.PendingInteraction
@@ -431,7 +435,9 @@ func getPendingForResume(ctx context.Context, tx *sql.Tx, resumeRef string) (fac
 		&pending.ResumeRef,
 		&pending.CheckpointRef,
 		&pending.Question,
+		&pending.OperationName,
 		&pending.RiskSummary,
+		&pending.TargetSummary,
 		&inputMode,
 		&candidatesJSON,
 		&expiresAt,
@@ -603,7 +609,7 @@ func (repo *Repository) listToolResults(ctx context.Context, runID string) ([]fa
 
 func (repo *Repository) listPendingInteractions(ctx context.Context, runID string) ([]facts.PendingInteraction, error) {
 	rows, err := repo.db.QueryContext(ctx, `
-		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, risk_summary, input_mode, candidates_json, expires_at
+		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at
 		FROM pending_interactions
 		WHERE run_id = ?
 		ORDER BY rowid ASC`, runID)
@@ -686,7 +692,7 @@ func scanPending(row rowScanner) (facts.PendingInteraction, error) {
 	var expiresAt string
 	var inputMode string
 	var candidatesJSON string
-	if err := row.Scan(&pending.PendingID, &pending.RunID, &kind, &status, &pending.ResumeRef, &pending.CheckpointRef, &pending.Question, &pending.RiskSummary, &inputMode, &candidatesJSON, &expiresAt); err != nil {
+	if err := row.Scan(&pending.PendingID, &pending.RunID, &kind, &status, &pending.ResumeRef, &pending.CheckpointRef, &pending.Question, &pending.OperationName, &pending.RiskSummary, &pending.TargetSummary, &inputMode, &candidatesJSON, &expiresAt); err != nil {
 		return facts.PendingInteraction{}, err
 	}
 	pending.Kind = facts.PendingKind(kind)

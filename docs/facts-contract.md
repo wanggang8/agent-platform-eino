@@ -111,6 +111,8 @@
 | `kind` | execution | 是 | approval / clarification |
 | `status` | Product Facts | 是 | 使用 PendingInteraction.status |
 | `question` / `risk_summary` | Safety Gate | 是 | 澄清问题或审批风险摘要 |
+| `operation_name` | Product Mapper | 是 | approval 操作名，SSE pending patch 必须提供 |
+| `target_summary` | Product Mapper | 是 | approval 影响对象摘要，SSE pending patch 和 ActionResult waiting 必须同源 |
 | `input_mode` | Product Mapper | 是 | clarification 输入形态：single_choice / multi_choice / free_text / mixed |
 | `candidates` | Product Mapper | 是 | 安全候选项，只包含 `candidate_ref`、label、description、entity_type、safe_fields |
 | `resume_ref` | secure ref store | 是 | 不可复用安全引用 |

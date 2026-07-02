@@ -151,7 +151,9 @@ func TestPendingResumeRefIsConsumedOnce(t *testing.T) {
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
 		CheckpointRef: "checkpoint-safe-1",
+		OperationName: "更新工单状态",
 		RiskSummary:   "需要审批",
+		TargetSummary: "ticket:T-1001 -> fixed",
 		ExpiresAt:     now.Add(time.Hour),
 	}); err != nil {
 		t.Fatal(err)
@@ -161,7 +163,10 @@ func TestPendingResumeRefIsConsumedOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pending.Status != facts.PendingStatusConsumed || pending.CheckpointRef != "checkpoint-safe-1" {
+	if pending.Status != facts.PendingStatusConsumed ||
+		pending.CheckpointRef != "checkpoint-safe-1" ||
+		pending.OperationName != "更新工单状态" ||
+		pending.TargetSummary != "ticket:T-1001 -> fixed" {
 		t.Fatalf("consumed pending mismatch: %+v", pending)
 	}
 
