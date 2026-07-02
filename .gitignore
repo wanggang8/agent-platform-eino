@@ -1,6 +1,7 @@
 node_modules/
 test-results/
 .agent/
+data/
 .DS_Store
 npm-debug.log*
 web/eino-workbench/dist/

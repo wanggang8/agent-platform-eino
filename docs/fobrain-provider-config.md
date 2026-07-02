@@ -22,6 +22,8 @@ fobrain:
   connector_status:
     mode: "mock"
     available: true
+  tls:
+    insecure_skip_verify: false
 ```
 
 `configs/eino-workbench.example.yaml` 只能展示无 secret 示例；真实 `api_token` 只能写入已 ignored 的 `configs/eino-workbench.local.yaml`。当前真实 Fobrain 环境使用名为 `authorization` 的认证参数，值为原始 token；不得把 token 写入仓库。
@@ -42,6 +44,7 @@ fobrain:
 | `credential.api_token` | 本地可选 | 只允许 local ignored 配置使用；不得进入 RedactedSummary、Product Facts、日志、报告。 |
 | `connector_status.mode` | 是 | Phase 5 只允许 `mock`；`live` 保留给真实 HTTP client 阶段。 |
 | `connector_status.available` | 是 | policy 输入，不替代业务读取工具。 |
+| `tls.insecure_skip_verify` | 否 | 只用于 Fobrain 私有证书环境；默认 `false`。开启后只影响 Fobrain HTTP client，不影响 LLM 或其它 provider。 |
 
 `connector_status.mode=mock` 时可以缺少 `credential.api_token`。Phase 5 的 `fobrain-poc` provider report 仍只能使用 `mock` 并声明 `provider_mode=mock`；Phase 8 Batch A 起，服务配置允许 `live` mode 进入真实 HTTP client。真实模型工具选择或 Fobrain live read 未完成对应批次验收时只能写 blocking skip report，不能声明通过。
 
@@ -56,6 +59,7 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - Phase 8 live acceptance 配置必须设置 `auth_param: "authorization"`；其它认证参数名需要先新增 ADR。
 - `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
 - `connector_status.mode=live` 时 `base_url` 必须使用 HTTPS；只有 `127.0.0.1`、`localhost`、`::1` 的 HTTP URL 可作为本地验收代理入口。
+- 私有证书环境可设置 `tls.insecure_skip_verify: true`；该开关必须留在 ignored local 配置或受控部署配置中，验收报告只能记录布尔值，不能记录证书、token 或连接细节。
 - 当前 Batch A 代码基础覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 的 `/api/v1/user` 读取；`connector.fobrain.security` 只展示安全配置、connector 可用性和凭据绑定摘要，不替代业务读工具。
 
 ## 派生对象
@@ -64,13 +68,13 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 
 - `capabilities.CredentialBinding`：只包含 `schema_version`、`workspace_id`、`system=fobrain`、`status`、`display_ref`、`owner_scope`、`audit_ref`。
 - `capabilities.ConnectorStatus`：只表达 available/unavailable。
-- `FobrainClientConfig`：只在 provider client 内部持有 `base_url`、`timeout`、secret token。
+- `FobrainClientConfig`：只在 provider client 内部持有 `base_url`、`timeout` 和 TLS 兼容开关；secret token 只由 `CredentialResolver` 解析成 `ResolvedCredential` 后进入单次请求。
 - `auth_param`：只作为 provider client 认证参数名，当前 live client 应发送 `authorization: <api_token>`；不要硬编码旧项目默认 header。
 
 ## 脱敏规则
 
 - `api_token`、Authorization、cookie、raw credential ref、连接串和 raw provider payload 不得进入 Product Facts、ActionResult、Workbench、SSE、audit、replay、report 或日志。
-- RedactedSummary 只能展示 provider enabled、connector id、workspace id、base url host、timeout、credential status、auth parameter name、connector mode 和 available。
+- RedactedSummary 只能展示 provider enabled、connector id、workspace id、base url host、timeout、credential status、auth parameter name、connector mode、available 和 TLS skip 布尔值。
 - workspace 不匹配必须返回 `credential_scope_denied`，不能回显配置里的 workspace/token。
 
 ## 验收
@@ -83,4 +87,4 @@ go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|
 go test ./cmd/eino-workbench -run 'Fobrain.*Live|FobrainOnlyWhenEnabled' -count=1
 ```
 
-测试必须覆盖：最小合法配置、live mode workspace token、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider、workspace 不匹配不发起外部 HTTP。
+测试必须覆盖：最小合法配置、live mode workspace token、私有证书 TLS skip、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider、workspace 不匹配不发起外部 HTTP。

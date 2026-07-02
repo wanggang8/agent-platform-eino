@@ -29,7 +29,7 @@ budgets:
 # Phase 3 默认不注册业务能力；smoke 或后续 provider 通过配置/注册表显式声明。
 capabilities: []
 
-# Phase 5 Fobrain provider PoC 示例。真实 api_token 只能写入 ignored local 配置。
+# Phase 5/8 Fobrain provider 示例。真实 api_token 只能写入 ignored local 配置。
 fobrain:
   enabled: false
   connector_id: "fobrain"
@@ -44,3 +44,5 @@ fobrain:
   connector_status:
     mode: "mock"
     available: false
+  tls:
+    insecure_skip_verify: false

@@ -50,7 +50,7 @@ type LLMConfig struct {
 	CredentialBinding CredentialBinding   `yaml:"-"`
 }
 
-// FobrainConfig 定义 Phase 5 provider PoC 的本地文件配置。
+// FobrainConfig 定义 Phase 5 provider PoC 与 Phase 8 live read 的本地文件配置。
 // 真实 token 只能在 provider/client 边界内使用，不进入产品事实或日志摘要。
 type FobrainConfig struct {
 	Enabled           bool                         `yaml:"enabled"`
@@ -60,6 +60,7 @@ type FobrainConfig struct {
 	Timeout           time.Duration                `yaml:"timeout"`
 	Credential        FobrainCredentialConfig      `yaml:"credential"`
 	ConnectorStatus   FobrainConnectorStatusConfig `yaml:"connector_status"`
+	TLS               FobrainTLSConfig             `yaml:"tls"`
 	CredentialBinding CredentialBinding            `yaml:"-"`
 }
 
@@ -76,6 +77,11 @@ type FobrainCredentialConfig struct {
 type FobrainConnectorStatusConfig struct {
 	Mode      string `yaml:"mode"`
 	Available bool   `yaml:"available"`
+}
+
+// FobrainTLSConfig 定义 Fobrain 专用 TLS 兼容开关，不影响 LLM 或其它 provider。
+type FobrainTLSConfig struct {
+	InsecureSkipVerify bool `yaml:"insecure_skip_verify"`
 }
 
 // NetworkSafetyConfig 定义模型 provider 出站网络策略。
@@ -633,17 +639,18 @@ func redactedFobrainSummary(config FobrainConfig) map[string]any {
 		return map[string]any{"enabled": false}
 	}
 	return map[string]any{
-		"enabled":             true,
-		"connector_id":        safeSummaryIdentifier(config.ConnectorID),
-		"workspace_id":        safeSummaryIdentifier(config.WorkspaceID),
-		"base_url":            redactURL(config.BaseURL),
-		"timeout":             config.Timeout.String(),
-		"credential_status":   config.CredentialBinding.Status,
-		"auth_param":          safeSummaryIdentifier(config.Credential.AuthParam),
-		"display_ref":         safeCredentialDisplay(config.CredentialBinding.DisplayRef),
-		"credential_scope":    config.CredentialBinding.OwnerScope,
-		"connector_mode":      config.ConnectorStatus.Mode,
-		"connector_available": config.ConnectorStatus.Available,
+		"enabled":                  true,
+		"connector_id":             safeSummaryIdentifier(config.ConnectorID),
+		"workspace_id":             safeSummaryIdentifier(config.WorkspaceID),
+		"base_url":                 redactURL(config.BaseURL),
+		"timeout":                  config.Timeout.String(),
+		"credential_status":        config.CredentialBinding.Status,
+		"auth_param":               safeSummaryIdentifier(config.Credential.AuthParam),
+		"display_ref":              safeCredentialDisplay(config.CredentialBinding.DisplayRef),
+		"credential_scope":         config.CredentialBinding.OwnerScope,
+		"connector_mode":           config.ConnectorStatus.Mode,
+		"connector_available":      config.ConnectorStatus.Available,
+		"tls_insecure_skip_verify": config.TLS.InsecureSkipVerify,
 	}
 }
 

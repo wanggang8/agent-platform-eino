@@ -221,8 +221,9 @@ func fobrainProviderFromConfig(config bootstrap.FobrainConfig) (*fobrain.Provide
 	client := fobrain.FobrainClient(fobrain.MockClient{})
 	if config.ConnectorStatus.Mode == "live" {
 		httpClient, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
-			BaseURL: config.BaseURL,
-			Timeout: config.Timeout,
+			BaseURL:            config.BaseURL,
+			Timeout:            config.Timeout,
+			InsecureSkipVerify: config.TLS.InsecureSkipVerify,
 		})
 		if err != nil {
 			return nil, err

@@ -2,6 +2,7 @@ package fobrain
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,11 +16,12 @@ import (
 const currentUserPath = "/api/v1/user"
 
 // HTTPClientConfig 保存真实 Fobrain HTTP client 的 provider 边界配置。
-// BaseURL 和 token 都不得进入 Product Facts；token 只从 ResolvedCredential 传入单次请求。
+// HTTPClientConfig 不持有 token；token 只从 ResolvedCredential 传入单次请求。
 type HTTPClientConfig struct {
-	BaseURL    string
-	Timeout    time.Duration
-	HTTPClient *http.Client
+	BaseURL            string
+	Timeout            time.Duration
+	HTTPClient         *http.Client
+	InsecureSkipVerify bool
 }
 
 // HTTPClient 是 Fobrain live read 的最小 HTTP 实现。
@@ -43,9 +45,22 @@ func NewHTTPClient(config HTTPClientConfig) (*HTTPClient, error) {
 	}
 	httpClient := config.HTTPClient
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: timeout}
+		httpClient = &http.Client{
+			Timeout:   timeout,
+			Transport: httpTransport(config.InsecureSkipVerify),
+		}
 	}
 	return &HTTPClient{baseURL: parsed, timeout: timeout, httpClient: httpClient}, nil
+}
+
+// httpTransport 仅在 Fobrain 私有证书配置明确开启时跳过证书链校验。
+func httpTransport(insecureSkipVerify bool) http.RoundTripper {
+	if !insecureSkipVerify {
+		return http.DefaultTransport
+	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	return transport
 }
 
 // CurrentUserContext 调用 Fobrain 标准当前用户接口，并只返回安全展示字段。

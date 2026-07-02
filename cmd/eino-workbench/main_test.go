@@ -293,6 +293,37 @@ func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T
 	}
 }
 
+func TestCapabilityRuntimeFromConfigPassesFobrainTLSInsecureSkipVerify(t *testing.T) {
+	// 私有证书跳过校验必须来自配置文件，并只传给 Fobrain HTTP client。
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{"display_name": "王五"},
+		})
+	}))
+	defer server.Close()
+
+	cfg := fobrainEnabledTestConfig(server.URL, "live")
+	cfg.TLS.InsecureSkipVerify = true
+	_, invoker, err := capabilityRuntimeFromConfig(bootstrap.Config{Fobrain: cfg})
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
+		CapabilityID: fobrain.CapabilityCurrentUserContext,
+		PolicyContext: capabilities.PolicyContext{
+			WorkspaceID:       "ws_fobrain",
+			CredentialBinding: fobrainCredentialBindingFromConfig(cfg.CredentialBinding),
+			ConnectorStatus:   capabilities.ConnectorStatusAvailable,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(candidate.SafeSummary, "王五") {
+		t.Fatalf("candidate did not use TLS server result: %+v", candidate)
+	}
+}
+
 func fobrainEnabledTestConfig(baseURL string, mode string) bootstrap.FobrainConfig {
 	return bootstrap.FobrainConfig{
 		Enabled:     true,

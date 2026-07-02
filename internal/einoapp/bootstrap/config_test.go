@@ -762,7 +762,9 @@ credential:
     api_token: "fobrain-local-secret"
 connector_status:
     mode: "live"
-    available: true`))
+    available: true
+tls:
+    insecure_skip_verify: true`))
 
 	cfg, err := bootstrap.LoadConfig(path)
 	if err != nil {
@@ -770,7 +772,8 @@ connector_status:
 	}
 	if cfg.Fobrain.ConnectorStatus.Mode != "live" ||
 		cfg.Fobrain.Credential.AuthParam != "authorization" ||
-		cfg.Fobrain.CredentialBinding.OwnerScope != "workspace" {
+		cfg.Fobrain.CredentialBinding.OwnerScope != "workspace" ||
+		!cfg.Fobrain.TLS.InsecureSkipVerify {
 		t.Fatalf("live fobrain config mismatch: %+v", cfg.Fobrain)
 	}
 }
@@ -821,7 +824,7 @@ func TestFobrainRedactedSummaryDoesNotExposeCredentialLeak(t *testing.T) {
 			t.Fatalf("fobrain redacted summary leaked %q: %s", forbidden, encoded)
 		}
 	}
-	for _, expected := range []string{"enabled: true", "connector_id: fobrain", "workspace_id: ws_fobrain", "base_url: https://fobrain.example.test/api", "credential_status: bound", "auth_param: authorization", "connector_mode: mock"} {
+	for _, expected := range []string{"enabled: true", "connector_id: fobrain", "workspace_id: ws_fobrain", "base_url: https://fobrain.example.test/api", "credential_status: bound", "auth_param: authorization", "connector_mode: mock", "tls_insecure_skip_verify: false"} {
 		if !strings.Contains(encoded, expected) {
 			t.Fatalf("fobrain redacted summary missing %q: %s", expected, encoded)
 		}
@@ -871,6 +874,8 @@ func defaultFobrainConfigBody(overrides string) string {
 		"connector_status": `connector_status:
   mode: "mock"
   available: true`,
+		"tls": `tls:
+  insecure_skip_verify: false`,
 	}
 	for _, block := range strings.Split(strings.TrimSpace(overrides), "\n") {
 		key := strings.TrimSpace(strings.SplitN(block, ":", 2)[0])
@@ -887,6 +892,7 @@ func defaultFobrainConfigBody(overrides string) string {
 		values["timeout"],
 		values["credential"],
 		values["connector_status"],
+		values["tls"],
 	}, "\n")
 }
 
