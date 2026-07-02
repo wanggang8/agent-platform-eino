@@ -90,3 +90,95 @@ func TestHTTPClientCurrentUserContextFoldsErrorsWithoutLeakingToken(t *testing.T
 		}
 	}
 }
+
+func TestHTTPClientMyPermissionsUsesCurrentUserEndpoint(t *testing.T) {
+	// my_permissions 从当前用户接口读取权限数组和数据范围摘要，不新增未经确认的外部 endpoint。
+	var gotPath string
+	var gotAuth string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("authorization")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{
+				"display_name":           "王五",
+				"permissions":            []any{"资产只读", "漏洞只读"},
+				"data_permission_names":  []any{"本部门数据"},
+				"raw_policy_payload":     "must stay inside provider",
+				"credential_debug_value": "must not be projected",
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL,
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := client.MyPermissions(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/v1/user" || gotAuth != "workspace-token" {
+		t.Fatalf("request path/auth mismatch path=%q auth=%q", gotPath, gotAuth)
+	}
+	if strings.Join(result.PermissionNames, ",") != "资产只读,漏洞只读" ||
+		strings.Join(result.DataPermissionNames, ",") != "本部门数据" {
+		t.Fatalf("permissions result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientMyPermissionsIgnoresRawAPIPolicyFields(t *testing.T) {
+	// API 路径、策略 code 和 raw payload 不是安全展示字段，不能进入权限 StructuredResult 材料。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{
+				"display_name": "王五",
+				"permissions": []any{
+					map[string]any{"name": "资产只读", "code": "/api/v1/internal/assets"},
+					map[string]any{"code": "/api/v1/internal/code-only"},
+				},
+				"apis":                   []any{map[string]any{"api": "/api/v1/internal/admin"}},
+				"api_names":              []any{"raw:/api/v1/internal/report"},
+				"data_permission_names":  []any{"本部门数据"},
+				"raw_policy_payload":     "raw policy must stay inside provider",
+				"credential_debug_value": "secret-like material",
+			},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL,
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.MyPermissions(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate, _ := fobrain.BuildMyPermissionsStructuredResult(result)
+	for _, forbidden := range []string{"/api/v1/internal", "raw policy", "credential_debug_value", "secret-like"} {
+		if strings.Contains(candidate.SafeSummary, forbidden) {
+			t.Fatalf("permissions summary leaked %q: %s", forbidden, candidate.SafeSummary)
+		}
+	}
+	if !strings.Contains(candidate.SafeSummary, "资产只读") || !strings.Contains(candidate.SafeSummary, "本部门数据") {
+		t.Fatalf("permissions summary missing safe fields: %s", candidate.SafeSummary)
+	}
+}

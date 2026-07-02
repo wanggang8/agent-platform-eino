@@ -7,19 +7,23 @@ import (
 	"agent-platform-eino/internal/einoapp/providers/fobrain"
 )
 
-func TestProviderCatalogRegistersReadonlyPoC(t *testing.T) {
-	// Phase 5 只允许注册一个只读 PoC 能力，避免提前声明完整 Fobrain 恢复。
+func TestProviderCatalogRegistersBatchACapabilities(t *testing.T) {
+	// Phase 8 Batch A 只注册 connector、当前用户和权限三类能力，不提前声明 Batch B-E。
 	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
 
 	catalog, err := provider.ListCapabilities()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(catalog) != 1 {
-		t.Fatalf("catalog length = %d, want one Phase 5 PoC capability: %+v", len(catalog), catalog)
+	if len(catalog) != 3 {
+		t.Fatalf("catalog length = %d, want Batch A three capabilities: %+v", len(catalog), catalog)
+	}
+	byID := map[string]capabilities.Capability{}
+	for _, capability := range catalog {
+		byID[capability.ID] = capability
 	}
 
-	capability := catalog[0]
+	capability := byID[fobrain.CapabilityCurrentUserContext]
 	if capability.ID != fobrain.CapabilityCurrentUserContext {
 		t.Fatalf("capability id = %q", capability.ID)
 	}
@@ -55,5 +59,23 @@ func TestProviderCatalogRegistersReadonlyPoC(t *testing.T) {
 	}
 	if capability.IdempotencyRequired {
 		t.Fatal("readonly PoC must not require idempotency key")
+	}
+
+	permissions := byID[fobrain.CapabilityMyPermissions]
+	if permissions.ID != fobrain.CapabilityMyPermissions ||
+		permissions.ResultSchema != fobrain.BusinessResultSchemaVersion ||
+		permissions.CredentialBindingPolicy != capabilities.CredentialBindingRequired ||
+		permissions.ConnectorID != fobrain.ConnectorID ||
+		permissions.SideEffect != capabilities.SideEffectReadExternal {
+		t.Fatalf("my permissions capability mismatch: %+v", permissions)
+	}
+
+	connector := byID[fobrain.CapabilityConnectorSecurity]
+	if connector.ID != fobrain.CapabilityConnectorSecurity ||
+		connector.ResultSchema != fobrain.BusinessResultSchemaVersion ||
+		connector.CredentialBindingPolicy != capabilities.CredentialBindingOptional ||
+		connector.ConnectorID != "" ||
+		connector.SideEffect != capabilities.SideEffectReadExternal {
+		t.Fatalf("connector capability mismatch: %+v", connector)
 	}
 }

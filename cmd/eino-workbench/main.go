@@ -253,13 +253,29 @@ func policyContextsFromConfig(config bootstrap.Config) map[string]capabilities.P
 		if config.Fobrain.ConnectorStatus.Available {
 			status = capabilities.ConnectorStatusAvailable
 		}
-		contexts[fobrain.CapabilityCurrentUserContext] = capabilities.PolicyContext{
-			WorkspaceID:       config.Fobrain.WorkspaceID,
-			CredentialBinding: fobrainCredentialBindingFromConfig(config.Fobrain.CredentialBinding),
-			ConnectorStatus:   status,
+		for _, capabilityID := range fobrainCapabilityIDs() {
+			contexts[capabilityID] = capabilities.PolicyContext{
+				WorkspaceID:       config.Fobrain.WorkspaceID,
+				CredentialBinding: fobrainCredentialBindingFromConfig(config.Fobrain.CredentialBinding),
+				ConnectorStatus:   status,
+			}
 		}
 	}
 	return contexts
+}
+
+// fobrainCapabilityIDs 从 provider catalog 派生 policy context 目标，避免启动层维护第二份工具清单。
+func fobrainCapabilityIDs() []string {
+	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
+	catalog, err := provider.ListCapabilities()
+	if err != nil {
+		return nil
+	}
+	ids := make([]string, 0, len(catalog))
+	for _, capability := range catalog {
+		ids = append(ids, capability.ID)
+	}
+	return ids
 }
 
 // fobrainCredentialBindingFromConfig 转换安全凭据摘要，不包含真实 token。

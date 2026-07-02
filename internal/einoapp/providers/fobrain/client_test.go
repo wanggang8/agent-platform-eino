@@ -67,3 +67,9 @@ func (client *recordingCurrentUserClient) CurrentUserContext(_ context.Context, 
 	client.lastCredential = credential
 	return client.result, client.err
 }
+
+func (client *recordingCurrentUserClient) MyPermissions(_ context.Context, credential fobrain.ResolvedCredential) (fobrain.MyPermissionsResult, error) {
+	client.calls++
+	client.lastCredential = credential
+	return fobrain.MyPermissionsResult{}, client.err
+}

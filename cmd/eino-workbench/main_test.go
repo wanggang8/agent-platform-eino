@@ -208,6 +208,27 @@ func TestCapabilityRuntimeFromConfigRegistersFobrainOnlyWhenEnabled(t *testing.T
 	}
 }
 
+func TestPolicyContextsFromConfigDerivesFobrainCapabilitiesFromProviderCatalog(t *testing.T) {
+	// policy context 不能维护第二份 Fobrain capability id 清单，必须跟 provider catalog 同步。
+	cfg := fobrainEnabledTestConfig("https://fobrain.example.test/api", "mock")
+	contexts := policyContextsFromConfig(bootstrap.Config{Fobrain: cfg})
+
+	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
+	catalog, err := provider.ListCapabilities()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, capability := range catalog {
+		context, ok := contexts[capability.ID]
+		if !ok {
+			t.Fatalf("missing policy context for %s: %+v", capability.ID, contexts)
+		}
+		if context.WorkspaceID != "ws_fobrain" || context.CredentialBinding.Status != capabilities.CredentialStatusBound {
+			t.Fatalf("policy context mismatch for %s: %+v", capability.ID, context)
+		}
+	}
+}
+
 func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T) {
 	// live mode 必须走 provider HTTP client；token 仍只在 provider 边界内作为 header 使用。
 	var gotAuth string
@@ -269,6 +290,32 @@ func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T
 	}
 	if !strings.Contains(candidate.SafeSummary, "王五") || !strings.Contains(candidate.SafeSummary, "安全运营") {
 		t.Fatalf("live fobrain candidate did not use HTTP result: %+v", candidate)
+	}
+}
+
+func fobrainEnabledTestConfig(baseURL string, mode string) bootstrap.FobrainConfig {
+	return bootstrap.FobrainConfig{
+		Enabled:     true,
+		ConnectorID: "fobrain",
+		WorkspaceID: "ws_fobrain",
+		BaseURL:     baseURL,
+		Timeout:     time.Second,
+		Credential: bootstrap.FobrainCredentialConfig{
+			Status:     "bound",
+			DisplayRef: "bound:fobrain:local",
+			OwnerScope: "workspace",
+			AuthParam:  "authorization",
+			APIToken:   "workspace-token",
+		},
+		ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: mode, Available: true},
+		CredentialBinding: bootstrap.CredentialBinding{
+			SchemaVersion: "eino.provider_credential_binding.v1",
+			WorkspaceID:   "ws_fobrain",
+			System:        "fobrain",
+			Status:        "bound",
+			DisplayRef:    "bound:fobrain:local",
+			OwnerScope:    "workspace",
+		},
 	}
 }
 

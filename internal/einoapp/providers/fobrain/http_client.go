@@ -50,11 +50,37 @@ func NewHTTPClient(config HTTPClientConfig) (*HTTPClient, error) {
 
 // CurrentUserContext 调用 Fobrain 标准当前用户接口，并只返回安全展示字段。
 func (client *HTTPClient) CurrentUserContext(ctx context.Context, credential ResolvedCredential) (CurrentUserContextResult, error) {
+	item, err := client.currentUserMap(ctx, credential)
+	if err != nil {
+		return CurrentUserContextResult{}, err
+	}
+	result := currentUserResultFromMap(item)
+	if strings.TrimSpace(result.DisplayName) == "" && strings.TrimSpace(result.Department) == "" && strings.TrimSpace(result.Role) == "" {
+		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应缺少安全字段")
+	}
+	return result, nil
+}
+
+// MyPermissions 读取当前用户权限范围；当前真实证据来自 /api/v1/user 的安全字段。
+func (client *HTTPClient) MyPermissions(ctx context.Context, credential ResolvedCredential) (MyPermissionsResult, error) {
+	item, err := client.currentUserMap(ctx, credential)
+	if err != nil {
+		return MyPermissionsResult{}, err
+	}
+	result := myPermissionsResultFromMap(item)
+	if len(result.PermissionNames) == 0 && len(result.DataPermissionNames) == 0 {
+		return MyPermissionsResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 权限响应缺少安全字段")
+	}
+	return result, nil
+}
+
+// currentUserMap 执行当前用户 HTTP 请求，并把 raw payload 限制在 provider 边界内。
+func (client *HTTPClient) currentUserMap(ctx context.Context, credential ResolvedCredential) (map[string]any, error) {
 	if client == nil || client.httpClient == nil || client.baseURL == nil {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain client 未配置")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain client 未配置")
 	}
 	if strings.TrimSpace(credential.APIToken) == "" {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 凭据未配置")
+		return nil, NewSafeError(capabilities.PolicyReasonCredentialMissing, "Fobrain 凭据未配置")
 	}
 	authParam := strings.TrimSpace(credential.AuthParam)
 	if authParam == "" {
@@ -70,38 +96,34 @@ func (client *HTTPClient) CurrentUserContext(ctx context.Context, credential Res
 
 	req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户请求创建失败")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户请求创建失败")
 	}
 	req.Header.Set(authParam, credential.APIToken)
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		if errors.Is(requestCtx.Err(), context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorTimeout, "Fobrain 当前用户请求超时")
+			return nil, NewSafeError(capabilities.PolicyReasonConnectorTimeout, "Fobrain 当前用户请求超时")
 		}
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 当前用户网络不可用")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 当前用户网络不可用")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorAuthFailure, "Fobrain 当前用户认证失败")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorAuthFailure, "Fobrain 当前用户认证失败")
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户读取失败")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户读取失败")
 	}
 	var payload any
 	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应不是合法 JSON")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应不是合法 JSON")
 	}
 	item, ok := unwrapPayloadMap(payload)
 	if !ok {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应结构无效")
+		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应结构无效")
 	}
-	result := currentUserResultFromMap(item)
-	if strings.TrimSpace(result.DisplayName) == "" && strings.TrimSpace(result.Department) == "" && strings.TrimSpace(result.Role) == "" {
-		return CurrentUserContextResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应缺少安全字段")
-	}
-	return result, nil
+	return item, nil
 }
 
 // endpoint 兼容 base_url 指向服务根路径或已经包含 /api/v1 的本地配置。
@@ -139,6 +161,17 @@ func currentUserResultFromMap(item map[string]any) CurrentUserContextResult {
 	}
 }
 
+// myPermissionsResultFromMap 只读取权限和数据范围安全字段，忽略 raw policy payload。
+func myPermissionsResultFromMap(item map[string]any) MyPermissionsResult {
+	return MyPermissionsResult{
+		DisplayName: firstString(item, "display_name", "name", "username", "staff_name"),
+		PermissionNames: stringListFromAny(firstPresentValue(item,
+			"permissions", "menu_names", "menus")),
+		DataPermissionNames: stringListFromAny(firstPresentValue(item,
+			"data_permission_names", "data_permissions", "data_permission", "dataPermission")),
+	}
+}
+
 func firstString(item map[string]any, keys ...string) string {
 	for _, key := range keys {
 		value := stringFromAny(item[key])
@@ -157,6 +190,64 @@ func roleName(value any, fallback string) string {
 		return firstString(item, "name", "label", "title")
 	}
 	return strings.TrimSpace(fallback)
+}
+
+func firstPresentValue(item map[string]any, keys ...string) any {
+	for _, key := range keys {
+		if value, ok := item[key]; ok {
+			return value
+		}
+	}
+	return nil
+}
+
+func stringListFromAny(value any) []string {
+	switch typed := value.(type) {
+	case []any:
+		out := make([]string, 0, len(typed))
+		for _, item := range typed {
+			out = append(out, stringListFromAny(item)...)
+		}
+		return out
+	case []string:
+		return cleanStringList(typed)
+	case map[string]any:
+		return cleanStringList([]string{firstString(typed, "name", "label", "title")})
+	case string:
+		if strings.Contains(typed, ",") {
+			return cleanStringList(strings.Split(typed, ","))
+		}
+		return cleanStringList([]string{typed})
+	default:
+		return nil
+	}
+}
+
+func cleanStringList(values []string) []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		text := strings.TrimSpace(value)
+		if text == "" || unsafePermissionText(text) {
+			continue
+		}
+		if _, ok := seen[text]; ok {
+			continue
+		}
+		seen[text] = struct{}{}
+		out = append(out, text)
+	}
+	return out
+}
+
+func unsafePermissionText(value string) bool {
+	lower := strings.ToLower(strings.TrimSpace(value))
+	for _, marker := range []string{"/api/", "raw", "credential", "secret", "token", "authorization", "bearer"} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 func stringFromAny(value any) string {

@@ -6,6 +6,7 @@ import "context"
 // 实现可以是 mock 或 HTTP client，但 raw provider payload 不能离开该边界。
 type FobrainClient interface {
 	CurrentUserContext(context.Context, ResolvedCredential) (CurrentUserContextResult, error)
+	MyPermissions(context.Context, ResolvedCredential) (MyPermissionsResult, error)
 }
 
 // CurrentUserContextResult 是当前用户 PoC 的安全业务结果。
@@ -15,9 +16,17 @@ type CurrentUserContextResult struct {
 	Role        string
 }
 
+// MyPermissionsResult 是 Batch A 权限范围读取的安全业务结果。
+type MyPermissionsResult struct {
+	DisplayName         string
+	PermissionNames     []string
+	DataPermissionNames []string
+}
+
 // MockClient 是 Phase 5 smoke 使用的本地 Fobrain client，不触达真实网络。
 type MockClient struct {
-	Result CurrentUserContextResult
+	Result      CurrentUserContextResult
+	Permissions MyPermissionsResult
 }
 
 // CurrentUserContext 返回安全 fixture 结果，用于证明 provider/Facts 链路。
@@ -30,4 +39,16 @@ func (client MockClient) CurrentUserContext(_ context.Context, _ ResolvedCredent
 		}, nil
 	}
 	return client.Result, nil
+}
+
+// MyPermissions 返回安全权限 fixture，用于 Batch A mock 验收。
+func (client MockClient) MyPermissions(_ context.Context, _ ResolvedCredential) (MyPermissionsResult, error) {
+	if len(client.Permissions.PermissionNames) == 0 && len(client.Permissions.DataPermissionNames) == 0 {
+		return MyPermissionsResult{
+			DisplayName:         "Fobrain 本地用户",
+			PermissionNames:     []string{"只读验证"},
+			DataPermissionNames: []string{"本地 fixture 数据范围"},
+		}, nil
+	}
+	return client.Permissions, nil
 }

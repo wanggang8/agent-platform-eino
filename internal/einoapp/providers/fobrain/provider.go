@@ -35,21 +35,21 @@ func (provider *Provider) ID() string {
 	return ProviderID
 }
 
-// ListCapabilities 返回 Phase 5 允许注册的 Fobrain PoC capability。
+// ListCapabilities 返回当前已实现的 Fobrain Batch A capability。
 func (provider *Provider) ListCapabilities() ([]capabilities.Capability, error) {
 	_ = provider.config
-	catalog := phase5Catalog()
+	catalog := batchACatalog()
 	out := make([]capabilities.Capability, len(catalog))
 	copy(out, catalog)
 	return out, nil
 }
 
-// Invoke 执行 Fobrain PoC 能力。provider 自身再次执行 policy/credential 防线。
+// Invoke 执行 Fobrain Batch A 能力。provider 自身再次执行 policy/credential 防线。
 func (provider *Provider) Invoke(ctx context.Context, request capabilities.InvocationRequest) (product.StructuredResultCandidate, error) {
-	if request.CapabilityID != CapabilityCurrentUserContext {
+	capability, ok := capabilityByID(request.CapabilityID)
+	if !ok {
 		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain capability 未注册")
 	}
-	capability := phase5Catalog()[0]
 	policyContext, err := provider.policyContextForInvocation(request)
 	if err != nil {
 		return product.StructuredResultCandidate{}, err
@@ -57,6 +57,9 @@ func (provider *Provider) Invoke(ctx context.Context, request capabilities.Invoc
 	decision := capabilities.EvaluatePolicy(capability, policyContext)
 	if !decision.Allowed {
 		return product.StructuredResultCandidate{}, NewSafeError(decision.ReasonCode, decision.SafeSummary)
+	}
+	if request.CapabilityID == CapabilityConnectorSecurity {
+		return BuildConnectorSecurityStructuredResult(policyContext, provider.connectorStatus()), nil
 	}
 
 	credential, err := provider.resolveCredential(ctx, policyContext)
@@ -67,12 +70,34 @@ func (provider *Provider) Invoke(ctx context.Context, request capabilities.Invoc
 	if client == nil {
 		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain client 未配置")
 	}
-	result, err := client.CurrentUserContext(ctx, credential)
-	if err != nil {
-		return product.StructuredResultCandidate{}, foldProviderError(err)
+	switch request.CapabilityID {
+	case CapabilityCurrentUserContext:
+		result, err := client.CurrentUserContext(ctx, credential)
+		if err != nil {
+			return product.StructuredResultCandidate{}, foldProviderError(err)
+		}
+		candidate, _ := BuildCurrentUserStructuredResult(result)
+		return candidate, nil
+	case CapabilityMyPermissions:
+		result, err := client.MyPermissions(ctx, credential)
+		if err != nil {
+			return product.StructuredResultCandidate{}, foldProviderError(err)
+		}
+		candidate, _ := BuildMyPermissionsStructuredResult(result)
+		return candidate, nil
+	default:
+		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain capability 未注册")
 	}
-	candidate, _ := BuildCurrentUserStructuredResult(result)
-	return candidate, nil
+}
+
+// capabilityByID 从 provider catalog 查找能力元数据，避免 execution/httpapi 写 provider 分支。
+func capabilityByID(capabilityID string) (capabilities.Capability, bool) {
+	for _, capability := range batchACatalog() {
+		if capability.ID == capabilityID {
+			return capability, true
+		}
+	}
+	return capabilities.Capability{}, false
 }
 
 // policyContextForInvocation 以调用方的 run/request workspace 为准，配置只补凭据摘要和 connector 状态。

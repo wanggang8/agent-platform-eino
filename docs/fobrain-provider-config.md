@@ -56,7 +56,7 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - Phase 8 live acceptance 配置必须设置 `auth_param: "authorization"`；其它认证参数名需要先新增 ADR。
 - `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
 - `connector_status.mode=live` 时 `base_url` 必须使用 HTTPS；只有 `127.0.0.1`、`localhost`、`::1` 的 HTTP URL 可作为本地验收代理入口。
-- 当前实现的第一步 live read 只覆盖 `tool.fobrain.current_user_context` 的 `/api/v1/user` 读取；`connector.fobrain.security` 和 `tool.fobrain.my_permissions` 仍需在 Batch A 后续小步补齐。
+- 当前 Batch A 代码基础覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 的 `/api/v1/user` 读取；`connector.fobrain.security` 只展示安全配置、connector 可用性和凭据绑定摘要，不替代业务读工具。
 
 ## 派生对象
 

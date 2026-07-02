@@ -22,7 +22,7 @@
 
 验收重点：认证成功/失败、connector 状态、workspace scope、当前用户安全摘要、权限空态和错误脱敏。
 
-第一小步只允许声明 `tool.fobrain.current_user_context` live HTTP 基础路径可用；Batch A 完成声明必须等 `connector.fobrain.security` 和 `tool.fobrain.my_permissions` 也具备 mock/live/脱敏证据。
+当前代码基础已覆盖 Batch A 三项能力：`connector.fobrain.security` 从安全配置和凭据摘要生成状态，`current_user_context` 与 `my_permissions` 从 `/api/v1/user` 读取安全字段。Batch A 最终完成声明仍必须补齐 live pass report、Workbench 视觉证据和验收记录。
 
 ### Batch B：我的范围
 
