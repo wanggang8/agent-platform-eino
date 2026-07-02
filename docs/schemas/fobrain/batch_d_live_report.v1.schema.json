@@ -44,6 +44,7 @@
           "capability_id",
           "status",
           "structured_result_schema",
+          "item_count",
           "policy_decision",
           "failure_category",
           "sample_source"
@@ -62,6 +63,7 @@
           "status": {"enum": ["passed", "failed", "blocked"]},
           "structured_result_schema": {"const": "tool.structured_result.v1"},
           "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+          "item_count": {"type": "integer", "minimum": 0},
           "policy_decision": {
             "enum": [
               "allowed",
@@ -191,6 +193,7 @@
                 "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
                 "policy_decision": {"type": "string", "const": "allowed"},
                 "failure_category": {"type": "string", "const": "none"},
+                "item_count": {"type": "integer", "minimum": 1},
                 "sample_source": {"type": "string", "enum": ["provided", "current_user"]}
               },
               "required": ["result_ref"]

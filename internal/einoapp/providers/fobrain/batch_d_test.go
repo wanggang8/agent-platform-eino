@@ -125,6 +125,7 @@ func TestProviderInvokesBatchDParameterizedQueryThroughStructuredResult(t *testi
 	}
 	if candidate.SchemaVersion != facts.StructuredResultSchemaVersion ||
 		candidate.ResultRef != "result:fobrain:list-assets-by-owner" ||
+		candidate.ItemCount != 1 ||
 		!strings.Contains(candidate.SafeSummary, "查询负责人资产") ||
 		!strings.Contains(candidate.SafeSummary, "张三") {
 		t.Fatalf("Batch D candidate mismatch: %+v", candidate)

@@ -120,6 +120,7 @@ func BuildParameterizedQueryStructuredResult(result ParameterizedQueryResult) (p
 		SchemaVersion: facts.StructuredResultSchemaVersion,
 		ResultRef:     "result:fobrain:" + metadata.ResultSlug,
 		SafeSummary:   summary,
+		ItemCount:     itemCount,
 	}, BusinessResultSchemaVersion
 }
 

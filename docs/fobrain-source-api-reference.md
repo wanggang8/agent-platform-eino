@@ -30,7 +30,7 @@
 推荐流程：
 
 1. 调用资产列表，找一条 `ip` 非空、`oper_info[].name` 非空、`business_department[].name` 非空的资产。
-2. 使用该资产的 `ip` 调用漏洞列表：`GET /api/v1/threat_center?page=1&per_page=20&data_range=4&ip=<IP>`。
+2. 使用该资产的 `ip` 调用漏洞列表：`GET /api/v1/threat_center?page=1&per_page=20&data_range=4&search_condition={"ip":["<IP>"],"operation_type_string":"=="}`。
 3. 如果漏洞列表也有数据，再确认 `person_info[].name` 或 `person_department[].name` 与候选 owner/department 一致或可关联。
 4. 只有三类样本都稳定存在时，才运行 Batch D live pass smoke。
 
@@ -45,9 +45,11 @@
 | `tool.fobrain.list_assets_by_department` | `GET /api/v1/asset` | `page`、`per_page`、`search_condition={"business_department.name.keyword":["<department>"],"operation_type_string":"=="}` | 资产模型 `business_department[].name` |
 | `tool.fobrain.list_vulnerabilities_by_department` | `GET /api/v1/threat_center` | `page`、`per_page`、`data_range=4`、`search_condition={"person_department.name.keyword":["<department>"],"operation_type_string":"=="}` | 漏洞模型 `person_department[].name` |
 | `tool.fobrain.list_assets_by_ip` | `GET /api/v1/asset` | `page`、`per_page`、`keyword=<ip>`、`search_condition={"ip":["<ip>"],"operation_type_string":"=="}` | 资产模型 `ip` |
-| `tool.fobrain.list_vulnerabilities_by_ip` | `GET /api/v1/threat_center` | `page`、`per_page`、`data_range=4`、`ip=<ip>` | 漏洞模型 `ip` |
+| `tool.fobrain.list_vulnerabilities_by_ip` | `GET /api/v1/threat_center` | `page`、`per_page`、`data_range=4`、`search_condition={"ip":["<ip>"],"operation_type_string":"=="}` | 漏洞模型 `ip` |
 
 `search_condition` 在旧源码中是字符串数组，由 `ParseQueryConditions` 解析。HTTP query 中可重复传入 `search_condition=<json>`；当前新项目 Batch D client 一次只传一个 JSON 字符串。
+
+注意：旧源码 `ThreatListRequest.Ip` 会让 controller 在 `len(params.Ip)>0` 时强制 `data_range=1`，这是 IP 画像场景的历史行为。Batch D 验收要求查询非回收站完整范围，因此漏洞按 IP 查询不得发送 `ip=<ip>` query 参数，必须使用 `search_condition` 约束 `ip` 字段。
 
 ## 字段与安全边界
 

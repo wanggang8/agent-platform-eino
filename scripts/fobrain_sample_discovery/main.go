@@ -289,7 +289,8 @@ func candidateVerificationQueries(kind string, value string, pageSize int) []can
 	case "ip":
 		return []candidateQuerySpec{
 			{suffix: "asset", family: "asset_list", paths: []string{"/api/asset", "/api/v1/asset"}, query: queryWithSearch("ip", value, pageSize, "keyword", value)},
-			{suffix: "threat", family: "threat_center", paths: []string{"/api/threat_center", "/api/v1/threat_center"}, query: url.Values{"page": {"1"}, "per_page": {fmt.Sprint(pageSize)}, "data_range": {"4"}, "ip": {value}}},
+			// 漏洞 IP 验证使用 search_condition，避免旧接口 ip 参数把 data_range 覆盖成未处理范围。
+			{suffix: "threat", family: "threat_center", paths: []string{"/api/threat_center", "/api/v1/threat_center"}, query: queryWithSearch("ip", value, pageSize, "data_range", "4")},
 		}
 	default:
 		return nil
@@ -309,7 +310,7 @@ func verifySamples(ctx context.Context, client *discoveryClient, samples discove
 		{id: "assets_by_department", family: "asset_list", paths: []string{"/api/asset", "/api/v1/asset"}, query: queryWithSearch("business_department.name.keyword", samples.Department, pageSize)},
 		{id: "vulnerabilities_by_department", family: "threat_center", paths: []string{"/api/threat_center", "/api/v1/threat_center"}, query: queryWithSearch("person_department.name.keyword", samples.Department, pageSize, "data_range", "4")},
 		{id: "assets_by_ip", family: "asset_list", paths: []string{"/api/asset", "/api/v1/asset"}, query: queryWithSearch("ip", samples.IP, pageSize, "keyword", samples.IP)},
-		{id: "vulnerabilities_by_ip", family: "threat_center", paths: []string{"/api/threat_center", "/api/v1/threat_center"}, query: url.Values{"page": {"1"}, "per_page": {fmt.Sprint(pageSize)}, "data_range": {"4"}, "ip": {samples.IP}}},
+		{id: "vulnerabilities_by_ip", family: "threat_center", paths: []string{"/api/threat_center", "/api/v1/threat_center"}, query: queryWithSearch("ip", samples.IP, pageSize, "data_range", "4")},
 	} {
 		page, check := client.fetchPage(ctx, spec.id, spec.family, spec.paths, spec.query)
 		if check.Status == "passed" && len(page.items) == 0 {

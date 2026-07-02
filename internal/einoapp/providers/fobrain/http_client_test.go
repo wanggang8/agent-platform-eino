@@ -368,10 +368,22 @@ func TestHTTPClientParameterizedVulnerabilityByIPUsesCurrentAPIPath(t *testing.T
 	var gotPath string
 	var gotIP string
 	var gotDataRange string
+	var gotConditions []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
 		gotIP = r.URL.Query().Get("ip")
 		gotDataRange = r.URL.Query().Get("data_range")
+		for _, encoded := range r.URL.Query()["search_condition"] {
+			var condition map[string]any
+			if err := json.Unmarshal([]byte(encoded), &condition); err != nil {
+				t.Fatalf("search_condition is not JSON: %v", err)
+			}
+			for key := range condition {
+				if key != "operation_type_string" {
+					gotConditions = append(gotConditions, key)
+				}
+			}
+		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"code": 0,
 			"data": map[string]any{
@@ -410,8 +422,8 @@ func TestHTTPClientParameterizedVulnerabilityByIPUsesCurrentAPIPath(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotPath != "/api/threat_center" || gotIP != "10.10.11.12" || gotDataRange != "4" {
-		t.Fatalf("request mismatch path=%s ip=%s data_range=%s", gotPath, gotIP, gotDataRange)
+	if gotPath != "/api/threat_center" || gotIP != "" || gotDataRange != "4" || !containsString(gotConditions, "ip") {
+		t.Fatalf("request mismatch path=%s ip=%s data_range=%s conditions=%+v", gotPath, gotIP, gotDataRange, gotConditions)
 	}
 	if len(result.Items) != 1 {
 		t.Fatalf("items = %+v", result.Items)

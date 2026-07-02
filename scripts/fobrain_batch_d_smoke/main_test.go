@@ -47,8 +47,47 @@ func TestRunBatchDLiveSmokeWritesSafePassedReport(t *testing.T) {
 		t.Fatalf("capability count = %d", len(report.CapabilityResults))
 	}
 	for _, result := range report.CapabilityResults {
-		if result.Status != "passed" || result.StructuredResultSchema != "tool.structured_result.v1" || result.ResultRef == "" {
+		if result.Status != "passed" || result.StructuredResultSchema != "tool.structured_result.v1" || result.ResultRef == "" || result.ItemCount == 0 {
 			t.Fatalf("capability result mismatch: %+v", result)
+		}
+	}
+	assertBatchDReportNoLeak(t, outputPath, secret, "张三", "安全部", "10.10.11.12")
+}
+
+func TestRunBatchDLiveSmokeBlocksWhenStableSampleReturnsEmpty(t *testing.T) {
+	// 稳定样本必须真实命中非空 StructuredResult；空结果不能声明 Batch D live pass。
+	const secret = "batch-d-secret"
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("authorization") != secret {
+			t.Fatalf("authorization header mismatch")
+		}
+		switch r.URL.Path {
+		case "/api/user":
+			_, _ = w.Write([]byte(`{"data":{"username":"当前用户","department_name":"安全部","role":{"name":"只读"}}}`))
+		case "/api/asset", "/api/threat_center":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[],"page":1,"per_page":20,"total":0}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "eino-workbench.yaml")
+	outputPath := filepath.Join(tempDir, "report.json")
+	writeBatchDTestConfig(t, configPath, server.URL, secret)
+
+	err := runBatchDLiveSmoke(configPath, outputPath, batchDSamples{owner: "张三", department: "安全部", ip: "10.10.11.12"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := readBatchDReport(t, outputPath)
+	if report.Status != "blocked" || report.FailureCategory != "empty_result" || len(report.BlocksClaims) == 0 {
+		t.Fatalf("empty report status mismatch: %+v", report)
+	}
+	for _, result := range report.CapabilityResults {
+		if result.Status != "blocked" || result.FailureCategory != "empty_result" || result.ItemCount != 0 {
+			t.Fatalf("empty capability mismatch: %+v", result)
 		}
 	}
 	assertBatchDReportNoLeak(t, outputPath, secret, "张三", "安全部", "10.10.11.12")

@@ -52,6 +52,7 @@ type batchDCapabilityResult struct {
 	Status                 string `json:"status"`
 	StructuredResultSchema string `json:"structured_result_schema"`
 	ResultRef              string `json:"result_ref,omitempty"`
+	ItemCount              int    `json:"item_count"`
 	PolicyDecision         string `json:"policy_decision"`
 	FailureCategory        string `json:"failure_category"`
 	SampleSource           string `json:"sample_source"`
@@ -147,6 +148,13 @@ func executeBatchDLiveSmoke(ctx context.Context, cfg bootstrap.Config, samples b
 			report.CapabilityResults = append(report.CapabilityResults, item)
 			continue
 		}
+		item.ItemCount = candidate.ItemCount
+		if candidate.ItemCount == 0 {
+			item.Status = "blocked"
+			item.FailureCategory = "empty_result"
+			report.CapabilityResults = append(report.CapabilityResults, item)
+			continue
+		}
 		structuredResult, err := gate.Approve(candidate)
 		if err != nil {
 			item.FailureCategory = "structured_result_rejected"
@@ -161,7 +169,7 @@ func executeBatchDLiveSmoke(ctx context.Context, cfg bootstrap.Config, samples b
 		report.CapabilityResults = append(report.CapabilityResults, item)
 	}
 	report.Status = batchDOverallStatus(report.CapabilityResults)
-	report.FailureCategory = batchDFailureCategory(report.Status, firstErr)
+	report.FailureCategory = batchDFailureCategory(report.CapabilityResults, firstErr)
 	if report.Status == "passed" {
 		report.BlocksClaims = []string{}
 	}
@@ -271,11 +279,17 @@ func batchDOverallStatus(results []batchDCapabilityResult) string {
 	return "passed"
 }
 
-func batchDFailureCategory(status string, firstErr error) string {
+func batchDFailureCategory(results []batchDCapabilityResult, firstErr error) string {
+	status := batchDOverallStatus(results)
 	if status == "passed" {
 		return "none"
 	}
 	if status == "blocked" {
+		for _, result := range results {
+			if result.FailureCategory == "empty_result" {
+				return "empty_result"
+			}
+		}
 		return "missing_sample_input"
 	}
 	return stableFailureCategory(firstErr)

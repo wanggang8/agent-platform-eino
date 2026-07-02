@@ -71,7 +71,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 验收重点：输入 schema、实体消歧、IP 完整展示、分页和 clarification 分支。
 
-当前代码进展：Batch D 六个参数化只读工具已进入 mock/参数化 client 可执行 catalog，并具备 mock 参数解析、必填字段校验和 `StructuredResult` 安全摘要 mapper。HTTP live mapper 已按当前真实接口返回重新归一化：资产优先 `/api/asset`，漏洞优先 `/api/threat_center`，并兼容旧 `/api/v1/...` fallback；真实返回包装为 `{code,data,message}`，列表位于 `data.items`。该切片只证明 capability metadata、输入契约、HTTP mapper 和 Product Facts 结果边界；Batch D 专用 live report、真实分页批量验收、实体消歧接入和视觉证据仍需后续批次验收。
+当前代码进展：Batch D 六个参数化只读工具已进入 mock/参数化 client 可执行 catalog，并具备 mock 参数解析、必填字段校验和 `StructuredResult` 安全摘要 mapper。HTTP live mapper 已按当前真实接口返回重新归一化：资产优先 `/api/asset`，漏洞优先 `/api/threat_center`，并兼容旧 `/api/v1/...` fallback；真实返回包装为 `{code,data,message}`，列表位于 `data.items`。Batch D 专用 live report 已覆盖六项工具、脱敏和非空 `item_count` 门禁；实体消歧接入、真实分页批量验收和 Workbench 视觉证据仍需后续批次验收。
 
 Batch D live smoke/report 命令：
 
@@ -83,7 +83,7 @@ go run ./scripts/fobrain_sample_discovery --config configs/eino-workbench.local.
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-d --config configs/eino-workbench.local.yaml --owner "<负责人>" --department "<部门>" --ip "<IP>"
 ```
 
-未提供稳定 `owner`、`department`、`ip` 样本时，Batch D smoke 必须生成 `blocked` report，并通过 `blocks_claims` 阻止 Batch D live pass 声明。样本发现流程、源码接口证据和 discovery report 规则见 `docs/fobrain-source-api-reference.md`。当前本地 discovery report 显示 owner/department 已找到，IP 未找到可同时命中资产和漏洞的样本，因此 `test-results/eino-workbench-fobrain-batch-d-live-report.json` 仍是 blocking report。
+未提供稳定 `owner`、`department`、`ip` 样本，或任一稳定样本查询返回空结果时，Batch D smoke 必须生成 `blocked` report，并通过 `blocks_claims` 阻止 Batch D live pass 声明。样本发现流程、源码接口证据和 discovery report 规则见 `docs/fobrain-source-api-reference.md`。当前本地 discovery report 已找到 owner/department/IP 三类稳定样本，`test-results/eino-workbench-fobrain-batch-d-live-report.json` 的六个 Batch D capability 均为 `passed`，且每项 `item_count > 0`。
 
 ### Batch E：详情与风险关联
 

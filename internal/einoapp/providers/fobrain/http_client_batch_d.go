@@ -79,7 +79,8 @@ func batchDLiveRequest(toolID string, query ParameterizedQuery) (url.Values, []s
 		return values, []string{currentThreatCenterPath, legacyThreatCenterPath}, nil
 	case CapabilityListVulnerabilitiesByIP:
 		values.Set("data_range", defaultThreatCenterDataRange)
-		values.Set("ip", strings.TrimSpace(query.IP))
+		// 旧 Fobrain 的 ip query 参数会触发 IP 画像分支并强制 data_range=1；Batch D 需要完整非回收站范围。
+		addLiveSearchCondition(values, "ip", []string{query.IP}, "==")
 		addLiveThreatFilters(values, query)
 		return values, []string{currentThreatCenterPath, legacyThreatCenterPath}, nil
 	default:

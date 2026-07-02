@@ -19,6 +19,8 @@ type StructuredResultCandidate struct {
 	SchemaVersion string
 	ResultRef     string
 	SafeSummary   string
+	// ItemCount 是 provider 已脱敏后的非敏感统计，只供验收/诊断使用，不进入 Product Facts。
+	ItemCount int
 }
 
 // StructuredResultSafetyGate 校验工具候选结果是否可作为唯一事实材料进入 Product Facts。

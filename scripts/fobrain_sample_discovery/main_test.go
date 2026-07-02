@@ -21,6 +21,15 @@ func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
 		case "/api/asset":
 			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"asset-1","ip":"10.10.11.12","oper_info":[{"name":"张三"}],"business_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
 		case "/api/threat_center":
+			// 旧 Fobrain 的 ip query 参数会强制 data_range=1；脚本必须用 search_condition 验证完整漏洞范围。
+			if r.URL.Query().Get("ip") != "" {
+				_, _ = w.Write([]byte(`{"code":0,"data":{"items":[],"page":1,"per_page":20,"total":0}}`))
+				return
+			}
+			if conditions := strings.Join(r.URL.Query()["search_condition"], "\n"); conditions != "" && !strings.Contains(conditions, `"ip"`) && !strings.Contains(conditions, "person_") {
+				_, _ = w.Write([]byte(`{"code":0,"data":{"items":[],"page":1,"per_page":20,"total":0}}`))
+				return
+			}
 			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"vuln-1","ip":"10.10.11.12","name":"高危组件漏洞","person_info":[{"name":"张三"}],"person_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
 		default:
 			http.NotFound(w, r)
