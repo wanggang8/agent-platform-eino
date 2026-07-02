@@ -9,6 +9,12 @@ type FobrainClient interface {
 	MyPermissions(context.Context, ResolvedCredential) (MyPermissionsResult, error)
 }
 
+// ParameterizedQueryClient 是 Batch D 参数化只读查询的可选 client 能力。
+// HTTP live 接入未完成前，provider 只在 client 明确实现该接口时启用 Batch D 调用。
+type ParameterizedQueryClient interface {
+	ParameterizedQuery(context.Context, ResolvedCredential, string, ParameterizedQuery) (ParameterizedQueryResult, error)
+}
+
 // CurrentUserContextResult 是当前用户 PoC 的安全业务结果。
 type CurrentUserContextResult struct {
 	DisplayName string
@@ -51,4 +57,26 @@ func (client MockClient) MyPermissions(_ context.Context, _ ResolvedCredential) 
 		}, nil
 	}
 	return client.Permissions, nil
+}
+
+// ParameterizedQuery 返回 Batch D mock 只读结果，用于固定 catalog、参数和 StructuredResult 边界。
+func (client MockClient) ParameterizedQuery(_ context.Context, _ ResolvedCredential, toolID string, query ParameterizedQuery) (ParameterizedQueryResult, error) {
+	metadata := parameterizedToolMetadata(toolID)
+	return ParameterizedQueryResult{
+		ToolID:     toolID,
+		Title:      metadata.DisplayName,
+		EntityType: metadata.EntityType,
+		Query:      query,
+		Items: []QueryResultItem{
+			{
+				EntityRef:   metadata.EntityType + ":fobrain:mock-1",
+				DisplayName: metadata.DisplayName + "结果",
+				OwnerName:   query.PersonName,
+				Status:      "resolved",
+				Summary:     parameterizedQueryTarget(query),
+				Severity:    query.Severity,
+				Affected:    1,
+			},
+		},
+	}, nil
 }

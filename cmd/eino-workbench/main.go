@@ -254,7 +254,7 @@ func policyContextsFromConfig(config bootstrap.Config) map[string]capabilities.P
 		if config.Fobrain.ConnectorStatus.Available {
 			status = capabilities.ConnectorStatusAvailable
 		}
-		for _, capabilityID := range fobrainCapabilityIDs() {
+		for _, capabilityID := range fobrainCapabilityIDs(config.Fobrain) {
 			contexts[capabilityID] = capabilities.PolicyContext{
 				WorkspaceID:       config.Fobrain.WorkspaceID,
 				CredentialBinding: fobrainCredentialBindingFromConfig(config.Fobrain.CredentialBinding),
@@ -265,9 +265,12 @@ func policyContextsFromConfig(config bootstrap.Config) map[string]capabilities.P
 	return contexts
 }
 
-// fobrainCapabilityIDs 从 provider catalog 派生 policy context 目标，避免启动层维护第二份工具清单。
-func fobrainCapabilityIDs() []string {
-	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
+// fobrainCapabilityIDs 从配置化 provider catalog 派生 policy context 目标，避免启动层维护第二份工具清单。
+func fobrainCapabilityIDs(config bootstrap.FobrainConfig) []string {
+	provider, err := fobrainProviderFromConfig(config)
+	if err != nil {
+		return nil
+	}
 	catalog, err := provider.ListCapabilities()
 	if err != nil {
 		return nil

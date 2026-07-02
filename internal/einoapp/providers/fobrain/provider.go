@@ -35,18 +35,17 @@ func (provider *Provider) ID() string {
 	return ProviderID
 }
 
-// ListCapabilities 返回当前已实现的 Fobrain Batch A capability。
+// ListCapabilities 返回当前 provider client 可执行的 Fobrain capability。
 func (provider *Provider) ListCapabilities() ([]capabilities.Capability, error) {
-	_ = provider.config
-	catalog := batchACatalog()
+	catalog := providerCatalog(provider.supportsParameterizedQuery())
 	out := make([]capabilities.Capability, len(catalog))
 	copy(out, catalog)
 	return out, nil
 }
 
-// Invoke 执行 Fobrain Batch A 能力。provider 自身再次执行 policy/credential 防线。
+// Invoke 执行 Fobrain 能力。provider 自身再次执行 policy/credential 防线。
 func (provider *Provider) Invoke(ctx context.Context, request capabilities.InvocationRequest) (product.StructuredResultCandidate, error) {
-	capability, ok := capabilityByID(request.CapabilityID)
+	capability, ok := provider.capabilityByID(request.CapabilityID)
 	if !ok {
 		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain capability 未注册")
 	}
@@ -86,18 +85,45 @@ func (provider *Provider) Invoke(ctx context.Context, request capabilities.Invoc
 		candidate, _ := BuildMyPermissionsStructuredResult(result)
 		return candidate, nil
 	default:
+		if batchDParameterizedCapabilityByID(request.CapabilityID) {
+			parameterizedClient, ok := client.(ParameterizedQueryClient)
+			if !ok {
+				return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 参数化查询 client 未配置")
+			}
+			query, err := parameterizedQueryFromArguments(request.CapabilityID, request.Arguments)
+			if err != nil {
+				return product.StructuredResultCandidate{}, err
+			}
+			result, err := parameterizedClient.ParameterizedQuery(ctx, credential, request.CapabilityID, query)
+			if err != nil {
+				return product.StructuredResultCandidate{}, foldProviderError(err)
+			}
+			// Product Facts 只能使用平台已校验的安全查询条件，不能信任 client 回填的 raw 查询。
+			result.ToolID = request.CapabilityID
+			result.Query = query
+			candidate, _ := BuildParameterizedQueryStructuredResult(result)
+			return candidate, nil
+		}
 		return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain capability 未注册")
 	}
 }
 
 // capabilityByID 从 provider catalog 查找能力元数据，避免 execution/httpapi 写 provider 分支。
-func capabilityByID(capabilityID string) (capabilities.Capability, bool) {
-	for _, capability := range batchACatalog() {
+func (provider *Provider) capabilityByID(capabilityID string) (capabilities.Capability, bool) {
+	for _, capability := range providerCatalog(provider.supportsParameterizedQuery()) {
 		if capability.ID == capabilityID {
 			return capability, true
 		}
 	}
 	return capabilities.Capability{}, false
+}
+
+func (provider *Provider) supportsParameterizedQuery() bool {
+	if provider == nil || provider.config.Client == nil {
+		return false
+	}
+	_, ok := provider.config.Client.(ParameterizedQueryClient)
+	return ok
 }
 
 // policyContextForInvocation 以调用方的 run/request workspace 为准，配置只补凭据摘要和 connector 状态。

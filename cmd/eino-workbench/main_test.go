@@ -206,6 +206,26 @@ func TestCapabilityRuntimeFromConfigRegistersFobrainOnlyWhenEnabled(t *testing.T
 	if candidate.SchemaVersion != facts.StructuredResultSchemaVersion || candidate.SafeSummary == "" {
 		t.Fatalf("fobrain candidate mismatch: %+v", candidate)
 	}
+
+	batchDCapability, ok := registry.Get(fobrain.CapabilityListAssetsByOwner)
+	if !ok {
+		t.Fatalf("mock fobrain Batch D capability was not registered: %+v", registry.List())
+	}
+	batchDPolicyContext, ok := policyContexts[fobrain.CapabilityListAssetsByOwner]
+	if !ok || batchDPolicyContext.CredentialBinding.Status != capabilities.CredentialStatusBound {
+		t.Fatalf("mock fobrain Batch D policy context missing: %+v", policyContexts)
+	}
+	batchDCandidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
+		CapabilityID:  fobrain.CapabilityListAssetsByOwner,
+		Arguments:     map[string]any{"person_name": "张三"},
+		PolicyContext: batchDPolicyContext,
+	})
+	if err != nil {
+		t.Fatalf("mock fobrain Batch D invoke failed for %+v: %v", batchDCapability, err)
+	}
+	if batchDCandidate.SchemaVersion != facts.StructuredResultSchemaVersion || !strings.Contains(batchDCandidate.SafeSummary, "张三") {
+		t.Fatalf("mock fobrain Batch D candidate mismatch: %+v", batchDCandidate)
+	}
 }
 
 func TestPolicyContextsFromConfigDerivesFobrainCapabilitiesFromProviderCatalog(t *testing.T) {
@@ -213,7 +233,10 @@ func TestPolicyContextsFromConfigDerivesFobrainCapabilitiesFromProviderCatalog(t
 	cfg := fobrainEnabledTestConfig("https://fobrain.example.test/api", "mock")
 	contexts := policyContextsFromConfig(bootstrap.Config{Fobrain: cfg})
 
-	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
+	provider, err := fobrainProviderFromConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 	catalog, err := provider.ListCapabilities()
 	if err != nil {
 		t.Fatal(err)
@@ -270,9 +293,12 @@ func TestCapabilityRuntimeFromConfigUsesFobrainHTTPClientInLiveMode(t *testing.T
 		},
 	}
 
-	_, invoker, err := capabilityRuntimeFromConfig(cfg)
+	registry, invoker, err := capabilityRuntimeFromConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if _, ok := registry.Get(fobrain.CapabilityListAssetsByOwner); ok {
+		t.Fatalf("live HTTP fobrain must not register Batch D before live mapper is implemented: %+v", registry.List())
 	}
 	candidate, err := invoker.Invoke(context.Background(), capabilities.InvocationRequest{
 		CapabilityID: fobrain.CapabilityCurrentUserContext,

@@ -99,17 +99,18 @@ func executeBatchALiveSmoke(ctx context.Context, cfg bootstrap.Config) (batchARe
 		report.BlocksClaims = []string{"fobrain-batch-a live pass"}
 		return report, err
 	}
-	if len(catalog) != 3 {
+	batchACatalog := batchACapabilities(catalog)
+	if len(batchACatalog) != 3 {
 		report.Status = "failed"
 		report.FailureCategory = "batch_a_catalog_mismatch"
 		report.BlocksClaims = []string{"fobrain-batch-a live pass"}
-		return report, fmt.Errorf("batch a catalog length = %d", len(catalog))
+		return report, fmt.Errorf("batch a catalog length = %d", len(batchACatalog))
 	}
 
 	var firstErr error
 	policyContext := fobrainPolicyContextFromConfig(cfg.Fobrain)
 	gate := product.NewStructuredResultSafetyGate()
-	for _, capability := range catalog {
+	for _, capability := range batchACatalog {
 		item := batchACapabilityReport{
 			CapabilityID:           capability.ID,
 			Status:                 "failed",
@@ -162,6 +163,18 @@ func executeBatchALiveSmoke(ctx context.Context, cfg bootstrap.Config) (batchARe
 	report.Status = "passed"
 	report.FailureCategory = "none"
 	return report, nil
+}
+
+// batchACapabilities 只保留 Batch A 验收范围，避免后续 catalog 扩展误伤 live smoke。
+func batchACapabilities(catalog []capabilities.Capability) []capabilities.Capability {
+	out := []capabilities.Capability{}
+	for _, capability := range catalog {
+		switch capability.ID {
+		case fobrain.CapabilityConnectorSecurity, fobrain.CapabilityCurrentUserContext, fobrain.CapabilityMyPermissions:
+			out = append(out, capability)
+		}
+	}
+	return out
 }
 
 // newBatchAReport 初始化报告公共字段，避免失败分支缺少门禁字段。

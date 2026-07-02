@@ -8,7 +8,7 @@ import (
 )
 
 func TestProviderCatalogRegistersBatchACapabilities(t *testing.T) {
-	// Phase 8 Batch A 只注册 connector、当前用户和权限三类能力，不提前声明 Batch B-E。
+	// 没有参数化 client 时只暴露 Batch A，避免真实 HTTP client 提前声明不可执行工具。
 	provider := fobrain.NewProvider(fobrain.ProviderConfig{})
 
 	catalog, err := provider.ListCapabilities()
@@ -77,5 +77,9 @@ func TestProviderCatalogRegistersBatchACapabilities(t *testing.T) {
 		connector.ConnectorID != "" ||
 		connector.SideEffect != capabilities.SideEffectReadExternal {
 		t.Fatalf("connector capability mismatch: %+v", connector)
+	}
+
+	if _, ok := byID[fobrain.CapabilityListAssetsByOwner]; ok {
+		t.Fatalf("Batch D capability must not be advertised without parameterized client: %+v", byID[fobrain.CapabilityListAssetsByOwner])
 	}
 }

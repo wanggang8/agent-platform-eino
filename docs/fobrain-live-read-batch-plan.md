@@ -71,6 +71,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 验收重点：输入 schema、实体消歧、IP 完整展示、分页和 clarification 分支。
 
+当前代码进展：Batch D 六个参数化只读工具已进入 mock/参数化 client 可执行 catalog，并具备 mock 参数解析、必填字段校验和 `StructuredResult` 安全摘要 mapper。真实 HTTP client 未实现 Batch D 前不会暴露这些工具。该切片只证明 capability metadata、输入契约和 Product Facts 结果边界，不声明真实 Fobrain HTTP live read 完成；live client 路径、真实分页、实体消歧接入和视觉证据仍需后续批次验收。
+
 ### Batch E：详情与风险关联
 
 范围：
