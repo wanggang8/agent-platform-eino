@@ -22,7 +22,13 @@
 
 验收重点：认证成功/失败、connector 状态、workspace scope、当前用户安全摘要、权限空态和错误脱敏。
 
-当前代码基础已覆盖 Batch A 三项能力：`connector.fobrain.security` 从安全配置和凭据摘要生成状态，`current_user_context` 与 `my_permissions` 从 `/api/v1/user` 读取安全字段。Batch A 最终完成声明仍必须补齐 live pass report、Workbench 视觉证据和验收记录。
+当前代码基础已覆盖 Batch A 三项能力：`connector.fobrain.security` 从安全配置和凭据摘要生成状态，`current_user_context` 与 `my_permissions` 从当前用户接口读取安全字段。标准路径优先使用 `/api/v1/user`，404/405 时兼容私有部署 `/api/user`；权限字段缺失时 `my_permissions` 输出权限空态安全摘要。Batch A live/smoke 验收命令为：
+
+```bash
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config configs/eino-workbench.local.yaml
+```
+
+配置齐全且真实环境可用时，该命令必须生成 `test-results/eino-workbench-fobrain-batch-a-live-report.json`，并符合 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json`。配置缺失时只能生成 blocking skip report，不能声明 Batch A live pass。Batch A 最终完成声明仍必须补齐 Workbench 视觉证据和验收记录。
 
 ### Batch B：我的范围
 
@@ -81,7 +87,7 @@
 - capability catalog、input schema、result schema、fixture 和 StructuredResult mapper 已补齐。
 - `docs/fixtures/fobrain/tool-matrix-24.json` 中对应工具的 `batch_gate` 与本计划一致。
 - mock test 覆盖成功、空态、provider 错误、schema mismatch 和敏感字段拒绝。
-- live 环境可用时生成 live pass report；不可用时只能生成 blocking skip report，且 `blocks_claims` 阻止通过声明。
+- live 环境可用时生成对应批次 live pass report；不可用时只能生成 blocking skip report，且 `blocks_claims` 阻止通过声明。
 - Workbench 和 Action API 消费同一组 Product Facts。
 - replay、audit、SSE 和报告不包含 token、raw provider payload 或 credential ref。
 - 前端可用后补齐工具卡折叠/展开、证据、审计和 fresh replay 截图。

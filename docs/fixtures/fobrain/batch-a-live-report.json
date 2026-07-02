@@ -1,0 +1,47 @@
+{
+  "schema_version": "eino.fobrain_batch_a_live_report.v1",
+  "scenario": "fobrain-batch-a",
+  "status": "passed",
+  "provider_mode": "live",
+  "workspace_id": "ws_fobrain",
+  "tls_private_cert_mode": true,
+  "capability_results": [
+    {
+      "capability_id": "tool.fobrain.current_user_context",
+      "status": "passed",
+      "structured_result_schema": "tool.structured_result.v1",
+      "result_ref": "result:fobrain:current-user-context",
+      "safe_summary": "Fobrain 当前用户：张三，部门：安全部，角色：安全运营",
+      "policy_decision": "allowed",
+      "failure_category": "none"
+    },
+    {
+      "capability_id": "tool.fobrain.my_permissions",
+      "status": "passed",
+      "structured_result_schema": "tool.structured_result.v1",
+      "result_ref": "result:fobrain:my-permissions",
+      "safe_summary": "Fobrain 权限范围：张三，权限：资产只读，数据范围：本部门",
+      "policy_decision": "allowed",
+      "failure_category": "none"
+    },
+    {
+      "capability_id": "connector.fobrain.security",
+      "status": "passed",
+      "structured_result_schema": "tool.structured_result.v1",
+      "result_ref": "result:fobrain:connector-security",
+      "safe_summary": "Fobrain connector：available，workspace：ws_fobrain，绑定状态：bound",
+      "policy_decision": "allowed",
+      "failure_category": "none"
+    }
+  ],
+  "redaction_checks": [
+    "secret_absent",
+    "auth_header_absent",
+    "raw_payload_absent",
+    "binding_reference_absent",
+    "checkpoint_absent",
+    "interrupt_absent"
+  ],
+  "failure_category": "none",
+  "report_created_at": "2026-07-02T00:00:00Z"
+}

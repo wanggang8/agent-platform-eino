@@ -290,6 +290,7 @@ Fobrain 真实模型工具选择必须符合 `intent-and-capability-selection.md
 ## Fobrain live 门禁
 
 ```bash
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config configs/eino-workbench.local.yaml
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-read
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-write-approval
@@ -302,6 +303,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 
 - 24 个只读工具矩阵通过。
 - `docs/fixtures/fobrain/tool-matrix-24.json` 精确覆盖 24 个只读工具，且已通过 schema-test。
+- Batch A live/smoke 报告必须通过 `schemas/fobrain/batch_a_live_report.v1.schema.json`，覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions` 三项能力。
 - 工具矩阵 coverage 不低于旧项目最终通过证据中的 `24` 只读工具 + `1` connector、每场景六类截图区域和 `0 failed` 要求。
 - connector 状态可展示。
 - `credential_binding` 可展示，secret 不泄漏。

@@ -74,6 +74,9 @@ func permissionsSafeSummary(result MyPermissionsResult) string {
 	if len(result.DataPermissionNames) > 0 {
 		parts = append(parts, "数据范围："+strings.Join(safeSummaryList(result.DataPermissionNames), "、"))
 	}
+	if len(result.PermissionNames) == 0 && len(result.DataPermissionNames) == 0 {
+		parts = append(parts, "未返回权限字段")
+	}
 	return strings.Join(parts, "，")
 }
 

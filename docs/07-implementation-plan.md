@@ -921,7 +921,7 @@ git diff --check
 - 未补齐矩阵的工具不得进入实现。
 - 工具实现顺序必须遵循 Batch A-E；每个批次完成前不得把后续批次标记为可验收。
 - `batch_gate` 必须由 `tool_matrix.v1.schema.json` 校验，并与 `docs/fobrain-live-read-batch-plan.md` 一致。
-- Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A 最终完成声明还必须补 live pass report、Workbench 视觉证据和验收记录。
+- Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A live/smoke 必须生成 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json` 约束的报告。Batch A 最终完成声明还必须补 Workbench 视觉证据和验收记录。
 
 任务级检查：
 
@@ -930,6 +930,7 @@ go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|Credent
 go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|Provider|Client|Credential|StructuredResult|Unsafe' -count=1
 go test ./cmd/eino-workbench -run 'Fobrain' -count=1
 go test ./internal/einoapp/providers/fobrain -run ReadonlyToolMatrix -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config configs/eino-workbench.local.yaml
 bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 ```
 

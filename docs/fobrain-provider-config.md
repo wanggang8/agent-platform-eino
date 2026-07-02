@@ -60,7 +60,9 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 - `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
 - `connector_status.mode=live` 时 `base_url` 必须使用 HTTPS；只有 `127.0.0.1`、`localhost`、`::1` 的 HTTP URL 可作为本地验收代理入口。
 - 私有证书环境可设置 `tls.insecure_skip_verify: true`；该开关必须留在 ignored local 配置或受控部署配置中，验收报告只能记录布尔值，不能记录证书、token 或连接细节。
-- 当前 Batch A 代码基础覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 的 `/api/v1/user` 读取；`connector.fobrain.security` 只展示安全配置、connector 可用性和凭据绑定摘要，不替代业务读工具。
+- 当前 Batch A 代码基础覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 的当前用户读取：标准路径优先使用 `/api/v1/user`，404/405 时兼容私有部署 `/api/user`。`connector.fobrain.security` 只展示安全配置、connector 可用性和凭据绑定摘要，不替代业务读工具。
+- `my_permissions` 必须支持权限空态；当前用户接口未返回权限字段时输出安全摘要 `未返回权限字段`，不能把空态当执行失败。
+- Batch A live/smoke 通过 `bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config configs/eino-workbench.local.yaml` 执行；通过报告写入 `test-results/eino-workbench-fobrain-batch-a-live-report.json`，schema 为 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json`。
 
 ## 派生对象
 
@@ -85,6 +87,7 @@ Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md
 go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|CredentialLeak' -count=1
 go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|Credential' -count=1
 go test ./cmd/eino-workbench -run 'Fobrain.*Live|FobrainOnlyWhenEnabled' -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config configs/eino-workbench.local.yaml
 ```
 
 测试必须覆盖：最小合法配置、live mode workspace token、私有证书 TLS skip、缺必填字段、非法 URL、非法 credential status、非法 auth parameter name、secret 不出现在脱敏摘要、`enabled=false` 不注册 provider、workspace 不匹配不发起外部 HTTP。

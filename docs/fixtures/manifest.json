@@ -98,6 +98,10 @@
       "schema": "docs/schemas/fobrain/provider_poc_report.v1.schema.json"
     },
     {
+      "fixture": "docs/fixtures/fobrain/batch-a-live-report.json",
+      "schema": "docs/schemas/fobrain/batch_a_live_report.v1.schema.json"
+    },
+    {
       "fixture": "docs/fixtures/fobrain/tool-matrix-24.json",
       "schema": "docs/schemas/fobrain/tool_matrix.v1.schema.json"
     }

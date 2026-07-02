@@ -32,7 +32,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
@@ -49,7 +49,7 @@ case "${scenario}" in
     ;;
   *)
     echo "unsupported scenario: ${scenario}" >&2
-    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
+    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-batch-a, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
     exit 2
     ;;
 esac
@@ -105,6 +105,49 @@ with open("test-results/eino-workbench-fobrain-skip-report.json", "w", encoding=
 PY
   echo "fobrain-poc real-model selection skipped: ${reason}"
 }
+
+write_fobrain_batch_a_skip_report() {
+  local reason="$1"
+  mkdir -p test-results
+  python3 - "${reason}" "${provided_config:-configs/eino-workbench.local.yaml}" <<'PY'
+import datetime, json, sys
+reason, config_path = sys.argv[1], sys.argv[2]
+report = {
+    "schema_version": "eino.skip_report.v1",
+    "command": f"bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config {config_path}",
+    "missing_env": ["local_fobrain_live_config"],
+    "credential_scope": "fobrain-workspace",
+    "reason": reason,
+    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with fobrain.connector_status.mode=live and workspace credential.",
+    "blocks_claims": ["fobrain-batch-a live pass", "Fobrain Batch A final acceptance"],
+    "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-fobrain-batch-a-skip-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  echo "fobrain-batch-a live smoke skipped: ${reason}"
+}
+
+if [[ "${scenario}" == "fobrain-batch-a" ]]; then
+  config_for_fobrain="${provided_config:-configs/eino-workbench.local.yaml}"
+  if [[ ! -f "${config_for_fobrain}" ]]; then
+    write_fobrain_batch_a_skip_report "本地 Fobrain live 配置文件不存在"
+    exit 0
+  fi
+  if ! go run ./scripts/eino_workbench_config_prepare.go --check-fobrain-live-credential --source "${config_for_fobrain}" >/dev/null 2>&1; then
+    write_fobrain_batch_a_skip_report "本地 Fobrain live 工作区凭据未配置"
+    exit 0
+  fi
+  report_path="test-results/eino-workbench-fobrain-batch-a-live-report.json"
+  go run ./scripts/fobrain_batch_a_smoke \
+    --config "${config_for_fobrain}" \
+    --output "${report_path}"
+  node scripts/eino_workbench_report_validate.mjs \
+    --schema docs/schemas/fobrain/batch_a_live_report.v1.schema.json \
+    --report "${report_path}" >/dev/null
+  echo "fobrain-batch-a live smoke passed"
+  exit 0
+fi
 
 if [[ "${scenario}" == "real-model-chat" ]]; then
   config_for_real="${provided_config:-configs/eino-workbench.local.yaml}"

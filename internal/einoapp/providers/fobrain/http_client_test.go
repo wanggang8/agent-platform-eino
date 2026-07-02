@@ -32,7 +32,7 @@ func TestHTTPClientCurrentUserContextUsesConfiguredAuthorizationHeader(t *testin
 	defer server.Close()
 
 	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
-		BaseURL:    server.URL,
+		BaseURL:    server.URL + "/api",
 		Timeout:    time.Second,
 		HTTPClient: server.Client(),
 	})
@@ -57,6 +57,109 @@ func TestHTTPClientCurrentUserContextUsesConfiguredAuthorizationHeader(t *testin
 	}
 	if result.DisplayName != "王五" || result.Department != "安全部" || result.Role != "安全运营" {
 		t.Fatalf("current user result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientCurrentUserContextSupportsAPIBasePath(t *testing.T) {
+	// 真实私有环境可能把 base_url 配到 /api；client 必须归一化到 /api/v1/user。
+	var gotPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{"display_name": "王五"},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.CurrentUserContext(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if gotPath != "/api/v1/user" {
+		t.Fatalf("path = %q, want /api/v1/user", gotPath)
+	}
+}
+
+func TestHTTPClientCurrentUserContextFallsBackToAPIUserPath(t *testing.T) {
+	// 部分私有部署只暴露 /api/user；标准路径 404 时允许回退，但仍不能泄漏响应 body。
+	var gotPaths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		if r.URL.Path == "/api/v1/user" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.URL.Path != "/api/user" {
+			t.Fatalf("unexpected path = %s", r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{"display_name": "王五"},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL,
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.CurrentUserContext(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.DisplayName != "王五" {
+		t.Fatalf("current user result mismatch: %+v", result)
+	}
+	if strings.Join(gotPaths, ",") != "/api/v1/user,/api/user" {
+		t.Fatalf("paths = %v, want standard then fallback", gotPaths)
+	}
+}
+
+func TestHTTPClientCurrentUserContextDoesNotFallbackAfterAuthFailure(t *testing.T) {
+	// 认证/权限失败是终止错误，不能 fallback 到兼容路径掩盖凭据问题。
+	var gotPaths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		http.Error(w, "denied", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.CurrentUserContext(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorAuthFailure) {
+		t.Fatalf("err = %v, want auth failure", err)
+	}
+	if strings.Join(gotPaths, ",") != "/api/v1/user" {
+		t.Fatalf("paths = %v, want no fallback after auth failure", gotPaths)
 	}
 }
 
@@ -189,6 +292,62 @@ func TestHTTPClientMyPermissionsUsesCurrentUserEndpoint(t *testing.T) {
 	if strings.Join(result.PermissionNames, ",") != "资产只读,漏洞只读" ||
 		strings.Join(result.DataPermissionNames, ",") != "本部门数据" {
 		t.Fatalf("permissions result mismatch: %+v", result)
+	}
+}
+
+func TestHTTPClientMyPermissionsAllowsEmptyPermissionFields(t *testing.T) {
+	// Batch A 必须覆盖权限空态：真实当前用户接口可能只返回身份，不返回权限数组。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"data": map[string]any{"display_name": "王五"},
+		})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL,
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.MyPermissions(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate, _ := fobrain.BuildMyPermissionsStructuredResult(result)
+	if !strings.Contains(candidate.SafeSummary, "未返回权限字段") {
+		t.Fatalf("permissions empty summary mismatch: %s", candidate.SafeSummary)
+	}
+}
+
+func TestHTTPClientMyPermissionsRejectsEmptyCurrentUserPayload(t *testing.T) {
+	// 权限空态只能建立在已识别当前用户上，不能把空对象或错结构响应误判为通过。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{}})
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL,
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.MyPermissions(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	})
+	if !fobrain.HasReason(err, capabilities.PolicyReasonConnectorExecutionFailed) {
+		t.Fatalf("err = %v, want invalid current user payload", err)
 	}
 }
 

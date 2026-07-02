@@ -13,7 +13,10 @@ import (
 	"agent-platform-eino/internal/einoapp/capabilities"
 )
 
-const currentUserPath = "/api/v1/user"
+const (
+	currentUserPath         = "/api/v1/user"
+	currentUserFallbackPath = "/api/user"
+)
 
 // HTTPClientConfig 保存真实 Fobrain HTTP client 的 provider 边界配置。
 // HTTPClientConfig 不持有 token；token 只从 ResolvedCredential 传入单次请求。
@@ -83,8 +86,8 @@ func (client *HTTPClient) MyPermissions(ctx context.Context, credential Resolved
 		return MyPermissionsResult{}, err
 	}
 	result := myPermissionsResultFromMap(item)
-	if len(result.PermissionNames) == 0 && len(result.DataPermissionNames) == 0 {
-		return MyPermissionsResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 权限响应缺少安全字段")
+	if strings.TrimSpace(result.DisplayName) == "" {
+		return MyPermissionsResult{}, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 权限响应缺少当前用户字段")
 	}
 	return result, nil
 }
@@ -101,7 +104,26 @@ func (client *HTTPClient) currentUserMap(ctx context.Context, credential Resolve
 	if authParam == "" {
 		authParam = "authorization"
 	}
-	endpoint := client.endpoint(currentUserPath)
+	for _, path := range currentUserProbePaths() {
+		item, ok, err := client.currentUserMapAtPath(ctx, credential, authParam, path)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return item, nil
+		}
+	}
+	return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户读取失败")
+}
+
+// currentUserProbePaths 按标准路径优先、私有部署兼容路径兜底的顺序探测当前用户接口。
+func currentUserProbePaths() []string {
+	return []string{currentUserPath, currentUserFallbackPath}
+}
+
+// currentUserMapAtPath 调用单个当前用户候选路径；404/405 返回可继续探测。
+func (client *HTTPClient) currentUserMapAtPath(ctx context.Context, credential ResolvedCredential, authParam string, path string) (map[string]any, bool, error) {
+	endpoint := client.endpoint(path)
 	requestCtx := ctx
 	cancel := func() {}
 	if _, ok := ctx.Deadline(); !ok && client.timeout > 0 {
@@ -111,41 +133,50 @@ func (client *HTTPClient) currentUserMap(ctx context.Context, credential Resolve
 
 	req, err := http.NewRequestWithContext(requestCtx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户请求创建失败")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户请求创建失败")
 	}
 	req.Header.Set(authParam, credential.APIToken)
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		if errors.Is(requestCtx.Err(), context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return nil, NewSafeError(capabilities.PolicyReasonConnectorTimeout, "Fobrain 当前用户请求超时")
+			return nil, false, NewSafeError(capabilities.PolicyReasonConnectorTimeout, "Fobrain 当前用户请求超时")
 		}
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 当前用户网络不可用")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 当前用户网络不可用")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorAuthFailure, "Fobrain 当前用户认证失败")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorAuthFailure, "Fobrain 当前用户认证失败")
+	}
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusMethodNotAllowed {
+		return nil, false, nil
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户读取失败")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户读取失败")
 	}
 	var payload any
 	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应不是合法 JSON")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应不是合法 JSON")
 	}
 	item, ok := unwrapPayloadMap(payload)
 	if !ok {
-		return nil, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应结构无效")
+		return nil, false, NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, "Fobrain 当前用户响应结构无效")
 	}
-	return item, nil
+	return item, true, nil
 }
 
 // endpoint 兼容 base_url 指向服务根路径或已经包含 /api/v1 的本地配置。
 func (client *HTTPClient) endpoint(path string) string {
 	endpoint := *client.baseURL
 	basePath := strings.TrimRight(endpoint.Path, "/")
-	if strings.HasSuffix(basePath, "/api/v1") && path == currentUserPath {
+	if path == currentUserPath && strings.HasSuffix(basePath, "/api/v1") {
+		endpoint.Path = basePath + "/user"
+	} else if path == currentUserPath && strings.HasSuffix(basePath, "/api") {
+		endpoint.Path = basePath + "/v1/user"
+	} else if path == currentUserFallbackPath && strings.HasSuffix(basePath, "/api/v1") {
+		endpoint.Path = strings.TrimSuffix(basePath, "/v1") + "/user"
+	} else if path == currentUserFallbackPath && strings.HasSuffix(basePath, "/api") {
 		endpoint.Path = basePath + "/user"
 	} else {
 		endpoint.Path = basePath + path
