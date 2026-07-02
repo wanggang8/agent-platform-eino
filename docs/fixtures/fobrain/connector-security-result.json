@@ -1,0 +1,46 @@
+{
+  "schema_version": "fobrain.tool_result.v2",
+  "tool_id": "connector.fobrain.security",
+  "display_type": "connector_status",
+  "entity_type": "connector",
+  "status": "resolved",
+  "query": {},
+  "data": {
+    "title": "Fobrain 连接器状态",
+    "summary": "连接器可用，工作区凭据已绑定",
+    "facts": [
+      {
+        "key": "connector_status",
+        "label": "连接器状态",
+        "value": "available",
+        "type": "status",
+        "tone": "success"
+      },
+      {
+        "key": "workspace_id",
+        "label": "工作区",
+        "value": "ws-demo",
+        "type": "code"
+      },
+      {
+        "key": "credential_status",
+        "label": "凭据绑定",
+        "value": "bound",
+        "type": "status",
+        "tone": "success"
+      },
+      {
+        "key": "credential_owner_scope",
+        "label": "绑定范围",
+        "value": "workspace",
+        "type": "badge"
+      }
+    ]
+  },
+  "metadata": {
+    "safe": true,
+    "source": "fobrain",
+    "result_ref": "result:fobrain:connector-security:fixture",
+    "observed_at": "2026-07-02T00:00:00Z"
+  }
+}

@@ -7,6 +7,7 @@ describe("fobrain visual fixtures", () => {
   it("defines Batch A business-read scenarios with six visual regions", () => {
     // Batch A 视觉验收必须继承旧最终矩阵的六区域覆盖，但数据必须来自新项目 fixture。
     expect(fobrainVisualScenarios.map((scenario) => scenario.toolId)).toEqual([
+      "connector.fobrain.security",
       "tool.fobrain.current_user_context",
       "tool.fobrain.my_permissions"
     ]);
@@ -16,6 +17,27 @@ describe("fobrain visual fixtures", () => {
       expect(fobrainVisualFixtures[scenario.fixtureKey].schema_version).toBe("eino_workbench_view.v1");
       expect(fobrainVisualFixtures[scenario.fixtureKey].timeline.some((item) => item.kind === "tool_card")).toBe(true);
     }
+  });
+
+  it("keeps Playwright scenario metadata in sync", () => {
+    // Playwright 不能直接导入含 JSON fixture 的模块；这里用单元测试防止两处场景元数据漂移。
+    expect(fobrainVisualScenarios.map(({ fixtureKey, prompt, label }) => ({ fixtureKey, prompt, label }))).toEqual([
+      {
+        fixtureKey: "fobrainConnectorSecurity",
+        prompt: "查看 Fobrain 连接器状态",
+        label: "Fobrain 连接器"
+      },
+      {
+        fixtureKey: "fobrainCurrentUser",
+        prompt: "查看当前 Fobrain 用户信息",
+        label: "Fobrain 当前用户"
+      },
+      {
+        fixtureKey: "fobrainMyPermissions",
+        prompt: "查看我的 Fobrain 权限范围",
+        label: "Fobrain 我的权限"
+      }
+    ]);
   });
 
   it("keeps Fobrain visual fixtures free of unsafe material", () => {
@@ -43,5 +65,27 @@ describe("fobrain visual fixtures", () => {
       expect(toolCard?.safe_summary).toBe(expectedSummary);
       expect(finalMessage?.content).toBe(`${expectedSummary}。`);
     }
+  });
+
+  it("renders connector status from credential binding safe facts", () => {
+    // connector 视觉证据只展示安全绑定摘要，不能把真实凭据或 raw connector 配置带入前端。
+    const view = fobrainVisualFixtures.fobrainConnectorSecurity;
+    const toolCard = view.timeline.find((item) => item.kind === "tool_card");
+    const result = toolCard?.structured_result;
+
+    expect(result?.schema_version).toBe("fobrain.tool_result.v2");
+    if (!result || result.schema_version !== "fobrain.tool_result.v2") {
+      throw new Error("connector visual fixture must use Fobrain StructuredResult");
+    }
+    expect(result.tool_id).toBe("connector.fobrain.security");
+    expect(result.display_type).toBe("connector_status");
+    expect(result.entity_type).toBe("connector");
+    expect(result.data.facts?.map((fact) => fact.key)).toEqual([
+      "connector_status",
+      "workspace_id",
+      "credential_status",
+      "credential_owner_scope"
+    ]);
+    expect(JSON.stringify(result).toLowerCase()).not.toContain("authorization");
   });
 });

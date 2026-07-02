@@ -78,6 +78,34 @@ func TestProviderInvokesConnectorSecurityWithoutBusinessRead(t *testing.T) {
 	}
 }
 
+func TestConnectorStatusCredentialBindingSummaryIsSafe(t *testing.T) {
+	// connector 状态摘要只能暴露绑定状态和 workspace，不得泄漏凭据引用、认证参数或 token。
+	policyContext := capabilities.PolicyContext{
+		WorkspaceID: "ws_fobrain",
+		CredentialBinding: capabilities.CredentialBinding{
+			WorkspaceID: "ws_fobrain",
+			System:      "fobrain",
+			Status:      capabilities.CredentialStatusBound,
+			DisplayRef:  "bound:fobrain:local",
+			OwnerScope:  capabilities.PermissionScopeWorkspace,
+			AuditRef:    "audit:fobrain:credential",
+		},
+		ConnectorStatus: capabilities.ConnectorStatusAvailable,
+	}
+
+	candidate := fobrain.BuildConnectorSecurityStructuredResult(policyContext, capabilities.ConnectorStatusAvailable)
+	if candidate.ResultRef != "result:fobrain:connector-security" ||
+		!strings.Contains(candidate.SafeSummary, "workspace：ws_fobrain") ||
+		!strings.Contains(candidate.SafeSummary, "绑定状态：bound") {
+		t.Fatalf("connector summary mismatch: %+v", candidate)
+	}
+	for _, forbidden := range []string{"authorization", "api_token", "token", "credential_ref", "bound:fobrain:local", "audit:fobrain:credential"} {
+		if strings.Contains(strings.ToLower(candidate.SafeSummary), strings.ToLower(forbidden)) {
+			t.Fatalf("connector summary leaked %q: %s", forbidden, candidate.SafeSummary)
+		}
+	}
+}
+
 func policyContextForFobrain(workspaceID string) capabilities.PolicyContext {
 	return capabilities.PolicyContext{
 		WorkspaceID:       workspaceID,

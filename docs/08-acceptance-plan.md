@@ -317,4 +317,5 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 阶段性记录：
 
 - Phase 8.2 Batch A 业务只读视觉切片已为 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 生成新项目 Playwright baseline：2 个工具 × 6 个区域 × desktop/mobile = 24 张截图。
-- 该记录只覆盖业务只读工具的 Workbench 视觉证据；`connector.fobrain.security`、24 个只读工具全量矩阵、live read/write 和写域审批仍按 Phase 8 后续任务验收。
+- Phase 8.3 已为 `connector.fobrain.security` 生成新项目 Playwright baseline：1 个 connector × 6 个区域 × desktop/mobile = 12 张截图。
+- 当前记录合计覆盖 Batch A 三项能力的 Workbench 视觉证据；24 个只读工具全量矩阵、Batch B-E、live read/write、实体消歧和写域审批仍按 Phase 8 后续任务验收。

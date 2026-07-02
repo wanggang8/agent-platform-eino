@@ -78,6 +78,7 @@ export const fixtureLabels: Record<WorkbenchFixtureKey, string> = {
   failed: "失败态",
   approval: "审批等待",
   clarification: "澄清等待",
+  fobrainConnectorSecurity: "Fobrain 连接器",
   fobrainCurrentUser: "Fobrain 当前用户",
   fobrainMyPermissions: "Fobrain 我的权限"
 };

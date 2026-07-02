@@ -971,6 +971,12 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 - `internal/einoapp/providers/fobrain/credentials.go`
 - `web/eino-workbench/src/presenters/fobrain.ts`
 
+当前进展：
+
+- `connector.fobrain.security` 已补齐 Workbench 视觉证据，使用 `fobrain.tool_result.v2` 的 `connector_status` 安全投影展示 connector 状态和 workspace credential binding 摘要。
+- connector 视觉基线已覆盖 desktop/mobile 的 `main-chat`、`fresh-main-chat`、`process`、`evidence`、`audit`、`internal-details` 六区域。
+- 本任务只证明 connector 状态和凭据绑定安全展示；Batch B-E、24 个只读工具全量恢复、实体消歧和写域审批仍按后续任务验收。
+
 任务级检查：
 
 ```bash

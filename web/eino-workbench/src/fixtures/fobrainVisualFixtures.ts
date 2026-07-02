@@ -1,9 +1,10 @@
 import type { StructuredResult, WorkbenchView } from "../contracts/generated";
+import connectorSecurityResult from "../../../../docs/fixtures/fobrain/connector-security-result.json";
 import currentUserResult from "../../../../docs/fixtures/fobrain/current-user-context-result.json";
 import myPermissionsResult from "../../../../docs/fixtures/fobrain/my-permissions-result.json";
 
-// FobrainVisualFixtureKey 固定当前 Batch A 业务只读视觉 fixture，connector 仍由 Task 8.3 单独覆盖。
-export type FobrainVisualFixtureKey = "fobrainCurrentUser" | "fobrainMyPermissions";
+// FobrainVisualFixtureKey 固定当前 Batch A 视觉 fixture，包含 connector 和两个业务只读工具。
+export type FobrainVisualFixtureKey = "fobrainConnectorSecurity" | "fobrainCurrentUser" | "fobrainMyPermissions";
 
 // FobrainVisualRegion 对齐旧最终验收六区域要求，但截图必须由新项目重新生成。
 export type FobrainVisualRegion =
@@ -16,7 +17,7 @@ export type FobrainVisualRegion =
 
 type FobrainVisualScenario = {
   readonly fixtureKey: FobrainVisualFixtureKey;
-  readonly toolId: "tool.fobrain.current_user_context" | "tool.fobrain.my_permissions";
+  readonly toolId: "connector.fobrain.security" | "tool.fobrain.current_user_context" | "tool.fobrain.my_permissions";
   readonly prompt: string;
   readonly label: string;
   readonly regions: readonly FobrainVisualRegion[];
@@ -25,11 +26,19 @@ type FobrainVisualScenario = {
 const requiredRegions = ["main-chat", "fresh-main-chat", "process", "evidence", "audit", "internal-details"] as const;
 
 // JSON fixture 先经过 schema-test 校验，这里只在前端契约边界收窄为 StructuredResult。
+const connectorSecurityStructuredResult = connectorSecurityResult as StructuredResult;
 const currentUserStructuredResult = currentUserResult as StructuredResult;
 const myPermissionsStructuredResult = myPermissionsResult as StructuredResult;
 
 // fobrainVisualScenarios 是视觉测试和验收记录的场景清单，不参与运行时工具选择。
 export const fobrainVisualScenarios = [
+  {
+    fixtureKey: "fobrainConnectorSecurity",
+    toolId: "connector.fobrain.security",
+    prompt: "查看 Fobrain 连接器状态",
+    label: "Fobrain 连接器",
+    regions: requiredRegions
+  },
   {
     fixtureKey: "fobrainCurrentUser",
     toolId: "tool.fobrain.current_user_context",
@@ -48,14 +57,20 @@ export const fobrainVisualScenarios = [
 
 // fobrainVisualFixtures 使用后端契约 fixture 组装 WorkbenchView，避免前端手写平行事实模型。
 export const fobrainVisualFixtures = {
-  fobrainCurrentUser: buildFobrainView({
+  fobrainConnectorSecurity: buildFobrainView({
     scenario: fobrainVisualScenarios[0],
+    runId: "run-fobrain-connector-security-visual",
+    toolCallId: "call-fobrain-connector-security-visual",
+    result: connectorSecurityStructuredResult
+  }),
+  fobrainCurrentUser: buildFobrainView({
+    scenario: fobrainVisualScenarios[1],
     runId: "run-fobrain-current-user-visual",
     toolCallId: "call-fobrain-current-user-visual",
     result: currentUserStructuredResult
   }),
   fobrainMyPermissions: buildFobrainView({
-    scenario: fobrainVisualScenarios[1],
+    scenario: fobrainVisualScenarios[2],
     runId: "run-fobrain-my-permissions-visual",
     toolCallId: "call-fobrain-my-permissions-visual",
     result: myPermissionsStructuredResult

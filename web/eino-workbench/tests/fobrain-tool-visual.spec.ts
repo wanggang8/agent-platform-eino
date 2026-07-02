@@ -2,6 +2,11 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const fobrainVisualScenarios = [
   {
+    fixtureKey: "fobrainConnectorSecurity",
+    prompt: "查看 Fobrain 连接器状态",
+    label: "Fobrain 连接器"
+  },
+  {
     fixtureKey: "fobrainCurrentUser",
     prompt: "查看当前 Fobrain 用户信息",
     label: "Fobrain 当前用户"
@@ -23,7 +28,7 @@ const forbiddenVisibleText = [
   "resume_token"
 ] as const;
 
-test.describe("@visual Fobrain Batch A business read evidence", () => {
+test.describe("@visual Fobrain Batch A connector and business read evidence", () => {
   for (const scenario of fobrainVisualScenarios) {
     test(`@visual ${scenario.fixtureKey} six evidence regions`, async ({ page }) => {
       await page.goto("/workspaces/ws-demo");
