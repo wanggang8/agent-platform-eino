@@ -80,6 +80,7 @@ credential_binding: configured | missing | unbound | bound:<system>:<binding>
 - workspace 不匹配返回 `credential_scope_denied`。
 - connector status 可以展示绑定状态，但不能替代业务读工具。
 - 凭据更新必须写 audit event，且 audit event 只保留安全摘要。
+- 当前 Fobrain live read 只支持 workspace 共享 token；不支持 per-user 或 per-tool token 绑定。
 
 ## Fobrain Policy
 

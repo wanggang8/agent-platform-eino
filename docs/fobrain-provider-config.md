@@ -18,7 +18,7 @@ fobrain:
     display_ref: "bound:fobrain:local"
     owner_scope: "workspace"
     auth_param: "authorization"
-    api_token: "local-only-secret"
+    api_token: "<ignored-local-token>"
   connector_status:
     mode: "mock"
     available: true
@@ -38,12 +38,23 @@ fobrain:
 | `credential.status` | 是 | `missing` / `unbound` / `configured` / `bound`。 |
 | `credential.display_ref` | 是 | 安全展示引用，不得包含 raw credential ref、token 或 URL。 |
 | `credential.owner_scope` | 是 | Phase 5 固定 `workspace`。 |
-| `credential.auth_param` | 是 | Fobrain HTTP client 使用的认证参数名；当前真实环境为 `authorization`。只允许安全 header/query 参数名，不包含 token 值。 |
+| `credential.auth_param` | 是 | Fobrain HTTP client 使用的认证 header 名；当前真实环境为 `authorization`。只允许安全 header 参数名，不包含 token 值。 |
 | `credential.api_token` | 本地可选 | 只允许 local ignored 配置使用；不得进入 RedactedSummary、Product Facts、日志、报告。 |
 | `connector_status.mode` | 是 | Phase 5 只允许 `mock`；`live` 保留给真实 HTTP client 阶段。 |
 | `connector_status.available` | 是 | policy 输入，不替代业务读取工具。 |
 
 `connector_status.mode=mock` 时可以缺少 `credential.api_token`。Phase 5 服务启动配置不接受 `live` mode，避免真实配置静默降级成 mock 结果；`fobrain-poc` provider report 的 `provider_mode` 只能是 `mock`。真实模型工具选择或 Fobrain live read 在 Phase 5 只能写 skip report，不能声明通过。
+
+## Live Read 边界
+
+Phase 8 live read 启用前必须先完成 `docs/fobrain-live-read-batch-plan.md`。当前凭据模型是 workspace 共享 token：
+
+- `credential.api_token` 只代表当前 workspace 的 Fobrain token。
+- 不从前端、Action API 请求或用户消息中接收 token。
+- 不按单个工具、单个用户或单次 run 生成独立 token。
+- live client 应把 `auth_param` 当作 header 名发送；如果后续确认真实 API 使用 query/body 参数，必须先新增 ADR。
+- Phase 8 live acceptance 配置必须设置 `auth_param: "authorization"`；其它认证参数名需要先新增 ADR。
+- `connector_status.mode=live` 时启动/执行前必须确认 `api_token` 非空、`owner_scope=workspace`、`workspace_id` 匹配；workspace 不匹配时不得发起外部 HTTP 请求。
 
 ## 派生对象
 

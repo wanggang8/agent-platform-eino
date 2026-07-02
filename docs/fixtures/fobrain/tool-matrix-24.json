@@ -8,15 +8,25 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/empty",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "A",
       "display_type": "entity_detail",
       "entity_type": "user",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/current-user-context-result.json",
       "real_model_prompt_id": "fobrain.current_user_context.basic",
-      "mock_assertions": ["returns safe user context", "does not expose account raw data"],
-      "live_assertions": ["current user display name is present", "department or role summary is safe"],
+      "mock_assertions": [
+        "returns safe user context",
+        "does not expose account raw data"
+      ],
+      "live_assertions": [
+        "current user display name is present",
+        "department or role summary is safe"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["account raw data", "secret"],
+      "sensitive_fields": [
+        "account raw data",
+        "secret"
+      ],
       "readonly_matrix": true
     },
     {
@@ -25,168 +35,276 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/empty",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "A",
       "display_type": "entity_detail",
       "entity_type": "permission",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-permissions-result.json",
       "real_model_prompt_id": "fobrain.my_permissions.basic",
-      "mock_assertions": ["permission list renders", "empty permission list renders empty state"],
-      "live_assertions": ["permission scope summary is present", "raw policy body is not shown"],
+      "mock_assertions": [
+        "permission list renders",
+        "empty permission list renders empty state"
+      ],
+      "live_assertions": [
+        "permission scope summary is present",
+        "raw policy body is not shown"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw policy body"],
+      "sensitive_fields": [
+        "raw policy body"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_assets_by_owner",
       "display_name_zh": "查询负责人资产",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/owner_query",
-      "required_fields": ["person_name"],
+      "required_fields": [
+        "person_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-assets-by-owner-result.json",
       "real_model_prompt_id": "fobrain.list_assets_by_owner.person_name",
-      "mock_assertions": ["same name can request clarification", "asset table has owner and asset columns"],
-      "live_assertions": ["named owner returns table or safe empty state", "pagination is safe"],
+      "mock_assertions": [
+        "same name can request clarification",
+        "asset table has owner and asset columns"
+      ],
+      "live_assertions": [
+        "named owner returns table or safe empty state",
+        "pagination is safe"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw credential"],
+      "sensitive_fields": [
+        "raw credential"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_vulnerabilities_by_owner",
       "display_name_zh": "查询负责人漏洞",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/owner_query",
-      "required_fields": ["person_name"],
+      "required_fields": [
+        "person_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-vulnerabilities-by-owner-result.json",
       "real_model_prompt_id": "fobrain.list_vulnerabilities_by_owner.person_name",
-      "mock_assertions": ["vulnerability table has severity and status", "owner ambiguity routes to clarification"],
-      "live_assertions": ["named owner vulnerabilities render", "severity filter is respected when present"],
+      "mock_assertions": [
+        "vulnerability table has severity and status",
+        "owner ambiguity routes to clarification"
+      ],
+      "live_assertions": [
+        "named owner vulnerabilities render",
+        "severity filter is respected when present"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["provider body"],
+      "sensitive_fields": [
+        "provider body"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_assets_by_department",
       "display_name_zh": "查询部门资产",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/department_query",
-      "required_fields": ["department_name"],
+      "required_fields": [
+        "department_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-assets-by-department-result.json",
       "real_model_prompt_id": "fobrain.list_assets_by_department.department_name",
-      "mock_assertions": ["department asset table renders", "department summary is shown"],
-      "live_assertions": ["department query returns table or safe empty state", "department path is business value only"],
+      "mock_assertions": [
+        "department asset table renders",
+        "department summary is shown"
+      ],
+      "live_assertions": [
+        "department query returns table or safe empty state",
+        "department path is business value only"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw query"],
+      "sensitive_fields": [
+        "raw query"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_vulnerabilities_by_department",
       "display_name_zh": "查询部门漏洞",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/department_query",
-      "required_fields": ["department_name"],
+      "required_fields": [
+        "department_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-vulnerabilities-by-department-result.json",
       "real_model_prompt_id": "fobrain.list_vulnerabilities_by_department.department_name",
-      "mock_assertions": ["department vulnerability table renders", "severity filter is optional"],
-      "live_assertions": ["department vulnerabilities render", "raw query is not displayed"],
+      "mock_assertions": [
+        "department vulnerability table renders",
+        "severity filter is optional"
+      ],
+      "live_assertions": [
+        "department vulnerabilities render",
+        "raw query is not displayed"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw query"],
+      "sensitive_fields": [
+        "raw query"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_assets_by_ip",
       "display_name_zh": "查询 IP 资产",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/ip_query",
-      "required_fields": ["ip"],
+      "required_fields": [
+        "ip"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-assets-by-ip-result.json",
       "real_model_prompt_id": "fobrain.list_assets_by_ip.ip",
-      "mock_assertions": ["IP-only prompt selects this tool", "IP asset table renders"],
-      "live_assertions": ["IP query returns asset table or safe empty state", "IP business value may be shown"],
+      "mock_assertions": [
+        "IP-only prompt selects this tool",
+        "IP asset table renders"
+      ],
+      "live_assertions": [
+        "IP query returns asset table or safe empty state",
+        "IP business value may be shown"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw connector request"],
+      "sensitive_fields": [
+        "raw connector request"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.list_vulnerabilities_by_ip",
       "display_name_zh": "查询 IP 漏洞",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/ip_query",
-      "required_fields": ["ip"],
+      "required_fields": [
+        "ip"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "D",
       "display_type": "entity_collection",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/list-vulnerabilities-by-ip-result.json",
       "real_model_prompt_id": "fobrain.list_vulnerabilities_by_ip.ip",
-      "mock_assertions": ["IP vulnerability table renders", "can reuse previous turn IP"],
-      "live_assertions": ["IP vulnerability query returns table or empty state", "CVE values may be shown"],
+      "mock_assertions": [
+        "IP vulnerability table renders",
+        "can reuse previous turn IP"
+      ],
+      "live_assertions": [
+        "IP vulnerability query returns table or empty state",
+        "CVE values may be shown"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw connector request"],
+      "sensitive_fields": [
+        "raw connector request"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.get_asset_detail",
       "display_name_zh": "查询资产详情",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/asset_detail",
-      "required_fields": ["asset_id"],
+      "required_fields": [
+        "asset_id"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "E",
       "display_type": "entity_detail",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/get-asset-detail-result.json",
       "real_model_prompt_id": "fobrain.get_asset_detail.asset_id",
-      "mock_assertions": ["asset facts render", "safe ref is not treated as real asset id"],
-      "live_assertions": ["real asset id returns detail or not_found", "detail facts are allowlisted"],
+      "mock_assertions": [
+        "asset facts render",
+        "safe ref is not treated as real asset id"
+      ],
+      "live_assertions": [
+        "real asset id returns detail or not_found",
+        "detail facts are allowlisted"
+      ],
       "screenshot_state": "detail",
-      "sensitive_fields": ["raw asset payload"],
+      "sensitive_fields": [
+        "raw asset payload"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.get_vulnerability_detail",
       "display_name_zh": "查询漏洞详情",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/vulnerability_detail",
-      "required_fields": ["vulnerability_id"],
+      "required_fields": [
+        "vulnerability_id"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "E",
       "display_type": "entity_detail",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/get-vulnerability-detail-result.json",
       "real_model_prompt_id": "fobrain.get_vulnerability_detail.vulnerability_id",
-      "mock_assertions": ["vulnerability facts render", "CVE facts are safe"],
-      "live_assertions": ["real vulnerability id returns detail or not_found", "raw payload is absent"],
+      "mock_assertions": [
+        "vulnerability facts render",
+        "CVE facts are safe"
+      ],
+      "live_assertions": [
+        "real vulnerability id returns detail or not_found",
+        "raw payload is absent"
+      ],
       "screenshot_state": "detail",
-      "sensitive_fields": ["raw vulnerability payload"],
+      "sensitive_fields": [
+        "raw vulnerability payload"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.business_risk_summary",
       "display_name_zh": "汇总业务风险",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/business_query",
-      "required_fields": ["business_name"],
+      "required_fields": [
+        "business_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "E",
       "display_type": "metrics_summary",
       "entity_type": "risk",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/business-risk-summary-result.json",
       "real_model_prompt_id": "fobrain.business_risk_summary.business_name",
-      "mock_assertions": ["metrics and key findings render", "risk judgement is safe narrative"],
-      "live_assertions": ["business summary returns metrics or safe empty state", "raw prompt is absent"],
+      "mock_assertions": [
+        "metrics and key findings render",
+        "risk judgement is safe narrative"
+      ],
+      "live_assertions": [
+        "business summary returns metrics or safe empty state",
+        "raw prompt is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw prompt"],
+      "sensitive_fields": [
+        "raw prompt"
+      ],
       "readonly_matrix": true
     },
     {
@@ -195,15 +313,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/business_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "entity_collection",
       "entity_type": "business_system",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/business-list-result.json",
       "real_model_prompt_id": "fobrain.business_list.basic",
-      "mock_assertions": ["business table renders without filter", "keyword filter is safe"],
-      "live_assertions": ["business list returns table or safe empty state", "provider payload is absent"],
+      "mock_assertions": [
+        "business table renders without filter",
+        "keyword filter is safe"
+      ],
+      "live_assertions": [
+        "business list returns table or safe empty state",
+        "provider payload is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["provider payload"],
+      "sensitive_fields": [
+        "provider payload"
+      ],
       "readonly_matrix": true
     },
     {
@@ -212,32 +339,52 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/stats_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/external-high-risk-assets-result.json",
       "real_model_prompt_id": "fobrain.external_high_risk_assets.basic",
-      "mock_assertions": ["external high risk table renders", "does not return connector status instead of data"],
-      "live_assertions": ["high risk assets return table or empty state", "risk values are business values"],
+      "mock_assertions": [
+        "external high risk table renders",
+        "does not return connector status instead of data"
+      ],
+      "live_assertions": [
+        "high risk assets return table or empty state",
+        "risk values are business values"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw aggregation body"],
+      "sensitive_fields": [
+        "raw aggregation body"
+      ],
       "readonly_matrix": true
     },
     {
       "tool_id": "tool.fobrain.threat_relevance_list",
       "display_name_zh": "查询威胁关联资产",
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/threat_query",
-      "required_fields": ["vulnerability_name"],
+      "required_fields": [
+        "vulnerability_name"
+      ],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "E",
       "display_type": "entity_collection",
       "entity_type": "risk",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/threat-relevance-list-result.json",
       "real_model_prompt_id": "fobrain.threat_relevance_list.vulnerability_name",
-      "mock_assertions": ["named threat directly calls tool", "associated assets table renders"],
-      "live_assertions": ["threat relevance returns table or empty state", "raw search body is absent"],
+      "mock_assertions": [
+        "named threat directly calls tool",
+        "associated assets table renders"
+      ],
+      "live_assertions": [
+        "threat relevance returns table or empty state",
+        "raw search body is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw search body"],
+      "sensitive_fields": [
+        "raw search body"
+      ],
       "readonly_matrix": true
     },
     {
@@ -246,15 +393,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/stats_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "metrics_summary",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/vulnerability-status-summary-result.json",
       "real_model_prompt_id": "fobrain.vulnerability_status_summary.basic",
-      "mock_assertions": ["status distribution metrics render", "not confused with vulnerability count stats"],
-      "live_assertions": ["status summary returns metrics", "status code is converted to safe label"],
+      "mock_assertions": [
+        "status distribution metrics render",
+        "not confused with vulnerability count stats"
+      ],
+      "live_assertions": [
+        "status summary returns metrics",
+        "status code is converted to safe label"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw aggregation body"],
+      "sensitive_fields": [
+        "raw aggregation body"
+      ],
       "readonly_matrix": true
     },
     {
@@ -263,15 +419,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/ticket_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "entity_collection",
       "entity_type": "ticket",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/pending-tickets-result.json",
       "real_model_prompt_id": "fobrain.pending_tickets.mine",
-      "mock_assertions": ["ticket table renders", "ticket mutation remains approval gated"],
-      "live_assertions": ["pending tickets return table or empty state", "ticket id and status are safe"],
+      "mock_assertions": [
+        "ticket table renders",
+        "ticket mutation remains approval gated"
+      ],
+      "live_assertions": [
+        "pending tickets return table or empty state",
+        "ticket id and status are safe"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw ticket payload"],
+      "sensitive_fields": [
+        "raw ticket payload"
+      ],
       "readonly_matrix": true
     },
     {
@@ -280,15 +445,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/stats_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "metrics_summary",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/ip-stats-result.json",
       "real_model_prompt_id": "fobrain.ip_stats.basic",
-      "mock_assertions": ["IP metrics render", "not used for single IP lookup"],
-      "live_assertions": ["IP stats return metrics", "raw aggregation body is absent"],
+      "mock_assertions": [
+        "IP metrics render",
+        "not used for single IP lookup"
+      ],
+      "live_assertions": [
+        "IP stats return metrics",
+        "raw aggregation body is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw aggregation body"],
+      "sensitive_fields": [
+        "raw aggregation body"
+      ],
       "readonly_matrix": true
     },
     {
@@ -297,15 +471,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/stats_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "C",
       "display_type": "metrics_summary",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/vul-stats-result.json",
       "real_model_prompt_id": "fobrain.vul_stats.basic",
-      "mock_assertions": ["vulnerability metrics render", "not used for status distribution question"],
-      "live_assertions": ["vulnerability stats return metrics", "raw aggregation body is absent"],
+      "mock_assertions": [
+        "vulnerability metrics render",
+        "not used for status distribution question"
+      ],
+      "live_assertions": [
+        "vulnerability stats return metrics",
+        "raw aggregation body is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw aggregation body"],
+      "sensitive_fields": [
+        "raw aggregation body"
+      ],
       "readonly_matrix": true
     },
     {
@@ -314,15 +497,24 @@
       "input_schema_ref": "docs/schemas/fobrain/my_assets.input.v1.schema.json",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-assets-result.json",
       "real_model_prompt_id": "fobrain.my_assets.basic",
-      "mock_assertions": ["current user is resolved internally", "asset table renders"],
-      "live_assertions": ["my assets returns table or safe empty state", "credential is not shown"],
+      "mock_assertions": [
+        "current user is resolved internally",
+        "asset table renders"
+      ],
+      "live_assertions": [
+        "my assets returns table or safe empty state",
+        "credential is not shown"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["credential"],
+      "sensitive_fields": [
+        "credential"
+      ],
       "readonly_matrix": true
     },
     {
@@ -331,15 +523,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/keyword_page_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "asset",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-department-assets-result.json",
       "real_model_prompt_id": "fobrain.my_department_assets.basic",
-      "mock_assertions": ["department is resolved internally", "does not ask for department name"],
-      "live_assertions": ["department assets return table or empty state", "department business value may be shown"],
+      "mock_assertions": [
+        "department is resolved internally",
+        "does not ask for department name"
+      ],
+      "live_assertions": [
+        "department assets return table or empty state",
+        "department business value may be shown"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw user payload"],
+      "sensitive_fields": [
+        "raw user payload"
+      ],
       "readonly_matrix": true
     },
     {
@@ -348,15 +549,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/keyword_page_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-vulnerabilities-result.json",
       "real_model_prompt_id": "fobrain.my_vulnerabilities.basic",
-      "mock_assertions": ["current user vulnerabilities render", "does not ask severity first"],
-      "live_assertions": ["my vulnerabilities return table or empty state", "raw query is absent"],
+      "mock_assertions": [
+        "current user vulnerabilities render",
+        "does not ask severity first"
+      ],
+      "live_assertions": [
+        "my vulnerabilities return table or empty state",
+        "raw query is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw query"],
+      "sensitive_fields": [
+        "raw query"
+      ],
       "readonly_matrix": true
     },
     {
@@ -365,15 +575,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/keyword_page_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "vulnerability",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-department-vulnerabilities-result.json",
       "real_model_prompt_id": "fobrain.my_department_vulnerabilities.basic",
-      "mock_assertions": ["department is resolved internally", "does not ask department or severity first"],
-      "live_assertions": ["department vulnerabilities return table or empty state", "raw query is absent"],
+      "mock_assertions": [
+        "department is resolved internally",
+        "does not ask department or severity first"
+      ],
+      "live_assertions": [
+        "department vulnerabilities return table or empty state",
+        "raw query is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw query"],
+      "sensitive_fields": [
+        "raw query"
+      ],
       "readonly_matrix": true
     },
     {
@@ -382,15 +601,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/keyword_page_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "business_system",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-business-systems-result.json",
       "real_model_prompt_id": "fobrain.my_business_systems.basic",
-      "mock_assertions": ["current user context is used", "business table renders"],
-      "live_assertions": ["my business systems return table or empty state", "raw user payload is absent"],
+      "mock_assertions": [
+        "current user context is used",
+        "business table renders"
+      ],
+      "live_assertions": [
+        "my business systems return table or empty state",
+        "raw user payload is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw user payload"],
+      "sensitive_fields": [
+        "raw user payload"
+      ],
       "readonly_matrix": true
     },
     {
@@ -399,15 +627,24 @@
       "input_schema_ref": "docs/schemas/fobrain/tool_inputs.v1.schema.json#/$defs/keyword_page_query",
       "required_fields": [],
       "result_schema_ref": "docs/schemas/fobrain/tool_result.v2.schema.json",
+      "batch_gate": "B",
       "display_type": "entity_collection",
       "entity_type": "business_system",
       "result_status": "resolved",
       "fixture": "docs/fixtures/fobrain/my-important-business-systems-result.json",
       "real_model_prompt_id": "fobrain.my_important_business_systems.basic",
-      "mock_assertions": ["important_only semantics are explicit", "business table renders"],
-      "live_assertions": ["important business systems return table or empty state", "raw user payload is absent"],
+      "mock_assertions": [
+        "important_only semantics are explicit",
+        "business table renders"
+      ],
+      "live_assertions": [
+        "important business systems return table or empty state",
+        "raw user payload is absent"
+      ],
       "screenshot_state": "expanded",
-      "sensitive_fields": ["raw user payload"],
+      "sensitive_fields": [
+        "raw user payload"
+      ],
       "readonly_matrix": true
     }
   ]

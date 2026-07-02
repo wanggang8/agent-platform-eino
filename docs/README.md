@@ -50,6 +50,7 @@ Runtime core 不耦合业务；业务能力通过 Skill / Tool / MCP / Capabilit
 - [capability-provider-contract.md](./capability-provider-contract.md)：工具、Skill、MCP、Connector 的新架构接入规范。
 - [provider-policy-and-credentials.md](./provider-policy-and-credentials.md)：policy、permission、凭据绑定和 workspace scope。
 - [fobrain-provider-config.md](./fobrain-provider-config.md)：Phase 5 Fobrain provider 本地配置、凭据和 connector 状态契约。
+- [fobrain-live-read-batch-plan.md](./fobrain-live-read-batch-plan.md)：Phase 8 Fobrain workspace 共享 token、live read 和 24 只读工具分批门禁。
 - [llm-provider-safety.md](./llm-provider-safety.md)：模型 provider 配置、网络安全和错误脱敏。
 - [frontend-architecture.md](./frontend-architecture.md)：Workbench 前端技术栈、状态边界、组件策略和测试策略。
 - [phase-3-execution-and-facts-plan.md](./phase-3-execution-and-facts-plan.md)：Phase 3 Eino Runner、Product Facts、SQLite、SSE 和 Action API 的落地顺序。

@@ -6,6 +6,8 @@
 
 Phase 8 是完整重构必做门禁。未完成本矩阵，不得声明重构完成、Fobrain 能力可比或替换当前产品基线。
 
+Phase 8 必须按 `docs/fobrain-live-read-batch-plan.md` 分批恢复：Batch A 先完成 connector、当前用户和权限，再进入我的范围、直接列表/统计、参数化查询、详情与风险关联。不得跳过批次直接声明 24/24 完成。
+
 ## 通用要求
 
 机器可读矩阵固定在：
@@ -24,6 +26,7 @@ docs/fixtures/fobrain/tool-matrix-24.json
 - 中文展示名。
 - 输入 schema。
 - StructuredResult schema。
+- 分批门禁。
 - 典型真实模型 prompt。
 - mock 断言。
 - live 断言。
@@ -40,6 +43,7 @@ docs/fixtures/fobrain/tool-matrix-24.json
 | `input_schema_ref` | 指向 `docs/schemas/` 中的输入 schema |
 | `result_schema_ref` | 固定为 `fobrain.tool_result.v2` 或更具体的业务结果 schema |
 | `required_fields` | 必填输入字段和默认值 |
+| `batch_gate` | 固定为 `A` / `B` / `C` / `D` / `E`，与 live read 分批计划一致 |
 | `display_type` | table / detail / metrics / narrative / connector_status / approval |
 | `entity_type` | person / asset / vulnerability / department / business / ticket / connector |
 | `result_status` | resolved / waiting / pending_approval / not_found / empty / failed / partial |
@@ -98,6 +102,7 @@ display_name_zh:
 input_schema_ref:
 required_fields:
 result_schema_ref:
+batch_gate:
 display_type:
 entity_type:
 result_status:
