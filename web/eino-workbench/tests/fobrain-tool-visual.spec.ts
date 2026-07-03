@@ -15,6 +15,26 @@ const fobrainVisualScenarios = [
     fixtureKey: "fobrainMyPermissions",
     prompt: "查看我的 Fobrain 权限范围",
     label: "Fobrain 我的权限"
+  },
+  {
+    fixtureKey: "fobrainAssetDetail",
+    prompt: "查看 Fobrain 资产详情",
+    label: "Fobrain 资产详情"
+  },
+  {
+    fixtureKey: "fobrainVulnerabilityDetail",
+    prompt: "查看 Fobrain 漏洞详情",
+    label: "Fobrain 漏洞详情"
+  },
+  {
+    fixtureKey: "fobrainBusinessRiskSummary",
+    prompt: "汇总 Fobrain 业务风险",
+    label: "Fobrain 业务风险"
+  },
+  {
+    fixtureKey: "fobrainThreatRelevanceList",
+    prompt: "查看 Fobrain 威胁关联资产",
+    label: "Fobrain 威胁关联"
   }
 ] as const;
 
@@ -28,7 +48,7 @@ const forbiddenVisibleText = [
   "resume_token"
 ] as const;
 
-test.describe("@visual Fobrain Batch A connector and business read evidence", () => {
+test.describe("@visual Fobrain Batch A/E connector and business read evidence", () => {
   for (const scenario of fobrainVisualScenarios) {
     test(`@visual ${scenario.fixtureKey} six evidence regions`, async ({ page }) => {
       await page.goto("/workspaces/ws-demo");

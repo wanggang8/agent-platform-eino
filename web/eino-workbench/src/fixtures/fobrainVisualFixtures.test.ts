@@ -4,12 +4,16 @@ import { fobrainVisualFixtures, fobrainVisualScenarios } from "./fobrainVisualFi
 const requiredRegions = ["main-chat", "fresh-main-chat", "process", "evidence", "audit", "internal-details"] as const;
 
 describe("fobrain visual fixtures", () => {
-  it("defines Batch A business-read scenarios with six visual regions", () => {
-    // Batch A 视觉验收必须继承旧最终矩阵的六区域覆盖，但数据必须来自新项目 fixture。
+  it("defines Batch A and Batch E business-read scenarios with six visual regions", () => {
+    // Batch A/E 视觉验收必须继承旧最终矩阵的六区域覆盖，但数据必须来自新项目 fixture。
     expect(fobrainVisualScenarios.map((scenario) => scenario.toolId)).toEqual([
       "connector.fobrain.security",
       "tool.fobrain.current_user_context",
-      "tool.fobrain.my_permissions"
+      "tool.fobrain.my_permissions",
+      "tool.fobrain.get_asset_detail",
+      "tool.fobrain.get_vulnerability_detail",
+      "tool.fobrain.business_risk_summary",
+      "tool.fobrain.threat_relevance_list"
     ]);
 
     for (const scenario of fobrainVisualScenarios) {
@@ -36,6 +40,26 @@ describe("fobrain visual fixtures", () => {
         fixtureKey: "fobrainMyPermissions",
         prompt: "查看我的 Fobrain 权限范围",
         label: "Fobrain 我的权限"
+      },
+      {
+        fixtureKey: "fobrainAssetDetail",
+        prompt: "查看 Fobrain 资产详情",
+        label: "Fobrain 资产详情"
+      },
+      {
+        fixtureKey: "fobrainVulnerabilityDetail",
+        prompt: "查看 Fobrain 漏洞详情",
+        label: "Fobrain 漏洞详情"
+      },
+      {
+        fixtureKey: "fobrainBusinessRiskSummary",
+        prompt: "汇总 Fobrain 业务风险",
+        label: "Fobrain 业务风险"
+      },
+      {
+        fixtureKey: "fobrainThreatRelevanceList",
+        prompt: "查看 Fobrain 威胁关联资产",
+        label: "Fobrain 威胁关联"
       }
     ]);
   });

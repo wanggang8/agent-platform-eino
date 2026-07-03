@@ -1,10 +1,21 @@
 import type { StructuredResult, WorkbenchView } from "../contracts/generated";
+import assetDetailResult from "../../../../docs/fixtures/fobrain/get-asset-detail-result.json";
+import businessRiskSummaryResult from "../../../../docs/fixtures/fobrain/business-risk-summary-result.json";
 import connectorSecurityResult from "../../../../docs/fixtures/fobrain/connector-security-result.json";
 import currentUserResult from "../../../../docs/fixtures/fobrain/current-user-context-result.json";
 import myPermissionsResult from "../../../../docs/fixtures/fobrain/my-permissions-result.json";
+import threatRelevanceListResult from "../../../../docs/fixtures/fobrain/threat-relevance-list-result.json";
+import vulnerabilityDetailResult from "../../../../docs/fixtures/fobrain/get-vulnerability-detail-result.json";
 
-// FobrainVisualFixtureKey 固定当前 Batch A 视觉 fixture，包含 connector 和两个业务只读工具。
-export type FobrainVisualFixtureKey = "fobrainConnectorSecurity" | "fobrainCurrentUser" | "fobrainMyPermissions";
+// FobrainVisualFixtureKey 固定当前 Batch A/E 视觉 fixture，包含 connector 和详情风险工具。
+export type FobrainVisualFixtureKey =
+  | "fobrainConnectorSecurity"
+  | "fobrainCurrentUser"
+  | "fobrainMyPermissions"
+  | "fobrainAssetDetail"
+  | "fobrainVulnerabilityDetail"
+  | "fobrainBusinessRiskSummary"
+  | "fobrainThreatRelevanceList";
 
 // FobrainVisualRegion 对齐旧最终验收六区域要求，但截图必须由新项目重新生成。
 export type FobrainVisualRegion =
@@ -17,7 +28,14 @@ export type FobrainVisualRegion =
 
 type FobrainVisualScenario = {
   readonly fixtureKey: FobrainVisualFixtureKey;
-  readonly toolId: "connector.fobrain.security" | "tool.fobrain.current_user_context" | "tool.fobrain.my_permissions";
+  readonly toolId:
+    | "connector.fobrain.security"
+    | "tool.fobrain.current_user_context"
+    | "tool.fobrain.my_permissions"
+    | "tool.fobrain.get_asset_detail"
+    | "tool.fobrain.get_vulnerability_detail"
+    | "tool.fobrain.business_risk_summary"
+    | "tool.fobrain.threat_relevance_list";
   readonly prompt: string;
   readonly label: string;
   readonly regions: readonly FobrainVisualRegion[];
@@ -29,6 +47,10 @@ const requiredRegions = ["main-chat", "fresh-main-chat", "process", "evidence", 
 const connectorSecurityStructuredResult = connectorSecurityResult as StructuredResult;
 const currentUserStructuredResult = currentUserResult as StructuredResult;
 const myPermissionsStructuredResult = myPermissionsResult as StructuredResult;
+const assetDetailStructuredResult = assetDetailResult as StructuredResult;
+const vulnerabilityDetailStructuredResult = vulnerabilityDetailResult as StructuredResult;
+const businessRiskSummaryStructuredResult = businessRiskSummaryResult as StructuredResult;
+const threatRelevanceListStructuredResult = threatRelevanceListResult as StructuredResult;
 
 // fobrainVisualScenarios 是视觉测试和验收记录的场景清单，不参与运行时工具选择。
 export const fobrainVisualScenarios = [
@@ -52,6 +74,34 @@ export const fobrainVisualScenarios = [
     prompt: "查看我的 Fobrain 权限范围",
     label: "Fobrain 我的权限",
     regions: requiredRegions
+  },
+  {
+    fixtureKey: "fobrainAssetDetail",
+    toolId: "tool.fobrain.get_asset_detail",
+    prompt: "查看 Fobrain 资产详情",
+    label: "Fobrain 资产详情",
+    regions: requiredRegions
+  },
+  {
+    fixtureKey: "fobrainVulnerabilityDetail",
+    toolId: "tool.fobrain.get_vulnerability_detail",
+    prompt: "查看 Fobrain 漏洞详情",
+    label: "Fobrain 漏洞详情",
+    regions: requiredRegions
+  },
+  {
+    fixtureKey: "fobrainBusinessRiskSummary",
+    toolId: "tool.fobrain.business_risk_summary",
+    prompt: "汇总 Fobrain 业务风险",
+    label: "Fobrain 业务风险",
+    regions: requiredRegions
+  },
+  {
+    fixtureKey: "fobrainThreatRelevanceList",
+    toolId: "tool.fobrain.threat_relevance_list",
+    prompt: "查看 Fobrain 威胁关联资产",
+    label: "Fobrain 威胁关联",
+    regions: requiredRegions
   }
 ] as const satisfies readonly FobrainVisualScenario[];
 
@@ -74,6 +124,30 @@ export const fobrainVisualFixtures = {
     runId: "run-fobrain-my-permissions-visual",
     toolCallId: "call-fobrain-my-permissions-visual",
     result: myPermissionsStructuredResult
+  }),
+  fobrainAssetDetail: buildFobrainView({
+    scenario: fobrainVisualScenarios[3],
+    runId: "run-fobrain-asset-detail-visual",
+    toolCallId: "call-fobrain-asset-detail-visual",
+    result: assetDetailStructuredResult
+  }),
+  fobrainVulnerabilityDetail: buildFobrainView({
+    scenario: fobrainVisualScenarios[4],
+    runId: "run-fobrain-vulnerability-detail-visual",
+    toolCallId: "call-fobrain-vulnerability-detail-visual",
+    result: vulnerabilityDetailStructuredResult
+  }),
+  fobrainBusinessRiskSummary: buildFobrainView({
+    scenario: fobrainVisualScenarios[5],
+    runId: "run-fobrain-business-risk-summary-visual",
+    toolCallId: "call-fobrain-business-risk-summary-visual",
+    result: businessRiskSummaryStructuredResult
+  }),
+  fobrainThreatRelevanceList: buildFobrainView({
+    scenario: fobrainVisualScenarios[6],
+    runId: "run-fobrain-threat-relevance-list-visual",
+    toolCallId: "call-fobrain-threat-relevance-list-visual",
+    result: threatRelevanceListStructuredResult
   })
 } as const satisfies Record<FobrainVisualFixtureKey, WorkbenchView>;
 

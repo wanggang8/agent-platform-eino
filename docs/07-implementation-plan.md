@@ -923,7 +923,7 @@ git diff --check
 - 工具实现顺序必须遵循 Batch A-E；每个批次完成前不得把后续批次标记为可验收。
 - `batch_gate` 必须由 `tool_matrix.v1.schema.json` 校验，并与 `docs/fobrain-live-read-batch-plan.md` 一致。
 - Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A live/smoke 必须生成 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json` 约束的报告。Batch A 最终完成声明还必须补 Workbench 视觉证据和验收记录。
-- Batch E 当前代码切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、`fobrain-batch-e` live smoke/report schema 和真实环境脱敏 live pass 报告。后续任务必须继续补 Workbench 视觉和 replay/audit 证据，不得把当前切片等同于 Batch E 完成。
+- Batch E 当前切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、`fobrain-batch-e` live smoke/report schema、真实环境脱敏 live pass 报告，以及 Workbench 视觉、fresh replay、audit evidence。该结论只覆盖 Batch E 四工具，不得把当前切片等同于 Fobrain 24 只读恢复完成。
 
 任务级检查：
 
@@ -952,8 +952,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-readonly
 当前进展：
 
 - Batch A 业务只读视觉切片已覆盖 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions`，每个工具在 desktop/mobile 下生成六区域 Playwright screenshot baseline。
-- 本切片只证明两个业务只读工具的 Workbench 安全投影、StructuredResult 展示和视觉区域覆盖；`connector.fobrain.security` 视觉证据仍按 Task 8.3 验收。
-- Phase 8.2 仍需继续扩展到 24 个只读工具矩阵，不得据此声明 Fobrain 24/24 恢复完成。
+- Batch E 四个详情与风险关联只读工具已覆盖 Workbench 安全投影、StructuredResult 展示、fresh replay、audit evidence 和 desktop/mobile 六区域 baseline。
+- 本任务仍需继续补齐 Batch B-D 视觉矩阵并执行 Action API 真实服务同源 smoke，不得据此声明 Fobrain 24/24 恢复完成。
 
 要求：
 
