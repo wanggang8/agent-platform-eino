@@ -99,7 +99,28 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-d --config 
 
 Batch E 开发前必须先完成 `docs/fobrain-batch-e-interface-plan.md` 的接口矩阵和样本策略。资产详情不能只按 `asset_id` 猜测路径：`network_type` 可选，缺省按旧 adapter 走 internal fallback；实现必须集中归一化 `1/2`、中英文内外网和 device/domain alias。详情 ID 只能来自 ignored local samples 或新的脱敏 discovery sidecar，不能从可提交 Batch D live report 反推，也不能回读 raw provider payload。Batch E live report 必须区分 resolved、empty/not_found、provider failure，并且不得把真实详情 ID、raw payload、POST body、auth header 或本地配置写入可提交报告。
 
-当前代码进展：Batch E 四个工具已进入可选 `DetailRiskClient` catalog 和 provider 调用链，mock client 可返回 StructuredResult 候选，HTTP client 已实现当前私有 `/api/...` 优先、`/api/v1/...` fallback 的详情和聚合 mapper。已覆盖的安全边界包括 `network_type` 中央归一、必填参数校验、敏感字段拒绝、业务风险 raw POST body 不进入 StructuredResult、威胁关联参数映射。Batch E sample discovery、live smoke/report schema、真实 ID 脱敏报告、Workbench 视觉和 replay/audit 证据仍未完成。
+当前代码进展：Batch E 四个工具已进入可选 `DetailRiskClient` catalog 和 provider 调用链，mock client 可返回 StructuredResult 候选，HTTP client 已实现当前私有 `/api/...` 优先、`/api/v1/...` fallback 的详情和聚合 mapper。已覆盖的安全边界包括 `network_type` 中央归一、必填参数校验、敏感字段拒绝、业务风险 raw POST body 不进入 StructuredResult、威胁关联参数映射。样本发现已扩展 Batch E 本地样本字段，安全 discovery report 只记录 presence booleans；`fobrain-batch-e` live smoke/report schema 已可生成 passed/blocked/failed 报告。当前真实 discovery 可找到 owner/department/IP、资产详情、漏洞详情和威胁名样本，但未发现稳定 `business` 样本，因此只能阻断 Batch E live pass 和最终 24 只读验收，不能阻断已具备样本条件的 Batch D live pass。真实环境 Batch E live pass、Workbench 视觉和 replay/audit 证据仍未完成。
+
+Batch E discovery 与 smoke 命令：
+
+```bash
+go run ./scripts/fobrain_sample_discovery \
+  --config configs/eino-workbench.local.yaml \
+  --output test-results/eino-workbench-fobrain-sample-discovery-report.json \
+  --samples-output test-results/eino-workbench-fobrain-batch-e-samples.local.json
+```
+
+```bash
+bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-e \
+  --config configs/eino-workbench.local.yaml \
+  --asset-id "<资产ID>" \
+  --asset-network-type "<internal|external|device|domain>" \
+  --vulnerability-id "<漏洞ID>" \
+  --business-name "<业务系统>" \
+  --vulnerability-name "<漏洞名>"
+```
+
+上述样本值只能来自 ignored local samples 或人工只读确认，不得写入可提交报告。
 
 ## 每批完成标准
 

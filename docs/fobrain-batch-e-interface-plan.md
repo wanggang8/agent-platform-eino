@@ -35,7 +35,7 @@
 4. 增加 Batch E live smoke/report schema，passed 必须证明四工具返回 resolved 或 documented not_found，且 raw payload/token 不出现。
 5. 补 Workbench 视觉和 replay/audit 证据后，才允许声明 Batch E 完成。
 
-当前代码进展：步骤 1-2 已完成 provider catalog、输入 mapper、mock StructuredResult 和 HTTP mapper。HTTP mapper 已覆盖资产详情 `network_type` 中央归一、漏洞详情非分页响应、业务风险 count POST body、威胁关联 `keyword/vul_name` 双参数映射和 `/api` 到 `/api/v1` fallback。步骤 3-5 尚未完成，因此不得声明 Batch E live pass 或 Fobrain 24 只读恢复完成。
+当前代码进展：步骤 1-4 的基础设施已完成 provider catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、Batch E live smoke 脚本和 `batch_e_live_report` schema。HTTP mapper 已覆盖资产详情 `network_type` 中央归一、漏洞详情非分页响应、业务风险 count POST body、威胁关联 `keyword/vul_name` 双参数映射和 `/api` 到 `/api/v1` fallback。真实环境 live pass 报告和步骤 5 仍未完成，因此不得声明 Batch E 完成或 Fobrain 24 只读恢复完成。
 
 输入契约进展：`asset_detail.network_type` schema 允许当前真实输入中的数字、中文和英文别名，但 provider 边界必须归一为 `internal`、`external`、`device`、`domain` 后再进入路径选择；`business_risk_summary` 使用专用 `business_risk_query`，避免影响 Batch C 的 `business_list`；`threat_relevance_list` 明确支持可选 `ip` 与 `business_name` 过滤。
 

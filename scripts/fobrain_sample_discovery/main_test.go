@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"agent-platform-eino/internal/einoapp/bootstrap"
 )
 
 func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
@@ -19,7 +21,7 @@ func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
 		}
 		switch r.URL.Path {
 		case "/api/asset":
-			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"asset-1","ip":"10.10.11.12","oper_info":[{"name":"张三"}],"business_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"asset-1","ip":"10.10.11.12","network_type":"internal","hostname":"prod-web-01","oper_info":[{"name":"张三"}],"business_department":[{"name":"安全部"}],"business":[{"name":"核心业务"}]}],"page":1,"per_page":20,"total":1}}`))
 		case "/api/threat_center":
 			// 旧 Fobrain 的 ip query 参数会强制 data_range=1；脚本必须用 search_condition 验证完整漏洞范围。
 			if r.URL.Query().Get("ip") != "" {
@@ -30,7 +32,7 @@ func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
 				_, _ = w.Write([]byte(`{"code":0,"data":{"items":[],"page":1,"per_page":20,"total":0}}`))
 				return
 			}
-			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"vuln-1","ip":"10.10.11.12","name":"高危组件漏洞","person_info":[{"name":"张三"}],"person_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"vuln-1","ip":"10.10.11.12","name":"高危组件漏洞","person_info":[{"name":"张三"}],"person_department":[{"name":"安全部"}],"business":[{"name":"核心业务"}]}],"page":1,"per_page":20,"total":1}}`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -53,6 +55,12 @@ func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
 	if !report.SamplePresence.OwnerPresent || !report.SamplePresence.DepartmentPresent || !report.SamplePresence.IPPresent {
 		t.Fatalf("sample presence mismatch: %+v", report.SamplePresence)
 	}
+	if !report.SamplePresence.AssetDetailPresent ||
+		!report.SamplePresence.VulnerabilityDetailPresent ||
+		!report.SamplePresence.BusinessPresent ||
+		!report.SamplePresence.ThreatNamePresent {
+		t.Fatalf("Batch E sample presence mismatch: %+v", report.SamplePresence)
+	}
 	if len(report.VerificationChecks) != 6 {
 		t.Fatalf("verification count = %d", len(report.VerificationChecks))
 	}
@@ -64,8 +72,15 @@ func TestRunDiscoveryWritesSafeReportAndLocalSamples(t *testing.T) {
 	if !report.SampleFile.Written {
 		t.Fatalf("sample file should be marked written: %+v", report.SampleFile)
 	}
-	assertDiscoveryReportNoLeak(t, reportPath, secret, "张三", "安全部", "10.10.11.12")
-	assertSamplesFileContains(t, samplesPath, "张三", "安全部", "10.10.11.12")
+	assertDiscoveryReportNoLeak(t, reportPath, secret, "张三", "安全部", "10.10.11.12", "asset-1", "vuln-1", "核心业务", "高危组件漏洞")
+	assertSamplesFileContains(t, samplesPath, "张三", "安全部", "10.10.11.12", "asset-1", "vuln-1", "核心业务", "高危组件漏洞")
+}
+
+func TestDiscoveryClientRequiresExplicitAuthParam(t *testing.T) {
+	_, err := newDiscoveryClient(bootstrapFobrainConfigForDiscoveryTest("https://fobrain.example.test/api", "sample-discovery-secret", ""))
+	if err == nil || !strings.Contains(err.Error(), "auth param") {
+		t.Fatalf("newDiscoveryClient err = %v, want missing auth param", err)
+	}
 }
 
 func TestRunDiscoveryBlocksWhenNoStableCandidate(t *testing.T) {
@@ -102,6 +117,74 @@ func TestRunDiscoveryBlocksWhenNoStableCandidate(t *testing.T) {
 	assertDiscoveryReportNoLeak(t, reportPath, secret)
 }
 
+func TestRunDiscoveryBlocksWhenBatchESamplesMissing(t *testing.T) {
+	// Batch E 样本不完整时不能写出 local samples，避免后续 live smoke 使用半成品样本。
+	const secret = "sample-discovery-secret"
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("authorization") != secret {
+			t.Fatalf("authorization header mismatch")
+		}
+		switch r.URL.Path {
+		case "/api/asset":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"ip":"10.10.11.12","oper_info":[{"name":"张三"}],"business_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+		case "/api/threat_center":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"ip":"10.10.11.12","person_info":[{"name":"张三"}],"person_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "eino-workbench.yaml")
+	reportPath := filepath.Join(tempDir, "report.json")
+	samplesPath := filepath.Join(tempDir, "samples.local.json")
+	writeDiscoveryTestConfig(t, configPath, server.URL, secret)
+
+	if err := runDiscovery(configPath, reportPath, samplesPath, 20); err != nil {
+		t.Fatal(err)
+	}
+	report := readDiscoveryReport(t, reportPath)
+	if report.Status != "blocked" || report.FailureCategory != "batch_e_sample_candidate_not_found" {
+		t.Fatalf("report status mismatch: %+v", report)
+	}
+	assertDiscoveryBlocksClaims(t, report.BlocksClaims, "fobrain-batch-e live pass", "Fobrain 24 readonly final acceptance")
+	assertDiscoveryBlocksClaimsAbsent(t, report.BlocksClaims, "fobrain-batch-d live pass")
+	if report.SampleFile.Written {
+		t.Fatalf("sample file should not be written for incomplete Batch E samples: %+v", report.SampleFile)
+	}
+	if _, err := os.Stat(samplesPath); !os.IsNotExist(err) {
+		t.Fatalf("samples file should not exist, stat err=%v", err)
+	}
+}
+
+func assertDiscoveryBlocksClaims(t *testing.T, claims []string, expected ...string) {
+	t.Helper()
+	for _, want := range expected {
+		found := false
+		for _, claim := range claims {
+			if claim == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("blocks_claims missing %q: %v", want, claims)
+		}
+	}
+}
+
+func assertDiscoveryBlocksClaimsAbsent(t *testing.T, claims []string, unexpected ...string) {
+	t.Helper()
+	for _, reject := range unexpected {
+		for _, claim := range claims {
+			if claim == reject {
+				t.Fatalf("blocks_claims should not contain %q: %v", reject, claims)
+			}
+		}
+	}
+}
+
 func readDiscoveryReport(t *testing.T, outputPath string) discoveryReport {
 	t.Helper()
 	data, err := os.ReadFile(outputPath)
@@ -132,14 +215,14 @@ func assertDiscoveryReportNoLeak(t *testing.T, outputPath string, forbidden ...s
 	}
 }
 
-func assertSamplesFileContains(t *testing.T, outputPath string, owner string, department string, ip string) {
+func assertSamplesFileContains(t *testing.T, outputPath string, markers ...string) {
 	t.Helper()
 	data, err := os.ReadFile(outputPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	encoded := string(data)
-	for _, marker := range []string{owner, department, ip} {
+	for _, marker := range markers {
 		if !strings.Contains(encoded, marker) {
 			t.Fatalf("samples file missing %q: %s", marker, encoded)
 		}
@@ -190,5 +273,22 @@ fobrain:
 `
 	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func bootstrapFobrainConfigForDiscoveryTest(baseURL string, secret string, authParam string) bootstrap.FobrainConfig {
+	return bootstrap.FobrainConfig{
+		Enabled:     true,
+		ConnectorID: "fobrain",
+		WorkspaceID: "ws_fobrain",
+		BaseURL:     baseURL,
+		Credential: bootstrap.FobrainCredentialConfig{
+			Status:     "bound",
+			DisplayRef: "bound:fobrain:local",
+			OwnerScope: "workspace",
+			AuthParam:  authParam,
+			APIToken:   secret,
+		},
+		ConnectorStatus: bootstrap.FobrainConnectorStatusConfig{Mode: "live", Available: true},
 	}
 }

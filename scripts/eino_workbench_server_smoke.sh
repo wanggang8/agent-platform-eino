@@ -6,6 +6,11 @@ provided_config=""
 batch_d_owner=""
 batch_d_department=""
 batch_d_ip=""
+batch_e_asset_id=""
+batch_e_asset_network_type=""
+batch_e_vulnerability_id=""
+batch_e_business_name=""
+batch_e_vulnerability_name=""
 
 require_option_value() {
   local option="$1"
@@ -43,6 +48,31 @@ while [[ $# -gt 0 ]]; do
       batch_d_ip="${2:-}"
       shift 2
       ;;
+    --asset-id)
+      require_option_value "$1" "${2:-}"
+      batch_e_asset_id="${2:-}"
+      shift 2
+      ;;
+    --asset-network-type)
+      require_option_value "$1" "${2:-}"
+      batch_e_asset_network_type="${2:-}"
+      shift 2
+      ;;
+    --vulnerability-id)
+      require_option_value "$1" "${2:-}"
+      batch_e_vulnerability_id="${2:-}"
+      shift 2
+      ;;
+    --business-name)
+      require_option_value "$1" "${2:-}"
+      batch_e_business_name="${2:-}"
+      shift 2
+      ;;
+    --vulnerability-name)
+      require_option_value "$1" "${2:-}"
+      batch_e_vulnerability_name="${2:-}"
+      shift 2
+      ;;
     *)
       if [[ -z "${scenario}" ]]; then
         scenario="$1"
@@ -62,7 +92,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-clarification)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
@@ -79,7 +109,7 @@ case "${scenario}" in
     ;;
   *)
     echo "unsupported scenario: ${scenario}" >&2
-    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-batch-a, fobrain-batch-d, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
+    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-batch-a, fobrain-batch-d, fobrain-batch-e, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
     exit 2
     ;;
 esac
@@ -190,6 +220,28 @@ PY
   echo "fobrain-batch-d live smoke skipped: ${reason}"
 }
 
+write_fobrain_batch_e_skip_report() {
+  local reason="$1"
+  mkdir -p test-results
+  python3 - "${reason}" "${provided_config:-configs/eino-workbench.local.yaml}" <<'PY'
+import datetime, json, sys
+reason, config_path = sys.argv[1], sys.argv[2]
+report = {
+    "schema_version": "eino.skip_report.v1",
+    "command": f"bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-e --config {config_path}",
+    "missing_env": ["local_fobrain_live_config_or_batch_e_samples"],
+    "credential_scope": "fobrain-workspace",
+    "reason": reason,
+    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with Fobrain live credential and pass --asset-id/--vulnerability-id/--business-name/--vulnerability-name.",
+    "blocks_claims": ["fobrain-batch-e live pass", "Fobrain 24 readonly final acceptance"],
+    "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-fobrain-batch-e-skip-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  echo "fobrain-batch-e live smoke skipped: ${reason}"
+}
+
 if [[ "${scenario}" == "fobrain-batch-a" ]]; then
   config_for_fobrain="${provided_config:-configs/eino-workbench.local.yaml}"
   if [[ ! -f "${config_for_fobrain}" ]]; then
@@ -255,6 +307,60 @@ PY
   fi
   if [[ "${batch_d_exit}" -ne 0 ]]; then
     exit "${batch_d_exit}"
+  fi
+  exit 0
+fi
+
+if [[ "${scenario}" == "fobrain-batch-e" ]]; then
+  config_for_fobrain="${provided_config:-configs/eino-workbench.local.yaml}"
+  if [[ ! -f "${config_for_fobrain}" ]]; then
+    write_fobrain_batch_e_skip_report "本地 Fobrain live 配置文件不存在"
+    exit 0
+  fi
+  if ! go run ./scripts/eino_workbench_config_prepare.go --check-fobrain-live-credential --source "${config_for_fobrain}" >/dev/null 2>&1; then
+    write_fobrain_batch_e_skip_report "本地 Fobrain live 工作区凭据未配置"
+    exit 0
+  fi
+  report_path="test-results/eino-workbench-fobrain-batch-e-live-report.json"
+  args=(--config "${config_for_fobrain}" --output "${report_path}")
+  if [[ -n "${batch_e_asset_id}" ]]; then
+    args+=(--asset-id "${batch_e_asset_id}")
+  fi
+  if [[ -n "${batch_e_asset_network_type}" ]]; then
+    args+=(--asset-network-type "${batch_e_asset_network_type}")
+  fi
+  if [[ -n "${batch_e_vulnerability_id}" ]]; then
+    args+=(--vulnerability-id "${batch_e_vulnerability_id}")
+  fi
+  if [[ -n "${batch_e_business_name}" ]]; then
+    args+=(--business-name "${batch_e_business_name}")
+  fi
+  if [[ -n "${batch_e_vulnerability_name}" ]]; then
+    args+=(--vulnerability-name "${batch_e_vulnerability_name}")
+  fi
+  set +e
+  go run ./scripts/fobrain_batch_e_smoke "${args[@]}"
+  batch_e_exit=$?
+  set -e
+  if [[ ! -f "${report_path}" ]]; then
+    echo "fobrain-batch-e live smoke failed before report was written" >&2
+    exit "${batch_e_exit}"
+  fi
+  node scripts/eino_workbench_report_validate.mjs \
+    --schema docs/schemas/fobrain/batch_e_live_report.v1.schema.json \
+    --report "${report_path}" >/dev/null
+  status="$(python3 - "${report_path}" <<'PY'
+import json, sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["status"])
+PY
+)"
+  if [[ "${status}" == "passed" ]]; then
+    echo "fobrain-batch-e live smoke passed"
+  else
+    echo "fobrain-batch-e live smoke ${status}; report blocks final claims"
+  fi
+  if [[ "${batch_e_exit}" -ne 0 ]]; then
+    exit "${batch_e_exit}"
   fi
   exit 0
 fi

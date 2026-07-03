@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/batch_e_live_report.v1.schema.json",
+  "title": "Fobrain Batch E Live Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scenario",
+    "status",
+    "provider_mode",
+    "workspace_id",
+    "tls_private_cert_mode",
+    "sample_inputs",
+    "capability_results",
+    "redaction_checks",
+    "failure_category",
+    "blocks_claims",
+    "report_created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "eino.fobrain_batch_e_live_report.v1"},
+    "scenario": {"const": "fobrain-batch-e"},
+    "status": {"enum": ["passed", "failed", "blocked"]},
+    "provider_mode": {"const": "live"},
+    "workspace_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]+$"},
+    "tls_private_cert_mode": {"type": "boolean"},
+    "sample_inputs": {
+      "type": "object",
+      "required": ["asset_detail_present", "vulnerability_detail_present", "business_present", "threat_name_present"],
+      "properties": {
+        "asset_detail_present": {"type": "boolean"},
+        "vulnerability_detail_present": {"type": "boolean"},
+        "business_present": {"type": "boolean"},
+        "threat_name_present": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "capability_results": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "capability_id",
+          "status",
+          "result_state",
+          "structured_result_schema",
+          "item_count",
+          "policy_decision",
+          "failure_category",
+          "sample_source"
+        ],
+        "properties": {
+          "capability_id": {
+            "enum": [
+              "tool.fobrain.get_asset_detail",
+              "tool.fobrain.get_vulnerability_detail",
+              "tool.fobrain.business_risk_summary",
+              "tool.fobrain.threat_relevance_list"
+            ]
+          },
+          "status": {"enum": ["passed", "failed", "blocked"]},
+          "result_state": {"enum": ["resolved", "empty", "not_run"]},
+          "structured_result_schema": {"const": "tool.structured_result.v1"},
+          "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+          "item_count": {"type": "integer", "minimum": 0},
+          "policy_decision": {
+            "enum": [
+              "allowed",
+              "credential_missing",
+              "credential_scope_denied",
+              "connector_transport_unavailable",
+              "connector_execution_failed",
+              "connector_timeout",
+              "connector_auth_failure",
+              "permission_denied"
+            ]
+          },
+          "failure_category": {"type": "string"},
+          "sample_source": {"enum": ["provided", "missing"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "redaction_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "secret_absent",
+          "auth_header_absent",
+          "raw_payload_absent",
+          "sample_values_absent",
+          "binding_reference_absent",
+          "checkpoint_absent",
+          "interrupt_absent"
+        ]
+      }
+    },
+    "failure_category": {"type": "string"},
+    "blocks_claims": {"type": "array", "items": {"type": "string"}},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "properties": {
+        "capability_results": {
+          "allOf": [
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.get_asset_detail"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.get_vulnerability_detail"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.business_risk_summary"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.threat_relevance_list"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "failure_category": {"const": "none"},
+          "blocks_claims": {"type": "array", "maxItems": 0},
+          "sample_inputs": {
+            "type": "object",
+            "properties": {
+              "asset_detail_present": {"type": "boolean", "const": true},
+              "vulnerability_detail_present": {"type": "boolean", "const": true},
+              "business_present": {"type": "boolean", "const": true},
+              "threat_name_present": {"type": "boolean", "const": true}
+            },
+            "required": ["asset_detail_present", "vulnerability_detail_present", "business_present", "threat_name_present"]
+          },
+          "capability_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string", "const": "passed"},
+                "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+                "policy_decision": {"type": "string", "const": "allowed"},
+                "failure_category": {"type": "string", "const": "none"},
+                "result_state": {"type": "string", "enum": ["resolved", "empty"]},
+                "sample_source": {"type": "string", "const": "provided"}
+              },
+              "required": ["result_ref"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "passed"},
+          "capability_results": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "properties": {
+                "result_state": {"const": "resolved"},
+                "item_count": {"const": 0}
+              },
+              "required": ["result_state", "item_count"]
+            }
+          }
+        },
+        "required": ["status", "capability_results"]
+      },
+      "then": false
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["failed", "blocked"]}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "blocks_claims": {"type": "array", "minItems": 1}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -42,9 +42,13 @@ type discoveryReport struct {
 
 // samplePresence 只表达三类样本是否存在，避免报告泄漏人员、部门或 IP 值。
 type samplePresence struct {
-	OwnerPresent      bool `json:"owner_present"`
-	DepartmentPresent bool `json:"department_present"`
-	IPPresent         bool `json:"ip_present"`
+	OwnerPresent               bool `json:"owner_present"`
+	DepartmentPresent          bool `json:"department_present"`
+	IPPresent                  bool `json:"ip_present"`
+	AssetDetailPresent         bool `json:"asset_detail_present"`
+	VulnerabilityDetailPresent bool `json:"vulnerability_detail_present"`
+	BusinessPresent            bool `json:"business_present"`
+	ThreatNamePresent          bool `json:"threat_name_present"`
 }
 
 // discoveryCheck 记录某个只读接口或验证查询是否成功，不保留 query 参数值。
@@ -63,9 +67,14 @@ type sampleFileReport struct {
 }
 
 type discoveredSamples struct {
-	Owner      string `json:"owner"`
-	Department string `json:"department"`
-	IP         string `json:"ip"`
+	Owner             string `json:"owner"`
+	Department        string `json:"department"`
+	IP                string `json:"ip"`
+	AssetID           string `json:"asset_id,omitempty"`
+	AssetNetworkType  string `json:"asset_network_type,omitempty"`
+	VulnerabilityID   string `json:"vulnerability_id,omitempty"`
+	BusinessName      string `json:"business_name,omitempty"`
+	VulnerabilityName string `json:"vulnerability_name,omitempty"`
 }
 
 type sampleFile struct {
@@ -142,13 +151,18 @@ func executeDiscovery(ctx context.Context, cfg bootstrap.Config, pageSize int) (
 	pageSize = boundedDiscoveryPageSize(pageSize)
 	samples, err := discoverSamples(ctx, client, pageSize, &report)
 	report.SamplePresence = samplePresence{
-		OwnerPresent:      strings.TrimSpace(samples.Owner) != "",
-		DepartmentPresent: strings.TrimSpace(samples.Department) != "",
-		IPPresent:         strings.TrimSpace(samples.IP) != "",
+		OwnerPresent:               strings.TrimSpace(samples.Owner) != "",
+		DepartmentPresent:          strings.TrimSpace(samples.Department) != "",
+		IPPresent:                  strings.TrimSpace(samples.IP) != "",
+		AssetDetailPresent:         strings.TrimSpace(samples.AssetID) != "",
+		VulnerabilityDetailPresent: strings.TrimSpace(samples.VulnerabilityID) != "",
+		BusinessPresent:            strings.TrimSpace(samples.BusinessName) != "",
+		ThreatNamePresent:          strings.TrimSpace(samples.VulnerabilityName) != "",
 	}
 	if err != nil {
 		report.Status = "blocked"
 		report.FailureCategory = stableDiscoveryFailure(err)
+		report.BlocksClaims = discoveryBlocksForFailure(report.FailureCategory)
 		return report, samples, nil
 	}
 	report.VerificationChecks = verifySamples(ctx, client, samples, pageSize)
@@ -193,6 +207,12 @@ func discoverSamples(ctx context.Context, client *discoveryClient, pageSize int,
 
 	candidates := collectDiscoveryCandidates(assetPage.items, threatPage.items, staffPage.items, departmentPage.items)
 	samples := discoveredSamples{}
+	samples.AssetID, samples.AssetNetworkType = firstAssetDetailSample(assetPage.items)
+	samples.VulnerabilityID, samples.VulnerabilityName = firstVulnerabilityDetailSample(threatPage.items)
+	samples.BusinessName = firstBusinessSample(assetPage.items, threatPage.items)
+	if strings.TrimSpace(samples.VulnerabilityName) == "" {
+		samples.VulnerabilityName = firstThreatNameSample(threatPage.items)
+	}
 	var checks []discoveryCheck
 	samples.Owner, checks = findVerifiedCandidate(ctx, client, "owner", candidates.owners, pageSize)
 	report.SourceChecks = append(report.SourceChecks, checks...)
@@ -203,6 +223,9 @@ func discoverSamples(ctx context.Context, client *discoveryClient, pageSize int,
 	if samples.complete() {
 		return samples, nil
 	}
+	if samples.batchDComplete() {
+		return samples, errors.New("batch_e_sample_candidate_not_found")
+	}
 	return samples, errors.New("sample_candidate_not_found")
 }
 
@@ -210,6 +233,65 @@ type discoveryCandidates struct {
 	owners      []string
 	departments []string
 	ips         []string
+}
+
+func firstAssetDetailSample(assets []map[string]any) (string, string) {
+	for _, asset := range assets {
+		id := firstPresentText(asset, "id", "asset_id", "assetId")
+		if id == "" {
+			continue
+		}
+		networkType := firstPresentText(asset, "network_type", "ip_type")
+		if networkType == "" {
+			networkType = "internal"
+		}
+		return id, networkType
+	}
+	return "", ""
+}
+
+func firstVulnerabilityDetailSample(threats []map[string]any) (string, string) {
+	for _, threat := range threats {
+		id := firstPresentText(threat, "id", "vulnerability_id", "vuln_id")
+		if id == "" {
+			continue
+		}
+		return id, firstThreatNameFromItem(threat)
+	}
+	return "", ""
+}
+
+func firstBusinessSample(itemGroups ...[]map[string]any) string {
+	for _, items := range itemGroups {
+		for _, item := range items {
+			if text := firstNestedText(item["business"], "name"); text != "" {
+				return text
+			}
+			if text := firstNestedText(item["business_info"], "name"); text != "" {
+				return text
+			}
+			if text := firstNestedText(item["business_system"], "name"); text != "" {
+				return text
+			}
+			if text := firstPresentText(item, "business_name"); text != "" {
+				return text
+			}
+		}
+	}
+	return ""
+}
+
+func firstThreatNameSample(threats []map[string]any) string {
+	for _, threat := range threats {
+		if text := firstThreatNameFromItem(threat); text != "" {
+			return text
+		}
+	}
+	return ""
+}
+
+func firstThreatNameFromItem(threat map[string]any) string {
+	return firstPresentText(threat, "name", "title", "threat_name", "vulnerability_name", "vul_name")
 }
 
 func collectDiscoveryCandidates(assets []map[string]any, threats []map[string]any, staffs []map[string]any, departments []map[string]any) discoveryCandidates {
@@ -353,7 +435,7 @@ func newDiscoveryClient(config bootstrap.FobrainConfig) (*discoveryClient, error
 	}
 	authParam := strings.TrimSpace(config.Credential.AuthParam)
 	if authParam == "" {
-		authParam = "authorization"
+		return nil, errors.New("fobrain auth param missing")
 	}
 	return &discoveryClient{
 		baseURL: parsed,
@@ -507,6 +589,15 @@ func firstText(value any) string {
 	return texts[0]
 }
 
+func firstPresentText(item map[string]any, keys ...string) string {
+	for _, key := range keys {
+		if text := firstText(item[key]); text != "" {
+			return text
+		}
+	}
+	return ""
+}
+
 func textsFromAny(value any) []string {
 	out := []string{}
 	switch typed := value.(type) {
@@ -548,6 +639,14 @@ func uniqueNonEmpty(values []string, limit int) []string {
 }
 
 func (samples discoveredSamples) complete() bool {
+	return samples.batchDComplete() &&
+		strings.TrimSpace(samples.AssetID) != "" &&
+		strings.TrimSpace(samples.VulnerabilityID) != "" &&
+		strings.TrimSpace(samples.BusinessName) != "" &&
+		strings.TrimSpace(samples.VulnerabilityName) != ""
+}
+
+func (samples discoveredSamples) batchDComplete() bool {
 	return strings.TrimSpace(samples.Owner) != "" && strings.TrimSpace(samples.Department) != "" && strings.TrimSpace(samples.IP) != ""
 }
 
@@ -588,7 +687,15 @@ func newDiscoveryReport(cfg bootstrap.Config) discoveryReport {
 }
 
 func defaultDiscoveryBlocks() []string {
-	return []string{"fobrain-batch-d live pass", "Fobrain 24 readonly final acceptance"}
+	return []string{"fobrain-batch-d live pass", "fobrain-batch-e live pass", "Fobrain 24 readonly final acceptance"}
+}
+
+func discoveryBlocksForFailure(failureCategory string) []string {
+	// Batch E 独有样本缺失时，不能错误阻断已经具备样本条件的 Batch D live 验收。
+	if failureCategory == "batch_e_sample_candidate_not_found" {
+		return []string{"fobrain-batch-e live pass", "Fobrain 24 readonly final acceptance"}
+	}
+	return defaultDiscoveryBlocks()
 }
 
 func stableDiscoveryFailure(err error) string {
@@ -598,6 +705,8 @@ func stableDiscoveryFailure(err error) string {
 	switch err.Error() {
 	case "sample_candidate_not_found":
 		return "sample_candidate_not_found"
+	case "batch_e_sample_candidate_not_found":
+		return "batch_e_sample_candidate_not_found"
 	default:
 		return "sample_discovery_failed"
 	}
@@ -633,7 +742,7 @@ func writeDiscoveryReport(outputPath string, report discoveryReport) error {
 
 func writeSamplesFile(outputPath string, samples discoveredSamples) error {
 	return writeJSON0600(outputPath, sampleFile{
-		SchemaVersion: "eino.fobrain_batch_d_samples.local.v1",
+		SchemaVersion: "eino.fobrain_batch_samples.local.v2",
 		Scenario:      discoveryScenario,
 		Samples:       samples,
 		CreatedAt:     time.Now().UTC().Format(time.RFC3339),

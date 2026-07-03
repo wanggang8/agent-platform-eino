@@ -28,11 +28,15 @@
     "tls_private_cert_mode": {"type": "boolean"},
     "sample_presence": {
       "type": "object",
-      "required": ["owner_present", "department_present", "ip_present"],
+      "required": ["owner_present", "department_present", "ip_present", "asset_detail_present", "vulnerability_detail_present", "business_present", "threat_name_present"],
       "properties": {
         "owner_present": {"type": "boolean"},
         "department_present": {"type": "boolean"},
-        "ip_present": {"type": "boolean"}
+        "ip_present": {"type": "boolean"},
+        "asset_detail_present": {"type": "boolean"},
+        "vulnerability_detail_present": {"type": "boolean"},
+        "business_present": {"type": "boolean"},
+        "threat_name_present": {"type": "boolean"}
       },
       "additionalProperties": false
     },
@@ -104,9 +108,13 @@
             "properties": {
               "owner_present": {"type": "boolean", "const": true},
               "department_present": {"type": "boolean", "const": true},
-              "ip_present": {"type": "boolean", "const": true}
+              "ip_present": {"type": "boolean", "const": true},
+              "asset_detail_present": {"type": "boolean", "const": true},
+              "vulnerability_detail_present": {"type": "boolean", "const": true},
+              "business_present": {"type": "boolean", "const": true},
+              "threat_name_present": {"type": "boolean", "const": true}
             },
-            "required": ["owner_present", "department_present", "ip_present"]
+            "required": ["owner_present", "department_present", "ip_present", "asset_detail_present", "vulnerability_detail_present", "business_present", "threat_name_present"]
           },
           "verification_checks": {
             "type": "array",
