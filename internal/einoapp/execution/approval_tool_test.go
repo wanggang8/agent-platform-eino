@@ -191,6 +191,83 @@ func TestApprovalInterruptResumeRejectDoesNotRequireCheckpoint(t *testing.T) {
 	}
 }
 
+func TestApprovalInterruptResumeCancelDoesNotRequireCheckpoint(t *testing.T) {
+	// cancel 表示用户取消整个审批和 run，不需要恢复 checkpoint，也不能触发写域能力。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	toolRunner := &recordingCapabilityRunner{}
+	checkpoints := newMemoryApprovalCheckpointStore()
+	commands := approvalCommands(repository, toolRunner).
+		WithApprovalCheckpointStore(checkpoints).
+		WithRunIDGenerator(fixedRunID("run-approval-cancel"))
+
+	accepted, pending := startApprovalRun(t, ctx, commands, repository)
+	checkpoints.values = map[string][]byte{}
+	_, err := commands.Resume(ctx, execution.ResumeCommand{
+		WorkspaceID:     "ws-hitl",
+		RunID:           accepted.RunID,
+		ResumeRef:       pending.ResumeRef,
+		ClientRequestID: "client-cancel-approval",
+		Decision:        "cancel",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := repository.GetSnapshot(ctx, accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.PendingInteractions[0].Status != facts.PendingStatusCancelled {
+		t.Fatalf("pending status after cancel = %q, want cancelled", snapshot.PendingInteractions[0].Status)
+	}
+	if snapshot.Run.Status != facts.RunStatusCancelled || snapshot.Run.SafeError != "approval_cancelled" {
+		t.Fatalf("run after cancel mismatch: %+v", snapshot.Run)
+	}
+	if toolRunner.calls != 0 {
+		t.Fatalf("cancelled approval must not execute mutation: %+v", toolRunner)
+	}
+}
+
+func TestApprovalInterruptResumeCancelIsIdempotentAndCannotApprove(t *testing.T) {
+	// cancel 后旧 resume_ref 进入终态；同一幂等键可重放，不同键 approve 不能重新打开写域能力。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	toolRunner := &recordingCapabilityRunner{}
+	commands := approvalCommands(repository, toolRunner).
+		WithApprovalCheckpointStore(newMemoryApprovalCheckpointStore()).
+		WithRunIDGenerator(fixedRunID("run-approval-cancel-idempotent"))
+
+	accepted, pending := startApprovalRun(t, ctx, commands, repository)
+	for i := 0; i < 2; i++ {
+		got, err := commands.Resume(ctx, execution.ResumeCommand{
+			WorkspaceID:     "ws-hitl",
+			RunID:           accepted.RunID,
+			ResumeRef:       pending.ResumeRef,
+			ClientRequestID: "client-cancel-approval-once",
+			Decision:        "cancel",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.RunID != accepted.RunID || got.Status != "accepted" {
+			t.Fatalf("accepted = %+v", got)
+		}
+	}
+	_, err := commands.Resume(ctx, execution.ResumeCommand{
+		WorkspaceID:     "ws-hitl",
+		RunID:           accepted.RunID,
+		ResumeRef:       pending.ResumeRef,
+		ClientRequestID: "client-approve-after-cancel",
+		Decision:        "approve",
+	})
+	if !errors.Is(err, execution.ErrResumeNotAllowed) {
+		t.Fatalf("approve after cancel err = %v, want ErrResumeNotAllowed", err)
+	}
+	if toolRunner.calls != 0 {
+		t.Fatalf("approve after cancel must not execute mutation: %+v", toolRunner)
+	}
+}
+
 func TestApprovalInterruptResumeExpiredCannotApprove(t *testing.T) {
 	// pending timeout 会把 approval 转为 expired；过期后不能再通过旧 resume_ref 执行 mutation。
 	ctx := context.Background()
@@ -278,6 +355,63 @@ func TestApprovalInterruptResumeAfterRestartContinuesMutation(t *testing.T) {
 	}
 	if toolRunner.calls != 1 || toolRunner.runID != accepted.RunID || toolRunner.capabilityID != "danger.write" {
 		t.Fatalf("restart resume did not continue stored mutation: %+v", toolRunner)
+	}
+}
+
+func TestApprovalInterruptResumeCancelAfterRestartClosesRun(t *testing.T) {
+	// SQLite Product Facts 重启后，cancel 仍必须只关闭审批和 run，不恢复 mutation continuation。
+	ctx := context.Background()
+	dbPath := filepath.Join(t.TempDir(), "approval-cancel.db")
+	repository, err := sqlite.Open(ctx, dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoints, err := sqlite.OpenCheckpointStore(ctx, dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	startCommands := approvalCommands(repository, &recordingCapabilityRunner{}).
+		WithApprovalCheckpointStore(checkpoints).
+		WithRunIDGenerator(fixedRunID("run-approval-cancel-restart"))
+	accepted, pending := startApprovalRun(t, ctx, startCommands, repository)
+	if err := checkpoints.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	reopenedRepository, err := sqlite.Open(ctx, dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopenedRepository.Close()
+	reopenedCheckpoints, err := sqlite.OpenCheckpointStore(ctx, dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopenedCheckpoints.Close()
+	toolRunner := &recordingCapabilityRunner{}
+	resumeCommands := approvalCommands(reopenedRepository, toolRunner).WithApprovalCheckpointStore(reopenedCheckpoints)
+	_, err = resumeCommands.Resume(ctx, execution.ResumeCommand{
+		WorkspaceID:     "ws-hitl",
+		RunID:           accepted.RunID,
+		ResumeRef:       pending.ResumeRef,
+		ClientRequestID: "client-restart-cancel",
+		Decision:        "cancel",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := reopenedRepository.GetSnapshot(ctx, accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.PendingInteractions[0].Status != facts.PendingStatusCancelled || snapshot.Run.Status != facts.RunStatusCancelled || snapshot.Run.SafeError != "approval_cancelled" {
+		t.Fatalf("restart cancel state mismatch: %+v", snapshot)
+	}
+	if toolRunner.calls != 0 {
+		t.Fatalf("restart cancel must not execute mutation: %+v", toolRunner)
 	}
 }
 

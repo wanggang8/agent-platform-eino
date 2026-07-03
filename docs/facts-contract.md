@@ -53,6 +53,7 @@
 | 审批通过 | `approved` | `running` -> 终态 | 恢复执行；pending 保留审批终态供 audit/replay 使用 |
 | 澄清提交 | `submitted` -> `consumed` | `running` | 恢复执行 |
 | 审批拒绝 | `rejected` | `failed` | 不执行 mutation，`safe_error=approval_rejected` |
+| 审批取消 | `cancelled` | `cancelled` | 取消整个 approval pending/run，`safe_error=approval_cancelled` |
 | 澄清取消 | `cancelled` | `cancelled` | 不继续执行原工具 |
 | 等待超时 | `expired` | `failed` | 返回安全超时摘要 |
 

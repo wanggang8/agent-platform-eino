@@ -23,6 +23,7 @@ type approvalDecision string
 const (
 	approvalDecisionApprove approvalDecision = "approve"
 	approvalDecisionReject  approvalDecision = "reject"
+	approvalDecisionCancel  approvalDecision = "cancel"
 )
 
 type approvalContinuation struct {
@@ -96,7 +97,7 @@ func (commands StaticCommands) requestApproval(ctx context.Context, runID string
 	})
 }
 
-// resumeApproval 处理 approval approve/reject，并只在新 approve 成功时继续执行 capability。
+// resumeApproval 处理 approval approve/reject/cancel，并只在新 approve 成功时继续执行 capability。
 func (commands StaticCommands) resumeApproval(ctx context.Context, command ResumeCommand, run facts.Run, pending facts.PendingInteraction) (AcceptedRun, error) {
 	decision, err := normalizeApprovalDecision(command.Decision)
 	if err != nil {
@@ -131,7 +132,7 @@ func (commands StaticCommands) resumeApproval(ctx context.Context, command Resum
 	if err != nil {
 		return AcceptedRun{}, mapResumeTransitionError(err)
 	}
-	if existed || decision == approvalDecisionReject {
+	if existed || decision == approvalDecisionReject || decision == approvalDecisionCancel {
 		return AcceptedRun{RunID: command.RunID, Status: "accepted"}, nil
 	}
 	if err := commands.runApprovedCapability(ctx, command.RunID, continuation); err != nil {
@@ -186,6 +187,10 @@ func approvalTransition(command ResumeCommand, decision approvalDecision) (facts
 		pendingStatus = facts.PendingStatusRejected
 		runStatus = facts.RunStatusFailed
 		safeError = "approval_rejected"
+	} else if decision == approvalDecisionCancel {
+		pendingStatus = facts.PendingStatusCancelled
+		runStatus = facts.RunStatusCancelled
+		safeError = "approval_cancelled"
 	}
 	return facts.ApprovalResumeTransition{
 		RunID:               command.RunID,
@@ -221,6 +226,8 @@ func normalizeApprovalDecision(value string) (approvalDecision, error) {
 		return approvalDecisionApprove, nil
 	case "reject", "rejected":
 		return approvalDecisionReject, nil
+	case "cancel", "cancelled":
+		return approvalDecisionCancel, nil
 	default:
 		return "", ErrResumeNotAllowed
 	}

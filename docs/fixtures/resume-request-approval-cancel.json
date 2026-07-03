@@ -1,0 +1,6 @@
+{
+  "schema_version": "eino_workbench_resume_request.v1",
+  "resume_ref": "resume_ref_approval_cancel",
+  "client_request_id": "client-resume-approval-cancel",
+  "decision": "cancel"
+}

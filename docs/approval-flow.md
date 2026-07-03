@@ -59,7 +59,7 @@ waiting
 | --- | --- | --- | --- | --- |
 | `waiting` | approve | `approved` | `running` -> 终态 | 恢复执行并允许一次 mutation；mutation 结果继续更新 run 终态 |
 | `waiting` | reject | `rejected` | `failed` | 不执行 mutation，`safe_error=approval_rejected` |
-| `waiting` | cancel | `cancelled` | `cancelled` | 用户取消审批，不执行 mutation |
+| `waiting` | cancel | `cancelled` | `cancelled` | 用户取消审批和整个 run，不执行 mutation，`safe_error=approval_cancelled` |
 | `waiting` | timeout | `expired` | `failed` | 返回安全超时摘要 |
 | `approved` | duplicate approve | 不变 | 当前 Run 状态 | 同一 `client_request_id` 返回 accepted，不重复 mutation |
 | `rejected` / `cancelled` / `expired` | approve | 不变 | 不变 | 返回安全错误，不恢复 |

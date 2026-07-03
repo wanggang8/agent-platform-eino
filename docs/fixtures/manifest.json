@@ -62,6 +62,10 @@
       "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
     },
     {
+      "fixture": "docs/fixtures/resume-request-approval-cancel.json",
+      "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
+    },
+    {
       "fixture": "docs/fixtures/resume-request-clarification-candidate.json",
       "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
     },
