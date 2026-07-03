@@ -195,6 +195,14 @@ func (api api) handleResume(w http.ResponseWriter, r *http.Request) {
 			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在或不可恢复", false))
 			return
 		}
+		if errors.Is(err, execution.ErrCheckpointMissing) {
+			WriteError(w, r, http.StatusConflict, product.NewSafeError("checkpoint_missing", "恢复点不存在或已失效", false))
+			return
+		}
+		if errors.Is(err, execution.ErrResumeNotAllowed) {
+			WriteError(w, r, http.StatusConflict, product.NewSafeError("resume_not_allowed", "当前运行状态不允许恢复", false))
+			return
+		}
 		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("execution_failed", "恢复暂无法执行", true))
 		return
 	}

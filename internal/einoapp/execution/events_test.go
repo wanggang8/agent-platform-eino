@@ -167,7 +167,7 @@ func TestRunnerEventMapperWritesPendingAndLifecycleFacts(t *testing.T) {
 		PendingKind:   "approval",
 		PendingStatus: "waiting",
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 		RiskSummary:   "需要审批",
 	}); err != nil {
 		t.Fatal(err)

@@ -436,7 +436,7 @@ func (repo *Repository) AppendToolResult(ctx context.Context, result facts.ToolR
 // AppendPendingInteraction 追加审批/澄清等待事实；resume/checkpoint 都必须是安全引用。
 func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending facts.PendingInteraction) error {
 	if facts.ContainsUnsafeMaterial(pending.ResumeRef) ||
-		facts.ContainsUnsafeMaterial(pending.CheckpointRef) ||
+		!facts.SafeCheckpointRef(pending.CheckpointRef) ||
 		facts.ContainsUnsafeMaterial(pending.Question) ||
 		facts.ContainsUnsafeMaterial(pending.OperationName) ||
 		facts.ContainsUnsafeMaterial(pending.RiskSummary) ||
@@ -467,6 +467,19 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 		formatTime(pending.ExpiresAt),
 	)
 	return err
+}
+
+// GetPendingByResumeRef 只读获取 pending，用于 resume 前校验 checkpoint，不消费 resume_ref。
+func (repo *Repository) GetPendingByResumeRef(ctx context.Context, resumeRef string) (facts.PendingInteraction, error) {
+	row := repo.db.QueryRowContext(ctx, `
+		SELECT pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at
+		FROM pending_interactions
+		WHERE resume_ref = ?`, resumeRef)
+	pending, err := scanPending(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return facts.PendingInteraction{}, facts.ErrNotFound
+	}
+	return pending, err
 }
 
 // UpdatePendingStatus 更新 pending 终态，避免 cancel/timeout 后旧 resume_ref 继续生效。

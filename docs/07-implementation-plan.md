@@ -713,6 +713,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-poc --config conf
 - waiting 前保存 checkpoint。
 - checkpoint 丢失返回安全错误。
 - 进程重启后可恢复。
+- 当前基础切片实现 SQLite Eino CheckPointStore、`checkpoint_ref:... -> 内部 checkpoint id` 不可变映射、run/pending 绑定校验、resume 前 checkpoint 存在性与 waiting 状态校验、生产启动路径 checkpoint resolver 注入，以及 HTTP `checkpoint_missing` / `resume_not_allowed` 安全错误；完整 approval/clarification resume 继续由 Task 6.2/6.3 打开。
 
 任务级检查：
 

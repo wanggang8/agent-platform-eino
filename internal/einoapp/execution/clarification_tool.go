@@ -37,7 +37,7 @@ func NewClarificationPendingEvent(request ClarificationRequest) (RunnerEvent, er
 		return RunnerEvent{}, ErrInvalidClarificationRequest
 	}
 	if facts.ContainsUnsafeMaterial(request.ResumeRef) ||
-		facts.ContainsUnsafeMaterial(request.CheckpointRef) ||
+		!facts.SafeCheckpointRef(request.CheckpointRef) ||
 		facts.ContainsUnsafeMaterial(request.Question) ||
 		facts.UnsafePendingCandidates(request.Candidates) {
 		return RunnerEvent{}, facts.ErrUnsafeFactMaterial

@@ -602,6 +602,54 @@ func TestResumeMissingRunReturnsUnifiedErrorEnvelope(t *testing.T) {
 	}
 }
 
+func TestResumeMissingCheckpointReturnsConflict(t *testing.T) {
+	// checkpoint 缺失是安全恢复失败，不能作为 500 可重试错误暴露。
+	projection := recordingProjection{}
+	commands := recordingCommands{resumeErr: execution.ErrCheckpointMissing}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_waiting/resume", "application/json", strings.NewReader(`{
+		"schema_version": "eino_workbench_resume_request.v1",
+		"resume_ref": "resume_ref_1",
+		"client_request_id": "client-resume-1",
+		"decision": "approve"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertErrorEnvelope(t, resp, http.StatusConflict, "checkpoint_missing")
+	if projection.resumeCalls != 0 {
+		t.Fatalf("resume projection calls = %d", projection.resumeCalls)
+	}
+}
+
+func TestResumeNotAllowedReturnsConflict(t *testing.T) {
+	// 非 waiting run 或终态 pending 的恢复请求必须是 409，不可进入 projection。
+	projection := recordingProjection{}
+	commands := recordingCommands{resumeErr: execution.ErrResumeNotAllowed}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_created/resume", "application/json", strings.NewReader(`{
+		"schema_version": "eino_workbench_resume_request.v1",
+		"resume_ref": "resume_ref_1",
+		"client_request_id": "client-resume-1",
+		"decision": "approve"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertErrorEnvelope(t, resp, http.StatusConflict, "resume_not_allowed")
+	if projection.resumeCalls != 0 {
+		t.Fatalf("resume projection calls = %d", projection.resumeCalls)
+	}
+}
+
 func TestInvalidResumeRequestReturnsUnifiedErrorEnvelope(t *testing.T) {
 	server := httptest.NewServer(httpapi.NewRouter(emptyProjectionDeps()))
 	defer server.Close()

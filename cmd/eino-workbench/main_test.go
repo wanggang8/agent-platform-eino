@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,10 +12,17 @@ import (
 
 	"agent-platform-eino/internal/einoapp/bootstrap"
 	"agent-platform-eino/internal/einoapp/capabilities"
+	"agent-platform-eino/internal/einoapp/execution"
 	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/llm"
 	"agent-platform-eino/internal/einoapp/providers/fobrain"
 )
+
+type mainMissingCheckpointResolver struct{}
+
+func (mainMissingCheckpointResolver) ResolveCheckpointID(context.Context, string, string, string) (string, bool, error) {
+	return "", false, nil
+}
 
 func TestCapabilityRegistryFromConfigDoesNotRegisterImplicitCapabilities(t *testing.T) {
 	// 启动路径不能内置 smoke 或业务能力；未配置时 registry 必须为空。
@@ -82,6 +90,35 @@ func TestLLMProviderFromConfigRejectsUnsupportedProvider(t *testing.T) {
 	_, err := llmProviderFromConfig(bootstrap.LLMConfig{Provider: "unsupported"})
 	if err == nil {
 		t.Fatal("unsupported provider err = nil")
+	}
+}
+
+func TestServiceCommandsInjectCheckpointResolver(t *testing.T) {
+	// 启动装配必须启用 checkpoint resolver，不能只在单元测试路径保护 resume。
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-waiting", WorkspaceID: "ws-1", Status: facts.RunStatusWaiting}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-1",
+		RunID:         "run-waiting",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-1",
+		CheckpointRef: "checkpoint_ref:missing",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	commands := serviceCommands(repository, nil, nil, capabilities.NewRegistry(), nil, mainMissingCheckpointResolver{})
+	if _, err := commands.Resume(ctx, execution.ResumeCommand{
+		WorkspaceID:     "ws-1",
+		RunID:           "run-waiting",
+		ResumeRef:       "resume-safe-1",
+		ClientRequestID: "client-resume-1",
+	}); !errors.Is(err, execution.ErrCheckpointMissing) {
+		t.Fatalf("resume err = %v, want ErrCheckpointMissing", err)
 	}
 }
 

@@ -303,7 +303,7 @@ func (repo *MemoryRepository) AppendToolResult(_ context.Context, result ToolRes
 // AppendPendingInteraction 追加内存 pending 事实。
 func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pending PendingInteraction) error {
 	if ContainsUnsafeMaterial(pending.ResumeRef) ||
-		ContainsUnsafeMaterial(pending.CheckpointRef) ||
+		!SafeCheckpointRef(pending.CheckpointRef) ||
 		ContainsUnsafeMaterial(pending.Question) ||
 		ContainsUnsafeMaterial(pending.OperationName) ||
 		ContainsUnsafeMaterial(pending.RiskSummary) ||
@@ -317,6 +317,21 @@ func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pendin
 
 	repo.pending[pending.RunID] = append(repo.pending[pending.RunID], pending)
 	return nil
+}
+
+// GetPendingByResumeRef 按安全 resume_ref 读取 pending，但不改变其状态。
+func (repo *MemoryRepository) GetPendingByResumeRef(_ context.Context, resumeRef string) (PendingInteraction, error) {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+
+	for _, pendingList := range repo.pending {
+		for _, pending := range pendingList {
+			if pending.ResumeRef == resumeRef {
+				return pending, nil
+			}
+		}
+	}
+	return PendingInteraction{}, ErrNotFound
 }
 
 // UpdatePendingStatus 更新内存 pending 状态，用于 lifecycle 单元测试。

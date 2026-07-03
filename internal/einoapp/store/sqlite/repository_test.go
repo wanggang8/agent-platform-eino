@@ -150,7 +150,7 @@ func TestPendingResumeRefIsConsumedOnce(t *testing.T) {
 		Kind:          facts.PendingKindApproval,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 		OperationName: "更新工单状态",
 		RiskSummary:   "需要审批",
 		TargetSummary: "ticket:T-1001 -> fixed",
@@ -164,7 +164,7 @@ func TestPendingResumeRefIsConsumedOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	if pending.Status != facts.PendingStatusConsumed ||
-		pending.CheckpointRef != "checkpoint-safe-1" ||
+		pending.CheckpointRef != "checkpoint_ref:1" ||
 		pending.OperationName != "更新工单状态" ||
 		pending.TargetSummary != "ticket:T-1001 -> fixed" {
 		t.Fatalf("consumed pending mismatch: %+v", pending)
@@ -211,7 +211,7 @@ func TestPendingClarificationCandidatesPersistThroughSnapshotAndResume(t *testin
 		Kind:          facts.PendingKindClarification,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-clarify-1",
-		CheckpointRef: "checkpoint-safe-clarify-1",
+		CheckpointRef: "checkpoint_ref:clarify-1",
 		Question:      "请选择要查询的人员",
 		InputMode:     facts.PendingInputModeSingleChoice,
 		Candidates:    candidates,
@@ -263,7 +263,7 @@ func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 		Kind:          facts.PendingKindApproval,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -318,7 +318,7 @@ func TestConsumeResumeRefWithIdempotencyRecordsSameTransaction(t *testing.T) {
 		Kind:          facts.PendingKindApproval,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-other-existing",
-		CheckpointRef: "checkpoint-safe-2",
+		CheckpointRef: "checkpoint_ref:2",
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -523,7 +523,7 @@ func TestLifecycleTransitionUpdatesPendingStatus(t *testing.T) {
 		Kind:          facts.PendingKindApproval,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -562,7 +562,7 @@ func TestApplyLifecycleTransitionIsAtomicForRunPendingAndAudit(t *testing.T) {
 		Kind:          facts.PendingKindClarification,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-life",
-		CheckpointRef: "checkpoint-life",
+		CheckpointRef: "checkpoint_ref:life",
 	}); err != nil {
 		t.Fatal(err)
 	}

@@ -90,13 +90,16 @@ func TestFactsCarrySequenceAndSafeResumeReferences(t *testing.T) {
 		Kind:          facts.PendingKindApproval,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 	}
 	if pending.ResumeRef == "" || pending.CheckpointRef == "" {
 		t.Fatalf("pending safe refs must be present: %+v", pending)
 	}
 	if pending.CheckpointRef == "checkpoint-raw-eino-id" {
 		t.Fatal("checkpoint ref must not expose a raw Eino checkpoint id")
+	}
+	if !facts.SafeCheckpointRef(pending.CheckpointRef) || facts.SafeCheckpointRef("cp1") {
+		t.Fatalf("checkpoint ref safety mismatch: %q", pending.CheckpointRef)
 	}
 }
 
@@ -201,7 +204,7 @@ func TestMemoryRepositoryRejectsUnsafeFactMaterial(t *testing.T) {
 			Kind:          facts.PendingKindClarification,
 			Status:        facts.PendingStatusWaiting,
 			ResumeRef:     "resume-safe-candidate",
-			CheckpointRef: "checkpoint-safe-candidate",
+			CheckpointRef: "checkpoint_ref:candidate",
 			Question:      "请选择要查询的人员",
 			InputMode:     facts.PendingInputModeSingleChoice,
 			Candidates:    []facts.PendingCandidate{candidate},
@@ -215,7 +218,7 @@ func TestMemoryRepositoryRejectsUnsafeFactMaterial(t *testing.T) {
 		Kind:          facts.PendingKindClarification,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-invalid-mode",
-		CheckpointRef: "checkpoint-safe-invalid-mode",
+		CheckpointRef: "checkpoint_ref:invalid-mode",
 		Question:      "请选择要查询的人员",
 		InputMode:     facts.PendingInputMode("dropdown"),
 		Candidates:    []facts.PendingCandidate{{CandidateRef: "candidate:fobrain:person:1", Label: "张三", EntityType: "person"}},

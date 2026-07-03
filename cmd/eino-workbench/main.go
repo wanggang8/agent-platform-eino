@@ -10,6 +10,7 @@ import (
 	"agent-platform-eino/internal/einoapp/bootstrap"
 	"agent-platform-eino/internal/einoapp/capabilities"
 	"agent-platform-eino/internal/einoapp/execution"
+	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/httpapi"
 	"agent-platform-eino/internal/einoapp/llm"
 	"agent-platform-eino/internal/einoapp/product"
@@ -34,6 +35,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer repository.Close()
+	checkpoints, err := sqlite.OpenCheckpointStore(context.Background(), cfg.Database.DSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer checkpoints.Close()
 	provider, err := llmProviderFromConfig(cfg.LLM)
 	if err != nil {
 		log.Fatal(err)
@@ -62,7 +68,7 @@ func main() {
 	// 服务路径使用 SQLite Product Facts，确保 Workbench、Action API、Replay 和 SSE 同源。
 	deps := httpapi.Dependencies{
 		Projection: product.NewFactsProjection(repository),
-		Commands:   execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).WithPolicyContexts(policyContexts),
+		Commands:   serviceCommands(repository, runner, toolRunner, registry, policyContexts, checkpoints),
 	}
 	server := &http.Server{
 		Addr:         cfg.Server.Addr,
@@ -75,6 +81,13 @@ func main() {
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+}
+
+// serviceCommands 统一装配生产命令层依赖，确保 resume/checkpoint 保护不会只存在于测试路径。
+func serviceCommands(repository facts.Repository, runner execution.Runner, toolRunner execution.CapabilityRunner, registry *capabilities.Registry, policyContexts map[string]capabilities.PolicyContext, checkpoints execution.CheckpointResolver) execution.StaticCommands {
+	return execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).
+		WithPolicyContexts(policyContexts).
+		WithCheckpointResolver(checkpoints)
 }
 
 // llmProviderFromConfig 创建模型 provider；真实密钥只传入 provider 私有边界，不进入 llm.Config。

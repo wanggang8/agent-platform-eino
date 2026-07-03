@@ -8,6 +8,9 @@ import (
 // StructuredResultSchemaVersion 是 Product Facts 接受的工具结果 schema 版本。
 const StructuredResultSchemaVersion = "tool.structured_result.v1"
 
+// CheckpointRefPrefix 是 Product Facts 可保存的 checkpoint 安全引用前缀。
+const CheckpointRefPrefix = "checkpoint_ref:"
+
 // ContainsUnsafeMaterial 判断文本是否包含明显不能进入 Product Facts 的敏感或原始材料。
 // 这是 facts/store 的最后防线；更复杂的安全投影仍由 product Safety Gate 承担。
 func ContainsUnsafeMaterial(value string) bool {
@@ -26,6 +29,15 @@ func UnsafeStructuredResultRef(result StructuredResultRef) bool {
 		return true
 	}
 	return ContainsUnsafeMaterial(result.ResultRef) || ContainsUnsafeMaterial(result.SafeSummary)
+}
+
+// SafeCheckpointRef 判断 checkpoint_ref 是否为产品安全引用，而不是 Eino 内部 checkpoint id。
+func SafeCheckpointRef(value string) bool {
+	ref := strings.TrimSpace(value)
+	return ref == value &&
+		strings.HasPrefix(ref, CheckpointRefPrefix) &&
+		len(ref) > len(CheckpointRefPrefix) &&
+		!ContainsUnsafeMaterial(ref)
 }
 
 // UnsafePendingCandidates 判断 clarification 候选是否包含原始 id、凭据、手机号、邮箱等不安全材料。

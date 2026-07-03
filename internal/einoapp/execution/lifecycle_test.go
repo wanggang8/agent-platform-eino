@@ -110,7 +110,7 @@ func TestRunPendingTimeoutExpiresWaitingPending(t *testing.T) {
 		Kind:          facts.PendingKindClarification,
 		Status:        facts.PendingStatusWaiting,
 		ResumeRef:     "resume-safe-1",
-		CheckpointRef: "checkpoint-safe-1",
+		CheckpointRef: "checkpoint_ref:1",
 		Question:      "请选择实体",
 	}); err != nil {
 		t.Fatal(err)

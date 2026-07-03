@@ -30,6 +30,8 @@ type Repository interface {
 	AppendToolResult(ctx context.Context, result ToolResult) error
 	// AppendPendingInteraction 记录 approval/clarification 等待态和安全 resume ref。
 	AppendPendingInteraction(ctx context.Context, pending PendingInteraction) error
+	// GetPendingByResumeRef 只读取等待交互，不消费 resume_ref。
+	GetPendingByResumeRef(ctx context.Context, resumeRef string) (PendingInteraction, error)
 	// UpdatePendingStatus 更新等待交互终态，供 cancel/timeout 阻断旧 resume。
 	UpdatePendingStatus(ctx context.Context, pendingID string, status PendingStatus) error
 	// ConsumeResumeRef 消费 resume ref，避免同一审批或澄清被重复提交。

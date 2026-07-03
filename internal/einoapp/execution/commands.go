@@ -21,6 +21,9 @@ var ErrCapabilityNotRegistered = errors.New("capability not registered")
 // ErrLifecycleNotAllowed 表示当前 run 状态不允许请求的 lifecycle 操作。
 var ErrLifecycleNotAllowed = errors.New("run lifecycle action not allowed")
 
+// ErrResumeNotAllowed 表示当前 run 或 pending 状态不允许恢复。
+var ErrResumeNotAllowed = errors.New("run resume not allowed")
+
 // LifecycleAction 是 run 生命周期控制动作，必须与 docs/run-lifecycle.md 保持一致。
 type LifecycleAction string
 
@@ -118,6 +121,7 @@ type StaticCommands struct {
 	capabilityRunner CapabilityRunner
 	registry         *capabilities.Registry
 	policyContexts   map[string]capabilities.PolicyContext
+	checkpoints      CheckpointResolver
 }
 
 // NewStaticCommands 创建不落 Product Facts 的静态命令替身。
@@ -178,6 +182,12 @@ func (commands StaticCommands) WithPolicyContexts(contexts map[string]capabiliti
 // WithRunIDGenerator 仅供测试注入稳定 run id，生产路径继续使用 opaque 随机 id。
 func (commands StaticCommands) WithRunIDGenerator(generator func() (string, error)) StaticCommands {
 	commands.newRunID = generator
+	return commands
+}
+
+// WithCheckpointResolver 绑定内部 checkpoint resolver，用于 resume 前校验恢复材料是否存在。
+func (commands StaticCommands) WithCheckpointResolver(resolver CheckpointResolver) StaticCommands {
+	commands.checkpoints = resolver
 	return commands
 }
 
@@ -254,14 +264,51 @@ func mergePolicyContext(base capabilities.PolicyContext, override capabilities.P
 // Resume 校验 run 存在后接收恢复请求；完整 HITL 执行在后续 Phase 接入。
 func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand) (AcceptedRun, error) {
 	if commands.repository != nil {
-		if _, err := commands.repository.GetRun(ctx, command.RunID); err != nil {
+		run, err := commands.repository.GetRun(ctx, command.RunID)
+		if err != nil {
 			if errors.Is(err, facts.ErrNotFound) {
 				return AcceptedRun{}, ErrRunNotFound
 			}
 			return AcceptedRun{}, err
 		}
+		if run.WorkspaceID != command.WorkspaceID {
+			return AcceptedRun{}, ErrRunNotFound
+		}
+		if run.Status != facts.RunStatusWaiting {
+			return AcceptedRun{}, ErrResumeNotAllowed
+		}
+		if commands.checkpoints != nil {
+			if err := commands.ensureCheckpointAvailable(ctx, command); err != nil {
+				return AcceptedRun{}, err
+			}
+		}
 	}
 	return AcceptedRun{RunID: command.RunID, Status: "accepted"}, nil
+}
+
+// ensureCheckpointAvailable 在消费 resume_ref 前确认内部 checkpoint 存在，避免缺失后破坏 pending。
+func (commands StaticCommands) ensureCheckpointAvailable(ctx context.Context, command ResumeCommand) error {
+	pending, err := commands.repository.GetPendingByResumeRef(ctx, command.ResumeRef)
+	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			return ErrRunNotFound
+		}
+		return err
+	}
+	if pending.RunID != command.RunID {
+		return ErrRunNotFound
+	}
+	if pending.Status != facts.PendingStatusWaiting && pending.Status != facts.PendingStatusSubmitted {
+		return ErrResumeNotAllowed
+	}
+	_, existed, err := commands.checkpoints.ResolveCheckpointID(ctx, pending.CheckpointRef, pending.RunID, pending.PendingID)
+	if err != nil {
+		return err
+	}
+	if !existed {
+		return ErrCheckpointMissing
+	}
+	return nil
 }
 
 // RunLifecycle 按 Product Facts 状态机执行 run 生命周期控制。

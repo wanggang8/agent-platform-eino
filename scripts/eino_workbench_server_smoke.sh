@@ -805,7 +805,7 @@ with sqlite3.connect(db_path) as conn:
     conn.execute("update runs set status = ?, updated_at = ? where run_id = ?", ("waiting", now, "run-life-pending"))
     conn.execute(
         "insert into pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("pending-life-1", "run-life-pending", "clarification", "waiting", "resume-safe-life-1", "checkpoint-safe-life-1", "请选择实体", "", "", "", "single_choice", "[]", ""),
+        ("pending-life-1", "run-life-pending", "clarification", "waiting", "resume-safe-life-1", "checkpoint_ref:life-1", "请选择实体", "", "", "", "single_choice", "[]", ""),
     )
 PY
   run_lifecycle_action "run-life-pending" "pending_timeout" "${capability_json}"
