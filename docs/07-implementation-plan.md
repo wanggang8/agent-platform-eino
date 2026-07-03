@@ -923,7 +923,7 @@ git diff --check
 - 工具实现顺序必须遵循 Batch A-E；每个批次完成前不得把后续批次标记为可验收。
 - `batch_gate` 必须由 `tool_matrix.v1.schema.json` 校验，并与 `docs/fobrain-live-read-batch-plan.md` 一致。
 - Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A live/smoke 必须生成 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json` 约束的报告。Batch A 最终完成声明还必须补 Workbench 视觉证据和验收记录。
-- Batch E 当前代码切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展和 `fobrain-batch-e` live smoke/report schema。后续任务必须继续补真实环境脱敏 live pass 报告、Workbench 视觉和 replay/audit 证据，不得把当前切片等同于 Batch E 完成。
+- Batch E 当前代码切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、`fobrain-batch-e` live smoke/report schema 和真实环境脱敏 live pass 报告。后续任务必须继续补 Workbench 视觉和 replay/audit 证据，不得把当前切片等同于 Batch E 完成。
 
 任务级检查：
 

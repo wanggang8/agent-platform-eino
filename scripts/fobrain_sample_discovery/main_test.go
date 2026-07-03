@@ -158,6 +158,43 @@ func TestRunDiscoveryBlocksWhenBatchESamplesMissing(t *testing.T) {
 	}
 }
 
+func TestRunDiscoveryFindsBusinessSampleFromBusinessList(t *testing.T) {
+	// 资产和漏洞页未携带业务字段时，discovery 应按旧项目接口证据从业务系统列表补充业务样本。
+	const secret = "sample-discovery-secret"
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("authorization") != secret {
+			t.Fatalf("authorization header mismatch")
+		}
+		switch r.URL.Path {
+		case "/api/asset":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"asset-1","ip":"10.10.11.12","network_type":"internal","oper_info":[{"name":"张三"}],"business_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+		case "/api/threat_center":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"vuln-1","ip":"10.10.11.12","name":"高危组件漏洞","person_info":[{"name":"张三"}],"person_department":[{"name":"安全部"}]}],"page":1,"per_page":20,"total":1}}`))
+		case "/api/v1/business":
+			_, _ = w.Write([]byte(`{"code":0,"data":{"items":[{"id":"biz-1","business_name":"核心业务"}],"page":1,"per_page":20,"total":1}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "eino-workbench.yaml")
+	reportPath := filepath.Join(tempDir, "report.json")
+	samplesPath := filepath.Join(tempDir, "samples.local.json")
+	writeDiscoveryTestConfig(t, configPath, server.URL, secret)
+
+	if err := runDiscovery(configPath, reportPath, samplesPath, 20); err != nil {
+		t.Fatal(err)
+	}
+	report := readDiscoveryReport(t, reportPath)
+	if report.Status != "passed" || report.FailureCategory != "none" || !report.SamplePresence.BusinessPresent {
+		t.Fatalf("business list sample should pass discovery: %+v", report)
+	}
+	assertDiscoveryReportNoLeak(t, reportPath, "核心业务", "biz-1")
+	assertSamplesFileContains(t, samplesPath, "核心业务")
+}
+
 func assertDiscoveryBlocksClaims(t *testing.T, claims []string, expected ...string) {
 	t.Helper()
 	for _, want := range expected {

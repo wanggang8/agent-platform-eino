@@ -321,4 +321,4 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 - 当前记录合计覆盖 Batch A 三项能力的 Workbench 视觉证据；24 个只读工具全量矩阵、Batch B-E、live read/write、实体消歧和写域审批仍按 Phase 8 后续任务验收。
 - Batch E 必须额外验收 `docs/fobrain-batch-e-interface-plan.md`：资产详情 `network_type` 归一化和路径分流、漏洞详情非分页响应、业务风险 count POST body、威胁关联 relevance list 参数映射、live 样本 ID 来源脱敏和 StructuredResult 唯一事实边界。
 - Batch E 当前只完成 mock/catalog/HTTP mapper 代码切片，验收记录见 `docs/acceptance-records/phase-8-batch-e-mock-http-2026-07-02.md`。该记录不允许作为 live pass、视觉通过或 24 只读恢复完成声明。
-- Batch E live smoke 基础设施记录见 `docs/acceptance-records/phase-8-batch-e-live-smoke-infra-2026-07-03.md`。该记录只证明 discovery sidecar、report schema 和 smoke 脚本可运行；真实 live pass、视觉通过和 replay/audit 仍需后续证据。
+- Batch E live smoke 记录见 `docs/acceptance-records/phase-8-batch-e-live-smoke-infra-2026-07-03.md`。该记录已覆盖 discovery sidecar、report schema、smoke 脚本和真实脱敏 live pass；视觉通过和 replay/audit 仍需后续证据。

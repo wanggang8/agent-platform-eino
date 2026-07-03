@@ -40,7 +40,7 @@ type discoveryReport struct {
 	ReportCreatedAt    string           `json:"report_created_at"`
 }
 
-// samplePresence 只表达三类样本是否存在，避免报告泄漏人员、部门或 IP 值。
+// samplePresence 只表达样本是否存在，避免报告泄漏人员、部门、IP 或详情 ID。
 type samplePresence struct {
 	OwnerPresent               bool `json:"owner_present"`
 	DepartmentPresent          bool `json:"department_present"`
@@ -205,11 +205,17 @@ func discoverSamples(ctx context.Context, client *discoveryClient, pageSize int,
 	})
 	report.SourceChecks = append(report.SourceChecks, departmentCheck)
 
+	businessPage, businessCheck := client.fetchPage(ctx, "business_seed", "business_list", []string{"/api/business", "/api/v1/business"}, url.Values{
+		"page":     {"1"},
+		"per_page": {fmt.Sprint(pageSize)},
+	})
+	report.SourceChecks = append(report.SourceChecks, businessCheck)
+
 	candidates := collectDiscoveryCandidates(assetPage.items, threatPage.items, staffPage.items, departmentPage.items)
 	samples := discoveredSamples{}
 	samples.AssetID, samples.AssetNetworkType = firstAssetDetailSample(assetPage.items)
 	samples.VulnerabilityID, samples.VulnerabilityName = firstVulnerabilityDetailSample(threatPage.items)
-	samples.BusinessName = firstBusinessSample(assetPage.items, threatPage.items)
+	samples.BusinessName = firstBusinessSample(assetPage.items, threatPage.items, businessPage.items)
 	if strings.TrimSpace(samples.VulnerabilityName) == "" {
 		samples.VulnerabilityName = firstThreatNameSample(threatPage.items)
 	}

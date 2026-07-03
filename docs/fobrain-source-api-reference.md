@@ -26,6 +26,7 @@
 | 部门样本 | `GET /api/v1/personnel_departments?page=1&per_page=20` | `items[].name` | 可作为 department 候选，但仍需资产/漏洞验证。 |
 | 资产样本 | `GET /api/v1/asset?page=1&per_page=20` | `items[].ip`、`items[].oper_info[].name`、`items[].business_department[].name` | 最可靠的 Batch D 样本来源。当前私有部署可兼容 `GET /api/asset`。 |
 | 漏洞验证 | `GET /api/v1/threat_center?page=1&per_page=20&data_range=4` | `items[].ip`、`items[].person_info[].name`、`items[].person_department[].name` | 用于验证同一 owner/department/ip 是否能命中漏洞。当前私有部署可兼容 `GET /api/threat_center`。 |
+| 业务样本 | `GET /api/v1/business?page=1&per_page=20` | `items[].business_name`、`items[].system_name`、`items[].name`、`items[].system` | 作为 Batch E `business_risk_summary` 样本来源。当前私有部署可兼容 `GET /api/business`。 |
 
 推荐流程：
 
@@ -59,7 +60,7 @@ Batch E 详情和风险关联的字段级计划见 `docs/fobrain-batch-e-interfa
 | --- | --- | --- | --- |
 | `tool.fobrain.get_asset_detail` | `GET /api/v1/internal_asset/:id`、`/api/v1/external_ip_asset/:id`、`/api/v1/device/:id`、`/api/v1/domain_asset/:id` | path `id`，可选 `network_type` 决定路径 | 旧 adapter 默认未知类型走 internal；新实现不得只硬编码一种资产类型而不记录 fallback。 |
 | `tool.fobrain.get_vulnerability_detail` | `GET /api/v1/threat_center/:id` | path `id` | 成功响应为 `{code,message,data}`，不是分页列表。 |
-| `tool.fobrain.business_risk_summary` | `POST /api/v1/threat_center/count` | body 数组，`count_name=business_risk`、`aggregation_field=business.name.keyword`、`data_range=4`、`search_condition` | 输出只保留安全统计 bucket，不保留 raw request body。 |
+| `tool.fobrain.business_risk_summary` | `POST /api/v1/threat_center/count` | body 数组，`count_name=business_risk`、`aggregation_field=business.name.keyword`、`data_range=4`、`search_condition` 为 JSON 字符串数组，过滤字段使用 `business_name` | 输出只保留安全统计 bucket，不保留 raw request body。当前私有部署接受 `/api/threat_center/count`。 |
 | `tool.fobrain.threat_relevance_list` | `GET /api/v1/threat_center/relevance/list` | `page`、`per_page`、`keyword`、`vul_name`，可选 `ip`、`business_name` | `vulnerability_name` 需同时映射为 `keyword` 与 `vul_name`。 |
 
 ## 字段与安全边界

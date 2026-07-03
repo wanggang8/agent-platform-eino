@@ -75,10 +75,7 @@ func (client *HTTPClient) BusinessRiskSummary(ctx context.Context, credential Re
 		"count_name":        "business_risk",
 		"aggregation_field": "business.name.keyword",
 		"data_range":        4,
-		"search_condition": []map[string]any{{
-			"business.name.keyword": []string{query.BusinessName},
-			"operation_type_string": "==",
-		}},
+		"search_condition":  []string{encodedLiveSearchCondition("business_name", query.BusinessName)},
 	}}
 	payload, err := client.firstSuccessfulBatchEPath(ctx, credential, http.MethodPost, []string{
 		currentThreatCountPath,
@@ -92,6 +89,15 @@ func (client *HTTPClient) BusinessRiskSummary(ctx context.Context, credential Re
 		Target:  query.BusinessName,
 		Metrics: liveRiskMetrics(payload),
 	}, nil
+}
+
+func encodedLiveSearchCondition(field string, value string) string {
+	// Fobrain count 接口沿用旧项目约定：search_condition 是 JSON 字符串数组，而不是对象数组。
+	encoded, _ := json.Marshal(map[string]any{
+		field:                   []string{strings.TrimSpace(value)},
+		"operation_type_string": "==",
+	})
+	return string(encoded)
 }
 
 // ThreatRelevanceList 调用漏洞关联列表接口，vulnerability_name 同步映射到 keyword 和 vul_name。

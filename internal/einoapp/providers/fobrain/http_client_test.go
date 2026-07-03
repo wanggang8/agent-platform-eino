@@ -910,6 +910,14 @@ func TestHTTPClientBusinessRiskSummaryPostsCountAggregation(t *testing.T) {
 		gotBody[0]["data_range"] != float64(4) {
 		t.Fatalf("count body mismatch: %+v", gotBody)
 	}
+	conditions, ok := gotBody[0]["search_condition"].([]any)
+	if !ok || len(conditions) != 1 {
+		t.Fatalf("search_condition should be a JSON string array: %+v", gotBody[0]["search_condition"])
+	}
+	condition, ok := conditions[0].(string)
+	if !ok || !strings.Contains(condition, `"business_name"`) || !strings.Contains(condition, `"operation_type_string":"=="`) {
+		t.Fatalf("search_condition shape mismatch: %#v", gotBody[0]["search_condition"])
+	}
 	if len(result.Metrics) != 1 || result.Metrics[0].Label != "核心业务" || result.Metrics[0].Count != 7 {
 		t.Fatalf("business risk result mismatch: %+v", result)
 	}
