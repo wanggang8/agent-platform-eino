@@ -16,6 +16,10 @@ type Repository interface {
 	GetSnapshot(ctx context.Context, runID string) (Snapshot, error)
 	// UpdateRunStatus 只更新 run 生命周期状态和脱敏错误摘要。
 	UpdateRunStatus(ctx context.Context, runID string, status RunStatus, safeError string, updatedAt time.Time) error
+	// ApplyLifecycleTransition 原子迁移 run/pending/tool/audit 生命周期事实。
+	ApplyLifecycleTransition(ctx context.Context, transition LifecycleTransition) error
+	// CreateRetryRun 原子写入 retry 幂等记录、新 run 和 retry audit。
+	CreateRetryRun(ctx context.Context, transition RetryRunTransition) (IdempotencyRecord, bool, error)
 	// RecordIdempotency 保存请求幂等记录，返回是否命中已有记录。
 	RecordIdempotency(ctx context.Context, record IdempotencyRecord) (IdempotencyRecord, bool, error)
 	// AppendTurn 追加对话 turn，sequence 由调用方保证单 run 内稳定递增。
@@ -26,6 +30,8 @@ type Repository interface {
 	AppendToolResult(ctx context.Context, result ToolResult) error
 	// AppendPendingInteraction 记录 approval/clarification 等待态和安全 resume ref。
 	AppendPendingInteraction(ctx context.Context, pending PendingInteraction) error
+	// UpdatePendingStatus 更新等待交互终态，供 cancel/timeout 阻断旧 resume。
+	UpdatePendingStatus(ctx context.Context, pendingID string, status PendingStatus) error
 	// ConsumeResumeRef 消费 resume ref，避免同一审批或澄清被重复提交。
 	ConsumeResumeRef(ctx context.Context, resumeRef string, submittedStatus PendingStatus) (PendingInteraction, error)
 	// ConsumeResumeRefWithIdempotency 在同一事务语义下处理 resume 和幂等记录。

@@ -92,9 +92,9 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
     ;;
-  run-lifecycle|clarification)
+  clarification)
     not_implemented "Phase 6"
     ;;
   budget)
@@ -646,6 +646,183 @@ with sqlite3.connect(db_path) as conn:
 assert count >= 1
 PY
   echo "action-basic smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "run-lifecycle" ]]; then
+  run_lifecycle_message() {
+    local run_id="$1"
+    local text="$2"
+    local output_file="$3"
+    curl -fsS \
+      -H "Content-Type: application/json" \
+      -d "{\"schema_version\":\"eino_workbench_message_request.v1\",\"message\":\"${text}\",\"client_request_id\":\"client-${run_id}\",\"run_id\":\"${run_id}\"}" \
+      "${base_url}/api/workspaces/ws_smoke/messages" \
+      -o "${output_file}"
+  }
+
+  run_lifecycle_action() {
+    local run_id="$1"
+    local action="$2"
+    local output_file="$3"
+    curl -fsS \
+      -H "Content-Type: application/json" \
+      -d "{\"schema_version\":\"eino_run_lifecycle_request.v1\",\"action\":\"${action}\",\"client_request_id\":\"client-${run_id}-${action}\"}" \
+      "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/lifecycle" \
+      -o "${output_file}"
+  }
+  run_lifecycle_seed_status() {
+    local run_id="$1"
+    local status="$2"
+    python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" "${status}" <<'PY'
+import sqlite3, time, sys
+db_path, run_id, status = sys.argv[1], sys.argv[2], sys.argv[3]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute("update runs set status = ?, safe_error = '', updated_at = ? where run_id = ?", (status, now, run_id))
+PY
+  }
+  run_lifecycle_seed_tool() {
+    local run_id="$1"
+    local tool_call_id="$2"
+    python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" "${tool_call_id}" <<'PY'
+import sqlite3, time, sys
+db_path, run_id, tool_call_id = sys.argv[1], sys.argv[2], sys.argv[3]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute(
+        "insert into tool_calls(tool_call_id, run_id, tool_id, display_name, status, args_hash, args_preview, created_at, ended_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (tool_call_id, run_id, "cap.smoke.read", "只读查询", "running", "", "scope=smoke", now, ""),
+    )
+PY
+  }
+
+  run_lifecycle_message "run-life-cancel" "cancel smoke" "${message_json}"
+  run_lifecycle_seed_status "run-life-cancel" "running"
+  run_lifecycle_seed_tool "run-life-cancel" "call-life-cancel-1"
+  run_lifecycle_action "run-life-cancel" "cancel" "${capability_json}"
+  python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+payload = json.dumps(body, ensure_ascii=False).lower()
+for forbidden in ("authorization", "api_key", "api_token", "provider_payload", "raw_payload", "raw provider", "raw body", "bearer "):
+    assert forbidden not in payload, forbidden
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["run_id"] == "run-life-cancel"
+assert body["status"] == "cancelled", body
+PY
+  run_lifecycle_action "run-life-cancel" "cancel" "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-life-cancel" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["run_id"] == "run-life-cancel"
+assert body["status"] == "cancelled", body
+assert body["inspector"]["runtime"]["safe_error"] == "user_cancelled", body["inspector"]["runtime"]
+tool_cards = [item for item in body["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1 and tool_cards[0]["status"] == "cancelled", tool_cards
+PY
+
+  run_lifecycle_message "run-life-stop" "stop smoke" "${message_json}"
+  run_lifecycle_seed_status "run-life-stop" "running"
+  run_lifecycle_seed_tool "run-life-stop" "call-life-stop-1"
+  run_lifecycle_action "run-life-stop" "stop" "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-life-stop/replay" -o "${replay_json}"
+  python3 - "${capability_json}" "${replay_json}" <<'PY'
+import json, sys
+action = json.load(open(sys.argv[1]))
+replay = json.load(open(sys.argv[2]))
+assert action["status"] == "stopped", action
+assert replay["view"]["status"] == "stopped", replay["view"]
+assert any(event.get("event_type") == "lifecycle" and event.get("safe_summary") == "run lifecycle: stopped" for event in replay["events"] if isinstance(event, dict)), replay["events"]
+tool_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1 and tool_cards[0]["status"] == "cancelled", tool_cards
+PY
+
+  run_lifecycle_message "run-life-timeout" "timeout smoke" "${message_json}"
+  run_lifecycle_seed_status "run-life-timeout" "running"
+  run_lifecycle_seed_tool "run-life-timeout" "call-life-timeout-1"
+  run_lifecycle_action "run-life-timeout" "provider_timeout" "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-life-timeout" -o "${snapshot_json}"
+  python3 - "${capability_json}" "${snapshot_json}" <<'PY'
+import json, sys
+action = json.load(open(sys.argv[1]))
+snapshot = json.load(open(sys.argv[2]))
+payload = json.dumps([action, snapshot], ensure_ascii=False).lower()
+for forbidden in ("authorization", "api_key", "api_token", "provider_payload", "raw_payload", "raw provider", "raw body", "bearer "):
+    assert forbidden not in payload, forbidden
+assert action["status"] == "failed", action
+assert snapshot["status"] == "failed", snapshot
+assert snapshot["inspector"]["runtime"]["safe_error"] == "provider_timeout", snapshot["inspector"]["runtime"]
+tool_cards = [item for item in snapshot["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1 and tool_cards[0]["status"] == "failed", tool_cards
+PY
+
+  run_lifecycle_message "run-life-retry" "retry smoke" "${message_json}"
+  python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, time, sys
+db_path = sys.argv[1]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute("update runs set status = ?, safe_error = ?, updated_at = ? where run_id = ?", ("failed", "schema_invalid", now, "run-life-retry"))
+PY
+  run_lifecycle_action "run-life-retry" "retry" "${capability_json}"
+  retry_run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["run_id"] != "run-life-retry", body
+assert body["status"] == "accepted", body
+print(body["run_id"])
+PY
+  )"
+  run_lifecycle_action "run-life-retry" "retry" "${capability_json}"
+  duplicate_retry_run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["status"] == "accepted", body
+print(body["run_id"])
+PY
+  )"
+  [[ "${duplicate_retry_run_id}" == "${retry_run_id}" ]]
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${retry_run_id}" -o "${snapshot_json}"
+  python3 - "${snapshot_json}" "${retry_run_id}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["run_id"] == sys.argv[2]
+assert body["status"] == "created", body
+user_messages = [item.get("content") for item in body["timeline"] if item.get("kind") == "user_message"]
+assert user_messages == ["retry run run-life-retry"], user_messages
+assert "retry smoke" not in json.dumps(body, ensure_ascii=False), body
+PY
+
+  run_lifecycle_message "run-life-pending" "pending timeout smoke" "${message_json}"
+  python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, time, sys
+db_path = sys.argv[1]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute("update runs set status = ?, updated_at = ? where run_id = ?", ("waiting", now, "run-life-pending"))
+    conn.execute(
+        "insert into pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ("pending-life-1", "run-life-pending", "clarification", "waiting", "resume-safe-life-1", "checkpoint-safe-life-1", "请选择实体", "", "", "", "single_choice", "[]", ""),
+    )
+PY
+  run_lifecycle_action "run-life-pending" "pending_timeout" "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-life-pending/replay" -o "${replay_json}"
+  python3 - "${replay_json}" "${tmp_dir}/eino-workbench.db" <<'PY'
+import json, sqlite3, sys
+replay = json.load(open(sys.argv[1]))
+assert replay["view"]["status"] == "failed", replay["view"]
+assert replay["view"]["inspector"]["runtime"]["safe_error"] == "pending_timeout", replay["view"]["inspector"]["runtime"]
+pending_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "clarification_card"]
+assert len(pending_cards) == 1 and pending_cards[0]["status"] == "expired", pending_cards
+with sqlite3.connect(sys.argv[2]) as conn:
+    pending_status = conn.execute("select status from pending_interactions where pending_id = ?", ("pending-life-1",)).fetchone()
+assert pending_status == ("expired",), pending_status
+PY
+
+  echo "run-lifecycle smoke passed"
   exit 0
 fi
 

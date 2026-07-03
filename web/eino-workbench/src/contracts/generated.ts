@@ -47,6 +47,11 @@ export const contractSchemas = [
     "path": "docs/schemas/eino_replay_view.v1.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/eino_run_lifecycle_request.v1.schema.json",
+    "title": "Eino Run Lifecycle Request",
+    "path": "docs/schemas/eino_run_lifecycle_request.v1.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/eino_run_snapshot.v1.schema.json",
     "title": "Eino Run Snapshot",
     "path": "docs/schemas/eino_run_snapshot.v1.schema.json"
@@ -187,7 +192,8 @@ export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | { readonly [key: string]: JsonValue } | readonly JsonValue[];
 
 export type RunStatus = "created" | "running" | "waiting" | "succeeded" | "failed" | "cancelled" | "stopped";
-export type ActionStatus = "accepted" | "running" | "waiting" | "completed" | "failed" | "stopped" | "denied" | "blocked";
+export type ActionStatus = "accepted" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "stopped" | "denied" | "blocked";
+export type RunLifecycleAction = "cancel" | "stop" | "provider_timeout" | "pending_timeout" | "retry";
 export type TimelineKind = "user_message" | "assistant_message" | "tool_card" | "approval_card" | "clarification_card" | "run_notice";
 export type InspectorTab = "evidence" | "structured" | "runtime" | "audit";
 export type DisplayType = "entity_collection" | "entity_detail" | "metrics_summary" | "operation_result" | "connector_status" | "entity_resolution";
@@ -390,4 +396,10 @@ export type ActionResult = {
     readonly candidates?: readonly PendingCandidate[];
   };
   readonly audit_refs: readonly string[];
+};
+
+export type RunLifecycleRequest = {
+  readonly schema_version: "eino_run_lifecycle_request.v1";
+  readonly action: RunLifecycleAction;
+  readonly client_request_id: string;
 };

@@ -218,3 +218,29 @@ type IdempotencyRecord struct {
 	Status      string
 	CreatedAt   time.Time
 }
+
+// LifecycleTransition 是 run 生命周期的原子事实迁移请求。
+type LifecycleTransition struct {
+	RunID               string
+	ExpectedRunStatuses []RunStatus
+	Status              RunStatus
+	SafeError           string
+	UpdatedAt           time.Time
+	PendingIDs          []string
+	PendingStatus       PendingStatus
+	ToolCallIDs         []string
+	ToolStatus          ToolCallStatus
+	AuditEvent          AuditEvent
+}
+
+// RetryRunTransition 是 retry 新 run 创建的原子事实迁移请求。
+type RetryRunTransition struct {
+	OldRunID             string
+	ExpectedOldRunStatus RunStatus
+	ExpectedOldSafeError string
+	NewRun               Run
+	UserTurn             Turn
+	OldAudit             AuditEvent
+	NewAudit             AuditEvent
+	Idempotency          IdempotencyRecord
+}

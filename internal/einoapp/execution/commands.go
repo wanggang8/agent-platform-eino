@@ -18,6 +18,20 @@ var ErrRunNotFound = errors.New("run not found")
 // ErrCapabilityNotRegistered 表示 Action API 请求的 capability hint 未通过注册表门禁。
 var ErrCapabilityNotRegistered = errors.New("capability not registered")
 
+// ErrLifecycleNotAllowed 表示当前 run 状态不允许请求的 lifecycle 操作。
+var ErrLifecycleNotAllowed = errors.New("run lifecycle action not allowed")
+
+// LifecycleAction 是 run 生命周期控制动作，必须与 docs/run-lifecycle.md 保持一致。
+type LifecycleAction string
+
+const (
+	LifecycleActionCancel          LifecycleAction = "cancel"
+	LifecycleActionStop            LifecycleAction = "stop"
+	LifecycleActionProviderTimeout LifecycleAction = "provider_timeout"
+	LifecycleActionPendingTimeout  LifecycleAction = "pending_timeout"
+	LifecycleActionRetry           LifecycleAction = "retry"
+)
+
 // AcceptedRun 是 HTTP/API 边界可以返回的最小接收结果，不包含执行事件。
 type AcceptedRun struct {
 	RunID  string
@@ -56,6 +70,14 @@ type ResumeCommand struct {
 	Comment         string
 }
 
+// LifecycleCommand 表示 run cancel/stop/timeout/retry 等生命周期控制请求。
+type LifecycleCommand struct {
+	WorkspaceID     string
+	RunID           string
+	Action          LifecycleAction
+	ClientRequestID string
+}
+
 // Attachment 是 Action API 的安全附件摘要，不包含文件原文。
 type Attachment struct {
 	AttachmentRef string
@@ -75,6 +97,7 @@ type Commands interface {
 	StartMessage(context.Context, MessageCommand) (AcceptedRun, error)
 	StartAction(context.Context, ActionCommand) (AcceptedRun, error)
 	Resume(context.Context, ResumeCommand) (AcceptedRun, error)
+	RunLifecycle(context.Context, LifecycleCommand) (AcceptedRun, error)
 }
 
 // Runner 是命令层触发执行的最小接口，生产实现由 ChatModelRunner 提供。
@@ -149,6 +172,12 @@ func (commands StaticCommands) WithPolicyContexts(contexts map[string]capabiliti
 	for capabilityID, context := range contexts {
 		commands.policyContexts[capabilityID] = context
 	}
+	return commands
+}
+
+// WithRunIDGenerator 仅供测试注入稳定 run id，生产路径继续使用 opaque 随机 id。
+func (commands StaticCommands) WithRunIDGenerator(generator func() (string, error)) StaticCommands {
+	commands.newRunID = generator
 	return commands
 }
 
@@ -235,11 +264,161 @@ func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand
 	return AcceptedRun{RunID: command.RunID, Status: "accepted"}, nil
 }
 
+// RunLifecycle 按 Product Facts 状态机执行 run 生命周期控制。
+func (commands StaticCommands) RunLifecycle(ctx context.Context, command LifecycleCommand) (AcceptedRun, error) {
+	if commands.repository == nil {
+		return AcceptedRun{RunID: command.RunID, Status: "accepted"}, nil
+	}
+	snapshot, err := commands.repository.GetSnapshot(ctx, command.RunID)
+	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			return AcceptedRun{}, ErrRunNotFound
+		}
+		return AcceptedRun{}, err
+	}
+	if snapshot.Run.WorkspaceID != command.WorkspaceID {
+		return AcceptedRun{}, ErrRunNotFound
+	}
+	if snapshot.Run.Status.Terminal() && command.Action != LifecycleActionRetry {
+		return AcceptedRun{RunID: snapshot.Run.RunID, Status: string(snapshot.Run.Status)}, nil
+	}
+
+	switch command.Action {
+	case LifecycleActionCancel:
+		if snapshot.Run.Status != facts.RunStatusRunning && snapshot.Run.Status != facts.RunStatusWaiting {
+			return AcceptedRun{}, ErrLifecycleNotAllowed
+		}
+		return commands.transitionRun(ctx, snapshot, facts.RunStatusCancelled, "user_cancelled", facts.PendingStatusCancelled, facts.ToolCallCancelled, activeToolCallIDs(snapshot))
+	case LifecycleActionStop:
+		if snapshot.Run.Status != facts.RunStatusRunning {
+			return AcceptedRun{}, ErrLifecycleNotAllowed
+		}
+		return commands.transitionRun(ctx, snapshot, facts.RunStatusStopped, "user_stopped", "", facts.ToolCallCancelled, activeToolCallIDs(snapshot))
+	case LifecycleActionProviderTimeout:
+		toolCallIDs := activeToolCallIDs(snapshot)
+		if snapshot.Run.Status != facts.RunStatusRunning || len(toolCallIDs) == 0 {
+			return AcceptedRun{}, ErrLifecycleNotAllowed
+		}
+		return commands.transitionRun(ctx, snapshot, facts.RunStatusFailed, "provider_timeout", "", facts.ToolCallFailed, toolCallIDs)
+	case LifecycleActionPendingTimeout:
+		pendingIDs := activePendingIDs(snapshot)
+		if snapshot.Run.Status != facts.RunStatusWaiting || len(pendingIDs) == 0 {
+			return AcceptedRun{}, ErrLifecycleNotAllowed
+		}
+		return commands.transitionRun(ctx, snapshot, facts.RunStatusFailed, "pending_timeout", facts.PendingStatusExpired, "", nil)
+	case LifecycleActionRetry:
+		return commands.retryRun(ctx, command, snapshot)
+	default:
+		return AcceptedRun{}, ErrLifecycleNotAllowed
+	}
+}
+
+// transitionRun 更新 run 状态，并按需关闭 waiting pending，保证旧 resume_ref 不再可继续。
+func (commands StaticCommands) transitionRun(ctx context.Context, snapshot facts.Snapshot, status facts.RunStatus, safeError string, pendingStatus facts.PendingStatus, toolStatus facts.ToolCallStatus, toolCallIDs []string) (AcceptedRun, error) {
+	now := time.Now().UTC()
+	pendingIDs := []string(nil)
+	if pendingStatus != "" {
+		for _, pending := range snapshot.PendingInteractions {
+			if pending.Status == facts.PendingStatusWaiting || pending.Status == facts.PendingStatusSubmitted {
+				pendingIDs = append(pendingIDs, pending.PendingID)
+			}
+		}
+	}
+	transition := facts.LifecycleTransition{
+		RunID:               snapshot.Run.RunID,
+		ExpectedRunStatuses: []facts.RunStatus{snapshot.Run.Status},
+		Status:              status,
+		SafeError:           safeError,
+		UpdatedAt:           now,
+		PendingIDs:          pendingIDs,
+		PendingStatus:       pendingStatus,
+		ToolCallIDs:         toolCallIDs,
+		ToolStatus:          toolStatus,
+		AuditEvent: facts.AuditEvent{
+			AuditID:     snapshot.Run.RunID + ":audit:lifecycle:" + string(status),
+			RunID:       snapshot.Run.RunID,
+			EventType:   "lifecycle",
+			SafeSummary: "run lifecycle: " + string(status),
+			Actor:       "system",
+			CreatedAt:   now,
+		},
+	}
+	if err := commands.repository.ApplyLifecycleTransition(ctx, transition); err != nil {
+		return AcceptedRun{}, err
+	}
+	return AcceptedRun{RunID: snapshot.Run.RunID, Status: string(status)}, nil
+}
+
+// retryRun 只对明确安全可重试的失败 run 创建新 run，不复用旧 checkpoint/resume。
+func (commands StaticCommands) retryRun(ctx context.Context, command LifecycleCommand, snapshot facts.Snapshot) (AcceptedRun, error) {
+	if snapshot.Run.Status != facts.RunStatusFailed || !retryableSafeError(snapshot.Run.SafeError) {
+		return AcceptedRun{}, ErrLifecycleNotAllowed
+	}
+	runID, err := commands.nextRunID()
+	if err != nil {
+		return AcceptedRun{}, err
+	}
+	now := time.Now().UTC()
+	record := facts.IdempotencyRecord{
+		Scope:       facts.IdempotencyScopeMutation,
+		Key:         command.ClientRequestID,
+		RunID:       runID,
+		ResourceRef: "retry:" + snapshot.Run.RunID,
+		Status:      "accepted",
+		CreatedAt:   now,
+	}
+	transition := facts.RetryRunTransition{
+		OldRunID:             snapshot.Run.RunID,
+		ExpectedOldRunStatus: facts.RunStatusFailed,
+		ExpectedOldSafeError: snapshot.Run.SafeError,
+		NewRun: facts.Run{
+			RunID:       runID,
+			WorkspaceID: snapshot.Run.WorkspaceID,
+			Status:      facts.RunStatusCreated,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		UserTurn: facts.Turn{
+			TurnID:    runID + ":user:1",
+			RunID:     runID,
+			Role:      facts.TurnRoleUser,
+			Content:   retryInputText(snapshot),
+			Sequence:  1,
+			CreatedAt: now,
+		},
+		OldAudit: facts.AuditEvent{
+			AuditID:     snapshot.Run.RunID + ":audit:lifecycle:retry:" + runID,
+			RunID:       snapshot.Run.RunID,
+			EventType:   "lifecycle",
+			SafeSummary: "run retry requested: " + runID,
+			Actor:       "user",
+			CreatedAt:   now,
+		},
+		NewAudit: facts.AuditEvent{
+			AuditID:     runID + ":audit:lifecycle:retry",
+			RunID:       runID,
+			EventType:   "lifecycle",
+			SafeSummary: "run retry from: " + snapshot.Run.RunID,
+			Actor:       "system",
+			CreatedAt:   now,
+		},
+		Idempotency: record,
+	}
+	record, existed, err := commands.repository.CreateRetryRun(ctx, transition)
+	if err != nil {
+		return AcceptedRun{}, err
+	}
+	if existed {
+		return AcceptedRun{RunID: record.RunID, Status: "accepted"}, nil
+	}
+	return AcceptedRun{RunID: record.RunID, Status: "accepted"}, nil
+}
+
 // acceptRun 统一创建 run，保证 Message 和 Action 入口共享 Product Facts。
 func (commands StaticCommands) acceptRun(ctx context.Context, workspaceID string, requestedRunID string, inputText string) (AcceptedRun, error) {
 	runID := strings.TrimSpace(requestedRunID)
 	if runID == "" {
-		generated, err := commands.newRunID()
+		generated, err := commands.nextRunID()
 		if err != nil {
 			return AcceptedRun{}, err
 		}
@@ -280,6 +459,46 @@ func (commands StaticCommands) acceptRun(ctx context.Context, workspaceID string
 		}
 	}
 	return AcceptedRun{RunID: runID, Status: "accepted"}, nil
+}
+
+func retryableSafeError(safeError string) bool {
+	switch safeError {
+	case "schema_invalid":
+		return true
+	default:
+		return false
+	}
+}
+
+func retryInputText(snapshot facts.Snapshot) string {
+	return "retry run " + snapshot.Run.RunID
+}
+
+func (commands StaticCommands) nextRunID() (string, error) {
+	if commands.newRunID == nil {
+		return randomRunID()
+	}
+	return commands.newRunID()
+}
+
+func activePendingIDs(snapshot facts.Snapshot) []string {
+	ids := []string{}
+	for _, pending := range snapshot.PendingInteractions {
+		if pending.Status == facts.PendingStatusWaiting || pending.Status == facts.PendingStatusSubmitted {
+			ids = append(ids, pending.PendingID)
+		}
+	}
+	return ids
+}
+
+func activeToolCallIDs(snapshot facts.Snapshot) []string {
+	ids := []string{}
+	for _, call := range snapshot.ToolCalls {
+		if call.Status == facts.ToolCallQueued || call.Status == facts.ToolCallRunning {
+			ids = append(ids, call.ToolCallID)
+		}
+	}
+	return ids
 }
 
 // recordSelection 将 capability 选择结果写成安全审计事实，后续 tool execution 只能读取该事实链路。

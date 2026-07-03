@@ -505,6 +505,209 @@ func TestLifecycleTransitionUpdatesRunStatus(t *testing.T) {
 	}
 }
 
+func TestLifecycleTransitionUpdatesPendingStatus(t *testing.T) {
+	// SQLite 是 smoke 的 Product Facts 来源，pending timeout/cancel 必须能阻断旧 resume_ref。
+	repository := openTestRepository(t)
+	ctx := context.Background()
+
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-pending",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusWaiting,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-1",
+		RunID:         "run-pending",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-1",
+		CheckpointRef: "checkpoint-safe-1",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.UpdatePendingStatus(ctx, "pending-1", facts.PendingStatusExpired); err != nil {
+		t.Fatal(err)
+	}
+
+	snapshot, err := repository.GetSnapshot(ctx, "run-pending")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.PendingInteractions) != 1 || snapshot.PendingInteractions[0].Status != facts.PendingStatusExpired {
+		t.Fatalf("pending status mismatch: %+v", snapshot.PendingInteractions)
+	}
+	if err := repository.UpdatePendingStatus(ctx, "pending-1", facts.PendingStatusCancelled); !errors.Is(err, facts.ErrIdempotencyConflict) {
+		t.Fatalf("consumed pending update err = %v, want ErrIdempotencyConflict", err)
+	}
+}
+
+func TestApplyLifecycleTransitionIsAtomicForRunPendingAndAudit(t *testing.T) {
+	// lifecycle 迁移必须同事务更新 pending、run 和 audit，避免半状态破坏 replay/resume。
+	repository := openTestRepository(t)
+	ctx := context.Background()
+	now := time.Unix(500, 0).UTC()
+
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-life",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusWaiting,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-life",
+		RunID:         "run-life",
+		Kind:          facts.PendingKindClarification,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-life",
+		CheckpointRef: "checkpoint-life",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.ApplyLifecycleTransition(ctx, facts.LifecycleTransition{
+		RunID:         "run-life",
+		Status:        facts.RunStatusFailed,
+		SafeError:     "pending_timeout",
+		UpdatedAt:     now,
+		PendingIDs:    []string{"pending-life"},
+		PendingStatus: facts.PendingStatusExpired,
+		AuditEvent: facts.AuditEvent{
+			AuditID:     "audit-life",
+			RunID:       "run-life",
+			EventType:   "lifecycle",
+			SafeSummary: "run lifecycle: failed",
+			Actor:       "system",
+			CreatedAt:   now,
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	snapshot, err := repository.GetSnapshot(ctx, "run-life")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Run.Status != facts.RunStatusFailed || snapshot.Run.SafeError != "pending_timeout" {
+		t.Fatalf("run mismatch: %+v", snapshot.Run)
+	}
+	if len(snapshot.PendingInteractions) != 1 || snapshot.PendingInteractions[0].Status != facts.PendingStatusExpired {
+		t.Fatalf("pending mismatch: %+v", snapshot.PendingInteractions)
+	}
+	if len(snapshot.AuditEvents) != 1 || snapshot.AuditEvents[0].AuditID != "audit-life" {
+		t.Fatalf("audit mismatch: %+v", snapshot.AuditEvents)
+	}
+	if err := repository.ApplyLifecycleTransition(ctx, facts.LifecycleTransition{
+		RunID:               "run-life",
+		ExpectedRunStatuses: []facts.RunStatus{facts.RunStatusWaiting},
+		Status:              facts.RunStatusCancelled,
+		SafeError:           "user_cancelled",
+		UpdatedAt:           now,
+		AuditEvent: facts.AuditEvent{
+			AuditID:     "audit-life-conflict",
+			RunID:       "run-life",
+			EventType:   "lifecycle",
+			SafeSummary: "run lifecycle: cancelled",
+			Actor:       "system",
+			CreatedAt:   now,
+		},
+	}); !errors.Is(err, facts.ErrIdempotencyConflict) {
+		t.Fatalf("stale lifecycle transition err = %v, want ErrIdempotencyConflict", err)
+	}
+}
+
+func TestCreateRetryRunIsIdempotentAndAtomic(t *testing.T) {
+	// retry 必须用同一事务写入幂等记录、新 run、turn 和 audit，重复 key 返回同一 run。
+	repository := openTestRepository(t)
+	ctx := context.Background()
+	now := time.Unix(600, 0).UTC()
+
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-old",
+		WorkspaceID: "ws-1",
+		Status:      facts.RunStatusFailed,
+		SafeError:   "schema_invalid",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	transition := facts.RetryRunTransition{
+		OldRunID:             "run-old",
+		ExpectedOldRunStatus: facts.RunStatusFailed,
+		ExpectedOldSafeError: "schema_invalid",
+		NewRun: facts.Run{
+			RunID:       "run-new",
+			WorkspaceID: "ws-1",
+			Status:      facts.RunStatusCreated,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		UserTurn: facts.Turn{TurnID: "run-new:user:1", RunID: "run-new", Role: facts.TurnRoleUser, Content: "retry run run-old", Sequence: 1, CreatedAt: now},
+		OldAudit: facts.AuditEvent{
+			AuditID:     "run-old:audit:retry:run-new",
+			RunID:       "run-old",
+			EventType:   "lifecycle",
+			SafeSummary: "run retry requested: run-new",
+			Actor:       "user",
+			CreatedAt:   now,
+		},
+		NewAudit: facts.AuditEvent{
+			AuditID:     "run-new:audit:retry",
+			RunID:       "run-new",
+			EventType:   "lifecycle",
+			SafeSummary: "run retry from: run-old",
+			Actor:       "system",
+			CreatedAt:   now,
+		},
+		Idempotency: facts.IdempotencyRecord{
+			Scope:       facts.IdempotencyScopeMutation,
+			Key:         "client-retry",
+			RunID:       "run-new",
+			ResourceRef: "retry:run-old",
+			Status:      "accepted",
+			CreatedAt:   now,
+		},
+	}
+	record, existed, err := repository.CreateRetryRun(ctx, transition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if existed || record.RunID != "run-new" {
+		t.Fatalf("retry record = %+v existed=%v", record, existed)
+	}
+	transition.NewRun.RunID = "run-other"
+	transition.Idempotency.RunID = "run-other"
+	record, existed, err = repository.CreateRetryRun(ctx, transition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !existed || record.RunID != "run-new" {
+		t.Fatalf("duplicate retry record = %+v existed=%v", record, existed)
+	}
+
+	snapshot, err := repository.GetSnapshot(ctx, "run-new")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Run.Status != facts.RunStatusCreated || len(snapshot.Turns) != 1 || len(snapshot.AuditEvents) != 1 {
+		t.Fatalf("new retry snapshot mismatch: %+v", snapshot)
+	}
+
+	if err := repository.UpdateRunStatus(ctx, "run-old", facts.RunStatusSucceeded, "", now.Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	transition.Idempotency.Key = "client-retry-after-state-change"
+	transition.Idempotency.RunID = "run-after-state-change"
+	transition.NewRun.RunID = "run-after-state-change"
+	transition.UserTurn.TurnID = "run-after-state-change:user:1"
+	transition.UserTurn.RunID = "run-after-state-change"
+	transition.NewAudit.AuditID = "run-after-state-change:audit:retry"
+	transition.NewAudit.RunID = "run-after-state-change"
+	if _, _, err := repository.CreateRetryRun(ctx, transition); !errors.Is(err, facts.ErrIdempotencyConflict) {
+		t.Fatalf("stale retry transition err = %v, want ErrIdempotencyConflict", err)
+	}
+}
+
 func openTestRepository(t *testing.T) *sqlite.Repository {
 	t.Helper()
 

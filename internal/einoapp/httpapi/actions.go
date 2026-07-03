@@ -60,6 +60,13 @@ type resumeRequest struct {
 	Comment               string   `json:"comment,omitempty"`
 }
 
+// lifecycleRequest 对应 run 生命周期控制入口，不接受 provider 或工具原始材料。
+type lifecycleRequest struct {
+	SchemaVersion   string `json:"schema_version"`
+	Action          string `json:"action"`
+	ClientRequestID string `json:"client_request_id"`
+}
+
 // messageResponse 是消息入口的接收结果，后续事件仍通过 Product Facts/SSE 投影读取。
 type messageResponse struct {
 	SchemaVersion string `json:"schema_version"`
@@ -199,6 +206,54 @@ func (api api) handleResume(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, r, http.StatusOK, result)
 }
 
+// handleRunLifecycle 校验生命周期控制请求，状态迁移由 execution/facts 层完成。
+func (api api) handleRunLifecycle(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspace_id")
+	runID := r.PathValue("run_id")
+	var req lifecycleRequest
+	if err := decodeJSONRequest(r, &req); err != nil {
+		WriteError(w, r, http.StatusBadRequest, product.NewSafeError("invalid_request", "生命周期请求无效", false))
+		return
+	}
+	if !validLifecycleRequest(req) {
+		WriteError(w, r, http.StatusBadRequest, product.NewSafeError("invalid_request", "生命周期请求无效", false))
+		return
+	}
+	action := execution.LifecycleAction(req.Action)
+	accepted, err := api.commands.RunLifecycle(r.Context(), execution.LifecycleCommand{
+		WorkspaceID:     workspaceID,
+		RunID:           runID,
+		Action:          action,
+		ClientRequestID: req.ClientRequestID,
+	})
+	if err != nil {
+		if errors.Is(err, execution.ErrRunNotFound) {
+			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在或不可操作", false))
+			return
+		}
+		if errors.Is(err, execution.ErrLifecycleNotAllowed) {
+			WriteError(w, r, http.StatusConflict, product.NewSafeError("lifecycle_not_allowed", "当前运行状态不允许该操作", false))
+			return
+		}
+		if errors.Is(err, facts.ErrIdempotencyConflict) {
+			WriteError(w, r, http.StatusConflict, product.NewSafeError("lifecycle_conflict", "生命周期操作已过期或已处理", false))
+			return
+		}
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("execution_failed", "生命周期操作暂无法执行", true))
+		return
+	}
+	result, err := api.projection.ActionResult(r.Context(), workspaceID, "run_lifecycle:"+string(action), accepted.RunID)
+	if err != nil {
+		if errors.Is(err, facts.ErrNotFound) {
+			WriteError(w, r, http.StatusNotFound, product.NewSafeError("run_not_found", "运行不存在", false))
+			return
+		}
+		WriteError(w, r, http.StatusInternalServerError, product.NewSafeError("projection_failed", "生命周期结果暂不可用", true))
+		return
+	}
+	WriteJSON(w, r, http.StatusOK, result)
+}
+
 // handleRunSnapshot 返回指定 run 的产品快照视图。
 func (api api) handleRunSnapshot(w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.PathValue("workspace_id")
@@ -301,4 +356,16 @@ func validResumeRequest(req resumeRequest) bool {
 		}
 	}
 	return count == 1
+}
+
+func validLifecycleRequest(req lifecycleRequest) bool {
+	if req.SchemaVersion != "eino_run_lifecycle_request.v1" || strings.TrimSpace(req.ClientRequestID) == "" {
+		return false
+	}
+	switch execution.LifecycleAction(req.Action) {
+	case execution.LifecycleActionCancel, execution.LifecycleActionStop, execution.LifecycleActionProviderTimeout, execution.LifecycleActionPendingTimeout, execution.LifecycleActionRetry:
+		return true
+	default:
+		return false
+	}
 }

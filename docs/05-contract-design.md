@@ -14,6 +14,7 @@ GET  /api/workspaces/{workspace_id}/runs/{run_id}/stream
 GET  /api/workspaces/{workspace_id}/runs/{run_id}
 GET  /api/workspaces/{workspace_id}/runs/{run_id}/replay
 POST /api/workspaces/{workspace_id}/runs/{run_id}/resume
+POST /api/workspaces/{workspace_id}/runs/{run_id}/lifecycle
 POST /api/workspaces/{workspace_id}/agent/actions
 ```
 
@@ -36,6 +37,7 @@ POST /api/workspaces/{workspace_id}/agent/actions
 - `eino_workbench_message_request.v1`
 - `eino_workbench_message_response.v1`
 - `eino_workbench_resume_request.v1`
+- `eino_run_lifecycle_request.v1`
 - `eino_workbench_pending_interaction.v1`
 - `eino_product_facts.v1`
 - `eino_action_request.v1`
@@ -176,7 +178,7 @@ SSE 事件必须包含：
 
 它必须和 Workbench View 使用同一套 Product Facts。不得新增独立的工具结果摘要事实；展示摘要只能从 StructuredResult 派生。
 
-`ActionResult` 必须覆盖 accepted、running、waiting、completed、failed、stopped、denied、blocked。waiting 时：
+`ActionResult` 必须覆盖 accepted、running、waiting、completed、failed、cancelled、stopped、denied、blocked。waiting 时：
 
 - approval 只暴露 `approval_refs`。
 - clarification/user input 只暴露 `resume_refs`。

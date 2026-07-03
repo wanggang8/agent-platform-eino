@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"agent-platform-eino/internal/einoapp/facts"
@@ -137,6 +138,211 @@ func (repo *Repository) UpdateRunStatus(ctx context.Context, runID string, statu
 	return nil
 }
 
+// ApplyLifecycleTransition 在同一事务内迁移 pending/tool/run/audit facts。
+func (repo *Repository) ApplyLifecycleTransition(ctx context.Context, transition facts.LifecycleTransition) error {
+	if facts.ContainsUnsafeMaterial(transition.SafeError) || facts.ContainsUnsafeMaterial(transition.AuditEvent.SafeSummary) {
+		return facts.ErrUnsafeFactMaterial
+	}
+	tx, err := repo.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, pendingID := range transition.PendingIDs {
+		result, err := tx.ExecContext(ctx, `
+			UPDATE pending_interactions
+			SET status = ?
+			WHERE pending_id = ? AND run_id = ? AND status IN (?, ?)`,
+			string(transition.PendingStatus),
+			pendingID,
+			transition.RunID,
+			string(facts.PendingStatusWaiting),
+			string(facts.PendingStatusSubmitted),
+		)
+		if err != nil {
+			return err
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected != 1 {
+			return facts.ErrIdempotencyConflict
+		}
+	}
+	for _, toolCallID := range transition.ToolCallIDs {
+		result, err := tx.ExecContext(ctx, `
+			UPDATE tool_calls
+			SET status = ?, ended_at = ?
+			WHERE tool_call_id = ? AND run_id = ? AND status IN (?, ?)`,
+			string(transition.ToolStatus),
+			formatTime(transition.UpdatedAt),
+			toolCallID,
+			transition.RunID,
+			string(facts.ToolCallQueued),
+			string(facts.ToolCallRunning),
+		)
+		if err != nil {
+			return err
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected != 1 {
+			return facts.ErrIdempotencyConflict
+		}
+	}
+	runArgs := []any{string(transition.Status), transition.SafeError, formatTime(transition.UpdatedAt), transition.RunID}
+	runStatusClause := ""
+	if len(transition.ExpectedRunStatuses) > 0 {
+		placeholders := make([]string, 0, len(transition.ExpectedRunStatuses))
+		for _, status := range transition.ExpectedRunStatuses {
+			placeholders = append(placeholders, "?")
+			runArgs = append(runArgs, string(status))
+		}
+		runStatusClause = " AND status IN (" + strings.Join(placeholders, ",") + ")"
+	}
+	result, err := tx.ExecContext(ctx, `
+		UPDATE runs
+		SET status = ?, safe_error = ?, updated_at = ?
+		WHERE run_id = ?`+runStatusClause,
+		runArgs...,
+	)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected != 1 {
+		return facts.ErrIdempotencyConflict
+	}
+	if transition.AuditEvent.AuditID != "" {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO audit_events(audit_id, run_id, event_type, safe_summary, actor, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			transition.AuditEvent.AuditID,
+			transition.AuditEvent.RunID,
+			transition.AuditEvent.EventType,
+			transition.AuditEvent.SafeSummary,
+			transition.AuditEvent.Actor,
+			formatTime(transition.AuditEvent.CreatedAt),
+		); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// CreateRetryRun 在同一事务内写入 retry 幂等、新 run、turn 和 audit。
+func (repo *Repository) CreateRetryRun(ctx context.Context, transition facts.RetryRunTransition) (facts.IdempotencyRecord, bool, error) {
+	if facts.ContainsUnsafeMaterial(transition.NewRun.SafeError) ||
+		facts.ContainsUnsafeMaterial(transition.UserTurn.Content) ||
+		facts.ContainsUnsafeMaterial(transition.OldAudit.SafeSummary) ||
+		facts.ContainsUnsafeMaterial(transition.NewAudit.SafeSummary) {
+		return facts.IdempotencyRecord{}, false, facts.ErrUnsafeFactMaterial
+	}
+	tx, err := repo.db.BeginTx(ctx, nil)
+	if err != nil {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	defer tx.Rollback()
+
+	existing, err := getIdempotencyRecord(ctx, tx, transition.Idempotency.Scope, transition.Idempotency.Key)
+	if err == nil {
+		if existing.ResourceRef != transition.Idempotency.ResourceRef {
+			return facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+		}
+		return existing, true, nil
+	}
+	if !errors.Is(err, facts.ErrNotFound) {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	var oldStatus string
+	var oldSafeError string
+	err = tx.QueryRowContext(ctx, `
+		SELECT status, safe_error
+		FROM runs
+		WHERE run_id = ?`,
+		transition.OldRunID,
+	).Scan(&oldStatus, &oldSafeError)
+	if errors.Is(err, sql.ErrNoRows) {
+		return facts.IdempotencyRecord{}, false, facts.ErrNotFound
+	}
+	if err != nil {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	if transition.ExpectedOldRunStatus != "" && oldStatus != string(transition.ExpectedOldRunStatus) {
+		return facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	if transition.ExpectedOldSafeError != "" && oldSafeError != transition.ExpectedOldSafeError {
+		return facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO idempotency_records(scope, key, run_id, resource_ref, status, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		string(transition.Idempotency.Scope),
+		transition.Idempotency.Key,
+		transition.Idempotency.RunID,
+		transition.Idempotency.ResourceRef,
+		transition.Idempotency.Status,
+		formatTime(transition.Idempotency.CreatedAt),
+	); err != nil {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO runs(run_id, workspace_id, status, created_at, updated_at, model_label, safe_error)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		transition.NewRun.RunID,
+		transition.NewRun.WorkspaceID,
+		string(transition.NewRun.Status),
+		formatTime(transition.NewRun.CreatedAt),
+		formatTime(transition.NewRun.UpdatedAt),
+		transition.NewRun.ModelLabel,
+		transition.NewRun.SafeError,
+	); err != nil {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	if transition.UserTurn.TurnID != "" {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO turns(turn_id, run_id, role, content, sequence, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			transition.UserTurn.TurnID,
+			transition.UserTurn.RunID,
+			string(transition.UserTurn.Role),
+			transition.UserTurn.Content,
+			transition.UserTurn.Sequence,
+			formatTime(transition.UserTurn.CreatedAt),
+		); err != nil {
+			return facts.IdempotencyRecord{}, false, err
+		}
+	}
+	for _, event := range []facts.AuditEvent{transition.OldAudit, transition.NewAudit} {
+		if event.AuditID == "" {
+			continue
+		}
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO audit_events(audit_id, run_id, event_type, safe_summary, actor, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			event.AuditID,
+			event.RunID,
+			event.EventType,
+			event.SafeSummary,
+			event.Actor,
+			formatTime(event.CreatedAt),
+		); err != nil {
+			return facts.IdempotencyRecord{}, false, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return facts.IdempotencyRecord{}, false, err
+	}
+	return transition.Idempotency, false, nil
+}
+
 // RecordIdempotency 记录幂等请求；相同 key 再次提交返回原记录，不覆盖事实。
 func (repo *Repository) RecordIdempotency(ctx context.Context, record facts.IdempotencyRecord) (facts.IdempotencyRecord, bool, error) {
 	tx, err := repo.db.BeginTx(ctx, nil)
@@ -261,6 +467,30 @@ func (repo *Repository) AppendPendingInteraction(ctx context.Context, pending fa
 		formatTime(pending.ExpiresAt),
 	)
 	return err
+}
+
+// UpdatePendingStatus 更新 pending 终态，避免 cancel/timeout 后旧 resume_ref 继续生效。
+func (repo *Repository) UpdatePendingStatus(ctx context.Context, pendingID string, status facts.PendingStatus) error {
+	result, err := repo.db.ExecContext(ctx, `
+		UPDATE pending_interactions
+		SET status = ?
+		WHERE pending_id = ? AND status IN (?, ?)`,
+		string(status),
+		pendingID,
+		string(facts.PendingStatusWaiting),
+		string(facts.PendingStatusSubmitted),
+	)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return facts.ErrIdempotencyConflict
+	}
+	return nil
 }
 
 // ConsumeResumeRef 消费一次性 resume 引用；重复消费返回已消费 pending 和幂等错误。

@@ -695,8 +695,10 @@ func actionStatus(status facts.RunStatus) string {
 		return "completed"
 	case facts.RunStatusFailed:
 		return "failed"
-	case facts.RunStatusStopped, facts.RunStatusCancelled:
+	case facts.RunStatusStopped:
 		return "stopped"
+	case facts.RunStatusCancelled:
+		return "cancelled"
 	default:
 		return "accepted"
 	}

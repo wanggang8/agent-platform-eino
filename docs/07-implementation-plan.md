@@ -788,9 +788,13 @@ bash scripts/eino_workbench_server_smoke.sh --scenario clarification
 
 创建/修改：
 
-- `internal/einoapp/execution/lifecycle.go`
-- `internal/einoapp/httpapi/runs.go`
-- `web/eino-workbench/src/components/RunNotice.tsx`
+- `internal/einoapp/execution/commands.go`
+- `internal/einoapp/facts/model.go`
+- `internal/einoapp/facts/repository.go`
+- `internal/einoapp/store/sqlite/repository.go`
+- `internal/einoapp/httpapi/actions.go`
+- `internal/einoapp/httpapi/routes.go`
+- `web/eino-workbench/src/components/RunNotice.tsx`（后续 UI 子任务）
 
 覆盖：
 
@@ -799,6 +803,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario clarification
 - provider timeout 和 pending timeout 的安全状态迁移。
 - retry 只按 `run-lifecycle.md` 中的安全策略允许。
 - 终态操作幂等。
+- 当前后端切片已打开 `run-lifecycle` smoke：通过本地服务验证 cancel、stop、provider timeout、pending timeout、`schema_invalid` retry、终态幂等、replay/audit 投影和 raw payload 禁止项。smoke 使用 SQLite seed 准备 running/waiting 状态；provider timeout retry 需等 capability metadata 可证明只读后开放，Workbench `RunNotice` 仍按后续 UI 任务验收。
 
 任务级检查：
 

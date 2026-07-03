@@ -97,6 +97,21 @@
         }
       }
     },
+    "/api/workspaces/{workspace_id}/runs/{run_id}/lifecycle": {
+      "post": {
+        "operationId": "postWorkbenchRunLifecycle",
+        "parameters": [
+          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/eino_run_lifecycle_request.v1.schema.json"}}}},
+        "responses": {
+          "200": {"description": "Lifecycle action result", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_action_result.v1.schema.json"}}}},
+          "4XX": {"$ref": "#/components/responses/Error"},
+          "5XX": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
     "/api/workspaces/{workspace_id}/agent/actions": {
       "post": {
         "operationId": "postAgentAction",

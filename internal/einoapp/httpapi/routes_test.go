@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"agent-platform-eino/internal/einoapp/execution"
+	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/httpapi"
 	"agent-platform-eino/internal/einoapp/product"
 )
@@ -139,6 +140,98 @@ func TestStreamEndpointUsesProjectionEvents(t *testing.T) {
 	}
 	if projection.streamWorkspaceID != "ws_123" || projection.streamRunID != "run_projected" {
 		t.Fatalf("stream projection args workspace=%q run=%q", projection.streamWorkspaceID, projection.streamRunID)
+	}
+}
+
+func TestRunLifecycleEndpointUsesCommandAndProjection(t *testing.T) {
+	// HTTP 层只解析 lifecycle 请求并返回投影结果，不能直接改 Product Facts。
+	projection := recordingProjection{}
+	commands := recordingCommands{acceptedRunID: "run_life"}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_life/lifecycle", "application/json", strings.NewReader(`{
+		"schema_version": "eino_run_lifecycle_request.v1",
+		"action": "cancel",
+		"client_request_id": "client-life-1"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	if commands.lifecycle.WorkspaceID != "ws_123" || commands.lifecycle.RunID != "run_life" || commands.lifecycle.Action != execution.LifecycleActionCancel {
+		t.Fatalf("lifecycle command mismatch: %+v", commands.lifecycle)
+	}
+	if projection.workspaceID != "ws_123" || projection.runID != "run_life" || projection.actionID != "run_lifecycle:cancel" {
+		t.Fatalf("projection args mismatch workspace=%q run=%q action=%q", projection.workspaceID, projection.runID, projection.actionID)
+	}
+}
+
+func TestRunLifecycleEndpointMapsNotAllowedToConflict(t *testing.T) {
+	commands := recordingCommands{lifecycleErr: execution.ErrLifecycleNotAllowed}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: product.NewEmptyProjection(), Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_done/lifecycle", "application/json", strings.NewReader(`{
+		"schema_version": "eino_run_lifecycle_request.v1",
+		"action": "retry",
+		"client_request_id": "client-life-denied"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf("status = %d, want 409", resp.StatusCode)
+	}
+	var body struct {
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Error.Code != "lifecycle_not_allowed" {
+		t.Fatalf("error.code = %q", body.Error.Code)
+	}
+}
+
+func TestRunLifecycleEndpointMapsFactConflictToConflict(t *testing.T) {
+	// facts 层 CAS/幂等冲突是预期并发结果，HTTP 不能暴露成 500 可重试错误。
+	commands := recordingCommands{lifecycleErr: facts.ErrIdempotencyConflict}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: product.NewEmptyProjection(), Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_race/lifecycle", "application/json", strings.NewReader(`{
+		"schema_version": "eino_run_lifecycle_request.v1",
+		"action": "cancel",
+		"client_request_id": "client-life-race"
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf("status = %d, want 409", resp.StatusCode)
+	}
+	var body struct {
+		Error struct {
+			Code      string `json:"code"`
+			Retryable bool   `json:"retryable"`
+		} `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Error.Code != "lifecycle_conflict" || body.Error.Retryable {
+		t.Fatalf("error = %+v, want lifecycle_conflict retryable=false", body.Error)
 	}
 }
 
@@ -618,8 +711,10 @@ type recordingCommands struct {
 	message       execution.MessageCommand
 	action        execution.ActionCommand
 	resume        execution.ResumeCommand
+	lifecycle     execution.LifecycleCommand
 	actionErr     error
 	resumeErr     error
+	lifecycleErr  error
 }
 
 // recordingCommands 只验证 HTTP 请求解析后的 command 边界，不模拟执行链路。
@@ -640,6 +735,14 @@ func (commands *recordingCommands) Resume(_ context.Context, command execution.R
 	commands.resume = command
 	if commands.resumeErr != nil {
 		return execution.AcceptedRun{}, commands.resumeErr
+	}
+	return execution.AcceptedRun{RunID: commands.acceptedRunID, Status: "accepted"}, nil
+}
+
+func (commands *recordingCommands) RunLifecycle(_ context.Context, command execution.LifecycleCommand) (execution.AcceptedRun, error) {
+	commands.lifecycle = command
+	if commands.lifecycleErr != nil {
+		return execution.AcceptedRun{}, commands.lifecycleErr
 	}
 	return execution.AcceptedRun{RunID: commands.acceptedRunID, Status: "accepted"}, nil
 }

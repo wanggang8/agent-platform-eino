@@ -171,7 +171,7 @@ Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 
 - 对 `capability-selection`，断言普通自然语言默认进入 ChatModelAgent，显式 action/capability_hint 通过配置驱动的 registry 和 policy，未知 hint 在创建 run 前被拒绝，需要审批的 hint 不会触发 runner 或 context snapshot。
 - 对 `context-projection`，断言模型输入上下文只来自 safe Product Facts / StructuredResult，并生成不含 raw、credential、token、checkpoint、interrupt 的 context snapshot。
 - 对 `tool-card`，断言 mock read capability 经 Eino tool loop 写入 ToolCall、Safety Gate 后的 ToolResult、Workbench 工具卡、ActionResult result card、SSE tool patch 和 audit。
-- 对 `run-lifecycle`，断言 cancel、stop、timeout、retry 和终态幂等符合 `run-lifecycle.md`。
+- 对 `run-lifecycle`，断言 cancel、stop、provider timeout、pending timeout、`schema_invalid` retry 和终态幂等符合 `run-lifecycle.md`；当前后端 smoke 使用 SQLite seed 准备 running/waiting Product Facts，验证 lifecycle API、ActionResult、run snapshot、replay/audit、SQLite pending 状态和 retry 幂等，不声明前端 RunNotice 或 provider timeout retry 已完成。
 - 对 `action-consistency`，提交 Action 后用同一 run_id 拉取 ActionResult、run、views/current、replay、SSE、audit refs 和 SQLite facts，并断言当前 mock read 场景中的 tool/audit/result card 字段同源、错 workspace 访问返回 404，且产品出口不泄漏 raw provider payload。
 - 对 `replay`，断言 replay view 精确等于同 run 的 Workbench snapshot 投影，replay events 同时包含由 Product Facts snapshot 派生的产品事件和安全 audit event。
 - 清理进程。

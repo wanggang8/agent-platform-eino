@@ -30,6 +30,7 @@ type MemoryRepository struct {
 	pending     map[string][]PendingInteraction
 	audit       map[string][]AuditEvent
 	contexts    map[string][]ContextSnapshot
+	idempotency map[string]IdempotencyRecord
 }
 
 // NewMemoryRepository 创建内存 facts repository，主要用于 execution/product 单元测试。
@@ -43,6 +44,7 @@ func NewMemoryRepository() *MemoryRepository {
 		pending:     map[string][]PendingInteraction{},
 		audit:       map[string][]AuditEvent{},
 		contexts:    map[string][]ContextSnapshot{},
+		idempotency: map[string]IdempotencyRecord{},
 	}
 }
 
@@ -122,9 +124,137 @@ func (repo *MemoryRepository) UpdateRunStatus(_ context.Context, runID string, s
 	return nil
 }
 
+// ApplyLifecycleTransition 在内存锁内一次性迁移 lifecycle facts。
+func (repo *MemoryRepository) ApplyLifecycleTransition(_ context.Context, transition LifecycleTransition) error {
+	if ContainsUnsafeMaterial(transition.SafeError) || ContainsUnsafeMaterial(transition.AuditEvent.SafeSummary) {
+		return ErrUnsafeFactMaterial
+	}
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	run, ok := repo.runs[transition.RunID]
+	if !ok {
+		return ErrNotFound
+	}
+	if len(transition.ExpectedRunStatuses) > 0 && !runStatusIn(run.Status, transition.ExpectedRunStatuses) {
+		return ErrIdempotencyConflict
+	}
+	pendingIndexes := make([]int, 0, len(transition.PendingIDs))
+	if len(transition.PendingIDs) > 0 {
+		for _, pendingID := range transition.PendingIDs {
+			index := indexPending(repo.pending[transition.RunID], pendingID)
+			if index < 0 {
+				return ErrNotFound
+			}
+			status := repo.pending[transition.RunID][index].Status
+			if status != PendingStatusWaiting && status != PendingStatusSubmitted {
+				return ErrIdempotencyConflict
+			}
+			pendingIndexes = append(pendingIndexes, index)
+		}
+	}
+	toolIndexes := make([]int, 0, len(transition.ToolCallIDs))
+	if len(transition.ToolCallIDs) > 0 {
+		for _, toolCallID := range transition.ToolCallIDs {
+			index := indexToolCall(repo.toolCalls[transition.RunID], toolCallID)
+			if index < 0 {
+				return ErrNotFound
+			}
+			status := repo.toolCalls[transition.RunID][index].Status
+			if status != ToolCallQueued && status != ToolCallRunning {
+				return ErrIdempotencyConflict
+			}
+			toolIndexes = append(toolIndexes, index)
+		}
+	}
+
+	for _, index := range pendingIndexes {
+		pending := repo.pending[transition.RunID][index]
+		pending.Status = transition.PendingStatus
+		repo.pending[transition.RunID][index] = pending
+	}
+	for _, index := range toolIndexes {
+		toolCall := repo.toolCalls[transition.RunID][index]
+		toolCall.Status = transition.ToolStatus
+		toolCall.EndedAt = transition.UpdatedAt
+		repo.toolCalls[transition.RunID][index] = toolCall
+	}
+	run.Status = transition.Status
+	run.SafeError = transition.SafeError
+	run.UpdatedAt = transition.UpdatedAt
+	repo.runs[transition.RunID] = run
+	if transition.AuditEvent.AuditID != "" {
+		repo.audit[transition.RunID] = append(repo.audit[transition.RunID], transition.AuditEvent)
+	}
+	return nil
+}
+
+// CreateRetryRun 在内存锁内原子写入 retry 幂等记录、新 run、turn 和 audit。
+func (repo *MemoryRepository) CreateRetryRun(_ context.Context, transition RetryRunTransition) (IdempotencyRecord, bool, error) {
+	if ContainsUnsafeMaterial(transition.NewRun.SafeError) ||
+		ContainsUnsafeMaterial(transition.UserTurn.Content) ||
+		ContainsUnsafeMaterial(transition.OldAudit.SafeSummary) ||
+		ContainsUnsafeMaterial(transition.NewAudit.SafeSummary) {
+		return IdempotencyRecord{}, false, ErrUnsafeFactMaterial
+	}
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	key := string(transition.Idempotency.Scope) + ":" + transition.Idempotency.Key
+	if existing, ok := repo.idempotency[key]; ok {
+		if existing.ResourceRef != transition.Idempotency.ResourceRef {
+			return IdempotencyRecord{}, false, ErrIdempotencyConflict
+		}
+		return existing, true, nil
+	}
+	oldRun, ok := repo.runs[transition.OldRunID]
+	if !ok {
+		return IdempotencyRecord{}, false, ErrNotFound
+	}
+	if transition.ExpectedOldRunStatus != "" && oldRun.Status != transition.ExpectedOldRunStatus {
+		return IdempotencyRecord{}, false, ErrIdempotencyConflict
+	}
+	if transition.ExpectedOldSafeError != "" && oldRun.SafeError != transition.ExpectedOldSafeError {
+		return IdempotencyRecord{}, false, ErrIdempotencyConflict
+	}
+	repo.idempotency[key] = transition.Idempotency
+	repo.runs[transition.NewRun.RunID] = transition.NewRun
+	repo.latestBy[transition.NewRun.WorkspaceID] = transition.NewRun.RunID
+	if transition.UserTurn.TurnID != "" {
+		repo.turns[transition.NewRun.RunID] = append(repo.turns[transition.NewRun.RunID], transition.UserTurn)
+	}
+	if transition.OldAudit.AuditID != "" {
+		repo.audit[transition.OldRunID] = append(repo.audit[transition.OldRunID], transition.OldAudit)
+	}
+	if transition.NewAudit.AuditID != "" {
+		repo.audit[transition.NewRun.RunID] = append(repo.audit[transition.NewRun.RunID], transition.NewAudit)
+	}
+	return transition.Idempotency, false, nil
+}
+
 // RecordIdempotency 是测试替身的最小幂等实现，不验证 SQLite 事务语义。
 func (repo *MemoryRepository) RecordIdempotency(_ context.Context, record IdempotencyRecord) (IdempotencyRecord, bool, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	key := string(record.Scope) + ":" + record.Key
+	if existing, ok := repo.idempotency[key]; ok {
+		if existing.ResourceRef != record.ResourceRef {
+			return IdempotencyRecord{}, false, ErrIdempotencyConflict
+		}
+		return existing, true, nil
+	}
+	repo.idempotency[key] = record
 	return record, false, nil
+}
+
+func runStatusIn(status RunStatus, allowed []RunStatus) bool {
+	for _, candidate := range allowed {
+		if status == candidate {
+			return true
+		}
+	}
+	return false
 }
 
 // AppendTurn 追加内存消息事实。
@@ -187,6 +317,44 @@ func (repo *MemoryRepository) AppendPendingInteraction(_ context.Context, pendin
 
 	repo.pending[pending.RunID] = append(repo.pending[pending.RunID], pending)
 	return nil
+}
+
+// UpdatePendingStatus 更新内存 pending 状态，用于 lifecycle 单元测试。
+func (repo *MemoryRepository) UpdatePendingStatus(_ context.Context, pendingID string, status PendingStatus) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	for runID, pendingList := range repo.pending {
+		for index, pending := range pendingList {
+			if pending.PendingID == pendingID {
+				if pending.Status != PendingStatusWaiting && pending.Status != PendingStatusSubmitted {
+					return ErrIdempotencyConflict
+				}
+				pending.Status = status
+				repo.pending[runID][index] = pending
+				return nil
+			}
+		}
+	}
+	return ErrNotFound
+}
+
+func indexPending(pendingList []PendingInteraction, pendingID string) int {
+	for index, pending := range pendingList {
+		if pending.PendingID == pendingID {
+			return index
+		}
+	}
+	return -1
+}
+
+func indexToolCall(toolCalls []ToolCall, toolCallID string) int {
+	for index, toolCall := range toolCalls {
+		if toolCall.ToolCallID == toolCallID {
+			return index
+		}
+	}
+	return -1
 }
 
 // ConsumeResumeRef 是测试替身占位；生产幂等语义由 SQLite repository 覆盖。

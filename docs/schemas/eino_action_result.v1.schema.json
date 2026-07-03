@@ -9,7 +9,7 @@
     "workspace_id": {"type": "string"},
     "action_id": {"type": "string"},
     "run_id": {"type": "string"},
-    "status": {"enum": ["accepted", "running", "waiting", "completed", "failed", "stopped", "denied", "blocked"]},
+    "status": {"enum": ["accepted", "running", "waiting", "completed", "failed", "cancelled", "stopped", "denied", "blocked"]},
     "snapshot_url": {"type": "string"},
     "events_url": {"type": "string"},
     "stream_ref": {"type": "string"},
@@ -128,7 +128,7 @@
     {
       "if": {
         "properties": {
-          "status": {"enum": ["accepted", "running", "completed", "failed", "stopped", "denied", "blocked"]}
+          "status": {"enum": ["accepted", "running", "completed", "failed", "cancelled", "stopped", "denied", "blocked"]}
         },
         "required": ["status"]
       },

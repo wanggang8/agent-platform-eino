@@ -54,6 +54,7 @@ func NewRouter(deps Dependencies) http.Handler {
 	mux.HandleFunc("GET /api/workspaces/{workspace_id}/runs/{run_id}", api.handleRunSnapshot)
 	mux.HandleFunc("GET /api/workspaces/{workspace_id}/runs/{run_id}/replay", api.handleReplay)
 	mux.HandleFunc("POST /api/workspaces/{workspace_id}/runs/{run_id}/resume", api.handleResume)
+	mux.HandleFunc("POST /api/workspaces/{workspace_id}/runs/{run_id}/lifecycle", api.handleRunLifecycle)
 	mux.HandleFunc("POST /api/workspaces/{workspace_id}/agent/actions", api.handleAgentAction)
 	mux.HandleFunc("/", api.handleNotFound)
 	return mux
