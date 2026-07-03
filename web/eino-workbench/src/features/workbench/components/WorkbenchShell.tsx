@@ -33,14 +33,14 @@ export function WorkbenchShell({ view }: WorkbenchShellProps) {
             <h1>查询 10.10.11.69 关联资产与风险</h1>
           </div>
           <div className="header-actions" aria-label="运行环境状态">
-            <span><Gauge size={14} /> gpt-5.4-mini</span>
+            <span><Gauge size={14} /> 模型已接入</span>
             <span><CircleCheck size={14} /> 连接正常</span>
             <span><Boxes size={14} /> 6/6 可用</span>
             <button type="button" aria-label="分享"><Share2 size={16} /></button>
           </div>
         </header>
 
-        <div className="fixture-switcher" aria-label="Fixture state selector">
+        <div className="fixture-switcher" aria-label="产品验收场景">
           {fixtureKeys.map((key) => (
             <button
               key={key}

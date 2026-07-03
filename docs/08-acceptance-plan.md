@@ -130,6 +130,7 @@ npm run eino-workbench:visual-test
 - 视觉 coverage 不低于 `legacy-acceptance-evidence.md` 中最终通过的场景、状态和截图区域要求。
 - visual report 输出到 `test-results/eino-workbench-visual-report/`。
 - `docs/fixtures/visual-evidence-matrix.json` 必须通过 schema-test，且 8 个必选 block 和状态 fixture 引用完整。
+- 产品视觉截图不得出现英文调试文案、tool id、schema 名、raw JSON、run id 或 provider 原始字段；可见内容必须是处理后的中文产品展示。
 - 覆盖 desktop 1440x900 与 mobile 390x844 的空态、聊天、工具卡、审批卡、澄清卡、失败态、Inspector。
 - 动态字段必须 mask：时间、run id、随机 id、模型耗时、token 计数。
 

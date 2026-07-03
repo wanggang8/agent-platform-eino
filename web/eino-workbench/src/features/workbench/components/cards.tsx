@@ -83,7 +83,9 @@ function statusLabel(status: string | undefined) {
     completed: "完成",
     failed: "失败",
     cancelled: "已取消",
-    waiting: "等待"
+    waiting: "等待",
+    pending_approval: "等待审批",
+    provider_timeout: "服务超时"
   };
-  return labels[status] ?? status;
+  return labels[status] ?? "未知";
 }

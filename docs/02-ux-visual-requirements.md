@@ -41,13 +41,22 @@ Workbench 是工作台，不是营销页。第一屏就是可用的聊天工作�
 工具卡必须包含：
 
 - 安全中文标题。
-- 状态：pending、running、completed、failed、cancelled。
+- 契约状态覆盖：`pending`、`running`、`completed`、`failed`、`cancelled`；可见文案必须映射为中文产品状态。
 - 简短摘要。
 - 展开区域。
 - 结构化结果视图。
 - 失败时的安全错误摘要。
 
 工具卡不得从 raw tool ID 推断业务展示；业务展示必须来自安全结构化结果。
+
+## 产品化文案要求
+
+Workbench 视觉验收截图必须是产品界面，不是调试台：
+
+- 可见文案优先使用中文产品语言。
+- 不显示 `tool_id`、schema 名、provider 字段名、run id、checkpoint/resume 标识或英文内部状态码。
+- 不显示原始 JSON、对象字段名或工具原始返回；嵌套对象只能显示处理后的摘要。
+- `StructuredResult`、`Product Facts` 等内部契约名只允许出现在文档、注释、测试名或非产品日志中，不得出现在产品可见区域。
 
 ## 审批卡
 

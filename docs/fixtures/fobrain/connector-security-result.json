@@ -6,33 +6,33 @@
   "status": "resolved",
   "query": {},
   "data": {
-    "title": "Fobrain 连接器状态",
+    "title": "安全平台连接器状态",
     "summary": "连接器可用，工作区凭据已绑定",
     "facts": [
       {
         "key": "connector_status",
         "label": "连接器状态",
-        "value": "available",
+        "value": "可用",
         "type": "status",
         "tone": "success"
       },
       {
         "key": "workspace_id",
         "label": "工作区",
-        "value": "ws-demo",
+        "value": "演示工作区",
         "type": "code"
       },
       {
         "key": "credential_status",
         "label": "凭据绑定",
-        "value": "bound",
+        "value": "已绑定",
         "type": "status",
         "tone": "success"
       },
       {
         "key": "credential_owner_scope",
         "label": "绑定范围",
-        "value": "workspace",
+        "value": "当前工作区",
         "type": "badge"
       }
     ]

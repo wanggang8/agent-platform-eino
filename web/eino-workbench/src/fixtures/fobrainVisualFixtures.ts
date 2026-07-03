@@ -57,50 +57,50 @@ export const fobrainVisualScenarios = [
   {
     fixtureKey: "fobrainConnectorSecurity",
     toolId: "connector.fobrain.security",
-    prompt: "查看 Fobrain 连接器状态",
-    label: "Fobrain 连接器",
+    prompt: "查看安全平台连接器状态",
+    label: "安全平台连接器",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainCurrentUser",
     toolId: "tool.fobrain.current_user_context",
-    prompt: "查看当前 Fobrain 用户信息",
-    label: "Fobrain 当前用户",
+    prompt: "查看当前安全平台用户信息",
+    label: "安全平台当前用户",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainMyPermissions",
     toolId: "tool.fobrain.my_permissions",
-    prompt: "查看我的 Fobrain 权限范围",
-    label: "Fobrain 我的权限",
+    prompt: "查看我的安全平台权限范围",
+    label: "安全平台我的权限",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainAssetDetail",
     toolId: "tool.fobrain.get_asset_detail",
-    prompt: "查看 Fobrain 资产详情",
-    label: "Fobrain 资产详情",
+    prompt: "查看安全平台资产详情",
+    label: "安全平台资产详情",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainVulnerabilityDetail",
     toolId: "tool.fobrain.get_vulnerability_detail",
-    prompt: "查看 Fobrain 漏洞详情",
-    label: "Fobrain 漏洞详情",
+    prompt: "查看安全平台漏洞详情",
+    label: "安全平台漏洞详情",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainBusinessRiskSummary",
     toolId: "tool.fobrain.business_risk_summary",
-    prompt: "汇总 Fobrain 业务风险",
-    label: "Fobrain 业务风险",
+    prompt: "汇总安全平台业务风险",
+    label: "安全平台业务风险",
     regions: requiredRegions
   },
   {
     fixtureKey: "fobrainThreatRelevanceList",
     toolId: "tool.fobrain.threat_relevance_list",
-    prompt: "查看 Fobrain 威胁关联资产",
-    label: "Fobrain 威胁关联",
+    prompt: "查看安全平台威胁关联资产",
+    label: "安全平台威胁关联",
     regions: requiredRegions
   }
 ] as const satisfies readonly FobrainVisualScenario[];
@@ -193,7 +193,7 @@ function buildFobrainView({
       tabs: ["evidence", "structured", "runtime", "audit"],
       evidence: [
         { label: "场景", value: scenario.label },
-        { label: "工具卡", value: "已从 StructuredResult 渲染" }
+        { label: "工具卡", value: "已完成安全结构化展示" }
       ],
       structured: {
         tool_call_id: toolCallId,
@@ -210,7 +210,7 @@ function buildFobrainView({
           audit_id: `audit-${scenario.fixtureKey}-tool-completed`,
           run_id: runId,
           event_type: "tool",
-          safe_summary: `${scenario.label} tool completed from StructuredResult`,
+          safe_summary: `${scenario.label} 已完成安全结构化处理`,
           actor: "tool",
           created_at: "2026-07-02T00:00:00Z"
         }
@@ -221,7 +221,7 @@ function buildFobrainView({
 
 function buildStructuredResultSummary(result: StructuredResult): string {
   // 摘要只从 StructuredResult 的安全字段生成，避免前端引入第二套事实。
-  const title = result.schema_version === "fobrain.tool_result.v2" ? (result.data.title ?? "Fobrain 工具结果") : "Fobrain 工具结果";
+  const title = result.schema_version === "fobrain.tool_result.v2" ? (result.data.title ?? "安全平台工具结果") : "安全平台工具结果";
   const summary = result.data.summary ?? `状态：${result.status}`;
   return `${title}：${summary}`;
 }

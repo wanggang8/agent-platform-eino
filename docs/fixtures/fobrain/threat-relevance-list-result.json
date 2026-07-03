@@ -7,7 +7,7 @@
   "query": {},
   "data": {
     "title": "查询威胁关联资产",
-    "summary": "查询威胁关联资产 fixture",
+    "summary": "查询威胁关联资产已完成",
     "columns": [
       {
         "key": "display_name",
@@ -24,7 +24,7 @@
       {
         "entity_ref": "risk:fobrain:fixture-1",
         "display_name": "查询威胁关联资产 示例",
-        "status": "resolved"
+        "status": "已解析"
       }
     ],
     "pagination": {

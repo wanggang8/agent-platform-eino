@@ -11,6 +11,7 @@ test.describe("@visual Workbench block baselines", () => {
       await page.goto("/workspaces/ws-demo");
       await selectFixture(page, state);
       await prepareState(page, state, testInfo.project.name);
+      await assertProductVisibleText(page);
 
       for (const blockId of state.required_blocks as VisualBlockId[]) {
         const block = visualFixtures.blocks[blockId];
@@ -21,6 +22,7 @@ test.describe("@visual Workbench block baselines", () => {
           await page.getByRole("button", { name: "证据" }).click();
         }
 
+        await assertProductVisibleText(page);
         const locator = page.locator(block.selector);
         await expect(locator, `${state.state_id}:${blockId} missing. ${state.blocker}`).toBeVisible();
         await expect(locator).toHaveScreenshot(`${state.state_id}-${blockId}.png`, {
@@ -58,4 +60,11 @@ function screenshotMasks(page: Page, scope: Locator) {
     scope.locator(".sidebar-footer"),
     page.locator(".header-actions span").first()
   ];
+}
+
+async function assertProductVisibleText(page: Page) {
+  // 通用视觉基线同样按产品界面验收，不允许内部英文或 JSON 出现在可见文本中。
+  const visibleText = (await page.getByTestId("workbench-shell").innerText()).toLowerCase();
+  expect(visibleText).not.toMatch(/[a-z]/);
+  expect(visibleText).not.toMatch(/[{}]|tool\.|schema_version|display_type|structuredresult|product facts|safe projection|run-/);
 }

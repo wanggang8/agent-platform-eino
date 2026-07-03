@@ -32,7 +32,7 @@
   ],
   "inspector": {
     "tabs": ["evidence", "structured", "runtime", "audit"],
-    "evidence": [{"label": "错误", "value": "provider_timeout"}],
+    "evidence": [{"label": "错误", "value": "模型服务请求超时"}],
     "runtime": {"status": "failed", "safe_error": "模型服务请求超时。"},
     "audit": [
       {
@@ -40,7 +40,7 @@
         "audit_id": "audit-failed-1",
         "run_id": "run-failed",
         "event_type": "error",
-        "safe_summary": "provider timeout",
+        "safe_summary": "模型服务请求超时",
         "actor": "system",
         "created_at": "2026-06-30T00:00:00Z"
       }

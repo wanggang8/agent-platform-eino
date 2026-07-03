@@ -59,7 +59,7 @@ function EvidencePanel({ inspector, fallbackStructuredResult }: InspectorProps) 
       {fallbackStructuredResult ? (
         <div className="detail-card">
           <span>事实材料</span>
-          <strong>StructuredResult</strong>
+          <strong>安全结构化结果</strong>
         </div>
       ) : null}
     </div>
@@ -88,15 +88,15 @@ function RuntimePanel({ inspector }: InspectorProps) {
     <div className="inspector-panel">
       <div className="detail-card">
         <span>运行状态</span>
-        <strong>{runtime?.status ?? "unknown"}</strong>
+        <strong>{runtimeStatusLabel(runtime?.status)}</strong>
       </div>
       <div className="detail-card">
         <span>模型上下文</span>
-        <strong>safe projection only</strong>
+        <strong>仅使用安全投影</strong>
       </div>
       <div className="detail-card">
         <span>事实来源</span>
-        <strong>Product Facts</strong>
+        <strong>产品事实</strong>
       </div>
       {runtime?.safe_error ? <div className="safe-error">{runtime.safe_error}</div> : null}
     </div>
@@ -111,9 +111,9 @@ function AuditPanel({ inspector }: InspectorProps) {
     <div className="inspector-panel">
       {audit.map((event) => (
         <div className="audit-row" key={event.audit_id}>
-          <span>{event.event_type}</span>
+          <span>{auditEventLabel(event.event_type)}</span>
           <strong>{event.safe_summary}</strong>
-          <small>{event.actor}</small>
+          <small>{auditActorLabel(event.actor)}</small>
         </div>
       ))}
     </div>
@@ -139,5 +139,42 @@ function tabLabel(tab: InspectorTab) {
 // getStructuredSummary 从 StructuredResult 中提取安全摘要，不展开 raw data。
 function getStructuredSummary(result: StructuredResult | undefined) {
   if (!result) return undefined;
-  return result.data.summary ?? result.schema_version;
+  return result.data.summary ?? "安全摘要已生成";
+}
+
+// runtimeStatusLabel 将运行状态枚举映射为中文，避免 Inspector 暴露内部状态码。
+function runtimeStatusLabel(status: string | undefined) {
+  const labels: Record<string, string> = {
+    created: "已创建",
+    running: "运行中",
+    waiting: "等待交互",
+    succeeded: "已完成",
+    failed: "失败",
+    cancelled: "已取消",
+    stopped: "已停止"
+  };
+  return status ? (labels[status] ?? "未知") : "未知";
+}
+
+// auditEventLabel 将审计事件类型转为产品化标签，不展示内部枚举。
+function auditEventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    tool: "工具执行",
+    error: "错误",
+    approval: "审批",
+    clarification: "澄清",
+    run: "运行"
+  };
+  return labels[eventType] ?? "审计事件";
+}
+
+// auditActorLabel 将审计 actor 转为中文展示，避免 tool/system 等内部词进入截图。
+function auditActorLabel(actor: string) {
+  const labels: Record<string, string> = {
+    tool: "系统",
+    system: "系统",
+    user: "用户",
+    assistant: "智能助手"
+  };
+  return labels[actor] ?? "系统";
 }

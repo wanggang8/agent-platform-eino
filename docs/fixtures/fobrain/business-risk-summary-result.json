@@ -7,7 +7,7 @@
   "query": {},
   "data": {
     "title": "汇总业务风险",
-    "summary": "汇总业务风险 fixture",
+    "summary": "汇总业务风险已完成",
     "metrics": [
       {
         "label": "总数",

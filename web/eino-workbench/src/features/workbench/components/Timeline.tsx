@@ -14,7 +14,7 @@ export function Timeline({ items }: TimelineProps) {
         <div className="empty-state">
           <Bot size={28} />
           <h2>开始一个新的安全分析会话</h2>
-          <p>发送问题后，工具结果会以 StructuredResult 的安全投影展示在这里。</p>
+          <p>发送问题后，工具结果会以安全结构化摘要展示在这里。</p>
         </div>
       ) : (
         items.map((item) => <TimelineEntry key={item.item_id} item={item} />)
@@ -50,7 +50,7 @@ function TimelineEntry({ item }: { readonly item: TimelineItem }) {
 function MessageBubble({ role, content }: { readonly role: "user" | "assistant"; readonly content: string }) {
   return (
     <article className={`message-row ${role}`}>
-      <div className="avatar" aria-hidden>{role === "user" ? <UserRound size={16} /> : "A"}</div>
+      <div className="avatar" aria-hidden>{role === "user" ? <UserRound size={16} /> : "智"}</div>
       <div className="message-bubble">
         <span>{role === "user" ? "用户" : "智能助手"}</span>
         <p>{content}</p>

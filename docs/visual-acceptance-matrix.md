@@ -12,6 +12,16 @@
 
 Phase 2 必须补充目标截图路径、block crop 坐标和 Playwright baseline。没有目标图的状态仍必须有 fixture screenshot 和人工 pass/fail 记录。
 
+## 产品化视觉门禁
+
+视觉验收必须按产品交付界面验收，不按调试工作台验收。所有进入 `web/eino-workbench/tests/__screenshots__/` 的截图必须满足：
+
+- 可见文案使用中文产品语言；不得出现 `tool_id`、schema 名、内部枚举、provider 字段名、run id、checkpoint/resume 标识或英文调试文案。
+- 工具结果只能展示处理后的安全标题、摘要、指标、事实表格和审计摘要；不得展示原始 JSON、`StructuredResult` dump、raw provider payload 或对象字段名。
+- 连接器、凭据、运行状态和审计事件必须映射为中文产品状态，例如“可用”“已绑定”“当前工作区”“工具执行”，不能展示 `available`、`bound`、`workspace`、`tool` 等内部值。
+- `StructuredResult`、`Product Facts` 等契约名可以出现在技术文档和源码注释中，但不能作为产品截图可见文本。
+- Playwright 视觉用例必须在截图前断言产品可见文本不包含 ASCII 英文调试词、raw JSON 标记或敏感材料。
+
 机器可读视觉矩阵固定在：
 
 ```text
@@ -45,14 +55,14 @@ docs/assets/legacy/workbench/
 | 场景 | 必须行为 |
 | --- | --- |
 | 普通聊天 | 用户消息、assistant delta、最终回答按时间线展示，不出现空工具区域。 |
-| 单工具 | 一个紧凑工具卡，折叠态可读，展开态展示 StructuredResult。 |
-| 多工具 | 保持真实顺序，不伪造成固定 workflow。 |
+| 单工具 | 一个紧凑工具卡，折叠态可读，展开态展示安全结构化结果。 |
+| 多工具 | 保持真实顺序，不伪造成固定流程。 |
 | assistant 插入文本 | 工具前后中间文本保持原始顺序。 |
 | 审批等待 | 审批卡出现在等待点，resume 前不得显示 mutation 成功。 |
 | 澄清等待 | 澄清卡展示候选或输入，提交后变只读。 |
 | 失败/空/部分结果 | 状态留在原工具位置，显示安全摘要和 evidence。 |
 | stop/cancel/timeout | 显示 run notice，不重复终态卡。 |
-| 多轮追问 | 只能引用 prior safe evidence 和 StructuredResult，不把内部 ref 当正文。 |
+| 多轮追问 | 只能引用已投影的安全证据和结构化结果，不把内部引用当正文。 |
 
 ## 必选可见 block
 
@@ -88,7 +98,7 @@ Selectors 可以调整，但必须在本矩阵和 screenshot 脚本同一任务�
 
 - 第一屏不是可工作的聊天工作台。
 - 桌面出现 hero、营销说明、手机预览或演示玩具布局。
-- 主聊天出现 raw prompt、provider payload、credential ref、Authorization、resume token、internal reason code 或 raw JSON dump。
+- 主聊天出现 raw prompt、provider payload、credential ref、Authorization、resume token、internal reason code、英文调试词或 raw JSON dump。
 - Workbench、replay、audit、ActionResult 对同一 run 展示不一致。
 - 工具卡展示内容不是从 StructuredResult 派生。
 - Inspector 直接展示 raw runtime event 或 raw provider payload。

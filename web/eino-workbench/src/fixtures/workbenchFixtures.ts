@@ -80,11 +80,11 @@ export const fixtureLabels: Record<WorkbenchFixtureKey, string> = {
   failed: "失败态",
   approval: "审批等待",
   clarification: "澄清等待",
-  fobrainConnectorSecurity: "Fobrain 连接器",
-  fobrainCurrentUser: "Fobrain 当前用户",
-  fobrainMyPermissions: "Fobrain 我的权限",
-  fobrainAssetDetail: "Fobrain 资产详情",
-  fobrainVulnerabilityDetail: "Fobrain 漏洞详情",
-  fobrainBusinessRiskSummary: "Fobrain 业务风险",
-  fobrainThreatRelevanceList: "Fobrain 威胁关联"
+  fobrainConnectorSecurity: "安全平台连接器",
+  fobrainCurrentUser: "安全平台当前用户",
+  fobrainMyPermissions: "安全平台我的权限",
+  fobrainAssetDetail: "安全平台资产详情",
+  fobrainVulnerabilityDetail: "安全平台漏洞详情",
+  fobrainBusinessRiskSummary: "安全平台业务风险",
+  fobrainThreatRelevanceList: "安全平台威胁关联"
 };

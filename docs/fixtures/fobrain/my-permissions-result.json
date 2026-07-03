@@ -7,7 +7,7 @@
   "query": {},
   "data": {
     "title": "读取我的权限范围",
-    "summary": "读取我的权限范围 fixture",
+    "summary": "读取我的权限范围已完成",
     "facts": [
       {
         "key": "display_name",
@@ -18,7 +18,7 @@
       {
         "key": "status",
         "label": "状态",
-        "value": "resolved",
+        "value": "已解析",
         "type": "status"
       }
     ]

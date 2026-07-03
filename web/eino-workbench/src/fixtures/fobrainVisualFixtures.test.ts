@@ -28,38 +28,38 @@ describe("fobrain visual fixtures", () => {
     expect(fobrainVisualScenarios.map(({ fixtureKey, prompt, label }) => ({ fixtureKey, prompt, label }))).toEqual([
       {
         fixtureKey: "fobrainConnectorSecurity",
-        prompt: "查看 Fobrain 连接器状态",
-        label: "Fobrain 连接器"
+        prompt: "查看安全平台连接器状态",
+        label: "安全平台连接器"
       },
       {
         fixtureKey: "fobrainCurrentUser",
-        prompt: "查看当前 Fobrain 用户信息",
-        label: "Fobrain 当前用户"
+        prompt: "查看当前安全平台用户信息",
+        label: "安全平台当前用户"
       },
       {
         fixtureKey: "fobrainMyPermissions",
-        prompt: "查看我的 Fobrain 权限范围",
-        label: "Fobrain 我的权限"
+        prompt: "查看我的安全平台权限范围",
+        label: "安全平台我的权限"
       },
       {
         fixtureKey: "fobrainAssetDetail",
-        prompt: "查看 Fobrain 资产详情",
-        label: "Fobrain 资产详情"
+        prompt: "查看安全平台资产详情",
+        label: "安全平台资产详情"
       },
       {
         fixtureKey: "fobrainVulnerabilityDetail",
-        prompt: "查看 Fobrain 漏洞详情",
-        label: "Fobrain 漏洞详情"
+        prompt: "查看安全平台漏洞详情",
+        label: "安全平台漏洞详情"
       },
       {
         fixtureKey: "fobrainBusinessRiskSummary",
-        prompt: "汇总 Fobrain 业务风险",
-        label: "Fobrain 业务风险"
+        prompt: "汇总安全平台业务风险",
+        label: "安全平台业务风险"
       },
       {
         fixtureKey: "fobrainThreatRelevanceList",
-        prompt: "查看 Fobrain 威胁关联资产",
-        label: "Fobrain 威胁关联"
+        prompt: "查看安全平台威胁关联资产",
+        label: "安全平台威胁关联"
       }
     ]);
   });
