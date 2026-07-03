@@ -42,6 +42,16 @@ type PolicyDecision struct {
 
 // EvaluatePolicy 执行 provider policy 门禁：凭据、workspace scope、connector 状态和写域审批。
 func EvaluatePolicy(capability Capability, contexts ...PolicyContext) PolicyDecision {
+	return evaluatePolicy(capability, false, contexts...)
+}
+
+// EvaluatePolicyAfterApproval 执行已经满足 HITL approval 后的 provider policy 门禁。
+// 它只解除 approval_required，不解除凭据、workspace scope 或 connector 可用性检查。
+func EvaluatePolicyAfterApproval(capability Capability, contexts ...PolicyContext) PolicyDecision {
+	return evaluatePolicy(capability, true, contexts...)
+}
+
+func evaluatePolicy(capability Capability, approvalGranted bool, contexts ...PolicyContext) PolicyDecision {
 	ctx := PolicyContext{ConnectorStatus: ConnectorStatusAvailable}
 	if len(contexts) > 0 {
 		ctx = contexts[0]
@@ -52,7 +62,7 @@ func EvaluatePolicy(capability Capability, contexts ...PolicyContext) PolicyDeci
 	binding := SafeCredentialBinding(ctx.CredentialBinding)
 	decision := newPolicyDecision(capability, binding)
 
-	if requiresApproval(capability) {
+	if requiresApproval(capability) && !approvalGranted {
 		return decision.block(PolicyReasonApprovalRequired, "能力需要审批后执行", true)
 	}
 	if requiresCredential(capability) {

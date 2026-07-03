@@ -726,8 +726,10 @@ go test ./internal/einoapp/execution -run 'ResumeCheckpointMissing|ResumeAfterRe
 
 创建/修改：
 
-- `internal/einoapp/execution/hitl.go`
 - `internal/einoapp/execution/approval_tool.go`
+- `internal/einoapp/execution/checkpoint.go`
+- `internal/einoapp/facts/model.go`
+- `internal/einoapp/store/sqlite/repository.go`
 
 覆盖：
 
@@ -737,6 +739,7 @@ go test ./internal/einoapp/execution -run 'ResumeCheckpointMissing|ResumeAfterRe
 - reject 后不可 approve。
 - duplicate resume。
 - pending 状态进入 audit/replay。
+- 当前后端切片已实现 approval-required capability 进入 `waiting` pending、安全 `resume_ref:` / `checkpoint_ref:`、SQLite/内存 `ApplyApprovalResume` 原子迁移、approve 后读取内部 continuation 并执行一次 capability、reject 后 `approval_rejected` 安全失败、同一 `client_request_id` 幂等去重、进程重启后继续执行；approval 只解除 approval gate，凭据、workspace scope 和 connector policy 仍必须通过。Pending UI/SSE 视觉验收仍由 Phase 6.4/Phase 7 对齐。
 
 任务级检查：
 

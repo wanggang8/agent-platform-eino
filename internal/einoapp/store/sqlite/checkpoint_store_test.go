@@ -25,13 +25,7 @@ func TestCheckPointStorePersistsCheckpointAndSafeRefAcrossRestart(t *testing.T) 
 	if err := store.Set(ctx, "eino-internal-checkpoint-1", []byte("serialized-eino-checkpoint")); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.BindCheckpointRef(ctx, sqlite.CheckpointBinding{
-		CheckpointRef: "checkpoint_ref:safe-1",
-		CheckpointID:  "eino-internal-checkpoint-1",
-		RunID:         "run-1",
-		PendingID:     "pending-1",
-		CreatedAt:     now,
-	}); err != nil {
+	if err := store.BindCheckpointRef(ctx, "checkpoint_ref:safe-1", "eino-internal-checkpoint-1", "run-1", "pending-1", now); err != nil {
 		t.Fatal(err)
 	}
 	if err := store.Close(); err != nil {
@@ -80,12 +74,7 @@ func TestCheckPointStoreRejectsUnsafeSafeRefAndReportsMissing(t *testing.T) {
 		{name: "outer whitespace", checkpointRef: " checkpoint_ref:space ", checkpointID: "eino-internal-checkpoint-1"},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := store.BindCheckpointRef(ctx, sqlite.CheckpointBinding{
-				CheckpointRef: testCase.checkpointRef,
-				CheckpointID:  testCase.checkpointID,
-				RunID:         "run-1",
-				PendingID:     "pending-1",
-			})
+			err := store.BindCheckpointRef(ctx, testCase.checkpointRef, testCase.checkpointID, "run-1", "pending-1", time.Time{})
 			if !errors.Is(err, facts.ErrUnsafeFactMaterial) {
 				t.Fatalf("unsafe checkpoint ref err = %v, want ErrUnsafeFactMaterial", err)
 			}
@@ -116,20 +105,13 @@ func TestCheckPointStoreBindingIsImmutable(t *testing.T) {
 	if err := store.Set(ctx, "eino-internal-checkpoint-2", []byte("serialized-2")); err != nil {
 		t.Fatal(err)
 	}
-	binding := sqlite.CheckpointBinding{
-		CheckpointRef: "checkpoint_ref:immutable",
-		CheckpointID:  "eino-internal-checkpoint-1",
-		RunID:         "run-1",
-		PendingID:     "pending-1",
-	}
-	if err := store.BindCheckpointRef(ctx, binding); err != nil {
+	if err := store.BindCheckpointRef(ctx, "checkpoint_ref:immutable", "eino-internal-checkpoint-1", "run-1", "pending-1", time.Time{}); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.BindCheckpointRef(ctx, binding); err != nil {
+	if err := store.BindCheckpointRef(ctx, "checkpoint_ref:immutable", "eino-internal-checkpoint-1", "run-1", "pending-1", time.Time{}); err != nil {
 		t.Fatalf("same checkpoint binding should be idempotent: %v", err)
 	}
-	binding.CheckpointID = "eino-internal-checkpoint-2"
-	if err := store.BindCheckpointRef(ctx, binding); !errors.Is(err, facts.ErrIdempotencyConflict) {
+	if err := store.BindCheckpointRef(ctx, "checkpoint_ref:immutable", "eino-internal-checkpoint-2", "run-1", "pending-1", time.Time{}); !errors.Is(err, facts.ErrIdempotencyConflict) {
 		t.Fatalf("rebinding checkpoint ref err = %v, want ErrIdempotencyConflict", err)
 	}
 }
@@ -146,12 +128,7 @@ func TestCheckPointStoreResolveRequiresRunAndPendingBinding(t *testing.T) {
 	if err := store.Set(ctx, "eino-internal-checkpoint-1", []byte("serialized")); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.BindCheckpointRef(ctx, sqlite.CheckpointBinding{
-		CheckpointRef: "checkpoint_ref:safe-1",
-		CheckpointID:  "eino-internal-checkpoint-1",
-		RunID:         "run-1",
-		PendingID:     "pending-1",
-	}); err != nil {
+	if err := store.BindCheckpointRef(ctx, "checkpoint_ref:safe-1", "eino-internal-checkpoint-1", "run-1", "pending-1", time.Time{}); err != nil {
 		t.Fatal(err)
 	}
 	if checkpointID, existed, err := store.ResolveCheckpointID(ctx, "checkpoint_ref:safe-1", "run-2", "pending-2"); err != nil || existed || checkpointID != "" {

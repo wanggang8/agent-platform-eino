@@ -236,9 +236,10 @@ func TestRunnerCommandsRunReadOnlyCapabilityThroughToolRunner(t *testing.T) {
 }
 
 func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T) {
-	// 写域能力在 Phase 6 前只能留下选择审计，不能继续进入 runner 或 provider 执行。
+	// 写域能力进入 Phase 6 approval waiting；审批前不能继续进入 runner 或 provider 执行。
 	repository := facts.NewMemoryRepository()
 	runner := &recordingRunner{}
+	toolRunner := &recordingCapabilityRunner{}
 	registry := capabilities.NewRegistry()
 	if err := registry.Register(capabilities.Capability{
 		ID:          "danger.write",
@@ -249,7 +250,8 @@ func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T
 	}); err != nil {
 		t.Fatal(err)
 	}
-	commands := execution.NewRunnerCommandsWithRegistry(repository, runner, registry)
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).
+		WithApprovalCheckpointStore(newMemoryApprovalCheckpointStore())
 
 	accepted, err := commands.StartAction(context.Background(), execution.ActionCommand{
 		WorkspaceID:     "ws_123",
@@ -264,12 +266,22 @@ func TestRunnerCommandsDoNotRunApprovalRequiredCapabilityBeforeHITL(t *testing.T
 	if runner.runID != "" {
 		t.Fatalf("runner should not run approval-required capability, got %q", runner.runID)
 	}
+	if toolRunner.runID != "" {
+		t.Fatalf("tool runner should not run before approval, got %q", toolRunner.runID)
+	}
 	run, err := repository.GetRun(context.Background(), accepted.RunID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if run.Status != facts.RunStatusCreated {
-		t.Fatalf("run status = %q, want created", run.Status)
+	if run.Status != facts.RunStatusWaiting {
+		t.Fatalf("run status = %q, want waiting", run.Status)
+	}
+	snapshot, err := repository.GetSnapshot(context.Background(), accepted.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.PendingInteractions) != 1 || snapshot.PendingInteractions[0].Kind != facts.PendingKindApproval {
+		t.Fatalf("approval pending missing: %+v", snapshot.PendingInteractions)
 	}
 }
 
@@ -485,12 +497,14 @@ type recordingCapabilityRunner struct {
 	runID        string
 	capabilityID string
 	inputText    string
+	calls        int
 }
 
 func (runner *recordingCapabilityRunner) RunCapability(_ context.Context, runID string, capabilityID string, inputText string) error {
 	runner.runID = runID
 	runner.capabilityID = capabilityID
 	runner.inputText = inputText
+	runner.calls++
 	return nil
 }
 

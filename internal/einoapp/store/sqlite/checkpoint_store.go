@@ -12,16 +12,6 @@ import (
 	"github.com/cloudwego/eino/compose"
 )
 
-// CheckpointBinding 绑定 Product Facts 安全 checkpoint_ref 与内部 Eino checkpoint id。
-// CheckpointID 是内部恢复键，不能进入 Workbench、Action API、audit 或 replay。
-type CheckpointBinding struct {
-	CheckpointRef string
-	CheckpointID  string
-	RunID         string
-	PendingID     string
-	CreatedAt     time.Time
-}
-
 // CheckpointStore 实现 Eino CheckPointStore，并提供安全 checkpoint_ref 解析。
 type CheckpointStore struct {
 	db *sql.DB
@@ -86,15 +76,16 @@ func (store *CheckpointStore) Get(ctx context.Context, checkpointID string) ([]b
 }
 
 // BindCheckpointRef 写入安全 checkpoint_ref 到内部 Eino checkpoint id 的映射。
-func (store *CheckpointStore) BindCheckpointRef(ctx context.Context, binding CheckpointBinding) error {
-	if strings.TrimSpace(binding.CheckpointRef) == "" ||
-		strings.TrimSpace(binding.CheckpointID) == "" ||
-		strings.TrimSpace(binding.RunID) == "" ||
-		strings.TrimSpace(binding.PendingID) == "" ||
-		!facts.SafeCheckpointRef(binding.CheckpointRef) ||
-		binding.CheckpointRef == binding.CheckpointID ||
-		facts.ContainsUnsafeMaterial(binding.RunID) ||
-		facts.ContainsUnsafeMaterial(binding.PendingID) {
+// checkpointID 是内部恢复键，只能保存在 checkpoint store，不能进入 Product Facts。
+func (store *CheckpointStore) BindCheckpointRef(ctx context.Context, checkpointRef string, checkpointID string, runID string, pendingID string, createdAt time.Time) error {
+	if strings.TrimSpace(checkpointRef) == "" ||
+		strings.TrimSpace(checkpointID) == "" ||
+		strings.TrimSpace(runID) == "" ||
+		strings.TrimSpace(pendingID) == "" ||
+		!facts.SafeCheckpointRef(checkpointRef) ||
+		checkpointRef == checkpointID ||
+		facts.ContainsUnsafeMaterial(runID) ||
+		facts.ContainsUnsafeMaterial(pendingID) {
 		return facts.ErrUnsafeFactMaterial
 	}
 	tx, err := store.db.BeginTx(ctx, nil)
@@ -108,9 +99,9 @@ func (store *CheckpointStore) BindCheckpointRef(ctx context.Context, binding Che
 	err = tx.QueryRowContext(ctx, `
 		SELECT checkpoint_id, run_id, pending_id
 		FROM checkpoint_refs
-		WHERE checkpoint_ref = ?`, binding.CheckpointRef).Scan(&existingCheckpointID, &existingRunID, &existingPendingID)
+		WHERE checkpoint_ref = ?`, checkpointRef).Scan(&existingCheckpointID, &existingRunID, &existingPendingID)
 	if err == nil {
-		if existingCheckpointID == binding.CheckpointID && existingRunID == binding.RunID && existingPendingID == binding.PendingID {
+		if existingCheckpointID == checkpointID && existingRunID == runID && existingPendingID == pendingID {
 			return tx.Commit()
 		}
 		return facts.ErrIdempotencyConflict
@@ -118,17 +109,16 @@ func (store *CheckpointStore) BindCheckpointRef(ctx context.Context, binding Che
 	if !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
-	createdAt := binding.CreatedAt
 	if createdAt.IsZero() {
 		createdAt = time.Now().UTC()
 	}
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO checkpoint_refs(checkpoint_ref, checkpoint_id, run_id, pending_id, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?)`,
-		binding.CheckpointRef,
-		binding.CheckpointID,
-		binding.RunID,
-		binding.PendingID,
+		checkpointRef,
+		checkpointID,
+		runID,
+		pendingID,
 		formatTime(createdAt),
 		formatTime(time.Now().UTC()),
 	); err != nil {

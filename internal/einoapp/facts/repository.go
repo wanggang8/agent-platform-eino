@@ -22,6 +22,8 @@ type Repository interface {
 	CreateRetryRun(ctx context.Context, transition RetryRunTransition) (IdempotencyRecord, bool, error)
 	// RecordIdempotency 保存请求幂等记录，返回是否命中已有记录。
 	RecordIdempotency(ctx context.Context, record IdempotencyRecord) (IdempotencyRecord, bool, error)
+	// ApplyApprovalResume 原子完成 approval resume 的幂等、pending、run 和 audit 事实迁移。
+	ApplyApprovalResume(ctx context.Context, transition ApprovalResumeTransition) (PendingInteraction, IdempotencyRecord, bool, error)
 	// AppendTurn 追加对话 turn，sequence 由调用方保证单 run 内稳定递增。
 	AppendTurn(ctx context.Context, turn Turn) error
 	// AppendToolCall 追加工具调用事实；工具选择来源必须是 capability registry。

@@ -58,13 +58,7 @@ func TestResumeAfterRestartResolvesCheckpointBeforeAccepting(t *testing.T) {
 	if err := checkpoints.Set(ctx, "eino-internal-checkpoint-restart", []byte("serialized")); err != nil {
 		t.Fatal(err)
 	}
-	if err := checkpoints.BindCheckpointRef(ctx, sqlite.CheckpointBinding{
-		CheckpointRef: "checkpoint_ref:restart",
-		CheckpointID:  "eino-internal-checkpoint-restart",
-		RunID:         "run-restart",
-		PendingID:     "pending-restart",
-		CreatedAt:     now,
-	}); err != nil {
+	if err := checkpoints.BindCheckpointRef(ctx, "checkpoint_ref:restart", "eino-internal-checkpoint-restart", "run-restart", "pending-restart", now); err != nil {
 		t.Fatal(err)
 	}
 	if err := checkpoints.Close(); err != nil {

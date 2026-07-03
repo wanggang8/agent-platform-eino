@@ -113,6 +113,31 @@ func TestProviderPolicyRequiresApprovalForWriteExternal(t *testing.T) {
 	}
 }
 
+func TestProviderPolicyAfterApprovalStillBlocksMissingCredential(t *testing.T) {
+	// approval 只解除写域审批门禁，不解除凭据、scope 和 connector 门禁。
+	capability := providerPolicyCapability()
+	capability.ID = "tool.fobrain.update_ticket_status"
+	capability.RiskLevel = capabilities.RiskWrite
+	capability.SideEffect = capabilities.SideEffectWriteExternal
+	capability.ApprovalRequired = true
+
+	decision := capabilities.EvaluatePolicyAfterApproval(capability, capabilities.PolicyContext{
+		WorkspaceID:     "ws_123",
+		ConnectorStatus: capabilities.ConnectorStatusAvailable,
+		CredentialBinding: capabilities.CredentialBinding{
+			WorkspaceID: "ws_123",
+			System:      "fobrain",
+			Status:      capabilities.CredentialStatusMissing,
+			DisplayRef:  "missing",
+			OwnerScope:  capabilities.PermissionScopeWorkspace,
+		},
+	})
+
+	if decision.Allowed || decision.ReasonCode != capabilities.PolicyReasonCredentialMissing || decision.RequiresApproval {
+		t.Fatalf("approved policy must still block missing credential: %+v", decision)
+	}
+}
+
 func TestProviderPolicyApprovalTakesPriorityForWriteExternal(t *testing.T) {
 	capability := providerPolicyCapability()
 	capability.ID = "tool.fobrain.update_ticket_status"

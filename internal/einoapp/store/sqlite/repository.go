@@ -376,6 +376,118 @@ func (repo *Repository) RecordIdempotency(ctx context.Context, record facts.Idem
 	return record, false, nil
 }
 
+// ApplyApprovalResume 原子完成 approval resume 状态迁移和幂等记录。
+func (repo *Repository) ApplyApprovalResume(ctx context.Context, transition facts.ApprovalResumeTransition) (facts.PendingInteraction, facts.IdempotencyRecord, bool, error) {
+	if facts.ContainsUnsafeMaterial(transition.SafeError) || facts.ContainsUnsafeMaterial(transition.AuditEvent.SafeSummary) {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrUnsafeFactMaterial
+	}
+	if transition.Idempotency.ResourceRef == "" {
+		transition.Idempotency.ResourceRef = transition.ResumeRef
+	}
+	if transition.Idempotency.ResourceRef != transition.ResumeRef {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	tx, err := repo.db.BeginTx(ctx, nil)
+	if err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	existing, err := getIdempotencyRecord(ctx, tx, transition.Idempotency.Scope, transition.Idempotency.Key)
+	if err == nil {
+		if existing.ResourceRef != transition.ResumeRef || existing.Status != transition.Idempotency.Status {
+			return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+		}
+		pending, pendingErr := getPendingForResume(ctx, tx, transition.ResumeRef)
+		if pendingErr != nil {
+			return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, pendingErr
+		}
+		if err := tx.Commit(); err != nil {
+			return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+		}
+		return pending, existing, true, nil
+	}
+	if !errors.Is(err, facts.ErrNotFound) {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+
+	pending, err := getPendingForResume(ctx, tx, transition.ResumeRef)
+	if err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	if pending.RunID != transition.RunID || pending.Kind != transition.ExpectedPendingKind || pending.Status != facts.PendingStatusWaiting {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrResumeAlreadyConsumed
+	}
+	run, err := scanRun(tx.QueryRowContext(ctx, `
+		SELECT run_id, workspace_id, status, created_at, updated_at, model_label, safe_error
+		FROM runs
+		WHERE run_id = ?`, transition.RunID))
+	if err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	if transition.ExpectedRunStatus != "" && run.Status != transition.ExpectedRunStatus {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	pendingResult, err := tx.ExecContext(ctx, `
+		UPDATE pending_interactions
+		SET status = ?
+		WHERE resume_ref = ? AND status = ?`,
+		string(transition.PendingStatus),
+		transition.ResumeRef,
+		string(facts.PendingStatusWaiting),
+	)
+	if err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	if affected, err := pendingResult.RowsAffected(); err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	} else if affected != 1 {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	runResult, err := tx.ExecContext(ctx, `
+		UPDATE runs
+		SET status = ?, safe_error = ?, updated_at = ?
+		WHERE run_id = ? AND status = ?`,
+		string(transition.RunStatus),
+		transition.SafeError,
+		formatTime(transition.UpdatedAt),
+		transition.RunID,
+		string(transition.ExpectedRunStatus),
+	)
+	if err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	if affected, err := runResult.RowsAffected(); err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	} else if affected != 1 {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, facts.ErrIdempotencyConflict
+	}
+	if err := insertIdempotencyRecord(ctx, tx, transition.Idempotency); err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	if transition.AuditEvent.AuditID != "" {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO audit_events(audit_id, run_id, event_type, safe_summary, actor, created_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			transition.AuditEvent.AuditID,
+			transition.AuditEvent.RunID,
+			transition.AuditEvent.EventType,
+			transition.AuditEvent.SafeSummary,
+			transition.AuditEvent.Actor,
+			formatTime(transition.AuditEvent.CreatedAt),
+		); err != nil {
+			return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return facts.PendingInteraction{}, facts.IdempotencyRecord{}, false, err
+	}
+	pending.Status = transition.PendingStatus
+	return pending, transition.Idempotency, false, nil
+}
+
 // AppendTurn 追加消息事实；content 必须已经是安全投影后的文本。
 func (repo *Repository) AppendTurn(ctx context.Context, turn facts.Turn) error {
 	if facts.ContainsUnsafeMaterial(turn.Content) {

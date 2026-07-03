@@ -258,6 +258,135 @@ func TestToolLoopRejectsDefaultPolicyContextForDifferentRunWorkspace(t *testing.
 	}
 }
 
+func TestToolLoopApprovedCapabilityStillEnforcesProviderPolicy(t *testing.T) {
+	// 审批通过只允许越过 approval_required；缺凭据、跨 workspace 和 connector 不可用仍不能执行 provider。
+	for _, testCase := range []struct {
+		name          string
+		runWorkspace  string
+		policyContext capabilities.PolicyContext
+	}{
+		{
+			name:         "missing credential",
+			runWorkspace: "ws-tool",
+			policyContext: capabilities.PolicyContext{
+				WorkspaceID:     "ws-tool",
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusMissing,
+					DisplayRef:  "missing",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+			},
+		},
+		{
+			name:         "credential scope denied",
+			runWorkspace: "ws-other",
+			policyContext: capabilities.PolicyContext{
+				WorkspaceID:     "ws-tool",
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+			},
+		},
+		{
+			name:         "connector unavailable",
+			runWorkspace: "ws-tool",
+			policyContext: capabilities.PolicyContext{
+				WorkspaceID:     "ws-tool",
+				ConnectorStatus: capabilities.ConnectorStatusUnavailable,
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+			},
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			repository := facts.NewMemoryRepository()
+			ctx := context.Background()
+			now := time.Unix(797, 0).UTC()
+			if err := repository.CreateRun(ctx, facts.Run{RunID: "run-tool", WorkspaceID: testCase.runWorkspace, Status: facts.RunStatusCreated, CreatedAt: now, UpdatedAt: now}); err != nil {
+				t.Fatal(err)
+			}
+			registry := capabilities.NewRegistry()
+			capability := mockWriteCredentialCapability()
+			if err := registry.Register(capability); err != nil {
+				t.Fatal(err)
+			}
+			runner := execution.NewToolLoopRunner(repository, registry, capabilities.NewMockProvider("fobrain", []capabilities.Capability{capability}), execution.ToolLoopRunnerConfig{
+				Now: func() time.Time { return now.Add(time.Second) },
+				PolicyContexts: map[string]capabilities.PolicyContext{
+					capability.ID: testCase.policyContext,
+				},
+			})
+
+			err := runner.RunApprovedCapability(ctx, "run-tool", capability.ID, "write")
+			if !errors.Is(err, execution.ErrCapabilityRequiresApproval) {
+				t.Fatalf("approved policy err = %v, want ErrCapabilityRequiresApproval", err)
+			}
+			snapshot, err := repository.GetSnapshot(ctx, "run-tool")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(snapshot.ToolCalls) != 0 || len(snapshot.ToolResults) != 0 {
+				t.Fatalf("blocked approved capability must not write tool facts: calls=%+v results=%+v", snapshot.ToolCalls, snapshot.ToolResults)
+			}
+		})
+	}
+}
+
+func TestToolLoopApprovedCapabilityRunsAfterPolicyAllows(t *testing.T) {
+	// 已审批且 provider policy 允许时，写域 capability 才能进入工具执行。
+	repository := facts.NewMemoryRepository()
+	ctx := context.Background()
+	now := time.Unix(798, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{RunID: "run-tool", WorkspaceID: "ws-tool", Status: facts.RunStatusCreated, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	registry := capabilities.NewRegistry()
+	capability := mockWriteCredentialCapability()
+	if err := registry.Register(capability); err != nil {
+		t.Fatal(err)
+	}
+	runner := execution.NewToolLoopRunner(repository, registry, writeInvoker{}, execution.ToolLoopRunnerConfig{
+		Now: func() time.Time { return now.Add(time.Second) },
+		PolicyContexts: map[string]capabilities.PolicyContext{
+			capability.ID: {
+				WorkspaceID:     "ws-tool",
+				ConnectorStatus: capabilities.ConnectorStatusAvailable,
+				CredentialBinding: capabilities.CredentialBinding{
+					WorkspaceID: "ws-tool",
+					System:      "fobrain",
+					Status:      capabilities.CredentialStatusBound,
+					DisplayRef:  "bound:fobrain:local",
+					OwnerScope:  capabilities.PermissionScopeWorkspace,
+				},
+			},
+		},
+	})
+
+	if err := runner.RunApprovedCapability(ctx, "run-tool", capability.ID, "write"); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := repository.GetSnapshot(ctx, "run-tool")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Run.Status != facts.RunStatusSucceeded || len(snapshot.ToolCalls) != 1 {
+		t.Fatalf("approved capability did not execute after policy allow: %+v", snapshot)
+	}
+}
+
 func mockReadCapability() capabilities.Capability {
 	return capabilities.Capability{
 		ID:          "cap.mock.asset.read",
@@ -275,4 +404,28 @@ func mockReadCapability() capabilities.Capability {
 		RiskLevel:    capabilities.RiskReadOnly,
 		Timeout:      5 * time.Second,
 	}
+}
+
+func mockWriteCredentialCapability() capabilities.Capability {
+	capability := mockReadCapability()
+	capability.ID = "tool.fobrain.ticket.write"
+	capability.ProviderID = "fobrain"
+	capability.ToolName = "fobrain_ticket_write"
+	capability.DisplayName = "更新工单"
+	capability.RiskLevel = capabilities.RiskWrite
+	capability.SideEffect = capabilities.SideEffectWriteExternal
+	capability.CredentialBindingPolicy = capabilities.CredentialBindingRequired
+	capability.ConnectorID = "fobrain"
+	capability.ApprovalRequired = true
+	return capability
+}
+
+type writeInvoker struct{}
+
+func (writeInvoker) Invoke(_ context.Context, request capabilities.InvocationRequest) (product.StructuredResultCandidate, error) {
+	return product.StructuredResultCandidate{
+		SchemaVersion: facts.StructuredResultSchemaVersion,
+		ResultRef:     "result:" + request.CapabilityID,
+		SafeSummary:   "写入完成",
+	}, nil
 }

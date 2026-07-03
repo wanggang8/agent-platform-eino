@@ -219,6 +219,21 @@ type IdempotencyRecord struct {
 	CreatedAt   time.Time
 }
 
+// ApprovalResumeTransition 是 approval resume 的原子事实迁移请求。
+// 它把 pending 终态、run 状态、幂等记录和 audit 绑定在同一个事务语义里。
+type ApprovalResumeTransition struct {
+	RunID               string
+	ResumeRef           string
+	ExpectedRunStatus   RunStatus
+	ExpectedPendingKind PendingKind
+	PendingStatus       PendingStatus
+	RunStatus           RunStatus
+	SafeError           string
+	UpdatedAt           time.Time
+	Idempotency         IdempotencyRecord
+	AuditEvent          AuditEvent
+}
+
 // LifecycleTransition 是 run 生命周期的原子事实迁移请求。
 type LifecycleTransition struct {
 	RunID               string

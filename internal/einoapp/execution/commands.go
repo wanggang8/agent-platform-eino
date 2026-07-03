@@ -122,6 +122,7 @@ type StaticCommands struct {
 	registry         *capabilities.Registry
 	policyContexts   map[string]capabilities.PolicyContext
 	checkpoints      CheckpointResolver
+	approvalStore    ApprovalCheckpointStore
 }
 
 // NewStaticCommands 创建不落 Product Facts 的静态命令替身。
@@ -191,6 +192,13 @@ func (commands StaticCommands) WithCheckpointResolver(resolver CheckpointResolve
 	return commands
 }
 
+// WithApprovalCheckpointStore 绑定 approval 中断点存储；同一个 store 也用于 resume 前安全校验。
+func (commands StaticCommands) WithApprovalCheckpointStore(store ApprovalCheckpointStore) StaticCommands {
+	commands.approvalStore = store
+	commands.checkpoints = store
+	return commands
+}
+
 // StartMessage 接收 Workbench 消息并创建 run。
 func (commands StaticCommands) StartMessage(ctx context.Context, command MessageCommand) (AcceptedRun, error) {
 	accepted, err := commands.acceptRun(ctx, command.WorkspaceID, command.RunID, command.Message)
@@ -225,7 +233,10 @@ func (commands StaticCommands) StartAction(ctx context.Context, command ActionCo
 		return accepted, nil
 	}
 	if selection.RequiresApproval {
-		return accepted, nil
+		if err := commands.requestApproval(ctx, accepted.RunID, command, selection); err != nil {
+			return AcceptedRun{}, err
+		}
+		return AcceptedRun{RunID: accepted.RunID, Status: string(facts.RunStatusWaiting)}, nil
 	}
 	if selection.Mode == SelectionModeCapability && commands.capabilityRunner != nil {
 		if err := commands.capabilityRunner.RunCapability(ctx, accepted.RunID, selection.CapabilityID, command.InputText); err != nil {
@@ -261,7 +272,7 @@ func mergePolicyContext(base capabilities.PolicyContext, override capabilities.P
 	return base
 }
 
-// Resume 校验 run 存在后接收恢复请求；完整 HITL 执行在后续 Phase 接入。
+// Resume 校验 run 存在后接收恢复请求；approval 在 Phase 6.2 通过 checkpoint continuation 继续执行。
 func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand) (AcceptedRun, error) {
 	if commands.repository != nil {
 		run, err := commands.repository.GetRun(ctx, command.RunID)
@@ -274,11 +285,18 @@ func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand
 		if run.WorkspaceID != command.WorkspaceID {
 			return AcceptedRun{}, ErrRunNotFound
 		}
+		pending, pendingErr := commands.pendingForResume(ctx, command)
+		if pendingErr == nil && pending.Kind == facts.PendingKindApproval && commands.approvalStore != nil {
+			return commands.resumeApproval(ctx, command, run, pending)
+		}
+		if pendingErr != nil && !errors.Is(pendingErr, facts.ErrNotFound) {
+			return AcceptedRun{}, pendingErr
+		}
 		if run.Status != facts.RunStatusWaiting {
 			return AcceptedRun{}, ErrResumeNotAllowed
 		}
 		if commands.checkpoints != nil {
-			if err := commands.ensureCheckpointAvailable(ctx, command); err != nil {
+			if _, _, err := commands.ensureCheckpointAvailable(ctx, command); err != nil {
 				return AcceptedRun{}, err
 			}
 		}
@@ -287,28 +305,39 @@ func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand
 }
 
 // ensureCheckpointAvailable 在消费 resume_ref 前确认内部 checkpoint 存在，避免缺失后破坏 pending。
-func (commands StaticCommands) ensureCheckpointAvailable(ctx context.Context, command ResumeCommand) error {
+func (commands StaticCommands) ensureCheckpointAvailable(ctx context.Context, command ResumeCommand) (facts.PendingInteraction, string, error) {
 	pending, err := commands.repository.GetPendingByResumeRef(ctx, command.ResumeRef)
 	if err != nil {
 		if errors.Is(err, facts.ErrNotFound) {
-			return ErrRunNotFound
+			return facts.PendingInteraction{}, "", ErrRunNotFound
 		}
-		return err
+		return facts.PendingInteraction{}, "", err
 	}
 	if pending.RunID != command.RunID {
-		return ErrRunNotFound
+		return facts.PendingInteraction{}, "", ErrRunNotFound
 	}
 	if pending.Status != facts.PendingStatusWaiting && pending.Status != facts.PendingStatusSubmitted {
-		return ErrResumeNotAllowed
+		return facts.PendingInteraction{}, "", ErrResumeNotAllowed
 	}
-	_, existed, err := commands.checkpoints.ResolveCheckpointID(ctx, pending.CheckpointRef, pending.RunID, pending.PendingID)
+	checkpointID, existed, err := commands.checkpoints.ResolveCheckpointID(ctx, pending.CheckpointRef, pending.RunID, pending.PendingID)
 	if err != nil {
-		return err
+		return facts.PendingInteraction{}, "", err
 	}
 	if !existed {
-		return ErrCheckpointMissing
+		return facts.PendingInteraction{}, "", ErrCheckpointMissing
 	}
-	return nil
+	return pending, checkpointID, nil
+}
+
+func (commands StaticCommands) pendingForResume(ctx context.Context, command ResumeCommand) (facts.PendingInteraction, error) {
+	pending, err := commands.repository.GetPendingByResumeRef(ctx, command.ResumeRef)
+	if err != nil {
+		return facts.PendingInteraction{}, err
+	}
+	if pending.RunID != command.RunID {
+		return facts.PendingInteraction{}, ErrRunNotFound
+	}
+	return pending, nil
 }
 
 // RunLifecycle 按 Product Facts 状态机执行 run 生命周期控制。

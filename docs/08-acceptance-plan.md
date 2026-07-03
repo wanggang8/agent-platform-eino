@@ -202,6 +202,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario clarification
 - clarification request、submit、cancel、duplicate、restart 后恢复均可测。
 - 澄清状态机、ActionResult waiting、SSE pending patch 和 replay/audit 必须符合 `clarification-flow.md`。
 
+Phase 6.2 当前进展：后端 approval interrupt/resume 已覆盖 requested、approved、rejected、duplicate approve、reject 后不可 approve、checkpoint missing 和 restart resume；pending UI/SSE 的产品化展示、clarification resume 和完整 replay 视觉验收仍必须在后续任务单独通过，不能由 Phase 6.2 自动声明完成。
+
 ## 安全门禁
 
 ```bash

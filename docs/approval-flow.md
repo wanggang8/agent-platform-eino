@@ -44,7 +44,6 @@
 ```text
 waiting
   -> approved
-  -> consumed
 
 waiting
   -> rejected
@@ -58,11 +57,11 @@ waiting
 
 | 当前状态 | 用户动作 | 新状态 | Run.status | 说明 |
 | --- | --- | --- | --- | --- |
-| `waiting` | approve | `approved` -> `consumed` | `running` | 恢复执行并允许一次 mutation |
-| `waiting` | reject | `rejected` | `cancelled` | 不执行 mutation |
+| `waiting` | approve | `approved` | `running` -> 终态 | 恢复执行并允许一次 mutation；mutation 结果继续更新 run 终态 |
+| `waiting` | reject | `rejected` | `failed` | 不执行 mutation，`safe_error=approval_rejected` |
 | `waiting` | cancel | `cancelled` | `cancelled` | 用户取消审批，不执行 mutation |
 | `waiting` | timeout | `expired` | `failed` | 返回安全超时摘要 |
-| `approved` / `consumed` | duplicate approve | 不变 | 当前 Run 状态 | 返回当前状态，不重复 mutation |
+| `approved` | duplicate approve | 不变 | 当前 Run 状态 | 同一 `client_request_id` 返回 accepted，不重复 mutation |
 | `rejected` / `cancelled` / `expired` | approve | 不变 | 不变 | 返回安全错误，不恢复 |
 
 ## 行为规则
@@ -70,6 +69,7 @@ waiting
 - `waiting` 时 Run.status 必须为 `waiting`。
 - 审批前 mutation count 必须为 0。
 - approve 后同一 idempotency key 最多执行一次 mutation。
+- pending 终态保留 `approved` 或 `rejected` 作为 audit/replay 事实，不再二次改写为 `consumed`。
 - reject、cancel、expired 后不得 approve。
 - 进程重启后 waiting 审批必须能恢复。
 - 审批请求、审批结果、mutation 执行结果必须进入 audit 和 replay。
@@ -89,7 +89,7 @@ waiting
     "operation_name": "更新工单状态",
     "risk_summary": "将修改外部 Fobrain 工单状态",
     "target_summary": "ticket:T-1001 -> fixed",
-    "resume_ref": "resume_ref_..."
+    "resume_ref": "resume_ref:..."
   }
 }
 ```
@@ -104,7 +104,7 @@ waiting
   "waiting": {
     "kind": "approval",
     "question": "是否批准更新工单状态？",
-    "approval_refs": ["resume_ref_..."]
+    "approval_refs": ["resume_ref:..."]
   }
 }
 ```

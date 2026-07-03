@@ -47,13 +47,22 @@ func NewToolLoopRunner(repository facts.Repository, registry *capabilities.Regis
 
 // RunCapability 执行显式选择的只读能力；工具选择本身必须来自 registry/policy。
 func (runner ToolLoopRunner) RunCapability(ctx context.Context, runID string, capabilityID string, inputText string) error {
+	return runner.runCapability(ctx, runID, capabilityID, inputText, false)
+}
+
+// RunApprovedCapability 执行已经通过人工审批的能力，仍保留凭据、scope 和 connector 策略门禁。
+func (runner ToolLoopRunner) RunApprovedCapability(ctx context.Context, runID string, capabilityID string, inputText string) error {
+	return runner.runCapability(ctx, runID, capabilityID, inputText, true)
+}
+
+func (runner ToolLoopRunner) runCapability(ctx context.Context, runID string, capabilityID string, inputText string, approvalGranted bool) error {
 	capability, ok := runner.registry.Get(capabilityID)
 	if !ok {
 		return ErrCapabilityNotRegistered
 	}
 	// 写域审批不依赖 run 或凭据，必须先短路，避免缺失 run 掩盖 HITL 门禁。
 	preflightDecision := capabilities.EvaluatePolicy(capability)
-	if preflightDecision.RequiresApproval {
+	if preflightDecision.RequiresApproval && !approvalGranted {
 		return ErrCapabilityRequiresApproval
 	}
 	policyContext, err := runner.policyContextForRun(ctx, runID, capabilityID)
@@ -61,6 +70,9 @@ func (runner ToolLoopRunner) RunCapability(ctx context.Context, runID string, ca
 		return err
 	}
 	decision := capabilities.EvaluatePolicy(capability, policyContext)
+	if approvalGranted {
+		decision = capabilities.EvaluatePolicyAfterApproval(capability, policyContext)
+	}
 	if !decision.Allowed || decision.RequiresApproval {
 		return ErrCapabilityRequiresApproval
 	}

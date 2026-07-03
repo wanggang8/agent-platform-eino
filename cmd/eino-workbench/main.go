@@ -85,9 +85,12 @@ func main() {
 
 // serviceCommands 统一装配生产命令层依赖，确保 resume/checkpoint 保护不会只存在于测试路径。
 func serviceCommands(repository facts.Repository, runner execution.Runner, toolRunner execution.CapabilityRunner, registry *capabilities.Registry, policyContexts map[string]capabilities.PolicyContext, checkpoints execution.CheckpointResolver) execution.StaticCommands {
-	return execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).
-		WithPolicyContexts(policyContexts).
-		WithCheckpointResolver(checkpoints)
+	commands := execution.NewToolRunnerCommandsWithRegistry(repository, runner, toolRunner, registry).
+		WithPolicyContexts(policyContexts)
+	if approvalStore, ok := checkpoints.(execution.ApprovalCheckpointStore); ok {
+		return commands.WithApprovalCheckpointStore(approvalStore)
+	}
+	return commands.WithCheckpointResolver(checkpoints)
 }
 
 // llmProviderFromConfig 创建模型 provider；真实密钥只传入 provider 私有边界，不进入 llm.Config。
