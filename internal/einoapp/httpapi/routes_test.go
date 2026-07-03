@@ -579,6 +579,65 @@ func TestResumeRequestParsesIntoExecutionCommand(t *testing.T) {
 	}
 }
 
+func TestResumeRequestParsesClarificationCancelAndMixedInput(t *testing.T) {
+	// 公开 resume API 必须覆盖 clarification cancel 和 mixed 输入，不能只在 execution 单元测试里可用。
+	for _, testCase := range []struct {
+		name       string
+		body       string
+		assertFunc func(t *testing.T, command execution.ResumeCommand)
+	}{
+		{
+			name: "cancel",
+			body: `{
+				"schema_version": "eino_workbench_resume_request.v1",
+				"resume_ref": "resume_ref_cancel",
+				"client_request_id": "client-resume-cancel",
+				"decision": "cancel"
+			}`,
+			assertFunc: func(t *testing.T, command execution.ResumeCommand) {
+				t.Helper()
+				if command.Decision != "cancel" {
+					t.Fatalf("decision = %q, want cancel", command.Decision)
+				}
+			},
+		},
+		{
+			name: "mixed",
+			body: `{
+				"schema_version": "eino_workbench_resume_request.v1",
+				"resume_ref": "resume_ref_mixed",
+				"client_request_id": "client-resume-mixed",
+				"selected_candidate_refs": ["candidate:fobrain:person:1"],
+				"free_text": "补充说明"
+			}`,
+			assertFunc: func(t *testing.T, command execution.ResumeCommand) {
+				t.Helper()
+				if len(command.SelectedRefs) != 1 || command.SelectedRefs[0] != "candidate:fobrain:person:1" || command.FreeText != "补充说明" {
+					t.Fatalf("mixed resume command mismatch: %+v", command)
+				}
+			},
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			projection := recordingProjection{}
+			commands := recordingCommands{acceptedRunID: "run-resume-command"}
+			server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+			defer server.Close()
+
+			resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_existing/resume", "application/json", strings.NewReader(testCase.body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d, want 200", resp.StatusCode)
+			}
+			testCase.assertFunc(t, commands.resume)
+		})
+	}
+}
+
 func TestResumeMissingRunReturnsUnifiedErrorEnvelope(t *testing.T) {
 	projection := recordingProjection{}
 	commands := recordingCommands{resumeErr: execution.ErrRunNotFound}
@@ -661,6 +720,34 @@ func TestInvalidResumeRequestReturnsUnifiedErrorEnvelope(t *testing.T) {
 	defer resp.Body.Close()
 
 	assertErrorEnvelope(t, resp, http.StatusBadRequest, "invalid_request")
+}
+
+func TestInvalidResumeDecisionWithCandidateReturnsUnifiedErrorEnvelope(t *testing.T) {
+	// HTTP 契约必须和 JSON Schema 一致：非法 decision 不能因带有 clarification 候选项而绕到 execution 层。
+	projection := recordingProjection{}
+	commands := recordingCommands{acceptedRunID: "run-resume-command"}
+	server := httptest.NewServer(httpapi.NewRouter(httpapi.Dependencies{Projection: &projection, Commands: &commands}))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/workspaces/ws_123/runs/run_existing/resume", "application/json", strings.NewReader(`{
+		"schema_version": "eino_workbench_resume_request.v1",
+		"resume_ref": "resume_ref_invalid",
+		"client_request_id": "client-resume-invalid",
+		"decision": "bogus",
+		"selected_candidate_refs": ["candidate:fobrain:person:1"]
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertErrorEnvelope(t, resp, http.StatusBadRequest, "invalid_request")
+	if commands.resume.RunID != "" {
+		t.Fatalf("resume command should not run, got %+v", commands.resume)
+	}
+	if projection.resumeCalls != 0 {
+		t.Fatalf("resume projection calls = %d", projection.resumeCalls)
+	}
 }
 
 func TestTrailingJSONReturnsUnifiedErrorEnvelope(t *testing.T) {

@@ -73,7 +73,9 @@ waiting
 
 - `waiting` 时 Run.status 为 `waiting`。
 - `submitted` 后立刻消费恢复数据；成功恢复后 PendingInteraction.status 变为 `consumed`，Run.status 变为 `running`。
+- `submit` 必须先确认 `checkpoint_ref` 绑定的内部 checkpoint 存在，缺失时不得消费 pending。
 - `cancelled` 后 Run.status 变为 `cancelled`，不得继续执行原工具。
+- `cancel` 不恢复执行，不依赖 checkpoint 存在。
 - `expired` 后不得继续 submit；用户需重新发起任务。
 - 进程重启后，`waiting` 澄清必须能从 store 恢复。
 - duplicate submit 不得重复调用工具或 mutation。
@@ -91,7 +93,7 @@ waiting
     "status": "waiting",
     "question": "请选择要查询的人员",
     "input_mode": "single_choice",
-    "resume_ref": "resume_ref_...",
+    "resume_ref": "resume_ref:...",
     "candidates": [
       {"candidate_ref": "candidate:fobrain:person:1", "label": "张三", "entity_type": "person"}
     ]
@@ -108,7 +110,7 @@ waiting
   "waiting": {
     "kind": "clarification",
     "question": "请选择要查询的人员",
-    "resume_refs": ["resume_ref_..."],
+    "resume_refs": ["resume_ref:..."],
     "input_mode": "single_choice",
     "candidates": [
       {"candidate_ref": "candidate:fobrain:person:1", "label": "张三", "entity_type": "person"}

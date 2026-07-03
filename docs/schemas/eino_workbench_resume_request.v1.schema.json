@@ -8,14 +8,14 @@
     "schema_version": {"const": "eino_workbench_resume_request.v1"},
     "resume_ref": {"type": "string"},
     "client_request_id": {"type": "string"},
-    "decision": {"enum": ["approve", "reject"]},
+    "decision": {"enum": ["approve", "reject", "cancel"]},
     "selected_candidate_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
     "free_text": {"type": "string", "minLength": 1},
     "comment": {"type": "string"}
   },
   "oneOf": [
     {
-      "title": "Approval decision resume",
+      "title": "Decision resume",
       "properties": {
         "decision": true,
         "selected_candidate_refs": false,
@@ -40,6 +40,15 @@
         "free_text": true
       },
       "required": ["free_text"]
+    },
+    {
+      "title": "Clarification mixed resume",
+      "properties": {
+        "decision": false,
+        "selected_candidate_refs": true,
+        "free_text": true
+      },
+      "required": ["selected_candidate_refs", "free_text"]
     }
   ],
   "additionalProperties": false

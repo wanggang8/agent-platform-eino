@@ -752,6 +752,8 @@ go test ./internal/einoapp/execution -run 'ApprovalInterrupt|ResumeDuplicate|Res
 创建/修改：
 
 - `internal/einoapp/execution/clarification_tool.go`
+- `internal/einoapp/facts/model.go`
+- `internal/einoapp/store/sqlite/repository.go`
 
 覆盖：
 
@@ -759,6 +761,7 @@ go test ./internal/einoapp/execution -run 'ApprovalInterrupt|ResumeDuplicate|Res
 - 候选消歧和自由文本澄清都必须转换为安全 resume data。
 - duplicate submit 幂等。
 - pending 状态进入 audit/replay。
+- 当前后端切片已实现 clarification submit/cancel：submit 校验安全 candidate refs / free text 并要求 checkpoint 存在，成功后 pending `consumed`、run `running`；cancel 不依赖 checkpoint，关闭 pending 和 run；duplicate submit 通过 `client_request_id` 幂等；过期/取消后旧 `resume_ref` 不可继续。Pending UI/SSE 视觉验收仍由 Phase 6.4 对齐。
 
 任务级检查：
 

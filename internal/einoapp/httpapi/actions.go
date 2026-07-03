@@ -354,16 +354,16 @@ func validResumeRequest(req resumeRequest) bool {
 	if req.SchemaVersion != "eino_workbench_resume_request.v1" || strings.TrimSpace(req.ResumeRef) == "" || strings.TrimSpace(req.ClientRequestID) == "" {
 		return false
 	}
-	hasDecision := req.Decision == "approve" || req.Decision == "reject"
+	hasDecision := req.Decision == "approve" || req.Decision == "reject" || req.Decision == "cancel"
 	hasCandidates := len(req.SelectedCandidateRefs) > 0
 	hasFreeText := strings.TrimSpace(req.FreeText) != ""
-	count := 0
-	for _, ok := range []bool{hasDecision, hasCandidates, hasFreeText} {
-		if ok {
-			count++
-		}
+	if req.Decision != "" && !hasDecision {
+		return false
 	}
-	return count == 1
+	if hasDecision {
+		return !hasCandidates && !hasFreeText
+	}
+	return hasCandidates || hasFreeText
 }
 
 func validLifecycleRequest(req lifecycleRequest) bool {

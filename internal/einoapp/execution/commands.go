@@ -289,6 +289,9 @@ func (commands StaticCommands) Resume(ctx context.Context, command ResumeCommand
 		if pendingErr == nil && pending.Kind == facts.PendingKindApproval && commands.approvalStore != nil {
 			return commands.resumeApproval(ctx, command, run, pending)
 		}
+		if pendingErr == nil && pending.Kind == facts.PendingKindClarification {
+			return commands.resumeClarification(ctx, command, run, pending)
+		}
 		if pendingErr != nil && !errors.Is(pendingErr, facts.ErrNotFound) {
 			return AcceptedRun{}, pendingErr
 		}

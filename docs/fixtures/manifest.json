@@ -66,6 +66,14 @@
       "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
     },
     {
+      "fixture": "docs/fixtures/resume-request-clarification-cancel.json",
+      "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
+    },
+    {
+      "fixture": "docs/fixtures/resume-request-clarification-mixed.json",
+      "schema": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
+    },
+    {
       "fixture": "docs/fixtures/pending-interaction-approval-waiting.json",
       "schema": "docs/schemas/eino_workbench_pending_interaction.v1.schema.json"
     },

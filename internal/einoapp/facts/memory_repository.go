@@ -253,7 +253,7 @@ func (repo *MemoryRepository) ApplyApprovalResume(_ context.Context, transition 
 	if ContainsUnsafeMaterial(transition.SafeError) || ContainsUnsafeMaterial(transition.AuditEvent.SafeSummary) {
 		return PendingInteraction{}, IdempotencyRecord{}, false, ErrUnsafeFactMaterial
 	}
-	if transition.Idempotency.ResourceRef != "" && transition.Idempotency.ResourceRef != transition.ResumeRef {
+	if transition.Idempotency.ResourceRef == "" || transition.Idempotency.ResourceRef != transition.ResumeRef {
 		return PendingInteraction{}, IdempotencyRecord{}, false, ErrIdempotencyConflict
 	}
 	repo.mu.Lock()
@@ -288,8 +288,58 @@ func (repo *MemoryRepository) ApplyApprovalResume(_ context.Context, transition 
 	if pending.Status != PendingStatusWaiting {
 		return PendingInteraction{}, IdempotencyRecord{}, false, ErrResumeAlreadyConsumed
 	}
+	repo.idempotency[key] = transition.Idempotency
+	pending.Status = transition.PendingStatus
+	repo.pending[transition.RunID][pendingIndex] = pending
+	run.Status = transition.RunStatus
+	run.SafeError = transition.SafeError
+	run.UpdatedAt = transition.UpdatedAt
+	repo.runs[transition.RunID] = run
+	if transition.AuditEvent.AuditID != "" {
+		repo.audit[transition.RunID] = append(repo.audit[transition.RunID], transition.AuditEvent)
+	}
+	return pending, transition.Idempotency, false, nil
+}
+
+// ApplyClarificationResume 在内存锁内原子迁移 clarification resume 事实，避免重复 submit 重复恢复。
+func (repo *MemoryRepository) ApplyClarificationResume(_ context.Context, transition ClarificationResumeTransition) (PendingInteraction, IdempotencyRecord, bool, error) {
+	if ContainsUnsafeMaterial(transition.SafeError) || ContainsUnsafeMaterial(transition.AuditEvent.SafeSummary) {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrUnsafeFactMaterial
+	}
 	if transition.Idempotency.ResourceRef == "" {
-		transition.Idempotency.ResourceRef = transition.ResumeRef
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrIdempotencyConflict
+	}
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	key := string(transition.Idempotency.Scope) + ":" + transition.Idempotency.Key
+	if existing, ok := repo.idempotency[key]; ok {
+		if existing.ResourceRef != transition.Idempotency.ResourceRef || existing.Status != transition.Idempotency.Status {
+			return PendingInteraction{}, IdempotencyRecord{}, false, ErrIdempotencyConflict
+		}
+		pending, err := repo.pendingByResumeRefLocked(transition.ResumeRef)
+		if err != nil {
+			return PendingInteraction{}, IdempotencyRecord{}, false, err
+		}
+		return pending, existing, true, nil
+	}
+	run, ok := repo.runs[transition.RunID]
+	if !ok {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrNotFound
+	}
+	if transition.ExpectedRunStatus != "" && run.Status != transition.ExpectedRunStatus {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrIdempotencyConflict
+	}
+	pendingIndex := indexPendingByResumeRef(repo.pending[transition.RunID], transition.ResumeRef)
+	if pendingIndex < 0 {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrNotFound
+	}
+	pending := repo.pending[transition.RunID][pendingIndex]
+	if transition.ExpectedPendingKind != "" && pending.Kind != transition.ExpectedPendingKind {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrIdempotencyConflict
+	}
+	if pending.Status != PendingStatusWaiting {
+		return PendingInteraction{}, IdempotencyRecord{}, false, ErrResumeAlreadyConsumed
 	}
 	repo.idempotency[key] = transition.Idempotency
 	pending.Status = transition.PendingStatus

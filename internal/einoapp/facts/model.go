@@ -234,6 +234,21 @@ type ApprovalResumeTransition struct {
 	AuditEvent          AuditEvent
 }
 
+// ClarificationResumeTransition 是 clarification submit/cancel 的原子事实迁移请求。
+// 它把安全 resume data 的结果、pending 终态、run 状态、幂等记录和 audit 绑定在同一事务语义里。
+type ClarificationResumeTransition struct {
+	RunID               string
+	ResumeRef           string
+	ExpectedRunStatus   RunStatus
+	ExpectedPendingKind PendingKind
+	PendingStatus       PendingStatus
+	RunStatus           RunStatus
+	SafeError           string
+	UpdatedAt           time.Time
+	Idempotency         IdempotencyRecord
+	AuditEvent          AuditEvent
+}
+
 // LifecycleTransition 是 run 生命周期的原子事实迁移请求。
 type LifecycleTransition struct {
 	RunID               string

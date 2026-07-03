@@ -1,0 +1,7 @@
+{
+  "schema_version": "eino_workbench_resume_request.v1",
+  "resume_ref": "resume_ref_clarification_mixed",
+  "client_request_id": "client-resume-clarification-mixed",
+  "selected_candidate_refs": ["candidate:fobrain:person:1"],
+  "free_text": "补充说明"
+}
