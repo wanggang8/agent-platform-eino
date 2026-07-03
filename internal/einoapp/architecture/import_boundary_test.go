@@ -228,13 +228,13 @@ func mustStayEinoFree(layer string) bool {
 func forbiddenImportsForLayer(layer string) []string {
 	switch layer {
 	case "httpapi":
-		return []string{"providers/fobrain", "llm", "capabilities"}
+		return []string{"providers/fobrain", "llm", "capabilities", "observability"}
 	case "execution":
 		return []string{"httpapi", "providers/fobrain"}
 	case "facts":
 		return []string{"httpapi", "execution", "product", "capabilities", "providers/fobrain", "llm", "observability"}
 	case "product":
-		return []string{"httpapi", "execution", "providers/fobrain", "llm"}
+		return []string{"httpapi", "execution", "providers/fobrain", "llm", "observability"}
 	case "capabilities":
 		return []string{"httpapi", "providers/fobrain"}
 	case "llm":

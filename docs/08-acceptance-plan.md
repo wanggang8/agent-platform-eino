@@ -238,6 +238,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 - trace/run/workspace/model/tool count/latency/token usage 至少进入内部 telemetry 或安全报告。
 - budget exceeded 必须通过 execution 层写入 Product Facts，产生 `budget_exceeded` 安全失败摘要，取消 active tool，关闭 waiting pending，并可 replay。
 - replay events 必须包含安全 `event_type=budget` audit event，且不得泄漏 raw prompt、secret、Authorization、API key、provider payload 或 reusable resume token。
+- 内部 telemetry 事件不得进入 Product Facts、Workbench SSE 或 Action API；字段只能包含安全 label、latency、token/tool count 和 failure category。
+- 预算阈值必须来自配置或 policy，评估器只能返回安全 decision，不能直接绕过 lifecycle 写 run 状态。
 - callback 只用于 tracing、metrics、diagnostics，不作为主 SSE 来源。
 - audit 与 replay 仍从 Product Facts 投影。
 

@@ -119,8 +119,11 @@ type ObservabilityConfig struct {
 
 // BudgetConfig 定义默认执行预算，供后续 run/tool 超时使用。
 type BudgetConfig struct {
-	DefaultTimeout time.Duration `yaml:"default_timeout"`
-	MaxToolTimeout time.Duration `yaml:"max_tool_timeout"`
+	DefaultTimeout       time.Duration `yaml:"default_timeout"`
+	MaxToolTimeout       time.Duration `yaml:"max_tool_timeout"`
+	MaxModelCallsPerRun  int           `yaml:"max_model_calls_per_run"`
+	MaxToolCallsPerRun   int           `yaml:"max_tool_calls_per_run"`
+	MaxInputTokensPerRun int           `yaml:"max_input_tokens_per_run"`
 }
 
 // CapabilityConfig 定义由配置文件注册的能力元数据，不包含 provider raw payload。
@@ -266,6 +269,15 @@ func (cfg Config) Validate() error {
 	if cfg.Budgets.MaxToolTimeout <= 0 {
 		return errors.New("budgets.max_tool_timeout must be positive")
 	}
+	if cfg.Budgets.MaxModelCallsPerRun <= 0 {
+		return errors.New("budgets.max_model_calls_per_run must be positive")
+	}
+	if cfg.Budgets.MaxToolCallsPerRun <= 0 {
+		return errors.New("budgets.max_tool_calls_per_run must be positive")
+	}
+	if cfg.Budgets.MaxInputTokensPerRun <= 0 {
+		return errors.New("budgets.max_input_tokens_per_run must be positive")
+	}
 	for index, capability := range cfg.Capabilities {
 		if strings.TrimSpace(capability.ID) == "" {
 			return fmt.Errorf("capabilities[%d].id is required", index)
@@ -369,6 +381,20 @@ func validateMCPProjectPolicy(policy MCPProjectPolicyConfig, serverIndex int, to
 func (cfg *Config) applyDerivedDefaults() {
 	cfg.LLM.applyDerivedDefaults()
 	cfg.Fobrain.applyDerivedDefaults()
+	cfg.Budgets.applyDerivedDefaults()
+}
+
+// applyDerivedDefaults 为新增预算计数字段提供安全默认值，避免旧本地配置升级时启动失败。
+func (cfg *BudgetConfig) applyDerivedDefaults() {
+	if cfg.MaxModelCallsPerRun == 0 {
+		cfg.MaxModelCallsPerRun = 8
+	}
+	if cfg.MaxToolCallsPerRun == 0 {
+		cfg.MaxToolCallsPerRun = 24
+	}
+	if cfg.MaxInputTokensPerRun == 0 {
+		cfg.MaxInputTokensPerRun = 32000
+	}
 }
 
 // applyDerivedDefaults 派生 model label、timeout_ms、credential binding 和网络安全默认值。
@@ -623,8 +649,11 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 			"enable_request_log": cfg.Observability.EnableRequestLog,
 		},
 		"budgets": map[string]any{
-			"default_timeout":  cfg.Budgets.DefaultTimeout.String(),
-			"max_tool_timeout": cfg.Budgets.MaxToolTimeout.String(),
+			"default_timeout":         cfg.Budgets.DefaultTimeout.String(),
+			"max_tool_timeout":        cfg.Budgets.MaxToolTimeout.String(),
+			"max_model_calls_per_run": cfg.Budgets.MaxModelCallsPerRun,
+			"max_tool_calls_per_run":  cfg.Budgets.MaxToolCallsPerRun,
+			"max_input_units_per_run": cfg.Budgets.MaxInputTokensPerRun,
 		},
 		"capabilities": redactedCapabilitySummaries(cfg.Capabilities),
 	}

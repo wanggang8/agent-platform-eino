@@ -35,6 +35,9 @@ observability:
 budgets:
   default_timeout: "11s"
   max_tool_timeout: "22s"
+  max_model_calls_per_run: 3
+  max_tool_calls_per_run: 5
+  max_input_tokens_per_run: 4096
 capabilities:
   - id: "cap.smoke.read"
     provider_id: "phase3-smoke"
@@ -77,11 +80,90 @@ capabilities:
 	if len(cfg.Capabilities) != 1 || cfg.Capabilities[0].ID != "cap.smoke.read" {
 		t.Fatalf("capabilities were not loaded from local config: %+v", cfg.Capabilities)
 	}
+	if cfg.Budgets.MaxModelCallsPerRun != 3 || cfg.Budgets.MaxToolCallsPerRun != 5 || cfg.Budgets.MaxInputTokensPerRun != 4096 {
+		t.Fatalf("budget counters were not loaded: %+v", cfg.Budgets)
+	}
 	if cfg.Capabilities[0].SideEffect != "read_external" ||
 		cfg.Capabilities[0].PolicyRef != "policy:smoke:read:v1" ||
 		cfg.Capabilities[0].PermissionScope != "workspace" ||
 		cfg.Capabilities[0].CredentialBindingPolicy != "none" {
 		t.Fatalf("capability policy fields were not loaded: %+v", cfg.Capabilities[0])
+	}
+}
+
+func TestConfigAppliesDefaultBudgetCounters(t *testing.T) {
+	// 新增预算计数字段必须能从旧配置安全派生默认值，避免本地配置升级时直接启动失败。
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+`)
+
+	cfg, err := bootstrap.LoadConfig(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Budgets.MaxModelCallsPerRun <= 0 || cfg.Budgets.MaxToolCallsPerRun <= 0 || cfg.Budgets.MaxInputTokensPerRun <= 0 {
+		t.Fatalf("default budget counters not applied: %+v", cfg.Budgets)
+	}
+	summary := cfg.RedactedSummary()
+	budgets, ok := summary["budgets"].(map[string]any)
+	if !ok {
+		t.Fatalf("budget summary missing: %+v", summary)
+	}
+	if budgets["max_model_calls_per_run"] == nil || budgets["max_tool_calls_per_run"] == nil || budgets["max_input_units_per_run"] == nil {
+		t.Fatalf("budget counter summary missing: %+v", budgets)
+	}
+	encoded := summary.String()
+	for _, forbidden := range []string{"token", "api_key", "api_token"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("budget summary leaked %q: %s", forbidden, encoded)
+		}
+	}
+}
+
+func TestConfigValidationRejectsNegativeBudgetCounter(t *testing.T) {
+	// 用户显式写错的负数预算不能被默认值静默覆盖，否则会掩盖配置错误。
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+  max_model_calls_per_run: -1
+`)
+
+	_, err := bootstrap.LoadConfig(path)
+	if err == nil || !strings.Contains(err.Error(), "budgets.max_model_calls_per_run") {
+		t.Fatalf("negative budget counter err = %v", err)
 	}
 }
 

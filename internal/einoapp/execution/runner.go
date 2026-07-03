@@ -8,6 +8,7 @@ import (
 
 	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/llm"
+	"agent-platform-eino/internal/einoapp/observability"
 	"github.com/cloudwego/eino/adk"
 	einomodel "github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/schema"
@@ -15,7 +16,8 @@ import (
 
 // ChatModelRunnerConfig 提供可替换时间源，保证 Runner 写入事实的测试稳定。
 type ChatModelRunnerConfig struct {
-	Now func() time.Time
+	Now       func() time.Time
+	Telemetry observability.Sink
 }
 
 // ChatModelRunner 使用 Eino ChatModelAgent 执行一次对话，并把事件落入 Product Facts。
@@ -24,6 +26,7 @@ type ChatModelRunner struct {
 	provider   llm.Provider
 	config     llm.Config
 	now        func() time.Time
+	telemetry  observability.Sink
 }
 
 // NewChatModelRunner 创建 Phase 3 的 Eino ChatModel runner。
@@ -32,11 +35,16 @@ func NewChatModelRunner(repository facts.Repository, provider llm.Provider, conf
 	if now == nil {
 		now = func() time.Time { return time.Now().UTC() }
 	}
+	telemetry := runnerConfig.Telemetry
+	if telemetry == nil {
+		telemetry = observability.NoopSink{}
+	}
 	return ChatModelRunner{
 		repository: repository,
 		provider:   provider,
 		config:     config,
 		now:        now,
+		telemetry:  telemetry,
 	}
 }
 
@@ -45,14 +53,36 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	if err := runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusRunning, "", runner.now()); err != nil {
 		return err
 	}
+	run, err := runner.repository.GetRun(ctx, runID)
+	if err != nil {
+		return err
+	}
+	telemetryStartedAt := runner.now()
+	failureCategory := ""
+	defer func() {
+		// telemetry 是内部诊断，不得因观测失败影响 Product Facts 执行结果。
+		_ = runner.telemetry.Record(ctx, observability.Event{
+			TraceID:         runID,
+			RunID:           runID,
+			WorkspaceID:     run.WorkspaceID,
+			OperationName:   "chat.model.generate",
+			Provider:        runner.config.Provider,
+			Model:           telemetryModelLabel(runner.config),
+			LatencyMS:       positiveLatencyMillis(telemetryStartedAt, runner.now()),
+			FailureCategory: failureCategory,
+			CreatedAt:       runner.now(),
+		})
+	}()
 	projector := NewContextProjector(runner.repository, ContextProjectorConfig{Now: runner.now})
 	safeContext, err := projector.Project(ctx, runID)
 	if err != nil {
+		failureCategory = "context_projection"
 		return err
 	}
 
 	model, err := runner.provider.NewChatModel(ctx, runner.config)
 	if err != nil {
+		failureCategory = "provider_config"
 		return err
 	}
 	agent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
@@ -65,6 +95,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		MaxIterations: 1,
 	})
 	if err != nil {
+		failureCategory = "agent_config"
 		return err
 	}
 
@@ -73,6 +104,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	mapper := NewEventMapper(runner.repository, EventMapperConfig{Now: runner.now})
 	sequence, err := nextSequence(ctx, runner.repository, runID)
 	if err != nil {
+		failureCategory = "sequence"
 		return err
 	}
 	assistantWritten := false
@@ -83,6 +115,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		}
 		if event.Err != nil {
 			_ = runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusFailed, "模型执行失败", runner.now())
+			failureCategory = "model_error"
 			return event.Err
 		}
 		for _, runnerEvent := range EinoAgentEventToRunnerEvents(runID, sequence, event) {
@@ -90,6 +123,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 				continue
 			}
 			if err := mapper.Map(ctx, runnerEvent); err != nil {
+				failureCategory = "event_mapping"
 				return err
 			}
 			if runnerEvent.Kind == RunnerEventAssistantMessage {
@@ -99,6 +133,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	}
 	if !assistantWritten {
 		_ = runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusFailed, "模型未返回可展示内容", runner.now())
+		failureCategory = "empty_response"
 		return errors.New("chat model returned no assistant message")
 	}
 	if err := runner.repository.AppendAuditEvent(ctx, facts.AuditEvent{
@@ -109,9 +144,29 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		Actor:       "model",
 		CreatedAt:   runner.now(),
 	}); err != nil {
+		failureCategory = "audit_write"
 		return err
 	}
-	return runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusSucceeded, "", runner.now())
+	if err := runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusSucceeded, "", runner.now()); err != nil {
+		failureCategory = "run_status"
+		return err
+	}
+	return nil
+}
+
+func positiveLatencyMillis(start time.Time, end time.Time) int64 {
+	latency := end.Sub(start).Milliseconds()
+	if latency <= 0 {
+		return 1
+	}
+	return latency
+}
+
+func telemetryModelLabel(config llm.Config) string {
+	if config.ModelLabel != "" {
+		return config.ModelLabel
+	}
+	return config.Model
 }
 
 // einoModelAdapter 把项目 llm.ChatModel 适配为 Eino BaseChatModel。

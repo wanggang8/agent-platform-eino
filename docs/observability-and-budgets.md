@@ -29,6 +29,8 @@ Callback 不用于：
 - 保存 raw provider payload 到 Product Facts。
 - 绕过 Safety Gate 输出 assistant 或 tool result。
 
+当前实现提供内部 `observability.Sink` 和内存测试 sink。ChatModelRunner 会记录 `chat.model.generate` 的安全 telemetry 事件，包含 run/workspace、provider/model label、latency、token/tool count 字段和 failure category；该事件不进入 Product Facts、Workbench SSE、ActionResult 或 Replay。真实 Eino callback adapter 与 OpenTelemetry exporter 仍需后续接入。
+
 ## Trace 字段
 
 最小 telemetry 字段：
@@ -62,6 +64,8 @@ P0/P1 最小预算：
 P2 可增加 cost estimate、workspace quota、rate limit 和 per-connector budgets。
 
 当前 Phase 7.2 最小实现先固定预算终态入口：execution lifecycle 接收 `budget_exceeded`，只允许作用于 `running` 或 `waiting` run；系统将 run 标记为 `failed`、写入 `safe_error=budget_exceeded`、取消 active tool、过期 waiting pending，并追加安全 `event_type=budget` audit event。该入口代表已由预算判断层触发的安全结果，不在 HTTP、前端或 telemetry 中直接写 Product Facts。完整 Eino callback、token/cost 估算、workspace quota 和 rate limit 仍需后续任务实现。
+
+当前配置文件支持 `max_model_calls_per_run`、`max_tool_calls_per_run` 和 `max_input_tokens_per_run`。execution 预算评估器只返回安全 `BudgetDecision`；调用方必须再通过 `budget_exceeded` lifecycle 写入 Product Facts，不能由 telemetry 或 HTTP 直接修改产品状态。
 
 ## Product Audit
 
