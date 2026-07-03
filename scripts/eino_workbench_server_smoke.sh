@@ -92,10 +92,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification|clarification)
-    ;;
-  budget)
-    not_implemented "Phase 7"
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification|clarification|budget)
     ;;
   fobrain-readonly|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
     not_implemented "Phase 8"
@@ -830,6 +827,91 @@ assert pending_status == ("expired",), pending_status
 PY
 
   echo "run-lifecycle smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "budget" ]]; then
+  # Phase 7.2 最小预算门禁：预算超限必须落 Product Facts、audit 和 replay，不由 telemetry 直接驱动产品出口。
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_workbench_message_request.v1","message":"budget smoke","client_request_id":"client-run-budget","run_id":"run-budget-smoke"}' \
+    "${base_url}/api/workspaces/ws_smoke/messages" \
+    -o "${message_json}"
+  python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, time, sys
+db_path = sys.argv[1]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute("update runs set status = ?, safe_error = '', updated_at = ? where run_id = ?", ("running", now, "run-budget-smoke"))
+    conn.execute(
+        "insert into tool_calls(tool_call_id, run_id, tool_id, display_name, status, args_hash, args_preview, created_at, ended_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ("call-budget-1", "run-budget-smoke", "cap.smoke.read", "只读查询", "running", "", "scope=smoke", now, ""),
+    )
+PY
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_run_lifecycle_request.v1","action":"budget_exceeded","client_request_id":"client-budget-exceeded"}' \
+    "${base_url}/api/workspaces/ws_smoke/runs/run-budget-smoke/lifecycle" \
+    -o "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-budget-smoke/replay" -o "${replay_json}"
+  python3 - "${capability_json}" "${replay_json}" <<'PY'
+import json, sys
+action = json.load(open(sys.argv[1]))
+replay = json.load(open(sys.argv[2]))
+payload = json.dumps([action, replay], ensure_ascii=False).lower()
+for forbidden in ("authorization", "api_key", "api_token", "provider_payload", "raw_payload", "raw prompt", "raw provider", "raw body", "bearer "):
+    assert forbidden not in payload, forbidden
+assert action["schema_version"] == "eino_action_result.v1"
+assert action["status"] == "failed", action
+assert replay["view"]["status"] == "failed", replay["view"]
+assert replay["view"]["inspector"]["runtime"]["safe_error"] == "budget_exceeded", replay["view"]["inspector"]["runtime"]
+assert any(event.get("event_type") == "budget" and event.get("safe_summary") == "budget exceeded" for event in replay["events"] if isinstance(event, dict)), replay["events"]
+tool_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1 and tool_cards[0]["status"] == "cancelled", tool_cards
+PY
+
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_workbench_message_request.v1","message":"budget pending smoke","client_request_id":"client-run-budget-pending","run_id":"run-budget-pending-smoke"}' \
+    "${base_url}/api/workspaces/ws_smoke/messages" \
+    -o "${message_json}"
+  python3 - "${tmp_dir}/eino-workbench.db" <<'PY'
+import sqlite3, time, sys
+db_path = sys.argv[1]
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+with sqlite3.connect(db_path) as conn:
+    conn.execute("update runs set status = ?, safe_error = '', updated_at = ? where run_id = ?", ("waiting", now, "run-budget-pending-smoke"))
+    conn.execute(
+        "insert into pending_interactions(pending_id, run_id, kind, status, resume_ref, checkpoint_ref, question, operation_name, risk_summary, target_summary, input_mode, candidates_json, expires_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ("pending-budget-1", "run-budget-pending-smoke", "approval", "waiting", "resume-safe-budget-smoke", "checkpoint_ref:budget-smoke", "是否批准？", "预算验收操作", "预算等待态验收", "目标已脱敏", "", "[]", ""),
+    )
+PY
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_run_lifecycle_request.v1","action":"budget_exceeded","client_request_id":"client-budget-pending-exceeded"}' \
+    "${base_url}/api/workspaces/ws_smoke/runs/run-budget-pending-smoke/lifecycle" \
+    -o "${capability_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/run-budget-pending-smoke/replay" -o "${replay_json}"
+  python3 - "${tmp_dir}/eino-workbench.db" "${capability_json}" "${replay_json}" <<'PY'
+import json, sqlite3, sys
+db_path, action_path, replay_path = sys.argv[1], sys.argv[2], sys.argv[3]
+action = json.load(open(action_path))
+replay = json.load(open(replay_path))
+payload = json.dumps([action, replay], ensure_ascii=False).lower()
+for forbidden in ("authorization", "api_key", "api_token", "provider_payload", "raw_payload", "raw prompt", "raw provider", "raw body", "bearer ", "checkpoint_ref:"):
+    assert forbidden not in payload, forbidden
+assert action["run_id"] == "run-budget-pending-smoke", action
+assert action["status"] == "failed", action
+assert replay["view"]["status"] == "failed", replay["view"]
+assert replay["view"]["inspector"]["runtime"]["safe_error"] == "budget_exceeded", replay["view"]["inspector"]["runtime"]
+pending_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "approval_card" and item.get("pending_id") == "pending-budget-1"]
+assert len(pending_cards) == 1 and pending_cards[0]["status"] == "expired", pending_cards
+with sqlite3.connect(db_path) as conn:
+    pending_status = conn.execute("select status from pending_interactions where pending_id = ?", ("pending-budget-1",)).fetchone()[0]
+assert pending_status == "expired", pending_status
+assert any(event.get("event_type") == "budget" and event.get("safe_summary") == "budget exceeded" for event in replay["events"] if isinstance(event, dict)), replay["events"]
+PY
+  echo "budget smoke passed"
   exit 0
 fi
 

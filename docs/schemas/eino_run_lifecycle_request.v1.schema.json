@@ -8,7 +8,7 @@
     "schema_version": {"const": "eino_run_lifecycle_request.v1"},
     "action": {
       "type": "string",
-      "enum": ["cancel", "stop", "provider_timeout", "pending_timeout", "retry"]
+      "enum": ["cancel", "stop", "provider_timeout", "pending_timeout", "budget_exceeded", "retry"]
     },
     "client_request_id": {"type": "string", "minLength": 1}
   },

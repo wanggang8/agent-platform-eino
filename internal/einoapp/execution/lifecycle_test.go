@@ -140,6 +140,83 @@ func TestRunPendingTimeoutExpiresWaitingPending(t *testing.T) {
 	}
 }
 
+func TestRunBudgetExceededFailsRunAndWritesAudit(t *testing.T) {
+	// budget exceeded 是系统安全停止信号，必须关闭 active tool/pending 并进入可 replay 的 Product Facts。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	commands := execution.NewFactCommands(repository)
+	createRun(t, repository, "run-budget", "ws-life", facts.RunStatusRunning, "")
+	appendRunningTool(t, repository, "run-budget", "call-budget-1")
+
+	accepted, err := commands.RunLifecycle(ctx, execution.LifecycleCommand{
+		WorkspaceID:     "ws-life",
+		RunID:           "run-budget",
+		Action:          execution.LifecycleActionBudgetExceeded,
+		ClientRequestID: "client-budget-1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if accepted.Status != string(facts.RunStatusFailed) {
+		t.Fatalf("budget result = %+v", accepted)
+	}
+	snapshot, err := repository.GetSnapshot(ctx, "run-budget")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Run.Status != facts.RunStatusFailed || snapshot.Run.SafeError != "budget_exceeded" {
+		t.Fatalf("run after budget exceeded = %+v", snapshot.Run)
+	}
+	if len(snapshot.ToolCalls) != 1 || snapshot.ToolCalls[0].Status != facts.ToolCallCancelled {
+		t.Fatalf("tool after budget exceeded = %+v", snapshot.ToolCalls)
+	}
+	if len(snapshot.AuditEvents) == 0 || snapshot.AuditEvents[len(snapshot.AuditEvents)-1].EventType != "budget" {
+		t.Fatalf("budget audit missing: %+v", snapshot.AuditEvents)
+	}
+}
+
+func TestRunBudgetExceededExpiresWaitingPending(t *testing.T) {
+	// 等待人工交互时预算超限必须关闭 pending，防止旧 resume_ref 在预算终态后继续使用。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	commands := execution.NewFactCommands(repository)
+	createRun(t, repository, "run-budget-pending", "ws-life", facts.RunStatusWaiting, "")
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-budget-1",
+		RunID:         "run-budget-pending",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusWaiting,
+		ResumeRef:     "resume-safe-budget",
+		CheckpointRef: "checkpoint_ref:budget",
+		Question:      "是否批准？",
+		OperationName: "预算测试操作",
+		RiskSummary:   "预算测试",
+		TargetSummary: "目标已脱敏",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := commands.RunLifecycle(ctx, execution.LifecycleCommand{
+		WorkspaceID:     "ws-life",
+		RunID:           "run-budget-pending",
+		Action:          execution.LifecycleActionBudgetExceeded,
+		ClientRequestID: "client-budget-pending",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := repository.GetSnapshot(ctx, "run-budget-pending")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Run.Status != facts.RunStatusFailed || snapshot.Run.SafeError != "budget_exceeded" {
+		t.Fatalf("run after pending budget exceeded = %+v", snapshot.Run)
+	}
+	if len(snapshot.PendingInteractions) != 1 || snapshot.PendingInteractions[0].Status != facts.PendingStatusExpired {
+		t.Fatalf("pending after budget exceeded = %+v", snapshot.PendingInteractions)
+	}
+}
+
 func TestRunRetryPolicyCreatesNewRunForRetryableFailure(t *testing.T) {
 	// retry 只能基于安全失败摘要创建新 run，不复用旧 resume_ref 或旧 run 状态。
 	ctx := context.Background()

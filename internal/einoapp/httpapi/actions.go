@@ -371,7 +371,7 @@ func validLifecycleRequest(req lifecycleRequest) bool {
 		return false
 	}
 	switch execution.LifecycleAction(req.Action) {
-	case execution.LifecycleActionCancel, execution.LifecycleActionStop, execution.LifecycleActionProviderTimeout, execution.LifecycleActionPendingTimeout, execution.LifecycleActionRetry:
+	case execution.LifecycleActionCancel, execution.LifecycleActionStop, execution.LifecycleActionProviderTimeout, execution.LifecycleActionPendingTimeout, execution.LifecycleActionBudgetExceeded, execution.LifecycleActionRetry:
 		return true
 	default:
 		return false

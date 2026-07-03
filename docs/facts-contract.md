@@ -128,7 +128,7 @@ clarification 候选不得包含 raw provider id、手机号、邮箱、credenti
 | --- | --- | --- | --- |
 | `audit_id` | 项目生成 | 是 | 审计事件 id |
 | `run_id` | Run | 是 | 关联运行 |
-| `event_type` | Product Facts | 是 | message/tool/pending/resume/safety/error |
+| `event_type` | Product Facts | 是 | message/tool/pending/resume/approval/clarification/lifecycle/budget/safety/error |
 | `safe_summary` | Safety Gate | 是 | 安全摘要 |
 | `actor` | auth/context | 是 | user/system/tool |
 | `redaction` | Safety Gate | 是 | 脱敏策略说明 |

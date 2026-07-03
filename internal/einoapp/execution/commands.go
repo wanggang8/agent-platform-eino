@@ -32,6 +32,7 @@ const (
 	LifecycleActionStop            LifecycleAction = "stop"
 	LifecycleActionProviderTimeout LifecycleAction = "provider_timeout"
 	LifecycleActionPendingTimeout  LifecycleAction = "pending_timeout"
+	LifecycleActionBudgetExceeded  LifecycleAction = "budget_exceeded"
 	LifecycleActionRetry           LifecycleAction = "retry"
 )
 
@@ -385,6 +386,11 @@ func (commands StaticCommands) RunLifecycle(ctx context.Context, command Lifecyc
 			return AcceptedRun{}, ErrLifecycleNotAllowed
 		}
 		return commands.transitionRun(ctx, snapshot, facts.RunStatusFailed, "pending_timeout", facts.PendingStatusExpired, "", nil)
+	case LifecycleActionBudgetExceeded:
+		if snapshot.Run.Status != facts.RunStatusRunning && snapshot.Run.Status != facts.RunStatusWaiting {
+			return AcceptedRun{}, ErrLifecycleNotAllowed
+		}
+		return commands.transitionRunWithAudit(ctx, snapshot, facts.RunStatusFailed, "budget_exceeded", facts.PendingStatusExpired, facts.ToolCallCancelled, activeToolCallIDs(snapshot), "budget", "budget exceeded")
 	case LifecycleActionRetry:
 		return commands.retryRun(ctx, command, snapshot)
 	default:
@@ -394,6 +400,11 @@ func (commands StaticCommands) RunLifecycle(ctx context.Context, command Lifecyc
 
 // transitionRun 更新 run 状态，并按需关闭 waiting pending，保证旧 resume_ref 不再可继续。
 func (commands StaticCommands) transitionRun(ctx context.Context, snapshot facts.Snapshot, status facts.RunStatus, safeError string, pendingStatus facts.PendingStatus, toolStatus facts.ToolCallStatus, toolCallIDs []string) (AcceptedRun, error) {
+	return commands.transitionRunWithAudit(ctx, snapshot, status, safeError, pendingStatus, toolStatus, toolCallIDs, "lifecycle", "run lifecycle: "+string(status))
+}
+
+// transitionRunWithAudit 复用同一终态迁移事务，并允许 budget 等系统事件写入独立 audit 类型。
+func (commands StaticCommands) transitionRunWithAudit(ctx context.Context, snapshot facts.Snapshot, status facts.RunStatus, safeError string, pendingStatus facts.PendingStatus, toolStatus facts.ToolCallStatus, toolCallIDs []string, eventType string, safeSummary string) (AcceptedRun, error) {
 	now := time.Now().UTC()
 	pendingIDs := []string(nil)
 	if pendingStatus != "" {
@@ -416,8 +427,8 @@ func (commands StaticCommands) transitionRun(ctx context.Context, snapshot facts
 		AuditEvent: facts.AuditEvent{
 			AuditID:     snapshot.Run.RunID + ":audit:lifecycle:" + string(status),
 			RunID:       snapshot.Run.RunID,
-			EventType:   "lifecycle",
-			SafeSummary: "run lifecycle: " + string(status),
+			EventType:   eventType,
+			SafeSummary: safeSummary,
 			Actor:       "system",
 			CreatedAt:   now,
 		},

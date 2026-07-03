@@ -61,6 +61,8 @@ P0/P1 最小预算：
 
 P2 可增加 cost estimate、workspace quota、rate limit 和 per-connector budgets。
 
+当前 Phase 7.2 最小实现先固定预算终态入口：execution lifecycle 接收 `budget_exceeded`，只允许作用于 `running` 或 `waiting` run；系统将 run 标记为 `failed`、写入 `safe_error=budget_exceeded`、取消 active tool、过期 waiting pending，并追加安全 `event_type=budget` audit event。该入口代表已由预算判断层触发的安全结果，不在 HTTP、前端或 telemetry 中直接写 Product Facts。完整 Eino callback、token/cost 估算、workspace quota 和 rate limit 仍需后续任务实现。
+
 ## Product Audit
 
 必须写入 audit 的事件：

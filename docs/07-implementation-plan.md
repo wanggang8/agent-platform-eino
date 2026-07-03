@@ -859,11 +859,13 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 - audit event 不包含 raw prompt、secret、Authorization、raw provider body 或 reusable resume token。
 - callback 只进入 telemetry/internal diagnostics，不驱动主 SSE。
 - model call、tool call、run duration、context token 预算超限后安全停止或返回 partial result。
+- 当前最小切片已打开 `budget` smoke：`budget_exceeded` 作为 execution lifecycle action 接收预算超限信号，只允许作用于 `running`/`waiting` run，失败 run、取消 active tool、expire waiting pending，并写入 `event_type=budget` 的安全 audit event；完整 Eino callback、token/cost 估算和 workspace quota 仍属后续硬化范围。
 
 任务级检查：
 
 ```bash
 go test ./internal/einoapp/... -run 'Audit|Safety|Leak|Redaction|Telemetry|Budget' -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario budget
 ```
 
 ### Task 7.3 Replay API

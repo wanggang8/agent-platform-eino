@@ -193,12 +193,13 @@ export type JsonValue = JsonPrimitive | { readonly [key: string]: JsonValue } | 
 
 export type RunStatus = "created" | "running" | "waiting" | "succeeded" | "failed" | "cancelled" | "stopped";
 export type ActionStatus = "accepted" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "stopped" | "denied" | "blocked";
-export type RunLifecycleAction = "cancel" | "stop" | "provider_timeout" | "pending_timeout" | "retry";
+export type RunLifecycleAction = "cancel" | "stop" | "provider_timeout" | "pending_timeout" | "budget_exceeded" | "retry";
 export type TimelineKind = "user_message" | "assistant_message" | "tool_card" | "approval_card" | "clarification_card" | "run_notice";
 export type InspectorTab = "evidence" | "structured" | "runtime" | "audit";
 export type PendingKind = "approval" | "clarification";
 export type PendingStatus = "waiting" | "submitted" | "approved" | "rejected" | "cancelled" | "expired" | "consumed";
 export type StreamEventType = "message.delta" | "message.updated" | "tool.updated" | "pending.updated" | "run.updated" | "view.replaced" | "audit.updated";
+export type AuditEventType = "message" | "tool" | "pending" | "resume" | "approval" | "clarification" | "lifecycle" | "budget" | "safety" | "error";
 export type DisplayType = "entity_collection" | "entity_detail" | "metrics_summary" | "operation_result" | "connector_status" | "entity_resolution";
 export type StructuredStatus = "resolved" | "waiting" | "pending_approval" | "not_found" | "empty" | "failed" | "partial";
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
@@ -321,7 +322,7 @@ export type AuditEvent = {
   readonly schema_version: "eino_audit_event.v1";
   readonly audit_id: string;
   readonly run_id: string;
-  readonly event_type: string;
+  readonly event_type: AuditEventType;
   readonly safe_summary: string;
   readonly actor: string;
   readonly created_at: string;

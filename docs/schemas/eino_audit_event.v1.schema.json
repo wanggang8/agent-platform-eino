@@ -8,7 +8,7 @@
     "schema_version": {"const": "eino_audit_event.v1"},
     "audit_id": {"type": "string"},
     "run_id": {"type": "string"},
-    "event_type": {"enum": ["message", "tool", "pending", "resume", "approval", "clarification", "safety", "error"]},
+    "event_type": {"enum": ["message", "tool", "pending", "resume", "approval", "clarification", "lifecycle", "budget", "safety", "error"]},
     "safe_summary": {"type": "string"},
     "actor": {"enum": ["user", "system", "tool", "model"]},
     "redaction": {"type": "string"},

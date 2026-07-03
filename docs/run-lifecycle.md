@@ -35,7 +35,10 @@ Run
 | stop | 用户或系统 | 当前 run 进入 `stopped`；保留已完成事实；不得新增业务工具结果。 |
 | provider timeout | 系统 | 当前 tool 进入 `failed`；run 根据是否可继续转 `failed` 或 partial safe result。 |
 | pending timeout | 系统 | pending 进入 `expired`；run 进入 `failed`，用户需重新发起。 |
+| budget exceeded | 系统 | 预算判断层已确认超限后触发；`running`/`waiting` run 进入 `failed`，写入 `safe_error=budget_exceeded`，active tool 进入 `cancelled`，waiting pending 进入 `expired`，并写入 `event_type=budget` audit。 |
 | checkpoint missing | 系统 | resume 失败，run 进入安全失败或保持 waiting 并返回安全错误，按实现阶段门禁固定。 |
+
+终态 run 对重复 lifecycle 请求保持幂等 no-op，返回当前事实投影，不再重新写 audit、tool 或 pending。`budget_exceeded` 的“只允许 running/waiting”指会改变事实的有效状态范围；对已终态 run 发送该 action 只能得到当前终态投影。
 
 ## Retry
 
@@ -73,6 +76,7 @@ Replay 从 Product Facts 重建：
 - stop running run 进入 `stopped` 并可 replay。
 - provider timeout 产生安全错误，不泄漏 raw provider body。
 - pending timeout 后不得 submit/approve。
+- budget exceeded 后 active tool 取消、waiting pending 过期、audit/replay 同源且不泄漏 raw 或 credential。
 - duplicate resume/approve/cancel 幂等。
 - mutation approval 后最多执行一次。
 
