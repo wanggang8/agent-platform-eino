@@ -65,6 +65,22 @@ describe("WorkbenchShell", () => {
     expect(visibleText).toContain("未知");
     expect(visibleText).not.toContain("provider_unknown_state");
   });
+
+  it("renders terminal pending cards as readonly product records", () => {
+    // 终态 pending 只能作为审计/回放记录展示，不能继续提供恢复动作。
+    const view = {
+      ...workbenchFixtures.approval,
+      timeline: workbenchFixtures.approval.timeline.map((item) =>
+        item.kind === "approval_card" ? { ...item, status: "cancelled" } : item
+      )
+    };
+
+    renderWithClient(<WorkbenchShell view={view} />);
+
+    expect(screen.getByText("已取消")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "批准并提交" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "拒绝" })).not.toBeInTheDocument();
+  });
 });
 
 function productText(element: HTMLElement) {

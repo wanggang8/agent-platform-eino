@@ -301,6 +301,62 @@ func TestFactsProjectionProjectsClarificationCandidatesFromProductFacts(t *testi
 	}
 }
 
+func TestFactsProjectionProjectsTerminalPendingAsReadonly(t *testing.T) {
+	// 终态 pending 只能用于产品回放和审计展示，SSE patch 不继续暴露旧 resume_ref。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	now := time.Unix(400, 0).UTC()
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-terminal-pending",
+		WorkspaceID: "ws-demo",
+		Status:      facts.RunStatusCancelled,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		SafeError:   "approval_cancelled",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repository.AppendPendingInteraction(ctx, facts.PendingInteraction{
+		PendingID:     "pending-terminal-1",
+		RunID:         "run-terminal-pending",
+		Kind:          facts.PendingKindApproval,
+		Status:        facts.PendingStatusCancelled,
+		ResumeRef:     "resume_ref_terminal",
+		CheckpointRef: "checkpoint_ref:terminal",
+		OperationName: "更新工单状态",
+		RiskSummary:   "写域操作已取消",
+		TargetSummary: "工单 T-1001",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	projection := product.NewFactsProjection(repository)
+
+	action, err := projection.ActionResult(ctx, "ws-demo", "action-terminal", "run-terminal-pending")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if action.Waiting != nil || len(action.ApprovalRefs) != 0 || len(action.ResumeRefs) != 0 {
+		t.Fatalf("terminal action result must not expose resume affordance: %+v", action)
+	}
+
+	events, err := projection.StreamEvents(ctx, "ws-demo", "run-terminal-pending")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var terminalPatch map[string]any
+	for _, event := range events {
+		if event.Type == "pending.updated" {
+			terminalPatch = event.Pending
+		}
+	}
+	if terminalPatch == nil || terminalPatch["status"] != string(facts.PendingStatusCancelled) {
+		t.Fatalf("terminal pending patch missing: %+v", events)
+	}
+	if _, ok := terminalPatch["resume_ref"]; ok {
+		t.Fatalf("terminal pending patch must not expose resume_ref: %+v", terminalPatch)
+	}
+}
+
 func TestFactsProjectionDoesNotSynthesizeSpecificMissingRun(t *testing.T) {
 	// current view 可以有空态；指定 run 的 snapshot/action/stream 不能伪造不存在的 Product Facts。
 	projection := product.NewFactsProjection(facts.NewMemoryRepository())

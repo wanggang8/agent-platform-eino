@@ -437,6 +437,20 @@
   color: #ffd891;
 }
 
+.pending-card.is-terminal {
+  border-color: rgb(148 163 184 / 45%);
+}
+
+.pending-terminal {
+  align-self: center;
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  background: rgb(148 163 184 / 10%);
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
 .run-notice,
 .empty-panel {
   display: flex;

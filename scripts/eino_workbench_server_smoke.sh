@@ -92,10 +92,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
-    ;;
-  clarification)
-    not_implemented "Phase 6"
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification|clarification)
     ;;
   budget)
     not_implemented "Phase 7"
@@ -123,6 +120,16 @@ if [[ "${scenario}" == "fobrain-clarification" ]]; then
   go test ./internal/einoapp/product -run ClarificationCandidates -count=1
   npm run eino-workbench:contract-test
   echo "fobrain-clarification smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "clarification" ]]; then
+  # Phase 6.4 验证 HITL clarification/pending 的后端事实、SSE patch 和前端 reducer，不声明真实 Fobrain 多候选工具已完成。
+  go test ./internal/einoapp/execution -run 'NewClarificationPendingEvent|ClarificationSubmit|ClarificationCancel|ClarificationDuplicate|ClarificationAfterRestart' -count=1
+  go test ./internal/einoapp/product -run 'ClarificationCandidates|TerminalPending' -count=1
+  npm run eino-workbench:stream-test -- --grep pending
+  npm run eino-workbench:contract-test
+  echo "clarification smoke passed"
   exit 0
 fi
 

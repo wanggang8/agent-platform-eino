@@ -745,7 +745,9 @@ func pendingPatch(pending facts.PendingInteraction) map[string]any {
 		"operation_name": pending.OperationName,
 		"risk_summary":   pending.RiskSummary,
 		"target_summary": pending.TargetSummary,
-		"resume_ref":     pending.ResumeRef,
+	}
+	if pending.Status == facts.PendingStatusWaiting {
+		patch["resume_ref"] = pending.ResumeRef
 	}
 	if pending.InputMode != "" {
 		patch["input_mode"] = string(pending.InputMode)

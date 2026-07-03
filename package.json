@@ -13,7 +13,7 @@
     "eino-workbench:openapi-lint": "node scripts/eino_workbench_schema_validate.mjs --openapi",
     "eino-workbench:typecheck": "npm --workspace @agent-platform-eino/eino-workbench run typecheck",
     "eino-workbench:test": "npm --workspace @agent-platform-eino/eino-workbench run test",
-    "eino-workbench:stream-test": "node scripts/eino_workbench_not_implemented.mjs stream-test Phase-3",
+    "eino-workbench:stream-test": "node scripts/eino_workbench_stream_test.mjs",
     "eino-workbench:browser-test": "npm --workspace @agent-platform-eino/eino-workbench run browser-test --",
     "eino-workbench:visual-test": "npm --workspace @agent-platform-eino/eino-workbench run visual-test --",
     "eino-workbench:build": "npm --workspace @agent-platform-eino/eino-workbench run build",

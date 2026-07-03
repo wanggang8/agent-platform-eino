@@ -206,6 +206,8 @@ Phase 6.2 当前进展：后端 approval interrupt/resume 已覆盖 requested、
 
 Phase 6.3 当前进展：后端 clarification submit/cancel 已覆盖安全 resume data、duplicate submit、cancel、expired 后拒绝、checkpoint missing 防消费和 restart submit；Pending UI/SSE 的产品化展示与完整 replay 视觉验收仍必须在 Phase 6.4/Phase 7 单独通过。
 
+Phase 6.4 当前进展：已实现 `pending.updated` 前端 reducer、approval/clarification waiting 与终态只读中文卡片、终态 pending SSE 不暴露旧 `resume_ref`、以及 `clarification` smoke 门禁。真实 UI 按钮提交/取消请求绑定、Playwright 视觉截图验收和完整 replay 视觉验收仍需后续任务覆盖。
+
 ## 安全门禁
 
 ```bash

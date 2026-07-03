@@ -773,16 +773,18 @@ go test ./internal/einoapp/execution -run 'ClarificationRequested|ClarificationS
 
 创建/修改：
 
-- `web/eino-workbench/src/components/ApprovalCard.tsx`
-- `web/eino-workbench/src/components/ClarificationCard.tsx`
-- `web/eino-workbench/src/state/workbenchReducer.ts`
-- `internal/einoapp/httpapi/sse.go`
+- `web/eino-workbench/src/features/workbench/components/cards.tsx`
+- `web/eino-workbench/src/features/workbench/state/workbenchReducer.ts`
+- `scripts/eino_workbench_stream_test.mjs`
+- `scripts/eino_workbench_server_smoke.sh`
+- `internal/einoapp/product/projection.go`
 
 覆盖：
 
 - approval 和 clarification waiting 卡片。
 - submitted / approved / rejected / cancelled / expired 只读终态。
 - SSE pending patch、ActionResult waiting 和 replay/audit 同源。
+- 当前切片已实现前端 reducer 消费 `pending.updated`、pending waiting/终态中文卡片、终态 pending SSE 不继续暴露 `resume_ref`、以及 `clarification` smoke 真实门禁；真实按钮提交/取消请求绑定和视觉截图验收仍由后续 UI 交互任务完成。
 
 任务级检查：
 
