@@ -172,10 +172,13 @@ Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 
 - 对 `context-projection`，断言模型输入上下文只来自 safe Product Facts / StructuredResult，并生成不含 raw、credential、token、checkpoint、interrupt 的 context snapshot。
 - 对 `tool-card`，断言 mock read capability 经 Eino tool loop 写入 ToolCall、Safety Gate 后的 ToolResult、Workbench 工具卡、ActionResult result card、SSE tool patch 和 audit。
 - 对 `run-lifecycle`，断言 cancel、stop、timeout、retry 和终态幂等符合 `run-lifecycle.md`。
-- 对 `action-consistency`，提交 Action 后用同一 run_id 拉取 run、views/current、replay，并断言 assistant/tool/pending/audit 字段同源。
+- 对 `action-consistency`，提交 Action 后用同一 run_id 拉取 ActionResult、run、views/current、replay、SSE、audit refs 和 SQLite facts，并断言当前 mock read 场景中的 tool/audit/result card 字段同源、错 workspace 访问返回 404，且产品出口不泄漏 raw provider payload。
+- 对 `replay`，断言 replay view 精确等于同 run 的 Workbench snapshot 投影，replay events 同时包含由 Product Facts snapshot 派生的产品事件和安全 audit event。
 - 清理进程。
 
 Phase 4/P0 完成后，`tool-card` 不得再返回 `exit 2`；它必须使用本地 mock capability provider，不依赖真实模型凭据。`real-model-chat` 归属 P1 真实模型 smoke：只有在 Phase 4.3 引入 OpenAI-compatible provider 后才能打开；无本地凭据时必须生成 skipped report，不能作为通过信号。
+
+Phase 7 当前进展：`action-consistency` 和 `replay` 已不再允许返回 `exit 2`；它们必须启动真实本地服务并通过同源 Product Facts 断言。`budget` 仍属 Phase 7 未开放门禁，未实现前继续返回 `exit 2`。assistant/pending 的完整同源验收仍由 `chat-stream`、HITL、clarification 和后续 replay 硬化门禁共同覆盖。
 
 ## HITL 门禁
 

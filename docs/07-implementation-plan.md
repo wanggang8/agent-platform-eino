@@ -821,6 +821,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario run-lifecycle
 - Workbench view/current、ActionResult、SSE patch、Replay View、Inspector 从 Product Facts 同源投影。
 - 同一 run 的 assistant、tool、pending、audit 字段一致。
 - 投影层不得读取 raw provider payload 或 Eino raw event。
+- 当前切片已打开 `action-consistency` smoke：同一 Action run 会校验 ActionResult、run snapshot、views/current、replay、SSE、audit refs 和 SQLite facts 同源，校验错 workspace 访问返回 404，且不暴露 raw provider payload 或凭据痕迹。
 
 任务级检查：
 
@@ -862,6 +863,7 @@ go test ./internal/einoapp/... -run 'Audit|Safety|Leak|Redaction|Telemetry|Budge
 - replay 从 Product Facts 重建，不依赖前端状态。
 - approval、clarification、tool result、失败态、cancel/timeout 都可回放。
 - replay 输出必须通过 `eino_replay_view.v1` schema。
+- 当前切片已打开 `replay` smoke：回放视图必须精确等于同 run 的 Workbench snapshot 投影，events 必须包含由 Product Facts snapshot 派生的产品事件和安全 audit event。持久化 facts cursor/event log 仍归属后续 replay 硬化任务。
 
 任务级检查：
 

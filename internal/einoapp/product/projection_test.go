@@ -164,7 +164,7 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 		t.Fatal(err)
 	}
 	if len(events) == 0 || events[0].EventID != "run-rich:000001" {
-		t.Fatalf("stream events not facts cursor based: %+v", events)
+		t.Fatalf("stream events not derived from Product Facts snapshot: %+v", events)
 	}
 	var approvalPatch map[string]any
 	for _, event := range events {
@@ -174,6 +174,44 @@ func TestFactsProjectionBuildsWorkbenchActionReplayAndStreamFromSnapshot(t *test
 	}
 	if approvalPatch["operation_name"] != "更新工单状态" || approvalPatch["target_summary"] != "ticket:T-1001 -> fixed" {
 		t.Fatalf("approval pending patch missing schema fields: %+v", approvalPatch)
+	}
+}
+
+func TestFactsProjectionRejectsCrossWorkspaceRunAccess(t *testing.T) {
+	// 所有按 run_id 查询的产品出口都必须校验 workspace 归属，避免已知 run_id 跨租户读取事实。
+	ctx := context.Background()
+	repository := facts.NewMemoryRepository()
+	if err := repository.CreateRun(ctx, facts.Run{
+		RunID:       "run-private",
+		WorkspaceID: "ws-owner",
+		Status:      facts.RunStatusSucceeded,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	projection := product.NewFactsProjection(repository)
+
+	checks := map[string]func() error{
+		"snapshot": func() error {
+			_, err := projection.RunSnapshot(ctx, "ws-other", "run-private")
+			return err
+		},
+		"action": func() error {
+			_, err := projection.ActionResult(ctx, "ws-other", "action-cross", "run-private")
+			return err
+		},
+		"replay": func() error {
+			_, err := projection.ReplayView(ctx, "ws-other", "run-private")
+			return err
+		},
+		"stream": func() error {
+			_, err := projection.StreamEvents(ctx, "ws-other", "run-private")
+			return err
+		},
+	}
+	for name, check := range checks {
+		if err := check(); !errors.Is(err, facts.ErrNotFound) {
+			t.Fatalf("%s err = %v, want facts.ErrNotFound", name, err)
+		}
 	}
 }
 

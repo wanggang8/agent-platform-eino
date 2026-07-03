@@ -92,12 +92,12 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-d|fobrain-batch-e|fobrain-clarification)
     ;;
   run-lifecycle|clarification)
     not_implemented "Phase 6"
     ;;
-  action-consistency|replay|budget)
+  budget)
     not_implemented "Phase 7"
     ;;
   fobrain-readonly|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
@@ -522,6 +522,8 @@ capability_write_json="${tmp_dir}/capability-write.json"
 capability_error_json="${tmp_dir}/capability-error.json"
 message_json="${tmp_dir}/message.json"
 snapshot_json="${tmp_dir}/snapshot.json"
+current_view_json="${tmp_dir}/current-view.json"
+replay_json="${tmp_dir}/replay.json"
 stream_headers="${tmp_dir}/stream.headers"
 stream_body="${tmp_dir}/stream.body"
 
@@ -890,6 +892,182 @@ PY
 )"
   [[ "${run_count_after_missing}" == "${run_count_before_missing}" ]]
   echo "capability-selection smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "action-consistency" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-consistency-smoke","client_request_id":"client-smoke-action-consistency","capability_hint":"cap.smoke.read","input":{"text":"same facts smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+payload = json.dumps(body, ensure_ascii=False).lower()
+# 同源事实验收不能允许 provider 原始材料或凭据痕迹进入 Action API。
+for forbidden in ("authorization", "api_key", "api_token", "credential_ref", "provider_payload", "raw_payload", "raw provider", "raw body", "bearer "):
+    assert forbidden not in payload, forbidden
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["workspace_id"] == "ws_smoke"
+assert body["status"] == "completed", body
+assert body["snapshot_url"].endswith(f"/runs/{body['run_id']}")
+assert body["stream_ref"].endswith(f"/runs/{body['run_id']}/stream")
+assert len(body["result_cards"]) == 1, body
+card = body["result_cards"][0]
+assert card["tool_call_id"], card
+assert card["title"] == "Phase 3 read smoke", card
+assert card["status"] == "succeeded", card
+assert card["safe_summary"] == "Phase 3 read smoke 完成", card
+assert card["structured_result"]["schema_version"] == "tool.structured_result.v1", card
+assert body["audit_refs"] == [f"/api/workspaces/ws_smoke/runs/{body['run_id']}/replay"], body["audit_refs"]
+print(body["run_id"])
+PY
+  )"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/views/current" -o "${current_view_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/replay" -o "${replay_json}"
+  wrong_snapshot_status="$(curl -sS -o /dev/null -w "%{http_code}" "${base_url}/api/workspaces/ws_other/runs/${run_id}")"
+  wrong_replay_status="$(curl -sS -o /dev/null -w "%{http_code}" "${base_url}/api/workspaces/ws_other/runs/${run_id}/replay")"
+  wrong_stream_status="$(curl -sS -o /dev/null -w "%{http_code}" "${base_url}/api/workspaces/ws_other/runs/${run_id}/stream")"
+  [[ "${wrong_snapshot_status}" == "404" ]]
+  [[ "${wrong_replay_status}" == "404" ]]
+  [[ "${wrong_stream_status}" == "404" ]]
+  python3 - "${capability_json}" "${snapshot_json}" "${current_view_json}" "${replay_json}" "${run_id}" <<'PY'
+import json, sys
+action = json.load(open(sys.argv[1]))
+snapshot = json.load(open(sys.argv[2]))
+current = json.load(open(sys.argv[3]))
+replay = json.load(open(sys.argv[4]))
+run_id = sys.argv[5]
+
+def reject_raw(name, value):
+    payload = json.dumps(value, ensure_ascii=False).lower()
+    # 这些检查只验证产品投影，不检查 provider 内部存储。
+    for forbidden in ("authorization", "api_key", "api_token", "credential_ref", "provider_payload", "raw_payload", "raw provider", "raw body", "bearer "):
+        assert forbidden not in payload, f"{name} leaked {forbidden}"
+
+for name, value in (("action", action), ("snapshot", snapshot), ("current", current), ("replay", replay)):
+    reject_raw(name, value)
+
+assert snapshot["schema_version"] == "eino_workbench_view.v1"
+assert current["schema_version"] == "eino_workbench_view.v1"
+assert replay["schema_version"] == "eino_replay_view.v1"
+assert action["run_id"] == snapshot["run_id"] == current["run_id"] == replay["run_id"] == run_id
+assert current == snapshot, "views/current must project the same latest run snapshot"
+assert replay["view"] == snapshot, "replay view must be rebuilt from the same Product Facts snapshot"
+
+result_card = action["result_cards"][0]
+snapshot_cards = [item for item in snapshot["timeline"] if item["kind"] == "tool_card"]
+current_cards = [item for item in current["timeline"] if item["kind"] == "tool_card"]
+replay_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "tool_card"]
+assert len(snapshot_cards) == len(current_cards) == len(replay_cards) == 1
+for card in (snapshot_cards[0], current_cards[0], replay_cards[0]):
+    assert card["tool_call_id"] == result_card["tool_call_id"], card
+    assert card["status"] == result_card["status"], card
+    assert card["safe_summary"] == result_card["safe_summary"], card
+    assert card["structured_result"]["schema_version"] == result_card["structured_result"]["schema_version"], card
+
+# assistant 和 pending 在当前 mock read 场景中通常为空；一旦出现，也必须来自同一 timeline。
+assistant_messages = [item for item in snapshot["timeline"] if item["kind"] == "assistant_message"]
+if action.get("final_answer"):
+    assert any(item.get("content") == action["final_answer"] for item in assistant_messages), assistant_messages
+pending_items = [item for item in snapshot["timeline"] if item["kind"] in ("approval_card", "clarification_card")]
+if action.get("waiting") is not None:
+    assert any(item.get("pending_id") for item in pending_items), pending_items
+else:
+    assert not pending_items, pending_items
+
+structured = snapshot["inspector"]["structured"]
+assert structured["tool_call_id"] == result_card["tool_call_id"], structured
+assert structured["structured_result"]["schema_version"] == "tool.structured_result.v1", structured
+audit = snapshot["inspector"]["audit"]
+assert any(row["event_type"] == "tool" and row["safe_summary"] == "tool completed: cap.smoke.read" for row in audit), audit
+events = replay["events"]
+assert any(row.get("type") == "tool.updated" and row.get("tool", {}).get("safe_summary") == result_card["safe_summary"] for row in events), events
+assert any(row.get("event_type") == "tool" and row.get("safe_summary") == "tool completed: cap.smoke.read" for row in events), events
+PY
+  curl -fsS -D "${stream_headers}" "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/stream" -o "${stream_body}"
+  grep -qi '^Content-Type: text/event-stream' "${stream_headers}"
+  grep -q "event: tool.updated" "${stream_body}"
+  grep -q "Phase 3 read smoke 完成" "${stream_body}"
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    tool_rows = conn.execute("select tool_call_id, tool_id, status from tool_calls where run_id = ?", (run_id,)).fetchall()
+    result_rows = conn.execute(
+        "select tr.structured_schema_version, tr.safe_summary from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchall()
+    audit_rows = conn.execute("select event_type, safe_summary from audit_events where run_id = ?", (run_id,)).fetchall()
+assert len(tool_rows) == 1, tool_rows
+assert tool_rows[0][1] == "cap.smoke.read" and tool_rows[0][2] == "succeeded", tool_rows
+assert result_rows == [("tool.structured_result.v1", "Phase 3 read smoke 完成")], result_rows
+assert any(event_type == "tool" and summary == "tool completed: cap.smoke.read" for event_type, summary in audit_rows), audit_rows
+PY
+  echo "action-consistency smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "replay" ]]; then
+  curl -fsS \
+    -H "Content-Type: application/json" \
+    -d '{"schema_version":"eino_action_request.v1","action_id":"action-replay-smoke","client_request_id":"client-smoke-replay","capability_hint":"cap.smoke.read","input":{"text":"replay smoke"}}' \
+    "${base_url}/api/workspaces/ws_smoke/agent/actions" \
+    -o "${capability_json}"
+  run_id="$(python3 - "${capability_json}" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+assert body["schema_version"] == "eino_action_result.v1"
+assert body["status"] == "completed", body
+assert len(body["result_cards"]) == 1, body
+print(body["run_id"])
+PY
+  )"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}" -o "${snapshot_json}"
+  curl -fsS "${base_url}/api/workspaces/ws_smoke/runs/${run_id}/replay" -o "${replay_json}"
+  python3 - "${capability_json}" "${snapshot_json}" "${replay_json}" "${run_id}" <<'PY'
+import json, sys
+action = json.load(open(sys.argv[1]))
+snapshot = json.load(open(sys.argv[2]))
+replay = json.load(open(sys.argv[3]))
+run_id = sys.argv[4]
+for name, value in (("action", action), ("snapshot", snapshot), ("replay", replay)):
+    payload = json.dumps(value, ensure_ascii=False).lower()
+    # replay 只能暴露 Product Facts 投影，不能包含 provider 原始响应或凭据。
+    for forbidden in ("authorization", "api_key", "api_token", "credential_ref", "provider_payload", "raw_payload", "raw provider", "raw body", "bearer "):
+        assert forbidden not in payload, f"{name} leaked {forbidden}"
+
+assert replay["schema_version"] == "eino_replay_view.v1"
+assert replay["workspace_id"] == "ws_smoke"
+assert replay["run_id"] == snapshot["run_id"] == action["run_id"] == run_id
+assert replay["view"] == snapshot, "replay view must exactly match run snapshot projection"
+assert replay["view"]["inspector"]["structured"]["structured_result"]["schema_version"] == "tool.structured_result.v1"
+event_ids = [row.get("event_id") for row in replay["events"] if isinstance(row, dict) and "event_id" in row]
+assert event_ids and all(event_id.startswith(f"{run_id}:") for event_id in event_ids), event_ids
+assert any(row.get("type") == "tool.updated" for row in replay["events"] if isinstance(row, dict)), replay["events"]
+assert any(row.get("schema_version") == "eino_audit_event.v1" and row.get("event_type") == "tool" for row in replay["events"] if isinstance(row, dict)), replay["events"]
+result_card = action["result_cards"][0]
+tool_cards = [item for item in replay["view"]["timeline"] if item["kind"] == "tool_card"]
+assert len(tool_cards) == 1
+assert tool_cards[0]["safe_summary"] == result_card["safe_summary"] == "Phase 3 read smoke 完成"
+PY
+  python3 - "${tmp_dir}/eino-workbench.db" "${run_id}" <<'PY'
+import sqlite3, sys
+db_path, run_id = sys.argv[1], sys.argv[2]
+with sqlite3.connect(db_path) as conn:
+    run_status = conn.execute("select status from runs where run_id = ?", (run_id,)).fetchone()
+    result_count = conn.execute(
+        "select count(*) from tool_results tr join tool_calls tc on tr.tool_call_id = tc.tool_call_id where tc.run_id = ?",
+        (run_id,),
+    ).fetchone()[0]
+    audit_count = conn.execute("select count(*) from audit_events where run_id = ? and event_type = 'tool'", (run_id,)).fetchone()[0]
+assert run_status == ("succeeded",), run_status
+assert result_count == 1, result_count
+assert audit_count >= 1, audit_count
+PY
+  echo "replay smoke passed"
   exit 0
 fi
 

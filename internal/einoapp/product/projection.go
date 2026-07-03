@@ -268,7 +268,7 @@ func (projection FactsProjection) WorkbenchView(ctx context.Context, workspaceID
 
 // RunSnapshot 返回指定 run 的 Workbench 快照。
 func (projection FactsProjection) RunSnapshot(ctx context.Context, workspaceID string, runID string) (WorkbenchView, error) {
-	snapshot, err := projection.repository.GetSnapshot(ctx, runID)
+	snapshot, err := projection.snapshotForWorkspace(ctx, workspaceID, runID)
 	if err != nil {
 		return WorkbenchView{}, err
 	}
@@ -277,7 +277,7 @@ func (projection FactsProjection) RunSnapshot(ctx context.Context, workspaceID s
 
 // ActionResult 从同一 run facts 投影 Action API 结果。
 func (projection FactsProjection) ActionResult(ctx context.Context, workspaceID string, actionID string, runID string) (ActionResult, error) {
-	snapshot, err := projection.repository.GetSnapshot(ctx, runID)
+	snapshot, err := projection.snapshotForWorkspace(ctx, workspaceID, runID)
 	if err != nil {
 		return ActionResult{}, err
 	}
@@ -317,11 +317,23 @@ func (projection FactsProjection) ReplayView(ctx context.Context, workspaceID st
 
 // StreamEvents 从 Product Facts 构造 SSE 事件，event_id 使用 run_id + 单调序号。
 func (projection FactsProjection) StreamEvents(ctx context.Context, workspaceID string, runID string) ([]StreamEvent, error) {
-	snapshot, err := projection.repository.GetSnapshot(ctx, runID)
+	snapshot, err := projection.snapshotForWorkspace(ctx, workspaceID, runID)
 	if err != nil {
 		return nil, err
 	}
 	return streamEventsFromSnapshot(snapshot), nil
+}
+
+// snapshotForWorkspace 是所有按 run_id 查询产品出口的 workspace 隔离边界。
+func (projection FactsProjection) snapshotForWorkspace(ctx context.Context, workspaceID string, runID string) (facts.Snapshot, error) {
+	snapshot, err := projection.repository.GetSnapshot(ctx, runID)
+	if err != nil {
+		return facts.Snapshot{}, err
+	}
+	if snapshot.Run.WorkspaceID != workspaceID {
+		return facts.Snapshot{}, facts.ErrNotFound
+	}
+	return snapshot, nil
 }
 
 func actionResultFromSnapshot(workspaceID string, actionID string, snapshot facts.Snapshot) ActionResult {
