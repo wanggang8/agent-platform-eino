@@ -2,7 +2,7 @@
 
 ## Scope
 
-本记录覆盖 Phase 7.2 的内部 telemetry/counter 基础切片，不声明完整 Eino callback adapter、OpenTelemetry exporter、真实 provider token usage、cost estimate 或 workspace quota 已完成。
+本记录覆盖 Phase 7.2 的内部 telemetry/counter 基础切片，不声明 OpenTelemetry exporter、真实 provider token usage、cost estimate 或 workspace quota 已完成。
 
 ## Change Summary
 
@@ -30,6 +30,5 @@ git diff --check
 
 ## Remaining Risks
 
-- 真实 Eino callback 尚未接入。
-- token usage 目前只是 telemetry 字段和预算阈值契约，真实 provider usage 映射尚未完成。
+- Eino ChatModel callback handler 已接入安全 telemetry sink；真实 provider usage 映射仍需接入具体 provider 返回。
 - OTel exporter、cost estimate、workspace quota 和 rate limit 仍待后续任务实现。

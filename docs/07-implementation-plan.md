@@ -849,7 +849,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 创建/修改：
 
 - `internal/einoapp/facts/audit.go`
-- `internal/einoapp/execution/callbacks.go`
+- `internal/einoapp/observability/eino_callback.go`
 - `internal/einoapp/execution/budgets.go`
 - `internal/einoapp/observability/telemetry.go`
 
@@ -859,8 +859,9 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 - audit event 不包含 raw prompt、secret、Authorization、raw provider body 或 reusable resume token。
 - callback 只进入 telemetry/internal diagnostics，不驱动主 SSE。
 - model call、tool call、run duration、context token 预算超限后安全停止或返回 partial result。
-- 当前最小切片已打开 `budget` smoke：`budget_exceeded` 作为 execution lifecycle action 接收预算超限信号，只允许作用于 `running`/`waiting` run，失败 run、取消 active tool、expire waiting pending，并写入 `event_type=budget` 的安全 audit event；完整 Eino callback、token/cost 估算和 workspace quota 仍属后续硬化范围。
-- 当前 telemetry/counter 切片已新增内部 `observability.Sink`、ChatModelRunner model-call 安全 telemetry、配置化 `max_model_calls_per_run` / `max_tool_calls_per_run` / `max_input_tokens_per_run` 和 execution 预算评估器。它们不写 Workbench SSE 或 Product Facts；真实 Eino callback adapter、provider token usage、OTel exporter 和 workspace quota 仍属后续任务。
+- 当前最小切片已打开 `budget` smoke：`budget_exceeded` 作为 execution lifecycle action 接收预算超限信号，只允许作用于 `running`/`waiting` run，失败 run、取消 active tool、expire waiting pending，并写入 `event_type=budget` 的安全 audit event；完整 token/cost 估算和 workspace quota 仍属后续硬化范围。
+- 当前 telemetry/counter 切片已新增内部 `observability.Sink`、配置化 `max_model_calls_per_run` / `max_tool_calls_per_run` / `max_input_tokens_per_run` 和 execution 预算评估器。它们不写 Workbench SSE 或 Product Facts；provider token usage、OTel exporter 和 workspace quota 仍属后续任务。
+- 当前 Eino callback 切片已通过 `observability.NewEinoCallbackHandler` 接入 ChatModel callback：`OnStart/OnEnd/OnError` 只写安全 telemetry。handler 已能从 `model.CallbackOutput.TokenUsage` 提取 token usage 与 latency，但真实 runner/provider 路径的非零 usage 映射仍待 provider response 扩展；当前 error callback 只写安全 `model_error` 分类，不保存 prompt、completion、raw provider payload 或 error 原文。
 
 任务级检查：
 

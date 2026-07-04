@@ -10,6 +10,8 @@ import (
 	"agent-platform-eino/internal/einoapp/llm"
 	"agent-platform-eino/internal/einoapp/observability"
 	"github.com/cloudwego/eino/adk"
+	"github.com/cloudwego/eino/callbacks"
+	"github.com/cloudwego/eino/components"
 	einomodel "github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/schema"
 )
@@ -57,32 +59,26 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	if err != nil {
 		return err
 	}
-	telemetryStartedAt := runner.now()
-	failureCategory := ""
-	defer func() {
-		// telemetry 是内部诊断，不得因观测失败影响 Product Facts 执行结果。
-		_ = runner.telemetry.Record(ctx, observability.Event{
-			TraceID:         runID,
-			RunID:           runID,
-			WorkspaceID:     run.WorkspaceID,
-			OperationName:   "chat.model.generate",
-			Provider:        runner.config.Provider,
-			Model:           telemetryModelLabel(runner.config),
-			LatencyMS:       positiveLatencyMillis(telemetryStartedAt, runner.now()),
-			FailureCategory: failureCategory,
-			CreatedAt:       runner.now(),
-		})
-	}()
+	ctx = callbacks.InitCallbacks(ctx, &callbacks.RunInfo{
+		Name:      "eino-workbench-chat-model",
+		Type:      "eino-workbench-chat-model",
+		Component: components.ComponentOfChatModel,
+	}, observability.NewEinoCallbackHandler(observability.EinoCallbackConfig{
+		Sink:        runner.telemetry,
+		RunID:       runID,
+		WorkspaceID: run.WorkspaceID,
+		Provider:    runner.config.Provider,
+		Model:       telemetryModelLabel(runner.config),
+		Now:         runner.now,
+	}))
 	projector := NewContextProjector(runner.repository, ContextProjectorConfig{Now: runner.now})
 	safeContext, err := projector.Project(ctx, runID)
 	if err != nil {
-		failureCategory = "context_projection"
 		return err
 	}
 
 	model, err := runner.provider.NewChatModel(ctx, runner.config)
 	if err != nil {
-		failureCategory = "provider_config"
 		return err
 	}
 	agent, err := adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
@@ -95,7 +91,6 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		MaxIterations: 1,
 	})
 	if err != nil {
-		failureCategory = "agent_config"
 		return err
 	}
 
@@ -104,7 +99,6 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	mapper := NewEventMapper(runner.repository, EventMapperConfig{Now: runner.now})
 	sequence, err := nextSequence(ctx, runner.repository, runID)
 	if err != nil {
-		failureCategory = "sequence"
 		return err
 	}
 	assistantWritten := false
@@ -115,7 +109,6 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		}
 		if event.Err != nil {
 			_ = runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusFailed, "模型执行失败", runner.now())
-			failureCategory = "model_error"
 			return event.Err
 		}
 		for _, runnerEvent := range EinoAgentEventToRunnerEvents(runID, sequence, event) {
@@ -123,7 +116,6 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 				continue
 			}
 			if err := mapper.Map(ctx, runnerEvent); err != nil {
-				failureCategory = "event_mapping"
 				return err
 			}
 			if runnerEvent.Kind == RunnerEventAssistantMessage {
@@ -133,7 +125,6 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 	}
 	if !assistantWritten {
 		_ = runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusFailed, "模型未返回可展示内容", runner.now())
-		failureCategory = "empty_response"
 		return errors.New("chat model returned no assistant message")
 	}
 	if err := runner.repository.AppendAuditEvent(ctx, facts.AuditEvent{
@@ -144,22 +135,12 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		Actor:       "model",
 		CreatedAt:   runner.now(),
 	}); err != nil {
-		failureCategory = "audit_write"
 		return err
 	}
 	if err := runner.repository.UpdateRunStatus(ctx, runID, facts.RunStatusSucceeded, "", runner.now()); err != nil {
-		failureCategory = "run_status"
 		return err
 	}
 	return nil
-}
-
-func positiveLatencyMillis(start time.Time, end time.Time) int64 {
-	latency := end.Sub(start).Milliseconds()
-	if latency <= 0 {
-		return 1
-	}
-	return latency
 }
 
 func telemetryModelLabel(config llm.Config) string {
@@ -176,11 +157,21 @@ type einoModelAdapter struct {
 
 // Generate 将 Eino messages 转成项目安全消息，再返回 Eino assistant message。
 func (adapter einoModelAdapter) Generate(ctx context.Context, input []*schema.Message, _ ...einomodel.Option) (*schema.Message, error) {
+	ctx = callbacks.EnsureRunInfo(ctx, "eino-workbench-chat-model", components.ComponentOfChatModel)
+	ctx = callbacks.OnStart(ctx, &einomodel.CallbackInput{Messages: input})
 	response, err := adapter.model.Generate(ctx, llm.ChatRequest{Messages: fromEinoMessages(input)})
 	if err != nil {
+		callbacks.OnError(ctx, err)
 		return nil, err
 	}
-	return schema.AssistantMessage(response.Content, nil), nil
+	message := schema.AssistantMessage(response.Content, nil)
+	callbacks.OnEnd(ctx, &einomodel.CallbackOutput{Message: message})
+	return message, nil
+}
+
+// IsCallbacksEnabled 告诉 Eino 当前模型适配器自己触发 callback，避免框架再包一层重复事件。
+func (adapter einoModelAdapter) IsCallbacksEnabled() bool {
+	return true
 }
 
 // Stream 当前 Phase 3 不启用 Eino streaming；SSE 只从 Product Facts 投影生成。

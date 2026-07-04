@@ -2,6 +2,7 @@ package execution_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -87,6 +88,9 @@ func TestChatModelRunnerRecordsSafeTelemetry(t *testing.T) {
 		events[0].Model != "mock-chat" ||
 		events[0].LatencyMS <= 0 {
 		t.Fatalf("telemetry event = %+v", events[0])
+	}
+	if strings.Contains(events[0].Provider, "不要进入 telemetry") || strings.Contains(events[0].Model, "不要进入 telemetry") {
+		t.Fatalf("runner callback telemetry leaked prompt text: %+v", events[0])
 	}
 	snapshot, err := repository.GetSnapshot(ctx, "run-telemetry")
 	if err != nil {
