@@ -113,8 +113,15 @@ type SecurityConfig struct {
 
 // ObservabilityConfig 定义日志和诊断开关。
 type ObservabilityConfig struct {
-	LogLevel         string `yaml:"log_level"`
-	EnableRequestLog bool   `yaml:"enable_request_log"`
+	LogLevel         string               `yaml:"log_level"`
+	EnableRequestLog bool                 `yaml:"enable_request_log"`
+	CostStatistics   CostStatisticsConfig `yaml:"cost_statistics"`
+}
+
+// CostStatisticsConfig 定义只用于内部统计的 token 成本单价；默认 0 表示不估算成本。
+type CostStatisticsConfig struct {
+	InputUnitMicrounits  int64 `yaml:"input_unit_microunits"`
+	OutputUnitMicrounits int64 `yaml:"output_unit_microunits"`
 }
 
 // BudgetConfig 定义默认执行预算，供后续 run/tool 超时使用。
@@ -262,6 +269,12 @@ func (cfg Config) Validate() error {
 	}
 	if cfg.Server.WriteTimeout <= 0 {
 		return errors.New("server.write_timeout must be positive")
+	}
+	if cfg.Observability.CostStatistics.InputUnitMicrounits < 0 {
+		return errors.New("observability.cost_statistics.input_unit_microunits must not be negative")
+	}
+	if cfg.Observability.CostStatistics.OutputUnitMicrounits < 0 {
+		return errors.New("observability.cost_statistics.output_unit_microunits must not be negative")
 	}
 	if cfg.Budgets.DefaultTimeout <= 0 {
 		return errors.New("budgets.default_timeout must be positive")
@@ -647,6 +660,10 @@ func (cfg Config) RedactedSummary() RedactedSummary {
 		"observability": map[string]any{
 			"log_level":          cfg.Observability.LogLevel,
 			"enable_request_log": cfg.Observability.EnableRequestLog,
+			"cost_statistics": map[string]any{
+				"input_unit_microunits":  cfg.Observability.CostStatistics.InputUnitMicrounits,
+				"output_unit_microunits": cfg.Observability.CostStatistics.OutputUnitMicrounits,
+			},
 		},
 		"budgets": map[string]any{
 			"default_timeout":         cfg.Budgets.DefaultTimeout.String(),

@@ -21,6 +21,10 @@ security:
 observability:
   log_level: "info"
   enable_request_log: true
+  cost_statistics:
+    # 默认 0 表示只统计 token，不估算成本；真实单价写入 ignored local 配置。
+    input_unit_microunits: 0
+    output_unit_microunits: 0
 
 budgets:
   default_timeout: "60s"

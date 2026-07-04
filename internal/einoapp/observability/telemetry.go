@@ -12,18 +12,21 @@ const maxSafeLabelLength = 128
 
 // Event 是内部 telemetry 事件，只允许保存安全标签和计数，不承载 prompt、raw provider body 或密钥。
 type Event struct {
-	TraceID         string
-	RunID           string
-	WorkspaceID     string
-	OperationName   string
-	Provider        string
-	Model           string
-	LatencyMS       int64
-	InputTokens     int
-	OutputTokens    int
-	ToolCount       int
-	FailureCategory string
-	CreatedAt       time.Time
+	TraceID       string
+	RunID         string
+	WorkspaceID   string
+	OperationName string
+	Provider      string
+	Model         string
+	LatencyMS     int64
+	InputTokens   int
+	OutputTokens  int
+	TotalTokens   int
+	// EstimatedCostMicrounits 是内部估算成本，单位由配置约定；默认 0 表示只统计 token。
+	EstimatedCostMicrounits int64
+	ToolCount               int
+	FailureCategory         string
+	CreatedAt               time.Time
 }
 
 // Sink 是内部观测写入接口；实现不得反向驱动 Workbench、Action API 或 Product Facts。
@@ -83,6 +86,12 @@ func sanitizeEvent(event Event) Event {
 	}
 	if event.OutputTokens < 0 {
 		event.OutputTokens = 0
+	}
+	if event.TotalTokens < 0 {
+		event.TotalTokens = 0
+	}
+	if event.EstimatedCostMicrounits < 0 {
+		event.EstimatedCostMicrounits = 0
 	}
 	if event.ToolCount < 0 {
 		event.ToolCount = 0

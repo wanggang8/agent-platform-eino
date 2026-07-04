@@ -20,6 +20,7 @@ import (
 type ChatModelRunnerConfig struct {
 	Now       func() time.Time
 	Telemetry observability.Sink
+	CostRates observability.TokenCostRates
 }
 
 // ChatModelRunner 使用 Eino ChatModelAgent 执行一次对话，并把事件落入 Product Facts。
@@ -29,6 +30,7 @@ type ChatModelRunner struct {
 	config     llm.Config
 	now        func() time.Time
 	telemetry  observability.Sink
+	costRates  observability.TokenCostRates
 }
 
 // NewChatModelRunner 创建 Phase 3 的 Eino ChatModel runner。
@@ -47,6 +49,7 @@ func NewChatModelRunner(repository facts.Repository, provider llm.Provider, conf
 		config:     config,
 		now:        now,
 		telemetry:  telemetry,
+		costRates:  runnerConfig.CostRates,
 	}
 }
 
@@ -69,6 +72,7 @@ func (runner ChatModelRunner) Run(ctx context.Context, runID string) error {
 		WorkspaceID: run.WorkspaceID,
 		Provider:    runner.config.Provider,
 		Model:       telemetryModelLabel(runner.config),
+		CostRates:   runner.costRates,
 		Now:         runner.now,
 	}))
 	projector := NewContextProjector(runner.repository, ContextProjectorConfig{Now: runner.now})

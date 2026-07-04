@@ -18,6 +18,7 @@ type EinoCallbackConfig struct {
 	WorkspaceID string
 	Provider    string
 	Model       string
+	CostRates   TokenCostRates
 	Now         func() time.Time
 }
 
@@ -81,15 +82,20 @@ func tokenUsage(output callbacks.CallbackOutput) einomodel.TokenUsage {
 
 func callbackTelemetryEvent(config EinoCallbackConfig, latencyMS int64, usage einomodel.TokenUsage, failureCategory string, createdAt time.Time) Event {
 	return Event{
-		TraceID:         config.RunID,
-		RunID:           config.RunID,
-		WorkspaceID:     config.WorkspaceID,
-		OperationName:   "chat.model.generate",
-		Provider:        config.Provider,
-		Model:           config.Model,
-		LatencyMS:       latencyMS,
-		InputTokens:     usage.PromptTokens,
-		OutputTokens:    usage.CompletionTokens,
+		TraceID:       config.RunID,
+		RunID:         config.RunID,
+		WorkspaceID:   config.WorkspaceID,
+		OperationName: "chat.model.generate",
+		Provider:      config.Provider,
+		Model:         config.Model,
+		LatencyMS:     latencyMS,
+		InputTokens:   usage.PromptTokens,
+		OutputTokens:  usage.CompletionTokens,
+		TotalTokens:   usage.TotalTokens,
+		EstimatedCostMicrounits: config.CostRates.Estimate(
+			usage.PromptTokens,
+			usage.CompletionTokens,
+		),
 		FailureCategory: failureCategory,
 		CreatedAt:       createdAt,
 	}

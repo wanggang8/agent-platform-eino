@@ -860,8 +860,9 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 - callback 只进入 telemetry/internal diagnostics，不驱动主 SSE。
 - model call、tool call、run duration、context token 预算超限后安全停止或返回 partial result。
 - 当前最小切片已打开 `budget` smoke：`budget_exceeded` 作为 execution lifecycle action 接收预算超限信号，只允许作用于 `running`/`waiting` run，失败 run、取消 active tool、expire waiting pending，并写入 `event_type=budget` 的安全 audit event；完整 cost 估算和 workspace quota 仍属后续硬化范围。
-- 当前 telemetry/counter 切片已新增内部 `observability.Sink`、配置化 `max_model_calls_per_run` / `max_tool_calls_per_run` / `max_input_tokens_per_run` 和 execution 预算评估器。它们不写 Workbench SSE 或 Product Facts；OTel exporter、cost estimate 和 workspace quota 仍属后续任务。
+- 当前 telemetry/counter 切片已新增内部 `observability.Sink`、配置化 `max_model_calls_per_run` / `max_tool_calls_per_run` / `max_input_tokens_per_run` 和 execution 预算评估器。它们不写 Workbench SSE 或 Product Facts；OTel exporter、workspace quota 和限制型 cost budget 仍属后续任务。
 - 当前 Eino callback 切片已通过 `observability.NewEinoCallbackHandler` 接入 ChatModel callback：`OnStart/OnEnd/OnError` 只写安全 telemetry。OpenAI-compatible provider 已解析 `usage.prompt_tokens` / `usage.completion_tokens` / `usage.total_tokens` 到 `llm.ChatResponse.Usage`，并由 `einoModelAdapter` 映射进 `model.CallbackOutput.TokenUsage`；当前 error callback 只写安全 `model_error` 分类，不保存 prompt、completion、raw provider payload 或 error 原文。
+- 当前 cost statistics 切片只做统计：`observability.cost_statistics.input_unit_microunits` / `output_unit_microunits` 为配置化单价，默认 0；Eino callback telemetry 会记录 `total_tokens` 和 `estimated_cost_microunits`，但不会触发 `budget_exceeded`、workspace quota 或 rate limit。
 
 任务级检查：
 

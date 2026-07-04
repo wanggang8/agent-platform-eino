@@ -13,6 +13,7 @@ import (
 	"agent-platform-eino/internal/einoapp/facts"
 	"agent-platform-eino/internal/einoapp/httpapi"
 	"agent-platform-eino/internal/einoapp/llm"
+	"agent-platform-eino/internal/einoapp/observability"
 	"agent-platform-eino/internal/einoapp/product"
 	"agent-platform-eino/internal/einoapp/providers/fobrain"
 	"agent-platform-eino/internal/einoapp/store/sqlite"
@@ -52,7 +53,12 @@ func main() {
 		TimeoutMillis:     cfg.LLM.TimeoutMillis,
 		NetworkSafety:     llm.NetworkSafety(cfg.LLM.NetworkSafety),
 		CredentialBinding: llm.CredentialBinding(cfg.LLM.CredentialBinding),
-	}, execution.ChatModelRunnerConfig{})
+	}, execution.ChatModelRunnerConfig{
+		CostRates: observability.TokenCostRates{
+			InputMicrounitsPerToken:  cfg.Observability.CostStatistics.InputUnitMicrounits,
+			OutputMicrounitsPerToken: cfg.Observability.CostStatistics.OutputUnitMicrounits,
+		},
+	})
 	registry, capabilityInvoker, err := capabilityRuntimeFromConfig(cfg)
 	if err != nil {
 		log.Fatal(err)

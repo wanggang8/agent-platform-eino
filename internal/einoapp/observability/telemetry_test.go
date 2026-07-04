@@ -14,18 +14,20 @@ func TestMemorySinkRecordsSanitizedTelemetry(t *testing.T) {
 	// telemetry 只能保存内部诊断标签，不能把 raw prompt、Authorization 或 provider payload 写入内存事件。
 	sink := observability.NewMemorySink()
 	err := sink.Record(context.Background(), observability.Event{
-		TraceID:         "trace-1",
-		RunID:           "run-1",
-		WorkspaceID:     "ws-1",
-		OperationName:   "chat",
-		Provider:        "mock authorization=secret",
-		Model:           "mock-chat",
-		LatencyMS:       12,
-		InputTokens:     3,
-		OutputTokens:    5,
-		ToolCount:       0,
-		FailureCategory: "none",
-		CreatedAt:       time.Unix(100, 0).UTC(),
+		TraceID:                 "trace-1",
+		RunID:                   "run-1",
+		WorkspaceID:             "ws-1",
+		OperationName:           "chat",
+		Provider:                "mock authorization=secret",
+		Model:                   "mock-chat",
+		LatencyMS:               12,
+		InputTokens:             3,
+		OutputTokens:            5,
+		TotalTokens:             8,
+		EstimatedCostMicrounits: 13,
+		ToolCount:               0,
+		FailureCategory:         "none",
+		CreatedAt:               time.Unix(100, 0).UTC(),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -47,6 +49,51 @@ func TestMemorySinkRecordsSanitizedTelemetry(t *testing.T) {
 	}
 	if events[0].Provider != "redacted" {
 		t.Fatalf("provider = %q, want redacted", events[0].Provider)
+	}
+	if events[0].TotalTokens != 8 || events[0].EstimatedCostMicrounits != 13 {
+		t.Fatalf("telemetry statistics changed unexpectedly: %+v", events[0])
+	}
+}
+
+func TestMemorySinkClampsNegativeStatistics(t *testing.T) {
+	// telemetry 统计来自外部 callback 链路时仍按不可信输入处理，负数不能进入诊断报表。
+	sink := observability.NewMemorySink()
+	err := sink.Record(context.Background(), observability.Event{
+		LatencyMS:               -1,
+		InputTokens:             -2,
+		OutputTokens:            -3,
+		TotalTokens:             -5,
+		EstimatedCostMicrounits: -7,
+		ToolCount:               -11,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	event := sink.Events()[0]
+	if event.LatencyMS != 0 ||
+		event.InputTokens != 0 ||
+		event.OutputTokens != 0 ||
+		event.TotalTokens != 0 ||
+		event.EstimatedCostMicrounits != 0 ||
+		event.ToolCount != 0 {
+		t.Fatalf("negative statistics were not clamped: %+v", event)
+	}
+}
+
+func TestTokenCostRatesEstimateUsesConfiguredRatesOnly(t *testing.T) {
+	// 成本估算只使用显式配置的单价；默认 0 表示只统计 token，不内置模型价格。
+	rates := observability.TokenCostRates{
+		InputMicrounitsPerToken:  3,
+		OutputMicrounitsPerToken: 7,
+	}
+	if got := rates.Estimate(11, 13); got != 124 {
+		t.Fatalf("estimated cost = %d", got)
+	}
+	if got := (observability.TokenCostRates{}).Estimate(11, 13); got != 0 {
+		t.Fatalf("default estimated cost = %d, want 0", got)
+	}
+	if got := (observability.TokenCostRates{InputMicrounitsPerToken: -1, OutputMicrounitsPerToken: -1}).Estimate(-11, -13); got != 0 {
+		t.Fatalf("negative estimated cost = %d, want 0", got)
 	}
 }
 

@@ -32,6 +32,9 @@ security:
 observability:
   log_level: "debug"
   enable_request_log: true
+  cost_statistics:
+    input_unit_microunits: 2
+    output_unit_microunits: 5
 budgets:
   default_timeout: "11s"
   max_tool_timeout: "22s"
@@ -82,6 +85,9 @@ capabilities:
 	}
 	if cfg.Budgets.MaxModelCallsPerRun != 3 || cfg.Budgets.MaxToolCallsPerRun != 5 || cfg.Budgets.MaxInputTokensPerRun != 4096 {
 		t.Fatalf("budget counters were not loaded: %+v", cfg.Budgets)
+	}
+	if cfg.Observability.CostStatistics.InputUnitMicrounits != 2 || cfg.Observability.CostStatistics.OutputUnitMicrounits != 5 {
+		t.Fatalf("cost statistics config was not loaded: %+v", cfg.Observability.CostStatistics)
 	}
 	if cfg.Capabilities[0].SideEffect != "read_external" ||
 		cfg.Capabilities[0].PolicyRef != "policy:smoke:read:v1" ||
@@ -164,6 +170,37 @@ budgets:
 	_, err := bootstrap.LoadConfig(path)
 	if err == nil || !strings.Contains(err.Error(), "budgets.max_model_calls_per_run") {
 		t.Fatalf("negative budget counter err = %v", err)
+	}
+}
+
+func TestConfigValidationRejectsNegativeCostStatistics(t *testing.T) {
+	// 成本统计单价只用于报告，但仍是外部配置输入，负数必须在启动前失败。
+	path := writeConfig(t, `
+server:
+  addr: "127.0.0.1:19091"
+  read_timeout: "2s"
+  write_timeout: "3s"
+database:
+  driver: "sqlite"
+  dsn: "data/test.db"
+llm:
+  provider: "mock"
+  base_url: "https://llm.example.test/v1"
+  model: "mock-chat"
+security:
+  redact_secrets: true
+observability:
+  log_level: "debug"
+  cost_statistics:
+    input_unit_microunits: -1
+budgets:
+  default_timeout: "11s"
+  max_tool_timeout: "22s"
+`)
+
+	_, err := bootstrap.LoadConfig(path)
+	if err == nil || !strings.Contains(err.Error(), "observability.cost_statistics.input_unit_microunits") {
+		t.Fatalf("negative cost statistics err = %v", err)
 	}
 }
 
@@ -478,6 +515,9 @@ security:
 observability:
   log_level: "debug"
   enable_request_log: true
+  cost_statistics:
+    input_unit_microunits: 2
+    output_unit_microunits: 5
 budgets:
   default_timeout: "11s"
   max_tool_timeout: "22s"
@@ -520,6 +560,9 @@ security:
 observability:
   log_level: "debug"
   enable_request_log: true
+  cost_statistics:
+    input_unit_microunits: 2
+    output_unit_microunits: 5
 budgets:
   default_timeout: "11s"
   max_tool_timeout: "22s"
@@ -533,6 +576,9 @@ budgets:
 	encoded := cfg.RedactedSummary().String()
 	if !strings.Contains(encoded, "default_timeout: 11s") || !strings.Contains(encoded, "max_tool_timeout: 22s") {
 		t.Fatalf("redacted summary missing budgets: %s", encoded)
+	}
+	if !strings.Contains(encoded, "input_unit_microunits: 2") || !strings.Contains(encoded, "output_unit_microunits: 5") {
+		t.Fatalf("redacted summary missing cost statistics: %s", encoded)
 	}
 }
 

@@ -76,6 +76,10 @@ func TestChatModelRunnerRecordsSafeTelemetry(t *testing.T) {
 	}, execution.ChatModelRunnerConfig{
 		Now:       func() time.Time { return now.Add(2 * time.Second) },
 		Telemetry: sink,
+		CostRates: observability.TokenCostRates{
+			InputMicrounitsPerToken:  2,
+			OutputMicrounitsPerToken: 5,
+		},
 	})
 
 	if err := runner.Run(ctx, "run-telemetry"); err != nil {
@@ -92,6 +96,8 @@ func TestChatModelRunnerRecordsSafeTelemetry(t *testing.T) {
 		events[0].Model != "mock-chat" ||
 		events[0].InputTokens != 9 ||
 		events[0].OutputTokens != 12 ||
+		events[0].TotalTokens != 21 ||
+		events[0].EstimatedCostMicrounits != 78 ||
 		events[0].LatencyMS <= 0 {
 		t.Fatalf("telemetry event = %+v", events[0])
 	}

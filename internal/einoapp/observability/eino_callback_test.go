@@ -23,7 +23,11 @@ func TestEinoCallbackHandlerRecordsModelTokenTelemetry(t *testing.T) {
 		WorkspaceID: "ws-callback",
 		Provider:    "mock",
 		Model:       "mock-chat",
-		Now:         fixedCallbackClock(),
+		CostRates: observability.TokenCostRates{
+			InputMicrounitsPerToken:  2,
+			OutputMicrounitsPerToken: 5,
+		},
+		Now: fixedCallbackClock(),
 	})
 	ctx := callbacks.InitCallbacks(context.Background(), &callbacks.RunInfo{
 		Name:      "chat-model",
@@ -55,6 +59,8 @@ func TestEinoCallbackHandlerRecordsModelTokenTelemetry(t *testing.T) {
 		event.Model != "mock-chat" ||
 		event.InputTokens != 7 ||
 		event.OutputTokens != 11 ||
+		event.TotalTokens != 18 ||
+		event.EstimatedCostMicrounits != 69 ||
 		event.LatencyMS <= 0 {
 		t.Fatalf("callback telemetry = %+v", event)
 	}
