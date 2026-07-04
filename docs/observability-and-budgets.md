@@ -63,7 +63,9 @@ P0/P1 最小预算：
 
 P2 可增加 cost estimate、workspace quota、rate limit 和 per-connector budgets。
 
-当前 Phase 7.2 最小实现先固定预算终态入口：execution lifecycle 接收 `budget_exceeded`，只允许作用于 `running` 或 `waiting` run；系统将 run 标记为 `failed`、写入 `safe_error=budget_exceeded`、取消 active tool、过期 waiting pending，并追加安全 `event_type=budget` audit event。该入口代表已由预算判断层触发的安全结果，不在 HTTP、前端或 telemetry 中直接写 Product Facts。完整 token/cost 估算、workspace quota 和 rate limit 仍需后续任务实现。
+当前 Phase 7.2 最小实现先固定预算终态入口：execution lifecycle 接收 `budget_exceeded`，只允许作用于 `running` 或 `waiting` run；系统将 run 标记为 `failed`、写入 `safe_error=budget_exceeded`、取消 active tool、过期 waiting pending，并追加安全 `event_type=budget` audit event。该入口代表已由预算判断层触发的安全结果，不在 HTTP、前端或 telemetry 中直接写 Product Facts。完整 cost 估算、workspace quota 和 rate limit 仍需后续任务实现。
+
+OpenAI-compatible provider 已解析响应 usage，并通过 `llm.ChatResponse.Usage` 和 Eino `model.CallbackOutput.TokenUsage` 进入内部 telemetry。usage 只包含计数，不包含 prompt、completion 或 raw provider body。
 
 当前配置文件支持 `max_model_calls_per_run`、`max_tool_calls_per_run` 和 `max_input_tokens_per_run`。execution 预算评估器只返回安全 `BudgetDecision`；调用方必须再通过 `budget_exceeded` lifecycle 写入 Product Facts，不能由 telemetry 或 HTTP 直接修改产品状态。
 

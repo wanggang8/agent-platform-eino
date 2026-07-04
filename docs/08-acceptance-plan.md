@@ -178,7 +178,7 @@ Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 
 
 Phase 4/P0 完成后，`tool-card` 不得再返回 `exit 2`；它必须使用本地 mock capability provider，不依赖真实模型凭据。`real-model-chat` 归属 P1 真实模型 smoke：只有在 Phase 4.3 引入 OpenAI-compatible provider 后才能打开；无本地凭据时必须生成 skipped report，不能作为通过信号。
 
-Phase 7 当前进展：`action-consistency`、`replay` 和 `budget` 已不再允许返回 `exit 2`；它们必须启动真实本地服务并通过同源 Product Facts 断言。`budget` 当前覆盖最小 `budget_exceeded` lifecycle：安全失败、active tool 取消、waiting pending 过期、audit 写入和 replay 投影；内部 telemetry/counter 与 ChatModel Eino callback handler 已接入安全 sink。provider token/cost 估算、OTel exporter 和 workspace quota 仍由后续硬化门禁覆盖。assistant/pending 的完整同源验收仍由 `chat-stream`、HITL、clarification 和后续 replay 硬化门禁共同覆盖。
+Phase 7 当前进展：`action-consistency`、`replay` 和 `budget` 已不再允许返回 `exit 2`；它们必须启动真实本地服务并通过同源 Product Facts 断言。`budget` 当前覆盖最小 `budget_exceeded` lifecycle：安全失败、active tool 取消、waiting pending 过期、audit 写入和 replay 投影；内部 telemetry/counter、ChatModel Eino callback handler 与 OpenAI-compatible token usage 映射已接入安全 sink。cost 估算、OTel exporter 和 workspace quota 仍由后续硬化门禁覆盖。assistant/pending 的完整同源验收仍由 `chat-stream`、HITL、clarification 和后续 replay 硬化门禁共同覆盖。
 
 ## HITL 门禁
 

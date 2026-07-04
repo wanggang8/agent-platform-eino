@@ -55,6 +55,48 @@ func TestOpenAICompatibleGeneratePostsChatCompletion(t *testing.T) {
 	}
 }
 
+func TestOpenAICompatibleGenerateMapsUsage(t *testing.T) {
+	// provider usage 只能作为安全计数进入 LLM 响应，不能携带 raw response 或凭据。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"choices":[{"message":{"role":"assistant","content":"带 usage 的回答"}}],
+			"usage":{"prompt_tokens":13,"completion_tokens":21,"total_tokens":34}
+		}`))
+	}))
+	defer server.Close()
+
+	model := newTestOpenAIModel(t, server.URL, "sk-test")
+	resp, err := model.Generate(context.Background(), llm.ChatRequest{Messages: []llm.Message{{Role: "user", Content: "hello"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Usage.InputTokens != 13 || resp.Usage.OutputTokens != 21 || resp.Usage.TotalTokens != 34 {
+		t.Fatalf("usage = %+v", resp.Usage)
+	}
+}
+
+func TestOpenAICompatibleGenerateNormalizesNegativeUsage(t *testing.T) {
+	// usage 属于 provider 外部输入，进入项目安全响应前必须压掉不可信负数。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"choices":[{"message":{"role":"assistant","content":"带异常 usage 的回答"}}],
+			"usage":{"prompt_tokens":-13,"completion_tokens":21,"total_tokens":-34}
+		}`))
+	}))
+	defer server.Close()
+
+	model := newTestOpenAIModel(t, server.URL, "sk-test")
+	resp, err := model.Generate(context.Background(), llm.ChatRequest{Messages: []llm.Message{{Role: "user", Content: "hello"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Usage.InputTokens != 0 || resp.Usage.OutputTokens != 21 || resp.Usage.TotalTokens != 0 {
+		t.Fatalf("usage = %+v", resp.Usage)
+	}
+}
+
 func TestOpenAICompatibleNon2xxReturnsRedactedError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "Authorization: Bearer sk-secret raw body", http.StatusUnauthorized)

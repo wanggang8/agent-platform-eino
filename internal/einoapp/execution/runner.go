@@ -165,13 +165,28 @@ func (adapter einoModelAdapter) Generate(ctx context.Context, input []*schema.Me
 		return nil, err
 	}
 	message := schema.AssistantMessage(response.Content, nil)
-	callbacks.OnEnd(ctx, &einomodel.CallbackOutput{Message: message})
+	callbacks.OnEnd(ctx, &einomodel.CallbackOutput{
+		Message:    message,
+		TokenUsage: einoTokenUsage(response.Usage),
+	})
 	return message, nil
 }
 
 // IsCallbacksEnabled 告诉 Eino 当前模型适配器自己触发 callback，避免框架再包一层重复事件。
 func (adapter einoModelAdapter) IsCallbacksEnabled() bool {
 	return true
+}
+
+// einoTokenUsage 只把 provider 返回的安全计数转为 Eino callback usage，不携带 prompt 或响应正文。
+func einoTokenUsage(usage llm.TokenUsage) *einomodel.TokenUsage {
+	if usage.InputTokens == 0 && usage.OutputTokens == 0 && usage.TotalTokens == 0 {
+		return nil
+	}
+	return &einomodel.TokenUsage{
+		PromptTokens:     usage.InputTokens,
+		CompletionTokens: usage.OutputTokens,
+		TotalTokens:      usage.TotalTokens,
+	}
 }
 
 // Stream 当前 Phase 3 不启用 Eino streaming；SSE 只从 Product Facts 投影生成。

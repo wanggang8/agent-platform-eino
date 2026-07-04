@@ -59,6 +59,14 @@ type Message struct {
 // ChatResponse 是模型返回的安全文本候选。
 type ChatResponse struct {
 	Content string
+	Usage   TokenUsage
+}
+
+// TokenUsage 是 provider 返回的安全 token 计数，不包含 prompt、completion 或 provider raw body。
+type TokenUsage struct {
+	InputTokens  int
+	OutputTokens int
+	TotalTokens  int
 }
 
 // ChatStream 抽象模型流式输出，调用方必须负责关闭。

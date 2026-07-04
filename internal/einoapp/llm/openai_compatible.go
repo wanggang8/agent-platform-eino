@@ -80,6 +80,13 @@ type chatCompletionResponse struct {
 	Choices []struct {
 		Message chatCompletionMessage `json:"message"`
 	} `json:"choices"`
+	Usage chatCompletionUsage `json:"usage"`
+}
+
+type chatCompletionUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 // Generate 调用 OpenAI-compatible /chat/completions，并只返回 assistant 安全文本候选。
@@ -126,7 +133,26 @@ func (model openAICompatibleChatModel) Generate(ctx context.Context, req ChatReq
 	if len(completion.Choices) == 0 || strings.TrimSpace(completion.Choices[0].Message.Content) == "" {
 		return ChatResponse{}, redactedProviderError("provider", "provider_malformed_response", "模型响应缺少可展示内容", false)
 	}
-	return ChatResponse{Content: completion.Choices[0].Message.Content}, nil
+	return ChatResponse{
+		Content: completion.Choices[0].Message.Content,
+		Usage:   normalizeChatCompletionUsage(completion.Usage),
+	}, nil
+}
+
+// normalizeChatCompletionUsage 在 provider 边界归一化外部 usage，避免负数穿透到 Eino callback。
+func normalizeChatCompletionUsage(usage chatCompletionUsage) TokenUsage {
+	return TokenUsage{
+		InputTokens:  nonNegativeTokenCount(usage.PromptTokens),
+		OutputTokens: nonNegativeTokenCount(usage.CompletionTokens),
+		TotalTokens:  nonNegativeTokenCount(usage.TotalTokens),
+	}
+}
+
+func nonNegativeTokenCount(value int) int {
+	if value < 0 {
+		return 0
+	}
+	return value
 }
 
 // Stream 真实流式 provider 在后续阶段接入；当前避免半成品 streaming 绕过安全门。

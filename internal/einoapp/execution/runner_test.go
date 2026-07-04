@@ -65,7 +65,11 @@ func TestChatModelRunnerRecordsSafeTelemetry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	runner := execution.NewChatModelRunner(repository, llm.NewMockProvider("安全回复"), llm.Config{
+	runner := execution.NewChatModelRunner(repository, llm.NewMockProviderWithUsage("安全回复", llm.TokenUsage{
+		InputTokens:  9,
+		OutputTokens: 12,
+		TotalTokens:  21,
+	}), llm.Config{
 		Provider:   "mock",
 		Model:      "mock-chat",
 		ModelLabel: "mock-chat",
@@ -86,6 +90,8 @@ func TestChatModelRunnerRecordsSafeTelemetry(t *testing.T) {
 		events[0].OperationName != "chat.model.generate" ||
 		events[0].Provider != "mock" ||
 		events[0].Model != "mock-chat" ||
+		events[0].InputTokens != 9 ||
+		events[0].OutputTokens != 12 ||
 		events[0].LatencyMS <= 0 {
 		t.Fatalf("telemetry event = %+v", events[0])
 	}
