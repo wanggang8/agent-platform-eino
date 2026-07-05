@@ -69,7 +69,7 @@ OpenAI-compatible provider 已解析响应 usage，并通过 `llm.ChatResponse.U
 
 cost estimate 当前只做统计：`observability.cost_statistics.input_unit_microunits` / `output_unit_microunits` 由配置文件显式提供，默认 0 表示不估算成本。callback telemetry 会记录 `estimated_cost_microunits`，但不会触发 `budget_exceeded`、不会写 Product Facts，也不会阻断 run。
 
-run summary 当前也只做内部统计：它聚合 event count、model call count、failure count、token count、estimated cost 和 total latency，不包含 prompt、completion、tool args 或 provider raw payload，也不作为 Product Facts、Workbench、Action API、Replay 或 audit 的事实来源。
+run summary 当前也只做内部统计：它聚合 event count、model call count、failure count、token count、estimated cost 和 total latency，不包含 prompt、completion、tool args 或 provider raw payload，也不作为 Product Facts、Workbench、Action API、Replay 或 audit 的事实来源。`WriteUsageSummaryReport` 可将 summary 写为 `eino.telemetry_usage_summary_report.v1` JSON 文件，默认报告路径见 `tooling-and-reporting.md`；该文件报告仍是内部诊断材料，不是产品事实。
 
 当前配置文件支持 `max_model_calls_per_run`、`max_tool_calls_per_run` 和 `max_input_tokens_per_run`。execution 预算评估器只返回安全 `BudgetDecision`；调用方必须再通过 `budget_exceeded` lifecycle 写入 Product Facts，不能由 telemetry 或 HTTP 直接修改产品状态。
 
@@ -99,6 +99,18 @@ real model provider、real model tool、live read、live write 和 skip report �
 - failure category。
 - screenshot/report path。
 - blocks_claims（skip 时）。
+
+telemetry summary report 必须只包含：
+
+- `schema_version=eino.telemetry_usage_summary_report.v1`。
+- `report_kind=telemetry_usage_summary`。
+- 生成时间。
+- run/workspace 安全 label。
+- event/model/failure count。
+- input/output/total token、estimated cost 和 total latency。
+- `blocks_claims=[]`。
+
+telemetry summary report 不得包含 raw events、prompt、completion、tool args、provider raw payload、Authorization、API key、credential ref 或 reusable resume token。
 
 ## 验收
 

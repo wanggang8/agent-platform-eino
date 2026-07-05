@@ -79,6 +79,7 @@ npm run eino-workbench:visual-test -- --update-snapshots
 | live read 报告 | `test-results/eino-workbench-live-read-report.json` |
 | live write 报告 | `test-results/eino-workbench-live-write-report.json` |
 | skipped 报告 | `test-results/eino-workbench-skip-report.json` |
+| telemetry summary 报告 | `test-results/eino-workbench-telemetry-usage-summary-report.json` |
 | 视觉报告 | `test-results/eino-workbench-visual-report/` |
 
 ## skip report

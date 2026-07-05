@@ -7,18 +7,18 @@ import (
 
 // UsageSummary 是内部 telemetry 的 run 级安全统计摘要，不是 Product Facts。
 type UsageSummary struct {
-	RunID                   string
-	WorkspaceID             string
-	EventCount              int
-	ModelCallCount          int
-	FailureCount            int
-	InputTokens             int
-	OutputTokens            int
-	TotalTokens             int
-	EstimatedCostMicrounits int64
-	TotalLatencyMS          int64
-	FirstEventAt            time.Time
-	LastEventAt             time.Time
+	RunID                   string    `json:"run_id"`
+	WorkspaceID             string    `json:"workspace_id"`
+	EventCount              int       `json:"event_count"`
+	ModelCallCount          int       `json:"model_call_count"`
+	FailureCount            int       `json:"failure_count"`
+	InputTokens             int       `json:"input_tokens"`
+	OutputTokens            int       `json:"output_tokens"`
+	TotalTokens             int       `json:"total_tokens"`
+	EstimatedCostMicrounits int64     `json:"estimated_cost_microunits"`
+	TotalLatencyMS          int64     `json:"total_latency_ms"`
+	FirstEventAt            time.Time `json:"first_event_at"`
+	LastEventAt             time.Time `json:"last_event_at"`
 }
 
 // RunSummary 返回指定 run 的内部统计摘要；未知 run 返回只包含安全 run_id 的空摘要。

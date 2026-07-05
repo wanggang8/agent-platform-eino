@@ -177,6 +177,11 @@ export const contractSchemas = [
     "path": "docs/schemas/skip-report.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/telemetry_usage_summary_report.v1.schema.json",
+    "title": "Eino Telemetry Usage Summary Report",
+    "path": "docs/schemas/telemetry_usage_summary_report.v1.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/tool.structured_result.v1.schema.json",
     "title": "Generic Tool StructuredResult",
     "path": "docs/schemas/tool.structured_result.v1.schema.json"

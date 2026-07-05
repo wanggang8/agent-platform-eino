@@ -1,0 +1,20 @@
+{
+  "schema_version": "eino.telemetry_usage_summary_report.v1",
+  "report_kind": "telemetry_usage_summary",
+  "generated_at": "2026-07-05T00:00:00Z",
+  "summary": {
+    "run_id": "run-summary",
+    "workspace_id": "ws-summary",
+    "event_count": 2,
+    "model_call_count": 2,
+    "failure_count": 1,
+    "input_tokens": 10,
+    "output_tokens": 16,
+    "total_tokens": 26,
+    "estimated_cost_microunits": 62,
+    "total_latency_ms": 24,
+    "first_event_at": "2026-07-05T00:00:10Z",
+    "last_event_at": "2026-07-05T00:00:20Z"
+  },
+  "blocks_claims": []
+}

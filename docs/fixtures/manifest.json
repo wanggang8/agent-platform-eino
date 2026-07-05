@@ -26,6 +26,10 @@
       "schema": "docs/schemas/llm_provider_config.v1.schema.json"
     },
     {
+      "fixture": "docs/fixtures/telemetry-usage-summary-report.json",
+      "schema": "docs/schemas/telemetry_usage_summary_report.v1.schema.json"
+    },
+    {
       "fixture": "docs/fixtures/provider-redacted-error-timeout.json",
       "schema": "docs/schemas/provider_redacted_error.v1.schema.json"
     },
