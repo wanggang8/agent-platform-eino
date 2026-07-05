@@ -863,6 +863,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 - 当前 telemetry/counter 切片已新增内部 `observability.Sink`、配置化 `max_model_calls_per_run` / `max_tool_calls_per_run` / `max_input_tokens_per_run` 和 execution 预算评估器。它们不写 Workbench SSE 或 Product Facts；OTel exporter、workspace quota 和限制型 cost budget 仍属后续任务。
 - 当前 Eino callback 切片已通过 `observability.NewEinoCallbackHandler` 接入 ChatModel callback：`OnStart/OnEnd/OnError` 只写安全 telemetry。OpenAI-compatible provider 已解析 `usage.prompt_tokens` / `usage.completion_tokens` / `usage.total_tokens` 到 `llm.ChatResponse.Usage`，并由 `einoModelAdapter` 映射进 `model.CallbackOutput.TokenUsage`；当前 error callback 只写安全 `model_error` 分类，不保存 prompt、completion、raw provider payload 或 error 原文。
 - 当前 cost statistics 切片只做统计：`observability.cost_statistics.input_unit_microunits` / `output_unit_microunits` 为配置化单价，默认 0；Eino callback telemetry 会记录 `total_tokens` 和 `estimated_cost_microunits`，但不会触发 `budget_exceeded`、workspace quota 或 rate limit。
+- 当前 run summary 切片只做内部汇总：`MemorySink.RunSummary(run_id)` 聚合已脱敏 telemetry events 的 event/model/failure/token/cost/latency 计数，不写 Product Facts、不接 Workbench/Action API，也不触发 lifecycle。
 
 任务级检查：
 

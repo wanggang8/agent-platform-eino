@@ -29,7 +29,7 @@ Callback 不用于：
 - 保存 raw provider payload 到 Product Facts。
 - 绕过 Safety Gate 输出 assistant 或 tool result。
 
-当前实现提供内部 `observability.Sink` 和内存测试 sink。ChatModelRunner 通过 Eino ChatModel callback handler 记录 `chat.model.generate` 的安全 telemetry 事件，包含 run/workspace、provider/model label、latency、token/tool count 字段、只统计型 cost estimate 和 failure category；该事件不进入 Product Facts、Workbench SSE、ActionResult 或 Replay。OpenTelemetry exporter 仍需后续接入。
+当前实现提供内部 `observability.Sink` 和内存测试 sink。ChatModelRunner 通过 Eino ChatModel callback handler 记录 `chat.model.generate` 的安全 telemetry 事件，包含 run/workspace、provider/model label、latency、token/tool count 字段、只统计型 cost estimate 和 failure category；该事件不进入 Product Facts、Workbench SSE、ActionResult 或 Replay。`MemorySink.RunSummary(run_id)` 可从已脱敏事件生成内部 run 级统计摘要，供后续 report/exporter 复用。OpenTelemetry exporter 仍需后续接入。
 
 ## Trace 字段
 
@@ -68,6 +68,8 @@ P2 可增加限制型 cost budget、cost exporter、workspace quota、rate limit
 OpenAI-compatible provider 已解析响应 usage，并通过 `llm.ChatResponse.Usage` 和 Eino `model.CallbackOutput.TokenUsage` 进入内部 telemetry。usage 只包含计数，不包含 prompt、completion 或 raw provider body。
 
 cost estimate 当前只做统计：`observability.cost_statistics.input_unit_microunits` / `output_unit_microunits` 由配置文件显式提供，默认 0 表示不估算成本。callback telemetry 会记录 `estimated_cost_microunits`，但不会触发 `budget_exceeded`、不会写 Product Facts，也不会阻断 run。
+
+run summary 当前也只做内部统计：它聚合 event count、model call count、failure count、token count、estimated cost 和 total latency，不包含 prompt、completion、tool args 或 provider raw payload，也不作为 Product Facts、Workbench、Action API、Replay 或 audit 的事实来源。
 
 当前配置文件支持 `max_model_calls_per_run`、`max_tool_calls_per_run` 和 `max_input_tokens_per_run`。execution 预算评估器只返回安全 `BudgetDecision`；调用方必须再通过 `budget_exceeded` lifecycle 写入 Product Facts，不能由 telemetry 或 HTTP 直接修改产品状态。
 

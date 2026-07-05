@@ -178,7 +178,7 @@ Phase 3 完成后，`chat-stream`、`action-basic`、`capability-selection` 和 
 
 Phase 4/P0 完成后，`tool-card` 不得再返回 `exit 2`；它必须使用本地 mock capability provider，不依赖真实模型凭据。`real-model-chat` 归属 P1 真实模型 smoke：只有在 Phase 4.3 引入 OpenAI-compatible provider 后才能打开；无本地凭据时必须生成 skipped report，不能作为通过信号。
 
-Phase 7 当前进展：`action-consistency`、`replay` 和 `budget` 已不再允许返回 `exit 2`；它们必须启动真实本地服务并通过同源 Product Facts 断言。`budget` 当前覆盖最小 `budget_exceeded` lifecycle：安全失败、active tool 取消、waiting pending 过期、audit 写入和 replay 投影；内部 telemetry/counter、ChatModel Eino callback handler、OpenAI-compatible token usage 映射和只统计型 cost estimate 已接入安全 sink。OTel exporter、workspace quota、rate limit 和限制型 cost budget 仍由后续硬化门禁覆盖。assistant/pending 的完整同源验收仍由 `chat-stream`、HITL、clarification 和后续 replay 硬化门禁共同覆盖。
+Phase 7 当前进展：`action-consistency`、`replay` 和 `budget` 已不再允许返回 `exit 2`；它们必须启动真实本地服务并通过同源 Product Facts 断言。`budget` 当前覆盖最小 `budget_exceeded` lifecycle：安全失败、active tool 取消、waiting pending 过期、audit 写入和 replay 投影；内部 telemetry/counter、ChatModel Eino callback handler、OpenAI-compatible token usage 映射、只统计型 cost estimate 和内部 run summary 已接入安全 sink。OTel exporter、workspace quota、rate limit 和限制型 cost budget 仍由后续硬化门禁覆盖。assistant/pending 的完整同源验收仍由 `chat-stream`、HITL、clarification 和后续 replay 硬化门禁共同覆盖。
 
 ## HITL 门禁
 
@@ -235,10 +235,10 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 
 通过标准：
 
-- trace/run/workspace/model/tool count/latency/token usage 和只统计型 `estimated_cost_microunits` 至少进入内部 telemetry 或安全报告。
+- trace/run/workspace/model/tool count/latency/token usage、只统计型 `estimated_cost_microunits` 和 run summary 至少进入内部 telemetry 或安全报告。
 - budget exceeded 必须通过 execution 层写入 Product Facts，产生 `budget_exceeded` 安全失败摘要，取消 active tool，关闭 waiting pending，并可 replay。
 - replay events 必须包含安全 `event_type=budget` audit event，且不得泄漏 raw prompt、secret、Authorization、API key、provider payload 或 reusable resume token。
-- 内部 telemetry 事件不得进入 Product Facts、Workbench SSE 或 Action API；字段只能包含安全 label、latency、token/tool count、只统计型 cost estimate 和 failure category。
+- 内部 telemetry 事件和 run summary 不得进入 Product Facts、Workbench SSE、Action API、Replay 或 audit；字段只能包含安全 label、latency、token/tool count、只统计型 cost estimate 和 failure category。
 - 预算阈值必须来自配置或 policy，评估器只能返回安全 decision，不能直接绕过 lifecycle 写 run 状态。
 - callback 只用于 tracing、metrics、diagnostics，不作为主 SSE 来源。
 - audit 与 replay 仍从 Product Facts 投影。
