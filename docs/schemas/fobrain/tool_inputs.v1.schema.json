@@ -116,7 +116,7 @@
     "ticket_query": {
       "type": "object",
       "properties": {
-        "person": {"type": "string"},
+        "keyword": {"type": "string"},
         "status": {"type": "string"},
         "page": {"type": "integer", "minimum": 1},
         "page_size": {"type": "integer", "minimum": 1, "maximum": 100}

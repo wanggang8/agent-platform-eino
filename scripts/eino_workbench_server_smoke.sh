@@ -10,7 +10,6 @@ batch_c_keyword=""
 batch_c_business_name=""
 batch_c_severity=""
 batch_c_status=""
-batch_c_person=""
 batch_c_field=""
 batch_c_time_range=""
 batch_e_asset_id=""
@@ -68,11 +67,6 @@ while [[ $# -gt 0 ]]; do
     --status)
       require_option_value "$1" "${2:-}"
       batch_c_status="${2:-}"
-      shift 2
-      ;;
-    --person)
-      require_option_value "$1" "${2:-}"
-      batch_c_person="${2:-}"
       shift 2
       ;;
     --field)
@@ -274,7 +268,7 @@ report = {
     "missing_env": ["local_fobrain_live_config"],
     "credential_scope": "fobrain-workspace",
     "reason": reason,
-    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with Fobrain live credential; optional filters can be passed with --keyword/--business-name/--severity/--status/--person/--field/--time-range.",
+    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with Fobrain live credential; optional filters can be passed with --keyword/--business-name/--severity/--status/--field/--time-range.",
     "blocks_claims": ["fobrain-batch-c live pass", "Fobrain 24 readonly final acceptance"],
     "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
 }
@@ -350,9 +344,6 @@ if [[ "${scenario}" == "fobrain-batch-c" ]]; then
   fi
   if [[ -n "${batch_c_status}" ]]; then
     args+=(--status "${batch_c_status}")
-  fi
-  if [[ -n "${batch_c_person}" ]]; then
-    args+=(--person "${batch_c_person}")
   fi
   if [[ -n "${batch_c_field}" ]]; then
     args+=(--field "${batch_c_field}")

@@ -43,7 +43,7 @@ func TestProviderCatalogRegistersBatchCDirectReadTools(t *testing.T) {
 		},
 		fobrain.CapabilityPendingTickets: {
 			required:   []string{},
-			properties: map[string]string{"person": "string", "status": "string", "page": "integer", "page_size": "integer"},
+			properties: map[string]string{"keyword": "string", "status": "string", "page": "integer", "page_size": "integer"},
 		},
 		fobrain.CapabilityIPStats: {
 			required:   []string{},
@@ -155,7 +155,7 @@ func TestProviderInvokesBatchCMetricsAndTickets(t *testing.T) {
 		{
 			name:         "pending tickets",
 			capabilityID: fobrain.CapabilityPendingTickets,
-			arguments:    map[string]any{"person": "当前用户", "status": "pending"},
+			arguments:    map[string]any{"keyword": "漏洞", "status": "pending"},
 			result:       fobrain.DirectReadResult{ToolID: fobrain.CapabilityPendingTickets, Items: []fobrain.QueryResultItem{{EntityRef: "ticket:fobrain:fixture-1", DisplayName: "待处理工单"}}},
 			wantRef:      "result:fobrain:pending-tickets",
 			wantSummary:  "查询待处理工单",

@@ -31,7 +31,6 @@
         "business_name_present",
         "severity_present",
         "status_present",
-        "person_present",
         "field_present",
         "time_range_present"
       ],
@@ -40,7 +39,6 @@
         "business_name_present": {"type": "boolean"},
         "severity_present": {"type": "boolean"},
         "status_present": {"type": "boolean"},
-        "person_present": {"type": "boolean"},
         "field_present": {"type": "boolean"},
         "time_range_present": {"type": "boolean"}
       },

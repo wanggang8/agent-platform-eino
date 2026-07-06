@@ -96,10 +96,11 @@ func batchCLiveRequest(toolID string, query DirectReadQuery) (batchCLiveHTTPRequ
 		for _, status := range liveThreatStatusCodes(query.Status) {
 			values.Add("status", fmt.Sprint(status))
 		}
-		if text := firstNonEmptyLiveText(query.Person, query.Keyword); text != "" {
-			values.Set("keyword", text)
+		if keyword := firstNonEmptyLiveText(query.Keyword); keyword != "" {
+			values.Set("keyword", keyword)
 		}
-		return batchCLiveHTTPRequest{method: http.MethodGet, paths: []string{currentTicketPendingPath, legacyTicketPendingPath}, query: values}, nil
+		// pending_tickets 是工单增量接口，旧项目和真实接口证据都不支持按人员服务端过滤。
+		return batchCLiveHTTPRequest{method: http.MethodGet, paths: []string{legacyTicketPendingPath, currentTicketPendingPath}, query: values}, nil
 	case CapabilityIPStats:
 		if keyword := firstNonEmptyLiveText(query.Keyword, query.Field); keyword != "" {
 			values.Set("keyword", keyword)

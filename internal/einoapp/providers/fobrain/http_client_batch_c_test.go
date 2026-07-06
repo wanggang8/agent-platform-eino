@@ -192,8 +192,8 @@ func TestHTTPClientDirectReadStatsAndTicketsUseBatchCPaths(t *testing.T) {
 		{
 			name:         "pending tickets",
 			capabilityID: fobrain.CapabilityPendingTickets,
-			query:        fobrain.DirectReadQuery{Status: "open", Page: 1, PageSize: 20},
-			wantPath:     "/api/ticket/pending",
+			query:        fobrain.DirectReadQuery{Status: "open", Keyword: "漏洞", Page: 1, PageSize: 20},
+			wantPath:     "/api/v1/ticket/pending",
 			assert: func(t *testing.T, result fobrain.DirectReadResult, _ string) {
 				t.Helper()
 				if len(result.Items) != 1 || result.Items[0].EntityRef != "ticket:fobrain:ticket-1" || result.Items[0].DisplayName != "高危组件漏洞" {
@@ -235,6 +235,12 @@ func TestHTTPClientDirectReadStatsAndTicketsUseBatchCPaths(t *testing.T) {
 				case fobrain.CapabilityVulStats:
 					_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"items": []map[string]any{{"vul_name": "SQL 注入", "ip_count": 9}}}})
 				case fobrain.CapabilityPendingTickets:
+					if r.URL.Query().Get("keyword") != "漏洞" || r.URL.Query().Get("person") != "" {
+						t.Fatalf("pending tickets query mismatch: %s", r.URL.RawQuery)
+					}
+					if r.URL.Query().Get("page_size") != "20" || r.URL.Query().Get("per_page") != "" {
+						t.Fatalf("pending ticket pagination mismatch: %s", r.URL.RawQuery)
+					}
 					_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"list": []map[string]any{{"ticket_id": "ticket-1", "vul_name": "高危组件漏洞", "status": "pending"}}}})
 				}
 			}))

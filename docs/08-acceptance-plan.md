@@ -367,3 +367,4 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 - Batch C mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-c-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch C provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C HTTP mapper 记录见 `docs/acceptance-records/phase-8-batch-c-live-mapper-2026-07-06.md`。该记录只允许声明 Batch C live mapper 有本地 focused tests，不代表真实 live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C live smoke/report 基础设施记录见 `docs/acceptance-records/phase-8-batch-c-live-smoke-infra-2026-07-06.md`。该记录只允许声明 Batch C report schema、smoke runner 和 server smoke 入口可用；没有真实 live passed 报告前，不代表 Batch C live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
+- Batch C 真实 live smoke 阻断记录见 `docs/acceptance-records/phase-8-batch-c-live-smoke-blocked-2026-07-06.md`。当前真实配置运行结果为 5/6 非空，`pending_tickets` 返回空结果，因此继续阻断 Batch C live pass 和 Fobrain 24/24 恢复完成声明。

@@ -45,7 +45,6 @@ type batchCSampleInputs struct {
 	BusinessNamePresent bool `json:"business_name_present"`
 	SeverityPresent     bool `json:"severity_present"`
 	StatusPresent       bool `json:"status_present"`
-	PersonPresent       bool `json:"person_present"`
 	FieldPresent        bool `json:"field_present"`
 	TimeRangePresent    bool `json:"time_range_present"`
 }
@@ -68,7 +67,6 @@ type batchCSamples struct {
 	businessName string
 	severity     string
 	status       string
-	person       string
 	field        string
 	timeRange    string
 }
@@ -80,7 +78,6 @@ func main() {
 	businessName := flag.String("business-name", "", "optional business name sample value; redacted from report")
 	severity := flag.String("severity", "", "optional severity sample value; redacted from report")
 	status := flag.String("status", "", "optional status sample value; redacted from report")
-	person := flag.String("person", "", "optional person sample value; redacted from report")
 	field := flag.String("field", "", "optional field sample value; redacted from report")
 	timeRange := flag.String("time-range", "", "optional time range sample value; redacted from report")
 	flag.Parse()
@@ -90,7 +87,6 @@ func main() {
 		businessName: *businessName,
 		severity:     *severity,
 		status:       *status,
-		person:       *person,
 		field:        *field,
 		timeRange:    *timeRange,
 	})
@@ -133,7 +129,6 @@ func executeBatchCLiveSmoke(ctx context.Context, cfg bootstrap.Config, samples b
 		BusinessNamePresent: strings.TrimSpace(samples.businessName) != "",
 		SeverityPresent:     strings.TrimSpace(samples.severity) != "",
 		StatusPresent:       strings.TrimSpace(samples.status) != "",
-		PersonPresent:       strings.TrimSpace(samples.person) != "",
 		FieldPresent:        strings.TrimSpace(samples.field) != "",
 		TimeRangePresent:    strings.TrimSpace(samples.timeRange) != "",
 	}
@@ -226,12 +221,11 @@ func batchCRequests(samples batchCSamples) []batchCInvocationRequest {
 			"keyword":  samples.keyword,
 		}, samples.severity, samples.status, samples.keyword),
 		batchCRequest(fobrain.CapabilityPendingTickets, map[string]any{
-			"person":    samples.person,
 			"status":    samples.status,
 			"keyword":   samples.keyword,
 			"page":      1,
 			"page_size": 20,
-		}, samples.person, samples.status, samples.keyword),
+		}, samples.status, samples.keyword),
 		batchCRequest(fobrain.CapabilityIPStats, map[string]any{
 			"field":      samples.field,
 			"time_range": samples.timeRange,

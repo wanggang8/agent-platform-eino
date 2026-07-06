@@ -178,7 +178,7 @@ func batchCDirectReadCatalog() []capabilities.Capability {
 		fobrainReadCapability(CapabilityBusinessList, "查询业务系统", "查询业务系统列表，可按负责人或关键字筛选。", map[string]string{"business_name": "string", "owner": "string", "keyword": "string", "time_range": "string", "page": "integer", "page_size": "integer"}, []string{}),
 		fobrainReadCapability(CapabilityExternalHighRiskAssets, "查询外部高风险资产", "查询外部暴露的高风险资产列表。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
 		fobrainReadCapability(CapabilityVulnerabilityStatusSummary, "汇总漏洞状态", "汇总漏洞状态分布指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
-		fobrainReadCapability(CapabilityPendingTickets, "查询待处理工单", "查询当前用户或指定人员的待处理工单列表。", map[string]string{"person": "string", "status": "string", "page": "integer", "page_size": "integer"}, []string{}),
+		fobrainReadCapability(CapabilityPendingTickets, "查询待处理工单", "查询当前凭据可见的待处理工单列表，可按状态或关键字筛选。", map[string]string{"keyword": "string", "status": "string", "page": "integer", "page_size": "integer"}, []string{}),
 		fobrainReadCapability(CapabilityIPStats, "统计 IP 资产", "统计 IP 资产指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
 		fobrainReadCapability(CapabilityVulStats, "统计漏洞情况", "统计漏洞数量和风险指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
 	}

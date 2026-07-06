@@ -33,7 +33,7 @@ git diff --check
 - `business_list` 映射到 `/api/business`，并兼容 `/api/v1/business`。
 - `external_high_risk_assets` 映射到 `/api/external_ip_asset`，并兼容 `/api/v1/external_ip_asset`。
 - `vulnerability_status_summary` 映射到 `/api/threat_center/count`，只保留安全指标。
-- `pending_tickets` 映射到 `/api/ticket/pending`，只保留安全工单行摘要。
+- `pending_tickets` 映射到 `/api/v1/ticket/pending`，保留旧 adapter 兼容的 `keyword`、`status[]`、`page/page_size` 查询，不发送真实接口不支持的人员过滤参数，只保留安全工单行摘要。
 - `ip_stats` / `vul_stats` 映射到 `/api/threat_center/relevance/ip_stats` 和 `/api/threat_center/relevance/vul_stats`，只保留安全指标。
 - 业务错误、非法响应和认证错误只折叠为安全错误，不把 token、header、raw response 或 raw aggregation body 写入事实材料。
 

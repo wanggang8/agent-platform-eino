@@ -27,7 +27,7 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 				t.Fatalf("method = %s, want POST", r.Method)
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "待修复", "count": 3}}})
-		case "/api/ticket/pending":
+		case "/api/v1/ticket/pending":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"items": []map[string]any{{"id": "ticket-1", "title": "漏洞修复", "status": "pending", "assignee": "张三"}}}})
 		case "/api/threat_center/relevance/ip_stats":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "外网", "count": 5}}})
@@ -49,7 +49,6 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 		businessName: "核心业务",
 		severity:     "high",
 		status:       "pending",
-		person:       "张三",
 		field:        "network",
 		timeRange:    "7d",
 	})
@@ -61,7 +60,7 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 		t.Fatalf("report status mismatch: %+v", report)
 	}
 	if !report.SampleInputs.KeywordPresent || !report.SampleInputs.BusinessNamePresent ||
-		!report.SampleInputs.SeverityPresent || !report.SampleInputs.StatusPresent || !report.SampleInputs.PersonPresent ||
+		!report.SampleInputs.SeverityPresent || !report.SampleInputs.StatusPresent ||
 		!report.SampleInputs.FieldPresent || !report.SampleInputs.TimeRangePresent {
 		t.Fatalf("sample input mismatch: %+v", report.SampleInputs)
 	}

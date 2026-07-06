@@ -20,7 +20,6 @@ type DirectReadQuery struct {
 	Severity     string
 	Status       string
 	TimeRange    string
-	Person       string
 	Page         int
 	PageSize     int
 }
@@ -86,11 +85,10 @@ func directReadQueryFromArguments(toolID string, arguments map[string]any) (Dire
 		Severity:     safeArgumentString(arguments["severity"]),
 		Status:       safeArgumentString(arguments["status"]),
 		TimeRange:    safeArgumentString(arguments["time_range"]),
-		Person:       safeArgumentString(arguments["person"]),
 		Page:         positiveInt(arguments["page"], 1),
 		PageSize:     boundedPageSize(arguments["page_size"], 20),
 	}
-	if directReadUnsafeValues(query.BusinessName, query.Owner, query.Keyword, query.Field, query.Severity, query.Status, query.TimeRange, query.Person) {
+	if directReadUnsafeValues(query.BusinessName, query.Owner, query.Keyword, query.Field, query.Severity, query.Status, query.TimeRange) {
 		return DirectReadQuery{}, facts.ErrUnsafeFactMaterial
 	}
 	return query, nil
@@ -114,7 +112,7 @@ func BuildDirectReadStructuredResult(result DirectReadResult) (product.Structure
 }
 
 func directReadQueryTarget(metadata directReadMetadata, query DirectReadQuery) string {
-	for _, value := range []string{query.BusinessName, query.Owner, query.Keyword, query.Field, query.Severity, query.Status, query.Person, query.TimeRange} {
+	for _, value := range []string{query.BusinessName, query.Owner, query.Keyword, query.Field, query.Severity, query.Status, query.TimeRange} {
 		if text := strings.TrimSpace(value); text != "" {
 			return text
 		}
