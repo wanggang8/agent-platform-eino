@@ -896,6 +896,39 @@ go test ./internal/einoapp/product -run Replay -count=1
 bash scripts/eino_workbench_server_smoke.sh --scenario replay
 ```
 
+### Phase 7 closeout status
+
+当前 Phase 7 已通过 Product projection、Replay、Audit/Budget 和 telemetry summary report 的本地任务级检查。可声明完成的范围仅包括：
+
+- Workbench、ActionResult、SSE/current view 和 Replay 从同一 Product Facts 投影。
+- Replay 视图与同 run snapshot 保持一致，并只暴露安全产品事件和 audit event。
+- `budget_exceeded` 通过 execution lifecycle 写入 Product Facts、audit 和 replay，不由 telemetry 或 HTTP 直接改产品状态。
+- Eino callback、provider usage、cost estimate、run summary 和 telemetry summary report 只进入内部 telemetry/安全报告，不进入产品事实链路。
+
+暂缓到后续硬化的范围：
+
+- OpenTelemetry exporter。
+- workspace quota。
+- rate limit。
+- 限制型 cost budget。
+- 持久化 facts cursor/event log 的 replay 硬化。
+
+Phase 7 closeout 任务级检查：
+
+```bash
+go test ./internal/einoapp/product -run 'Projection|Inspector|Replay' -count=1
+go test ./scripts/telemetry_summary_report ./internal/einoapp/observability -run 'TelemetrySummary|Report|Summary|Cost' -count=1
+go run ./scripts/telemetry_summary_report --output test-results/eino-workbench-telemetry-usage-summary-report.json
+node scripts/eino_workbench_report_validate.mjs --schema docs/schemas/telemetry_usage_summary_report.v1.schema.json --report test-results/eino-workbench-telemetry-usage-summary-report.json
+go test ./internal/einoapp/... -run 'Audit|Safety|Leak|Redaction|Telemetry|Budget|ContextSnapshot|RunLifecycle|ImportBoundary|Usage|Cost|Summary|Report' -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
+bash scripts/eino_workbench_server_smoke.sh --scenario replay
+bash scripts/eino_workbench_server_smoke.sh --scenario budget
+go test ./...
+npm run eino-workbench:contract-test
+git diff --check
+```
+
 ## Phase 8：Fobrain 产品能力恢复
 
 Phase 8 是 P2 门禁，属于完整重构必做范围；未完成本阶段不得声明重构完成、能力等价或替换当前产品基线。

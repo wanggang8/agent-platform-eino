@@ -246,6 +246,29 @@ bash scripts/eino_workbench_server_smoke.sh --scenario budget
 - callback 只用于 tracing、metrics、diagnostics，不作为主 SSE 来源。
 - audit 与 replay 仍从 Product Facts 投影。
 
+Phase 7 closeout 通过条件：
+
+- `action-consistency`、`replay`、`budget` 三个本地 smoke 必须全部通过。
+- telemetry summary report 必须生成并通过 schema 校验。
+- 任务级检查必须覆盖 Product projection/replay Go 测试、observability/report Go 测试、安全边界 Go 测试、`go test ./...`、contract-test 和 `git diff --check`。
+- 不得把 OpenTelemetry exporter、workspace quota、rate limit、限制型 cost budget 或持久化 facts cursor/event log replay 硬化声明为已完成。
+
+Phase 7 closeout 权威验收命令：
+
+```bash
+go test ./internal/einoapp/product -run 'Projection|Inspector|Replay' -count=1
+go test ./scripts/telemetry_summary_report ./internal/einoapp/observability -run 'TelemetrySummary|Report|Summary|Cost' -count=1
+go run ./scripts/telemetry_summary_report --output test-results/eino-workbench-telemetry-usage-summary-report.json
+node scripts/eino_workbench_report_validate.mjs --schema docs/schemas/telemetry_usage_summary_report.v1.schema.json --report test-results/eino-workbench-telemetry-usage-summary-report.json
+go test ./internal/einoapp/... -run 'Audit|Safety|Leak|Redaction|Telemetry|Budget|ContextSnapshot|RunLifecycle|ImportBoundary|Usage|Cost|Summary|Report' -count=1
+bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
+bash scripts/eino_workbench_server_smoke.sh --scenario replay
+bash scripts/eino_workbench_server_smoke.sh --scenario budget
+go test ./...
+npm run eino-workbench:contract-test
+git diff --check
+```
+
 ## 真实模型与 Fobrain PoC smoke
 
 真实模型和 Fobrain smoke 使用本地 ignored 配置文件，不使用环境变量作为服务配置来源：
