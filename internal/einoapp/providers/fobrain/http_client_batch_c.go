@@ -99,8 +99,8 @@ func batchCLiveRequest(toolID string, query DirectReadQuery) (batchCLiveHTTPRequ
 		if keyword := firstNonEmptyLiveText(query.Keyword); keyword != "" {
 			values.Set("keyword", keyword)
 		}
-		// pending_tickets 是工单增量接口，旧项目和真实接口证据都不支持按人员服务端过滤。
-		return batchCLiveHTTPRequest{method: http.MethodGet, paths: []string{legacyTicketPendingPath, currentTicketPendingPath}, query: values}, nil
+		// pending_tickets 当前真实环境使用 /api/ticket/pending；/api/v1 只保留为旧环境 fallback。
+		return batchCLiveHTTPRequest{method: http.MethodGet, paths: []string{currentTicketPendingPath, legacyTicketPendingPath}, query: values}, nil
 	case CapabilityIPStats:
 		if keyword := firstNonEmptyLiveText(query.Keyword, query.Field); keyword != "" {
 			values.Set("keyword", keyword)

@@ -61,7 +61,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 验收重点：无筛选首读、指标卡、表格卡、状态标签安全映射、pending ticket 只读展示。
 
-当前代码进展：Batch C 六个“直接列表与统计”只读工具已进入 mock provider catalog，并具备安全筛选入参、无筛选默认范围、列表/指标两类 mock client 返回和 StructuredResult 安全摘要 mapper。HTTP live mapper 已按旧 Fobrain 只读路由补齐 focused tests：业务系统列表走 `/api/business`，外部高风险资产走 `/api/external_ip_asset`，漏洞状态汇总走 `/api/threat_center/count`，待处理工单走 `/api/v1/ticket/pending` 且只发送 `keyword`、`status[]`、`page/page_size`，不暴露人员过滤语义，IP/漏洞统计走 `/api/threat_center/relevance/ip_stats` 和 `/api/threat_center/relevance/vul_stats`。`fobrain-batch-c` live smoke/report 基础设施已补齐，报告通过 `docs/schemas/fobrain/batch_c_live_report.v1.schema.json` 约束；无真实配置时只生成 skip report，真实返回任一空结果时生成 blocking report。2026-07-06 真实配置运行结果为 5/6 非空，`pending_tickets` 当前真实环境返回空结果，因此仍不得声明 Batch C live pass。Workbench 视觉证据和 Action API 同源 smoke 仍需后续任务补齐；不得据此声明 Fobrain 24/24 恢复完成。
+当前代码进展：Batch C 六个“直接列表与统计”只读工具已进入 mock provider catalog，并具备安全筛选入参、无筛选默认范围、列表/指标两类 mock client 返回和 StructuredResult 安全摘要 mapper。HTTP live mapper 已按当前真实 Fobrain 路由补齐 focused tests：业务系统列表走 `/api/business`，外部高风险资产走 `/api/external_ip_asset`，漏洞状态汇总走 `/api/threat_center/count`，待处理工单走 `/api/ticket/pending` 且只发送 `keyword`、`status[]`、`page/page_size`，不暴露人员过滤语义，IP/漏洞统计走 `/api/threat_center/relevance/ip_stats` 和 `/api/threat_center/relevance/vul_stats`。`fobrain-batch-c` live smoke/report 基础设施已补齐，报告通过 `docs/schemas/fobrain/batch_c_live_report.v1.schema.json` 约束；无真实配置时只生成 skip report，真实返回任一空结果时生成 blocking report。2026-07-06 真实配置运行结果为 5/6 非空，`pending_tickets` 当前真实环境返回空结果，因此仍不得声明 Batch C live pass。Workbench 视觉证据和 Action API 同源 smoke 仍需后续任务补齐；不得据此声明 Fobrain 24/24 恢复完成。
 
 ### Batch D：参数化查询
 

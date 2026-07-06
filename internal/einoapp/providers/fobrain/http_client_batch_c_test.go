@@ -193,7 +193,7 @@ func TestHTTPClientDirectReadStatsAndTicketsUseBatchCPaths(t *testing.T) {
 			name:         "pending tickets",
 			capabilityID: fobrain.CapabilityPendingTickets,
 			query:        fobrain.DirectReadQuery{Status: "open", Keyword: "漏洞", Page: 1, PageSize: 20},
-			wantPath:     "/api/v1/ticket/pending",
+			wantPath:     "/api/ticket/pending",
 			assert: func(t *testing.T, result fobrain.DirectReadResult, _ string) {
 				t.Helper()
 				if len(result.Items) != 1 || result.Items[0].EntityRef != "ticket:fobrain:ticket-1" || result.Items[0].DisplayName != "高危组件漏洞" {

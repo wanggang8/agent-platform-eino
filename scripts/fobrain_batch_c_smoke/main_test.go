@@ -27,7 +27,7 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 				t.Fatalf("method = %s, want POST", r.Method)
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "待修复", "count": 3}}})
-		case "/api/v1/ticket/pending":
+		case "/api/ticket/pending":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"items": []map[string]any{{"id": "ticket-1", "title": "漏洞修复", "status": "pending", "assignee": "张三"}}}})
 		case "/api/threat_center/relevance/ip_stats":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "外网", "count": 5}}})
