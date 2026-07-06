@@ -82,6 +82,13 @@ npm run eino-workbench:visual-test -- --update-snapshots
 | telemetry summary 报告 | `test-results/eino-workbench-telemetry-usage-summary-report.json` |
 | 视觉报告 | `test-results/eino-workbench-visual-report/` |
 
+telemetry summary 报告由独立内部脚本生成，不连接 Workbench、Action API、Product Facts 或真实 provider：
+
+```bash
+go run ./scripts/telemetry_summary_report --output test-results/eino-workbench-telemetry-usage-summary-report.json
+node scripts/eino_workbench_report_validate.mjs --schema docs/schemas/telemetry_usage_summary_report.v1.schema.json --report test-results/eino-workbench-telemetry-usage-summary-report.json
+```
+
 ## skip report
 
 skip report 必须机器可读：

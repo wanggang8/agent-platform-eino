@@ -864,11 +864,14 @@ bash scripts/eino_workbench_server_smoke.sh --scenario action-consistency
 - 当前 Eino callback 切片已通过 `observability.NewEinoCallbackHandler` 接入 ChatModel callback：`OnStart/OnEnd/OnError` 只写安全 telemetry。OpenAI-compatible provider 已解析 `usage.prompt_tokens` / `usage.completion_tokens` / `usage.total_tokens` 到 `llm.ChatResponse.Usage`，并由 `einoModelAdapter` 映射进 `model.CallbackOutput.TokenUsage`；当前 error callback 只写安全 `model_error` 分类，不保存 prompt、completion、raw provider payload 或 error 原文。
 - 当前 cost statistics 切片只做统计：`observability.cost_statistics.input_unit_microunits` / `output_unit_microunits` 为配置化单价，默认 0；Eino callback telemetry 会记录 `total_tokens` 和 `estimated_cost_microunits`，但不会触发 `budget_exceeded`、workspace quota 或 rate limit。
 - 当前 run summary 切片只做内部汇总：`MemorySink.RunSummary(run_id)` 聚合已脱敏 telemetry events 的 event/model/failure/token/cost/latency 计数，不写 Product Facts、不接 Workbench/Action API，也不触发 lifecycle。
-- 当前 telemetry summary report 切片只做内部文件报告：`WriteUsageSummaryReport` 输出 `eino.telemetry_usage_summary_report.v1` JSON，文件权限 0600，不包含 raw events/prompt/completion/provider payload，不接 HTTP 产品出口。
+- 当前 telemetry summary report 切片只做内部文件报告：`WriteUsageSummaryReport` 输出 `eino.telemetry_usage_summary_report.v1` JSON，文件权限 0600，不包含 raw events/prompt/completion/provider payload，不接 HTTP 产品出口。`scripts/telemetry_summary_report` 提供固定安全样本的可复跑 smoke 生成器，报告必须再通过 schema validator。
 
 任务级检查：
 
 ```bash
+go test ./scripts/telemetry_summary_report ./internal/einoapp/observability -run 'TelemetrySummary|Report|Summary|Cost' -count=1
+go run ./scripts/telemetry_summary_report --output test-results/eino-workbench-telemetry-usage-summary-report.json
+node scripts/eino_workbench_report_validate.mjs --schema docs/schemas/telemetry_usage_summary_report.v1.schema.json --report test-results/eino-workbench-telemetry-usage-summary-report.json
 go test ./internal/einoapp/... -run 'Audit|Safety|Leak|Redaction|Telemetry|Budget' -count=1
 bash scripts/eino_workbench_server_smoke.sh --scenario budget
 ```

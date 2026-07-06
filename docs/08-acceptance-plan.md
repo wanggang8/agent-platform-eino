@@ -229,13 +229,16 @@ npm run eino-workbench:stream-test -- --grep safety
 ## Observability / Budget 门禁
 
 ```bash
+go test ./scripts/telemetry_summary_report ./internal/einoapp/observability -run 'TelemetrySummary|Report|Summary|Cost' -count=1
+go run ./scripts/telemetry_summary_report --output test-results/eino-workbench-telemetry-usage-summary-report.json
+node scripts/eino_workbench_report_validate.mjs --schema docs/schemas/telemetry_usage_summary_report.v1.schema.json --report test-results/eino-workbench-telemetry-usage-summary-report.json
 go test ./internal/einoapp/... -run 'Telemetry|Budget|ContextSnapshot|RunLifecycle' -count=1
 bash scripts/eino_workbench_server_smoke.sh --scenario budget
 ```
 
 通过标准：
 
-- trace/run/workspace/model/tool count/latency/token usage、只统计型 `estimated_cost_microunits`、run summary 和 telemetry summary report 至少进入内部 telemetry 或安全报告。
+- trace/run/workspace/model/tool count/latency/token usage、只统计型 `estimated_cost_microunits`、run summary 和 telemetry summary report 至少进入内部 telemetry 或安全报告；telemetry summary report 必须由 `scripts/telemetry_summary_report` 生成并通过 `docs/schemas/telemetry_usage_summary_report.v1.schema.json` 校验。
 - budget exceeded 必须通过 execution 层写入 Product Facts，产生 `budget_exceeded` 安全失败摘要，取消 active tool，关闭 waiting pending，并可 replay。
 - replay events 必须包含安全 `event_type=budget` audit event，且不得泄漏 raw prompt、secret、Authorization、API key、provider payload 或 reusable resume token。
 - 内部 telemetry 事件、run summary 和 telemetry summary report 不得进入 Product Facts、Workbench SSE、Action API、Replay 或 audit；字段只能包含安全 label、latency、token/tool count、只统计型 cost estimate 和 failure category。
