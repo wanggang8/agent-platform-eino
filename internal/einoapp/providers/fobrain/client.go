@@ -24,6 +24,12 @@ type DetailRiskClient interface {
 	ThreatRelevanceList(context.Context, ResolvedCredential, ThreatRelevanceQuery) (DetailRiskResult, error)
 }
 
+// MyScopeClient 是 Batch B “我的范围”只读查询的可选 client 能力。
+// HTTP live 接入前，只有明确实现该接口的 client 才会让 provider 广告 Batch B 工具。
+type MyScopeClient interface {
+	MyScopeQuery(context.Context, ResolvedCredential, string, MyScopeQuery) (MyScopeResult, error)
+}
+
 // CurrentUserContextResult 是当前用户 PoC 的安全业务结果。
 type CurrentUserContextResult struct {
 	DisplayName string
@@ -66,6 +72,26 @@ func (client MockClient) MyPermissions(_ context.Context, _ ResolvedCredential) 
 		}, nil
 	}
 	return client.Permissions, nil
+}
+
+// MyScopeQuery 返回 Batch B mock 只读结果，证明当前用户/本部门范围不需要向用户追问 owner/department。
+func (client MockClient) MyScopeQuery(_ context.Context, _ ResolvedCredential, toolID string, query MyScopeQuery) (MyScopeResult, error) {
+	metadata := myScopeToolMetadata(toolID)
+	return MyScopeResult{
+		ToolID:     toolID,
+		Title:      metadata.DisplayName,
+		EntityType: metadata.EntityType,
+		Query:      query,
+		Items: []QueryResultItem{
+			{
+				EntityRef:   metadata.EntityType + ":fobrain:mock-1",
+				DisplayName: metadata.DisplayName + "结果",
+				Status:      "resolved",
+				Summary:     myScopeQueryTarget(metadata, query),
+				Affected:    1,
+			},
+		},
+	}, nil
 }
 
 // ParameterizedQuery 返回 Batch D mock 只读结果，用于固定 catalog、参数和 StructuredResult 边界。

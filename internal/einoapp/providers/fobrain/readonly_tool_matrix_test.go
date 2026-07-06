@@ -71,6 +71,12 @@ func TestReadonlyToolMatrixDocumentsProviderGaps(t *testing.T) {
 		fobrain.CapabilityConnectorSecurity,
 		fobrain.CapabilityCurrentUserContext,
 		fobrain.CapabilityMyPermissions,
+		fobrain.CapabilityMyAssets,
+		fobrain.CapabilityMyDepartmentAssets,
+		fobrain.CapabilityMyVulnerabilities,
+		fobrain.CapabilityMyDepartmentVulnerabilities,
+		fobrain.CapabilityMyBusinessSystems,
+		fobrain.CapabilityMyImportantBusinessSystems,
 		fobrain.CapabilityListAssetsByOwner,
 		fobrain.CapabilityListVulnerabilitiesByOwner,
 		fobrain.CapabilityListAssetsByDepartment,
@@ -84,17 +90,11 @@ func TestReadonlyToolMatrixDocumentsProviderGaps(t *testing.T) {
 	}
 	assertStringSet(t, catalogIDs, expectedAdvertised)
 
-	// Batch B/C 已登记在 24 只读矩阵中，但当前 provider 尚未实现；该断言防止后续误声明 24/24 可用。
+	// Batch C 已登记在 24 只读矩阵中，但当前 provider 尚未实现；该断言防止后续误声明 24/24 可用。
 	expectedGaps := []string{
 		"tool.fobrain.business_list",
 		"tool.fobrain.external_high_risk_assets",
 		"tool.fobrain.ip_stats",
-		"tool.fobrain.my_assets",
-		"tool.fobrain.my_business_systems",
-		"tool.fobrain.my_department_assets",
-		"tool.fobrain.my_department_vulnerabilities",
-		"tool.fobrain.my_important_business_systems",
-		"tool.fobrain.my_vulnerabilities",
 		"tool.fobrain.pending_tickets",
 		"tool.fobrain.vul_stats",
 		"tool.fobrain.vulnerability_status_summary",
@@ -104,11 +104,11 @@ func TestReadonlyToolMatrixDocumentsProviderGaps(t *testing.T) {
 		if !ok {
 			t.Fatalf("expected gap %s missing from matrix", toolID)
 		}
-		if entry.BatchGate != "B" && entry.BatchGate != "C" {
-			t.Fatalf("gap %s batch = %s, want B or C", toolID, entry.BatchGate)
+		if entry.BatchGate != "C" {
+			t.Fatalf("gap %s batch = %s, want C", toolID, entry.BatchGate)
 		}
 		if catalogIDs[toolID] {
-			t.Fatalf("gap %s must not be advertised before Batch B/C provider implementation", toolID)
+			t.Fatalf("gap %s must not be advertised before Batch C provider implementation", toolID)
 		}
 	}
 }

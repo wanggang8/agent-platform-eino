@@ -22,6 +22,21 @@ const CapabilityMyPermissions = "tool.fobrain.my_permissions"
 const CapabilityConnectorSecurity = "connector.fobrain.security"
 
 const (
+	// CapabilityMyAssets 查询当前用户资产列表。
+	CapabilityMyAssets = "tool.fobrain.my_assets"
+	// CapabilityMyDepartmentAssets 查询当前用户部门资产列表。
+	CapabilityMyDepartmentAssets = "tool.fobrain.my_department_assets"
+	// CapabilityMyVulnerabilities 查询当前用户漏洞列表。
+	CapabilityMyVulnerabilities = "tool.fobrain.my_vulnerabilities"
+	// CapabilityMyDepartmentVulnerabilities 查询当前用户部门漏洞列表。
+	CapabilityMyDepartmentVulnerabilities = "tool.fobrain.my_department_vulnerabilities"
+	// CapabilityMyBusinessSystems 查询当前用户业务系统列表。
+	CapabilityMyBusinessSystems = "tool.fobrain.my_business_systems"
+	// CapabilityMyImportantBusinessSystems 查询当前用户重要业务系统列表。
+	CapabilityMyImportantBusinessSystems = "tool.fobrain.my_important_business_systems"
+)
+
+const (
 	// CapabilityListAssetsByOwner 按负责人查询资产列表。
 	CapabilityListAssetsByOwner = "tool.fobrain.list_assets_by_owner"
 	// CapabilityListVulnerabilitiesByOwner 按负责人查询漏洞列表。
@@ -60,7 +75,7 @@ const currentUserContextTimeout = 10 * time.Second
 
 // providerCatalog 返回当前阶段允许注册的 Fobrain 能力目录。
 // 后续恢复只读工具时只能扩展目录数据和 provider mapper，不能在 execution/httpapi 写工具名分支。
-func providerCatalog(includeBatchD bool, includeBatchE bool) []capabilities.Capability {
+func providerCatalog(includeBatchB bool, includeBatchD bool, includeBatchE bool) []capabilities.Capability {
 	catalog := []capabilities.Capability{
 		{
 			ID:          CapabilityCurrentUserContext,
@@ -128,6 +143,9 @@ func providerCatalog(includeBatchD bool, includeBatchE bool) []capabilities.Capa
 			Timeout:                 currentUserContextTimeout,
 		},
 	}
+	if includeBatchB {
+		catalog = append(catalog, batchBMyScopeCatalog()...)
+	}
 	if includeBatchD {
 		catalog = append(catalog, batchDParameterizedCatalog()...)
 	}
@@ -135,6 +153,21 @@ func providerCatalog(includeBatchD bool, includeBatchE bool) []capabilities.Capa
 		catalog = append(catalog, batchEDetailRiskCatalog()...)
 	}
 	return catalog
+}
+
+func batchBMyScopeCatalog() []capabilities.Capability {
+	return []capabilities.Capability{
+		myScopeCapability(CapabilityMyAssets, "查询我的资产", "查询当前用户负责或可见的资产列表。"),
+		myScopeCapability(CapabilityMyDepartmentAssets, "查询本部门资产", "查询当前用户所属部门的资产列表。"),
+		myScopeCapability(CapabilityMyVulnerabilities, "查询我的漏洞", "查询当前用户负责或可见的漏洞列表。"),
+		myScopeCapability(CapabilityMyDepartmentVulnerabilities, "查询本部门漏洞", "查询当前用户所属部门的漏洞列表。"),
+		myScopeCapability(CapabilityMyBusinessSystems, "查询我的业务系统", "查询当前用户负责或可见的业务系统列表。"),
+		myScopeCapability(CapabilityMyImportantBusinessSystems, "查询我的重要业务系统", "查询当前用户负责或可见的重要业务系统列表。"),
+	}
+}
+
+func myScopeCapability(id string, displayName string, description string) capabilities.Capability {
+	return fobrainReadCapability(id, displayName, description, map[string]string{"keyword": "string", "page": "integer", "page_size": "integer"}, []string{})
 }
 
 func batchDParameterizedCatalog() []capabilities.Capability {
