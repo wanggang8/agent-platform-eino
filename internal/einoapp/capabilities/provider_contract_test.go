@@ -74,6 +74,40 @@ func TestEinoToolAdapterPreservesRequiredFields(t *testing.T) {
 	}
 }
 
+func TestEinoToolAdapterAllowsExplicitEmptyRequiredFields(t *testing.T) {
+	capability := capabilities.Capability{
+		ID:          "cap.mock.optional.read",
+		ProviderID:  "mock",
+		ToolName:    "mock_optional_read",
+		DisplayName: "可选筛选查询",
+		Description: "支持无筛选首读",
+		InputSchema: capabilities.JSONSchema{
+			SchemaVersion: "json_schema.v1",
+			Properties: map[string]string{
+				"keyword": "string",
+				"page":    "integer",
+			},
+			// 显式空 required 表示全部字段可选，区别于旧零值 schema 的未声明 required。
+			Required: []string{},
+		},
+		ResultSchema: facts.StructuredResultSchemaVersion,
+		RiskLevel:    capabilities.RiskReadOnly,
+		Timeout:      5 * time.Second,
+	}
+
+	info, err := capabilities.ToolInfoFromCapability(context.Background(), capability)
+	if err != nil {
+		t.Fatal(err)
+	}
+	jsonSchema, err := info.ParamsOneOf.ToJSONSchema()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(jsonSchema.Required) != 0 {
+		t.Fatalf("explicit empty required fields must stay optional: %+v", jsonSchema.Required)
+	}
+}
+
 func TestProviderContractConvertsReadResultToStructuredResultCandidate(t *testing.T) {
 	provider := capabilities.NewMockProvider("mock", []capabilities.Capability{
 		{

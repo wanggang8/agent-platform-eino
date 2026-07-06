@@ -37,7 +37,7 @@ func (provider *Provider) ID() string {
 
 // ListCapabilities 返回当前 provider client 可执行的 Fobrain capability。
 func (provider *Provider) ListCapabilities() ([]capabilities.Capability, error) {
-	catalog := providerCatalog(provider.supportsMyScopeQuery(), provider.supportsParameterizedQuery(), provider.supportsDetailRisk())
+	catalog := providerCatalog(provider.supportsMyScopeQuery(), provider.supportsDirectRead(), provider.supportsParameterizedQuery(), provider.supportsDetailRisk())
 	out := make([]capabilities.Capability, len(catalog))
 	copy(out, catalog)
 	return out, nil
@@ -102,6 +102,25 @@ func (provider *Provider) Invoke(ctx context.Context, request capabilities.Invoc
 			result.ToolID = request.CapabilityID
 			result.Query = query
 			candidate, _ := BuildMyScopeStructuredResult(result)
+			return candidate, nil
+		}
+		if batchCDirectReadCapabilityByID(request.CapabilityID) {
+			directClient, ok := client.(DirectReadClient)
+			if !ok {
+				return product.StructuredResultCandidate{}, NewSafeError(capabilities.PolicyReasonConnectorTransportUnavailable, "Fobrain 直接读取 client 未配置")
+			}
+			query, err := directReadQueryFromArguments(request.CapabilityID, request.Arguments)
+			if err != nil {
+				return product.StructuredResultCandidate{}, err
+			}
+			result, err := directClient.DirectRead(ctx, credential, request.CapabilityID, query)
+			if err != nil {
+				return product.StructuredResultCandidate{}, foldProviderError(err)
+			}
+			// Product Facts 只能使用平台已校验的安全查询条件，不能信任 client 回填的 raw 聚合条件。
+			result.ToolID = request.CapabilityID
+			result.Query = query
+			candidate, _ := BuildDirectReadStructuredResult(result)
 			return candidate, nil
 		}
 		if batchDParameterizedCapabilityByID(request.CapabilityID) {
@@ -180,12 +199,20 @@ func (provider *Provider) invokeBatchEDetailRisk(ctx context.Context, client Det
 
 // capabilityByID 从 provider catalog 查找能力元数据，避免 execution/httpapi 写 provider 分支。
 func (provider *Provider) capabilityByID(capabilityID string) (capabilities.Capability, bool) {
-	for _, capability := range providerCatalog(provider.supportsMyScopeQuery(), provider.supportsParameterizedQuery(), provider.supportsDetailRisk()) {
+	for _, capability := range providerCatalog(provider.supportsMyScopeQuery(), provider.supportsDirectRead(), provider.supportsParameterizedQuery(), provider.supportsDetailRisk()) {
 		if capability.ID == capabilityID {
 			return capability, true
 		}
 	}
 	return capabilities.Capability{}, false
+}
+
+func (provider *Provider) supportsDirectRead() bool {
+	if provider == nil || provider.config.Client == nil {
+		return false
+	}
+	_, ok := provider.config.Client.(DirectReadClient)
+	return ok
 }
 
 func (provider *Provider) supportsMyScopeQuery() bool {

@@ -37,6 +37,21 @@ const (
 )
 
 const (
+	// CapabilityBusinessList 查询业务系统列表。
+	CapabilityBusinessList = "tool.fobrain.business_list"
+	// CapabilityExternalHighRiskAssets 查询外部高风险资产列表。
+	CapabilityExternalHighRiskAssets = "tool.fobrain.external_high_risk_assets"
+	// CapabilityVulnerabilityStatusSummary 汇总漏洞状态分布。
+	CapabilityVulnerabilityStatusSummary = "tool.fobrain.vulnerability_status_summary"
+	// CapabilityPendingTickets 查询待处理工单。
+	CapabilityPendingTickets = "tool.fobrain.pending_tickets"
+	// CapabilityIPStats 统计 IP 资产情况。
+	CapabilityIPStats = "tool.fobrain.ip_stats"
+	// CapabilityVulStats 统计漏洞情况。
+	CapabilityVulStats = "tool.fobrain.vul_stats"
+)
+
+const (
 	// CapabilityListAssetsByOwner 按负责人查询资产列表。
 	CapabilityListAssetsByOwner = "tool.fobrain.list_assets_by_owner"
 	// CapabilityListVulnerabilitiesByOwner 按负责人查询漏洞列表。
@@ -75,7 +90,7 @@ const currentUserContextTimeout = 10 * time.Second
 
 // providerCatalog 返回当前阶段允许注册的 Fobrain 能力目录。
 // 后续恢复只读工具时只能扩展目录数据和 provider mapper，不能在 execution/httpapi 写工具名分支。
-func providerCatalog(includeBatchB bool, includeBatchD bool, includeBatchE bool) []capabilities.Capability {
+func providerCatalog(includeBatchB bool, includeBatchC bool, includeBatchD bool, includeBatchE bool) []capabilities.Capability {
 	catalog := []capabilities.Capability{
 		{
 			ID:          CapabilityCurrentUserContext,
@@ -146,6 +161,9 @@ func providerCatalog(includeBatchB bool, includeBatchD bool, includeBatchE bool)
 	if includeBatchB {
 		catalog = append(catalog, batchBMyScopeCatalog()...)
 	}
+	if includeBatchC {
+		catalog = append(catalog, batchCDirectReadCatalog()...)
+	}
 	if includeBatchD {
 		catalog = append(catalog, batchDParameterizedCatalog()...)
 	}
@@ -153,6 +171,17 @@ func providerCatalog(includeBatchB bool, includeBatchD bool, includeBatchE bool)
 		catalog = append(catalog, batchEDetailRiskCatalog()...)
 	}
 	return catalog
+}
+
+func batchCDirectReadCatalog() []capabilities.Capability {
+	return []capabilities.Capability{
+		fobrainReadCapability(CapabilityBusinessList, "查询业务系统", "查询业务系统列表，可按负责人或关键字筛选。", map[string]string{"business_name": "string", "owner": "string", "keyword": "string", "time_range": "string", "page": "integer", "page_size": "integer"}, []string{}),
+		fobrainReadCapability(CapabilityExternalHighRiskAssets, "查询外部高风险资产", "查询外部暴露的高风险资产列表。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
+		fobrainReadCapability(CapabilityVulnerabilityStatusSummary, "汇总漏洞状态", "汇总漏洞状态分布指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
+		fobrainReadCapability(CapabilityPendingTickets, "查询待处理工单", "查询当前用户或指定人员的待处理工单列表。", map[string]string{"person": "string", "status": "string", "page": "integer", "page_size": "integer"}, []string{}),
+		fobrainReadCapability(CapabilityIPStats, "统计 IP 资产", "统计 IP 资产指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
+		fobrainReadCapability(CapabilityVulStats, "统计漏洞情况", "统计漏洞数量和风险指标。", map[string]string{"field": "string", "severity": "string", "time_range": "string"}, []string{}),
+	}
 }
 
 func batchBMyScopeCatalog() []capabilities.Capability {

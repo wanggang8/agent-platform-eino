@@ -33,14 +33,14 @@ git diff --check
 - 输入只包含 `keyword/page/page_size`，不要求用户提供 owner 或 department。
 - provider 在调用前设置当前用户范围、本部门范围或重要业务范围语义；StructuredResult 摘要只使用本地元数据和已校验 query。
 - Mock client 可返回安全 `MyScopeResult`；raw user payload、Authorization、API key、credential ref 不进入 Product Facts。
-- `ReadonlyToolMatrix` 已更新为当前 provider 广告 connector + Batch A/B/D/E，Batch C 仍是未实现缺口。
+- 本记录创建时，`ReadonlyToolMatrix` 已更新为当前 provider 广告 connector + Batch A/B/D/E，Batch C 仍是未实现缺口；后续 Batch C mock/catalog 已由 `phase-8-batch-c-mock-catalog-2026-07-06.md` 更新。
 
 ## 结论
 
 - 通过 / 不通过 / skipped blocking：通过。
 - 阻断 P0/P1/P2：本记录不单独声明 P0/P1/P2 通过。
-- 阻断重构完成声明：仍阻断 Fobrain 24/24 完整恢复声明；Batch C provider、Batch B live/视觉/Action API 同源 smoke 尚未完成。
+- 阻断重构完成声明：仍阻断 Fobrain 24/24 完整恢复声明；Batch B/C live、视觉、Action API 同源 smoke 尚未完成。
 - 允许替换当前产品基线：不允许。
 - report schema 校验结果：`npm run eino-workbench:schema-test` 通过。
-- 不得声明的能力：Batch B live pass、Batch B 视觉通过、Batch C provider 可用、Fobrain 24/24 只读恢复完成、Fobrain 能力可比、替换当前产品基线。
+- 不得声明的能力：Batch B/C live pass、Batch B/C 视觉通过、Action API 同源通过、Fobrain 24/24 只读恢复完成、Fobrain 能力可比、替换当前产品基线。
 - 关联 ADR：`docs/adr/2026-07-02-fobrain-live-auth-and-batch-gates.md`。

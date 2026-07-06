@@ -30,6 +30,12 @@ type MyScopeClient interface {
 	MyScopeQuery(context.Context, ResolvedCredential, string, MyScopeQuery) (MyScopeResult, error)
 }
 
+// DirectReadClient 是 Batch C 直接列表与统计只读查询的可选 client 能力。
+// 该接口只返回安全列表或指标摘要，不能返回 raw aggregation body。
+type DirectReadClient interface {
+	DirectRead(context.Context, ResolvedCredential, string, DirectReadQuery) (DirectReadResult, error)
+}
+
 // CurrentUserContextResult 是当前用户 PoC 的安全业务结果。
 type CurrentUserContextResult struct {
 	DisplayName string
@@ -92,6 +98,29 @@ func (client MockClient) MyScopeQuery(_ context.Context, _ ResolvedCredential, t
 			},
 		},
 	}, nil
+}
+
+// DirectRead 返回 Batch C mock 只读结果，覆盖无筛选首读、统计指标和待处理工单表格。
+func (client MockClient) DirectRead(_ context.Context, _ ResolvedCredential, toolID string, query DirectReadQuery) (DirectReadResult, error) {
+	metadata := directReadToolMetadata(toolID)
+	result := DirectReadResult{
+		ToolID:     toolID,
+		Title:      metadata.DisplayName,
+		EntityType: metadata.EntityType,
+		Query:      query,
+	}
+	if metadata.Metrics {
+		result.Metrics = []RiskMetric{{Label: metadata.DisplayName, Count: 1}}
+		return result, nil
+	}
+	result.Items = []QueryResultItem{{
+		EntityRef:   metadata.EntityType + ":fobrain:mock-1",
+		DisplayName: metadata.DisplayName + "结果",
+		Status:      "resolved",
+		Summary:     directReadQueryTarget(metadata, query),
+		Affected:    1,
+	}}
+	return result, nil
 }
 
 // ParameterizedQuery 返回 Batch D mock 只读结果，用于固定 catalog、参数和 StructuredResult 边界。

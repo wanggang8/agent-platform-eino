@@ -45,10 +45,10 @@ func ToolInfoFromCapability(_ context.Context, capability Capability) (*schema.T
 	return info, nil
 }
 
-// requiredSchemaFields 返回 schema required 集合；旧 capability 未声明 required 时保持全部必填兼容。
+// requiredSchemaFields 返回 schema required 集合；nil 表示旧 capability 未声明 required，显式空切片表示全部可选。
 func requiredSchemaFields(input JSONSchema) map[string]bool {
 	required := map[string]bool{}
-	if len(input.Required) == 0 {
+	if input.Required == nil {
 		for name := range input.Properties {
 			required[name] = true
 		}

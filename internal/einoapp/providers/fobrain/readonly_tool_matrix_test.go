@@ -77,6 +77,12 @@ func TestReadonlyToolMatrixDocumentsProviderGaps(t *testing.T) {
 		fobrain.CapabilityMyDepartmentVulnerabilities,
 		fobrain.CapabilityMyBusinessSystems,
 		fobrain.CapabilityMyImportantBusinessSystems,
+		fobrain.CapabilityBusinessList,
+		fobrain.CapabilityExternalHighRiskAssets,
+		fobrain.CapabilityVulnerabilityStatusSummary,
+		fobrain.CapabilityPendingTickets,
+		fobrain.CapabilityIPStats,
+		fobrain.CapabilityVulStats,
 		fobrain.CapabilityListAssetsByOwner,
 		fobrain.CapabilityListVulnerabilitiesByOwner,
 		fobrain.CapabilityListAssetsByDepartment,
@@ -90,25 +96,10 @@ func TestReadonlyToolMatrixDocumentsProviderGaps(t *testing.T) {
 	}
 	assertStringSet(t, catalogIDs, expectedAdvertised)
 
-	// Batch C 已登记在 24 只读矩阵中，但当前 provider 尚未实现；该断言防止后续误声明 24/24 可用。
-	expectedGaps := []string{
-		"tool.fobrain.business_list",
-		"tool.fobrain.external_high_risk_assets",
-		"tool.fobrain.ip_stats",
-		"tool.fobrain.pending_tickets",
-		"tool.fobrain.vul_stats",
-		"tool.fobrain.vulnerability_status_summary",
-	}
-	for _, toolID := range expectedGaps {
-		entry, ok := matrixByID[toolID]
-		if !ok {
-			t.Fatalf("expected gap %s missing from matrix", toolID)
-		}
-		if entry.BatchGate != "C" {
-			t.Fatalf("gap %s batch = %s, want C", toolID, entry.BatchGate)
-		}
-		if catalogIDs[toolID] {
-			t.Fatalf("gap %s must not be advertised before Batch C provider implementation", toolID)
+	// Mock provider 只证明 catalog/mapper 覆盖；live、视觉和 Action API 同源验收仍由后续门禁声明。
+	for toolID := range matrixByID {
+		if !catalogIDs[toolID] {
+			t.Fatalf("readonly tool %s missing from mock provider catalog", toolID)
 		}
 	}
 }

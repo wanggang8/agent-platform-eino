@@ -357,10 +357,11 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 
 - Phase 8.2 Batch A 业务只读视觉切片已为 `tool.fobrain.current_user_context` 和 `tool.fobrain.my_permissions` 生成新项目 Playwright baseline：2 个工具 × 6 个区域 × desktop/mobile = 24 张截图。
 - Phase 8.3 已为 `connector.fobrain.security` 生成新项目 Playwright baseline：1 个 connector × 6 个区域 × desktop/mobile = 12 张截图。
-- 当前记录合计覆盖 Batch A 三项能力和 Batch E 四个只读工具的 Workbench 视觉证据；24 个只读工具全量矩阵、Batch B-D 视觉、live read/write、实体消歧和写域审批仍按 Phase 8 后续任务验收。
+- 当前记录合计覆盖 Batch A 三项能力和 Batch E 四个只读工具的 Workbench 视觉证据；24 个只读工具全量视觉矩阵、Batch B-D 视觉、live read/write、实体消歧和写域审批仍按 Phase 8 后续任务验收。
 - Batch E 必须额外验收 `docs/fobrain-batch-e-interface-plan.md`：资产详情 `network_type` 归一化和路径分流、漏洞详情非分页响应、业务风险 count POST body、威胁关联 relevance list 参数映射、live 样本 ID 来源脱敏和 StructuredResult 唯一事实边界。
 - Batch E mock/catalog/HTTP mapper 代码切片记录见 `docs/acceptance-records/phase-8-batch-e-mock-http-2026-07-02.md`。该记录不允许单独作为 live pass、视觉通过或 24 只读恢复完成声明。
 - Batch E live smoke 记录见 `docs/acceptance-records/phase-8-batch-e-live-smoke-infra-2026-07-03.md`。该记录已覆盖 discovery sidecar、report schema、smoke 脚本和真实脱敏 live pass。
 - Batch E 视觉、fresh replay 和 audit evidence 记录见 `docs/acceptance-records/phase-8-batch-e-visual-replay-audit-2026-07-03.md`。该记录只允许声明 Batch E 四个只读工具的 fixture-based 视觉切片通过，不代表 Batch B-D、Action API 真实服务同源 smoke 或 Fobrain 24/24 恢复完成。
-- Phase 8.1 只读矩阵初始对账记录见 `docs/acceptance-records/phase-8-readonly-tool-matrix-gap-2026-07-06.md`。Batch B mock/catalog 完成后，当前缺口已缩小为 Batch C provider 未实现。
+- Phase 8.1 只读矩阵初始对账记录见 `docs/acceptance-records/phase-8-readonly-tool-matrix-gap-2026-07-06.md`。Batch B/C mock/catalog 完成后，mock provider catalog 已覆盖 connector + 24 个只读工具；live、视觉和 Action API 同源仍未完成。
 - Batch B mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-b-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch B provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
+- Batch C mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-c-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch C provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。

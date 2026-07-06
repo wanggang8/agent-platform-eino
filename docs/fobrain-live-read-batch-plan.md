@@ -61,6 +61,8 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 验收重点：无筛选首读、指标卡、表格卡、状态标签安全映射、pending ticket 只读展示。
 
+当前代码进展：Batch C 六个“直接列表与统计”只读工具已进入 mock provider catalog，并具备安全筛选入参、无筛选默认范围、列表/指标两类 mock client 返回和 StructuredResult 安全摘要 mapper。HTTP live mapper、真实分页/聚合验收、Workbench 视觉证据和 Action API 同源 smoke 仍需后续任务补齐；不得据此声明 Batch C live pass 或 Fobrain 24/24 恢复完成。
+
 ### Batch D：参数化查询
 
 范围：
