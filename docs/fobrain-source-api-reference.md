@@ -52,6 +52,21 @@
 
 注意：旧源码 `ThreatListRequest.Ip` 会让 controller 在 `len(params.Ip)>0` 时强制 `data_range=1`，这是 IP 画像场景的历史行为。Batch D 验收要求查询非回收站完整范围，因此漏洞按 IP 查询不得发送 `ip=<ip>` query 参数，必须使用 `search_condition` 约束 `ip` 字段。
 
+## Batch B 查询映射
+
+Batch B “我的范围”工具复用当前用户上下文，但 raw user payload 不能离开 provider 边界。当前实现先尝试私有部署路径 `/api/asset`、`/api/threat_center`、`/api/business`，再 fallback 到 `/api/v1/...`。
+
+| 能力 | 标准接口 | 查询参数 | 源码字段证据 |
+| --- | --- | --- | --- |
+| `tool.fobrain.my_assets` | `GET /api/v1/asset` | `page`、`per_page`、可选 `keyword`、`search_condition={"oper_info.name":["<current user>"],"operation_type_string":"=="}` | 旧 adapter 有 `oper_info.id` 优先、`oper_info.name` fallback；当前新项目未把 staff id 暴露为事实字段，因此先使用安全姓名。 |
+| `tool.fobrain.my_department_assets` | `GET /api/v1/asset` | `page`、`per_page`、可选 `keyword`、`search_condition={"business_department.name.keyword":["<department>"],"operation_type_string":"=="}` | 资产模型和过滤器支持 `business_department.name.keyword`。 |
+| `tool.fobrain.my_vulnerabilities` | `GET /api/v1/threat_center` | `page`、`per_page`、`data_range=4`、可选 `keyword`、`search_condition={"person_info.name":["<current user>"],"operation_type_string":"=="}` | 旧 adapter 有 `person_info.id` 优先、`person_info.name` fallback；当前先使用安全姓名。 |
+| `tool.fobrain.my_department_vulnerabilities` | `GET /api/v1/threat_center` | `page`、`per_page`、`data_range=4`、可选 `keyword`、`search_condition={"person_department.name.keyword":["<department>"],"operation_type_string":"=="}` | 漏洞过滤器支持 `person_department.name.keyword`。 |
+| `tool.fobrain.my_business_systems` | `GET /api/v1/business` | `page`、`per_page`、`search_condition={"person_base.name":["<current user>"],"operation_type_string":"=="}`，用户 keyword 只追加 `business_name` 收窄条件 | 旧 adapter owner 过滤为 `person_base.id` 优先、`person_base.name` fallback；业务系统源码 `NewKeywordQuery` 也会搜索 `person_base.name`，但新实现必须使用 `search_condition` 保持 owner scope。 |
+| `tool.fobrain.my_important_business_systems` | `GET /api/v1/business` | 同 `my_business_systems`，并追加 `search_condition={"assets_attribute.important_types":[1,2],"operation_type_string":"in"}` | 业务系统模型 `assets_attribute.important_types`：1=非常重要，2=重要，3=一般。 |
+
+风险边界：如果当前用户接口后续能稳定返回 staff id，可在 provider 内部增加 safe staff id routing key，并把资产、漏洞、业务系统 owner 条件升级为 `*.id`；未完成真实 live smoke 前，不得声明 Batch B live pass。
+
 ## Batch E 查询映射
 
 Batch E 详情和风险关联的字段级计划见 `docs/fobrain-batch-e-interface-plan.md`。实现时必须遵循以下已确认接口证据：

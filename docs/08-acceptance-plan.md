@@ -364,6 +364,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 - Batch E 视觉、fresh replay 和 audit evidence 记录见 `docs/acceptance-records/phase-8-batch-e-visual-replay-audit-2026-07-03.md`。该记录只允许声明 Batch E 四个只读工具的 fixture-based 视觉切片通过，不代表 Batch B-D、Action API 真实服务同源 smoke 或 Fobrain 24/24 恢复完成。
 - Phase 8.1 只读矩阵初始对账记录见 `docs/acceptance-records/phase-8-readonly-tool-matrix-gap-2026-07-06.md`。Batch B/C mock/catalog 完成后，mock provider catalog 已覆盖 connector + 24 个只读工具；live、视觉和 Action API 同源仍未完成。
 - Batch B mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-b-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch B provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
+- Batch B HTTP mapper 记录见 `docs/acceptance-records/phase-8-batch-b-live-mapper-2026-07-06.md`。该记录只允许声明 Batch B live mapper 有本地 focused tests，不代表真实分页 live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-c-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch C provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C HTTP mapper 记录见 `docs/acceptance-records/phase-8-batch-c-live-mapper-2026-07-06.md`。该记录只允许声明 Batch C live mapper 有本地 focused tests，不代表 Batch C 5 工具 live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C live smoke/report 基础设施记录见 `docs/acceptance-records/phase-8-batch-c-live-smoke-infra-2026-07-06.md`。该记录只允许声明 Batch C report schema、smoke runner 和 server smoke 入口可用；没有真实 live passed 报告前，不代表 Batch C 5 工具 live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。

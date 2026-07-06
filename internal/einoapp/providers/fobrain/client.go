@@ -25,7 +25,7 @@ type DetailRiskClient interface {
 }
 
 // MyScopeClient 是 Batch B “我的范围”只读查询的可选 client 能力。
-// HTTP live 接入前，只有明确实现该接口的 client 才会让 provider 广告 Batch B 工具。
+// 只有 mock 或 HTTP client 明确实现该接口时，provider 才会广告 Batch B 工具。
 type MyScopeClient interface {
 	MyScopeQuery(context.Context, ResolvedCredential, string, MyScopeQuery) (MyScopeResult, error)
 }

@@ -46,7 +46,7 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-a --config 
 
 验收重点：当前用户上下文复用、无需追问部门/负责人、分页、空态、表格 StructuredResult 和敏感字段脱敏。
 
-当前代码进展：Batch B 六个“我的范围”只读工具已进入 mock provider catalog，并具备 `keyword/page/page_size` 安全入参、当前用户/本部门/重要业务范围语义标记、mock client 和 StructuredResult 安全摘要 mapper。HTTP live mapper、真实分页批量验收、Workbench 视觉证据和 Action API 同源 smoke 仍需后续任务补齐；不得据此声明 Batch B live pass 或 Fobrain 24/24 恢复完成。
+当前代码进展：Batch B 六个“我的范围”只读工具已进入 mock provider catalog，并具备 `keyword/page/page_size` 安全入参、当前用户/本部门/重要业务范围语义标记、mock client 和 StructuredResult 安全摘要 mapper。HTTP live mapper 已完成 focused tests，覆盖当前用户/部门派生、`/api` 到 `/api/v1` fallback、业务系统 `person_base.name` owner scope + `business_name` 收窄过滤、重要性 `assets_attribute.important_types` 过滤和错误脱敏。真实分页批量验收、Workbench 视觉证据和 Action API 同源 smoke 仍需后续任务补齐；不得据此声明 Batch B live pass 或 Fobrain 24/24 恢复完成。
 
 ### Batch C：直接列表与统计
 
