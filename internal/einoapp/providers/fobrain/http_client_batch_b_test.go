@@ -272,6 +272,35 @@ func TestHTTPClientMyScopeQueryRejectsUnsafeBusinessError(t *testing.T) {
 	}
 }
 
+func TestHTTPClientMyScopeQueryUsesStableReasonWhenCurrentUserScopeMissing(t *testing.T) {
+	// 当前用户上下文缺字段时必须返回稳定原因码，smoke/report 不能依赖中文错误文案做分类。
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v1/user" {
+			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"display_name": "王五"}})
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	client, err := fobrain.NewHTTPClient(fobrain.HTTPClientConfig{
+		BaseURL:    server.URL + "/api",
+		Timeout:    time.Second,
+		HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.MyScopeQuery(context.Background(), fobrain.ResolvedCredential{
+		WorkspaceID: "ws_fobrain",
+		AuthParam:   "authorization",
+		APIToken:    "workspace-token",
+	}, fobrain.CapabilityMyDepartmentAssets, fobrain.MyScopeQuery{})
+	if !fobrain.HasReason(err, fobrain.PolicyReasonMissingCurrentUserScope) {
+		t.Fatalf("err = %v, want missing current user scope reason", err)
+	}
+}
+
 func batchBHTTPItems(capabilityID string) []map[string]any {
 	switch capabilityID {
 	case fobrain.CapabilityMyAssets, fobrain.CapabilityMyDepartmentAssets:

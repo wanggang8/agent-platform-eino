@@ -92,6 +92,11 @@ export const contractSchemas = [
     "path": "docs/schemas/fobrain/batch_a_live_report.v1.schema.json"
   },
   {
+    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_b_live_report.v1.schema.json",
+    "title": "Fobrain Batch B Live Report",
+    "path": "docs/schemas/fobrain/batch_b_live_report.v1.schema.json"
+  },
+  {
     "id": "https://agent-platform-eino.local/schemas/fobrain/batch_c_live_report.v1.schema.json",
     "title": "Fobrain Batch C Live Report",
     "path": "docs/schemas/fobrain/batch_c_live_report.v1.schema.json"

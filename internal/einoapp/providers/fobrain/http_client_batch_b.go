@@ -107,7 +107,7 @@ func batchBLiveRequest(toolID string, query MyScopeQuery, userContext CurrentUse
 
 func requireBatchBUserScope(value string, message string) error {
 	if strings.TrimSpace(value) == "" {
-		return NewSafeError(capabilities.PolicyReasonConnectorExecutionFailed, message)
+		return NewSafeError(PolicyReasonMissingCurrentUserScope, message)
 	}
 	return nil
 }

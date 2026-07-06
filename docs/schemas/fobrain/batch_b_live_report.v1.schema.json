@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/fobrain/batch_b_live_report.v1.schema.json",
+  "title": "Fobrain Batch B Live Report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scenario",
+    "status",
+    "provider_mode",
+    "workspace_id",
+    "tls_private_cert_mode",
+    "sample_inputs",
+    "capability_results",
+    "redaction_checks",
+    "failure_category",
+    "blocks_claims",
+    "report_created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "eino.fobrain_batch_b_live_report.v1"},
+    "scenario": {"const": "fobrain-batch-b"},
+    "status": {"enum": ["passed", "failed", "blocked"]},
+    "provider_mode": {"enum": ["live", "mock", "disabled", ""]},
+    "workspace_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]+$"},
+    "tls_private_cert_mode": {"type": "boolean"},
+    "sample_inputs": {
+      "type": "object",
+      "required": ["keyword_present"],
+      "properties": {
+        "keyword_present": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "capability_results": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "capability_id",
+          "status",
+          "result_state",
+          "structured_result_schema",
+          "item_count",
+          "policy_decision",
+          "failure_category",
+          "sample_source"
+        ],
+        "properties": {
+          "capability_id": {
+            "enum": [
+              "tool.fobrain.my_assets",
+              "tool.fobrain.my_department_assets",
+              "tool.fobrain.my_vulnerabilities",
+              "tool.fobrain.my_department_vulnerabilities",
+              "tool.fobrain.my_business_systems",
+              "tool.fobrain.my_important_business_systems"
+            ]
+          },
+          "status": {"enum": ["passed", "failed", "blocked"]},
+          "result_state": {"enum": ["resolved", "empty", "not_run"]},
+          "structured_result_schema": {"const": "tool.structured_result.v1"},
+          "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+          "item_count": {"type": "integer", "minimum": 0},
+          "policy_decision": {
+            "enum": [
+              "allowed",
+              "credential_missing",
+              "credential_scope_denied",
+              "connector_transport_unavailable",
+              "connector_execution_failed",
+              "connector_timeout",
+              "connector_auth_failure",
+              "permission_denied"
+            ]
+          },
+          "failure_category": {"type": "string"},
+          "sample_source": {"enum": ["current_user", "provided_filter"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "redaction_checks": {
+      "type": "array",
+      "minItems": 1,
+      "allOf": [
+        {"contains": {"const": "secret_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "auth_header_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "raw_payload_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "sample_values_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "binding_reference_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "checkpoint_absent"}, "minContains": 1, "maxContains": 1},
+        {"contains": {"const": "interrupt_absent"}, "minContains": 1, "maxContains": 1}
+      ],
+      "items": {
+        "enum": [
+          "secret_absent",
+          "auth_header_absent",
+          "raw_payload_absent",
+          "sample_values_absent",
+          "binding_reference_absent",
+          "checkpoint_absent",
+          "interrupt_absent"
+        ]
+      }
+    },
+    "failure_category": {"type": "string"},
+    "blocks_claims": {"type": "array", "items": {"type": "string"}},
+    "report_created_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "properties": {
+        "capability_results": {
+          "allOf": [
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_assets"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_department_assets"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_vulnerabilities"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_department_vulnerabilities"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_business_systems"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "type": "array",
+              "contains": {"type": "object", "properties": {"capability_id": {"const": "tool.fobrain.my_important_business_systems"}}, "required": ["capability_id"]},
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "passed"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "provider_mode": {"const": "live"},
+          "failure_category": {"const": "none"},
+          "blocks_claims": {"type": "array", "maxItems": 0},
+          "capability_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string", "const": "passed"},
+                "result_state": {"type": "string", "const": "resolved"},
+                "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+                "policy_decision": {"type": "string", "const": "allowed"},
+                "failure_category": {"type": "string", "const": "none"},
+                "item_count": {"type": "integer", "minimum": 1}
+              },
+              "required": ["result_ref"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["failed", "blocked"]}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "blocks_claims": {"type": "array", "minItems": 1}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

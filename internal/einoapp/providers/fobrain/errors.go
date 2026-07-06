@@ -7,6 +7,9 @@ import (
 	"agent-platform-eino/internal/einoapp/capabilities"
 )
 
+// PolicyReasonMissingCurrentUserScope 表示当前用户上下文不足，无法构造“我的范围”查询。
+const PolicyReasonMissingCurrentUserScope capabilities.PolicyReason = "missing_current_user_scope"
+
 // SafeError 是 Fobrain provider 边界可向上返回的脱敏错误。
 type SafeError struct {
 	ReasonCode  capabilities.PolicyReason

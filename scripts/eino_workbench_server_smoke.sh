@@ -6,6 +6,7 @@ provided_config=""
 batch_d_owner=""
 batch_d_department=""
 batch_d_ip=""
+batch_b_keyword=""
 batch_c_keyword=""
 batch_c_business_name=""
 batch_c_severity=""
@@ -56,6 +57,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --keyword)
       require_option_value "$1" "${2:-}"
+      batch_b_keyword="${2:-}"
       batch_c_keyword="${2:-}"
       shift 2
       ;;
@@ -124,7 +126,7 @@ not_implemented() {
 }
 
 case "${scenario}" in
-  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-c|fobrain-batch-d|fobrain-batch-e|fobrain-clarification|clarification|budget)
+  contract|chat-stream|action-basic|capability-selection|context-projection|tool-card|run-lifecycle|action-consistency|replay|mcp-mock|real-model-chat|fobrain-poc|fobrain-batch-a|fobrain-batch-b|fobrain-batch-c|fobrain-batch-d|fobrain-batch-e|fobrain-clarification|clarification|budget)
     ;;
   fobrain-readonly|fobrain-write-approval|fobrain-live-read|fobrain-live-write)
     not_implemented "Phase 8"
@@ -135,7 +137,7 @@ case "${scenario}" in
     ;;
   *)
     echo "unsupported scenario: ${scenario}" >&2
-    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-batch-a, fobrain-batch-c, fobrain-batch-d, fobrain-batch-e, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
+    echo "supported scenarios: contract, capability-selection, context-projection, chat-stream, action-basic, tool-card, mcp-mock, real-model-chat, run-lifecycle, clarification, action-consistency, replay, budget, fobrain-poc, fobrain-batch-a, fobrain-batch-b, fobrain-batch-c, fobrain-batch-d, fobrain-batch-e, fobrain-readonly, fobrain-clarification, fobrain-write-approval, fobrain-live-read, fobrain-live-write" >&2
     exit 2
     ;;
 esac
@@ -278,6 +280,28 @@ PY
   echo "fobrain-batch-c live smoke skipped: ${reason}"
 }
 
+write_fobrain_batch_b_skip_report() {
+  local reason="$1"
+  mkdir -p test-results
+  python3 - "${reason}" "${provided_config:-configs/eino-workbench.local.yaml}" <<'PY'
+import datetime, json, sys
+reason, config_path = sys.argv[1], sys.argv[2]
+report = {
+    "schema_version": "eino.skip_report.v1",
+    "command": f"bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-b --config {config_path}",
+    "missing_env": ["local_fobrain_live_config"],
+    "credential_scope": "fobrain-workspace",
+    "reason": reason,
+    "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with Fobrain live credential; optional filter can be passed with --keyword.",
+    "blocks_claims": ["fobrain-batch-b live pass", "Fobrain 24 readonly final acceptance"],
+    "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+}
+with open("test-results/eino-workbench-fobrain-batch-b-skip-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+PY
+  echo "fobrain-batch-b live smoke skipped: ${reason}"
+}
+
 write_fobrain_batch_e_skip_report() {
   local reason="$1"
   mkdir -p test-results
@@ -318,6 +342,48 @@ if [[ "${scenario}" == "fobrain-batch-a" ]]; then
     --schema docs/schemas/fobrain/batch_a_live_report.v1.schema.json \
     --report "${report_path}" >/dev/null
   echo "fobrain-batch-a live smoke passed"
+  exit 0
+fi
+
+if [[ "${scenario}" == "fobrain-batch-b" ]]; then
+  config_for_fobrain="${provided_config:-configs/eino-workbench.local.yaml}"
+  if [[ ! -f "${config_for_fobrain}" ]]; then
+    write_fobrain_batch_b_skip_report "本地 Fobrain live 配置文件不存在"
+    exit 0
+  fi
+  if ! go run ./scripts/eino_workbench_config_prepare.go --check-fobrain-live-credential --source "${config_for_fobrain}" >/dev/null 2>&1; then
+    write_fobrain_batch_b_skip_report "本地 Fobrain live 工作区凭据未配置"
+    exit 0
+  fi
+  report_path="test-results/eino-workbench-fobrain-batch-b-live-report.json"
+  args=(--config "${config_for_fobrain}" --output "${report_path}")
+  if [[ -n "${batch_b_keyword}" ]]; then
+    args+=(--keyword "${batch_b_keyword}")
+  fi
+  set +e
+  go run ./scripts/fobrain_batch_b_smoke "${args[@]}"
+  batch_b_exit=$?
+  set -e
+  if [[ ! -f "${report_path}" ]]; then
+    echo "fobrain-batch-b live smoke failed before report was written" >&2
+    exit "${batch_b_exit}"
+  fi
+  node scripts/eino_workbench_report_validate.mjs \
+    --schema docs/schemas/fobrain/batch_b_live_report.v1.schema.json \
+    --report "${report_path}" >/dev/null
+  status="$(python3 - "${report_path}" <<'PY'
+import json, sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["status"])
+PY
+)"
+  if [[ "${status}" == "passed" ]]; then
+    echo "fobrain-batch-b live smoke passed"
+  else
+    echo "fobrain-batch-b live smoke ${status}; report blocks final claims"
+  fi
+  if [[ "${batch_b_exit}" -ne 0 ]]; then
+    exit "${batch_b_exit}"
+  fi
   exit 0
 fi
 
