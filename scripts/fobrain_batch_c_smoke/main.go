@@ -21,6 +21,7 @@ import (
 const (
 	batchCReportSchemaVersion = "eino.fobrain_batch_c_live_report.v1"
 	batchCScenario            = "fobrain-batch-c"
+	batchCSkippedUnavailable  = "skipped_unavailable_feature"
 )
 
 // batchCReport 是 Batch C live smoke 的脱敏机器报告，只记录 StructuredResult 出口和稳定失败分类。
@@ -146,6 +147,14 @@ func executeBatchCLiveSmoke(ctx context.Context, cfg bootstrap.Config, samples b
 			FailureCategory:        "none",
 			SampleSource:           request.sampleSource,
 		}
+		if request.skipUnavailable {
+			// 当前真实环境没有待处理工单功能数据，按用户确认先跳过，不再阻断 Batch C 其他只读能力验收。
+			item.Status = "skipped"
+			item.ResultState = "not_run"
+			item.FailureCategory = batchCSkippedUnavailable
+			report.CapabilityResults = append(report.CapabilityResults, item)
+			continue
+		}
 		candidate, err := provider.Invoke(ctx, capabilities.InvocationRequest{
 			CapabilityID:  request.capabilityID,
 			Arguments:     request.arguments,
@@ -196,9 +205,10 @@ func executeBatchCLiveSmoke(ctx context.Context, cfg bootstrap.Config, samples b
 }
 
 type batchCInvocationRequest struct {
-	capabilityID string
-	arguments    map[string]any
-	sampleSource string
+	capabilityID    string
+	arguments       map[string]any
+	sampleSource    string
+	skipUnavailable bool
 }
 
 func batchCRequests(samples batchCSamples) []batchCInvocationRequest {
@@ -220,7 +230,7 @@ func batchCRequests(samples batchCSamples) []batchCInvocationRequest {
 			"status":   samples.status,
 			"keyword":  samples.keyword,
 		}, samples.severity, samples.status, samples.keyword),
-		batchCRequest(fobrain.CapabilityPendingTickets, map[string]any{
+		batchCPendingTicketsSkippedRequest(map[string]any{
 			"status":    samples.status,
 			"keyword":   samples.keyword,
 			"page":      1,
@@ -248,6 +258,13 @@ func batchCRequest(capabilityID string, arguments map[string]any, sampleValues .
 		}
 	}
 	return batchCInvocationRequest{capabilityID: capabilityID, arguments: arguments, sampleSource: source}
+}
+
+func batchCPendingTicketsSkippedRequest(arguments map[string]any, sampleValues ...string) batchCInvocationRequest {
+	request := batchCRequest(fobrain.CapabilityPendingTickets, arguments, sampleValues...)
+	request.skipUnavailable = true
+	request.sampleSource = "unavailable_feature"
+	return request
 }
 
 func batchCOverallStatus(results []batchCCapabilityResult) string {
@@ -300,7 +317,7 @@ func newBatchCReport(cfg bootstrap.Config) batchCReport {
 			"interrupt_absent",
 		},
 		FailureCategory: "not_run",
-		BlocksClaims:    []string{"fobrain-batch-c live pass", "Fobrain 24 readonly final acceptance"},
+		BlocksClaims:    []string{"fobrain-batch-c 5-tool live pass", "Fobrain 24 readonly final acceptance"},
 		ReportCreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 }

@@ -28,7 +28,7 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "待修复", "count": 3}}})
 		case "/api/ticket/pending":
-			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"items": []map[string]any{{"id": "ticket-1", "title": "漏洞修复", "status": "pending", "assignee": "张三"}}}})
+			t.Fatalf("pending tickets should be skipped in Batch C live smoke")
 		case "/api/threat_center/relevance/ip_stats":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{{"key": "外网", "count": 5}}})
 		case "/api/threat_center/relevance/vul_stats":
@@ -68,11 +68,17 @@ func TestRunBatchCLiveSmokeWritesSafePassedReport(t *testing.T) {
 		t.Fatalf("capability result count = %d", len(report.CapabilityResults))
 	}
 	for _, result := range report.CapabilityResults {
+		if result.CapabilityID == "tool.fobrain.pending_tickets" {
+			if result.Status != "skipped" || result.ResultState != "not_run" || result.FailureCategory != batchCSkippedUnavailable || result.ItemCount != 0 {
+				t.Fatalf("skipped ticket result mismatch: %+v", result)
+			}
+			continue
+		}
 		if result.Status != "passed" || result.ResultState != "resolved" || result.ResultRef == "" || result.PolicyDecision != "allowed" || result.FailureCategory != "none" || result.ItemCount == 0 {
 			t.Fatalf("capability result mismatch: %+v", result)
 		}
 	}
-	assertBatchCReportNoLeak(t, reportPath, secret, "核心业务", "张三", "203.0.113.10", "ticket-1", "asset-1")
+	assertBatchCReportNoLeak(t, reportPath, secret, "核心业务", "张三", "203.0.113.10", "asset-1")
 }
 
 func TestRunBatchCLiveSmokeBlocksWhenAnyCapabilityReturnsEmpty(t *testing.T) {
@@ -83,8 +89,10 @@ func TestRunBatchCLiveSmokeBlocksWhenAnyCapabilityReturnsEmpty(t *testing.T) {
 			t.Fatalf("authorization header mismatch")
 		}
 		switch r.URL.Path {
-		case "/api/business", "/api/external_ip_asset", "/api/ticket/pending":
+		case "/api/business", "/api/external_ip_asset":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": map[string]any{"items": []map[string]any{}}})
+		case "/api/ticket/pending":
+			t.Fatalf("pending tickets should be skipped in Batch C live smoke")
 		case "/api/threat_center/count", "/api/threat_center/relevance/ip_stats", "/api/threat_center/relevance/vul_stats":
 			_ = json.NewEncoder(w).Encode(map[string]any{"code": 0, "data": []map[string]any{}})
 		default:
@@ -107,6 +115,12 @@ func TestRunBatchCLiveSmokeBlocksWhenAnyCapabilityReturnsEmpty(t *testing.T) {
 		t.Fatalf("blocked report mismatch: %+v", report)
 	}
 	for _, result := range report.CapabilityResults {
+		if result.CapabilityID == "tool.fobrain.pending_tickets" {
+			if result.Status != "skipped" || result.FailureCategory != batchCSkippedUnavailable {
+				t.Fatalf("skipped ticket mismatch: %+v", result)
+			}
+			continue
+		}
 		if result.Status != "blocked" || result.ResultState != "empty" || result.FailureCategory != "empty_result" {
 			t.Fatalf("empty capability mismatch: %+v", result)
 		}

@@ -269,7 +269,7 @@ report = {
     "credential_scope": "fobrain-workspace",
     "reason": reason,
     "rerun_condition": "Create ignored configs/eino-workbench.local.yaml with Fobrain live credential; optional filters can be passed with --keyword/--business-name/--severity/--status/--field/--time-range.",
-    "blocks_claims": ["fobrain-batch-c live pass", "Fobrain 24 readonly final acceptance"],
+    "blocks_claims": ["fobrain-batch-c 5-tool live pass", "Fobrain 24 readonly final acceptance"],
     "expires_at": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).isoformat().replace("+00:00", "Z"),
 }
 with open("test-results/eino-workbench-fobrain-batch-c-skip-report.json", "w", encoding="utf-8") as f:

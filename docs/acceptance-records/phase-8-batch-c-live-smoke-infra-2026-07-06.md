@@ -35,7 +35,7 @@ git diff --check
 - 新增 `docs/schemas/fobrain/batch_c_live_report.v1.schema.json`，要求 passed 报告中六个工具全部为 `resolved`、`allowed` 且 `item_count >= 1`。
 - `scripts/eino_workbench_server_smoke.sh --scenario fobrain-batch-c` 已接入本地配置检查、skip report、live report 写入和 schema 校验。
 - 报告只记录样本是否存在、StructuredResult schema/result_ref、item_count、policy decision 和稳定失败分类；不记录 token、authorization、raw provider payload、safe summary 或真实筛选值。
-- 任一工具真实返回空结果时，runner 生成 `blocked` 报告并保留 `blocks_claims`，不能声明 Batch C live pass。
+- 原始口径下，任一工具真实返回空结果时，runner 生成 `blocked` 报告并保留 `blocks_claims`。后续用户确认当前环境没有待处理工单功能数据，`pending_tickets` 已改为 `skipped`，详见 `docs/acceptance-records/phase-8-batch-c-skip-pending-ticket-2026-07-06.md`。
 
 ## 结论
 

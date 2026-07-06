@@ -71,7 +71,7 @@
               "tool.fobrain.vul_stats"
             ]
           },
-          "status": {"enum": ["passed", "failed", "blocked"]},
+          "status": {"enum": ["passed", "failed", "blocked", "skipped"]},
           "result_state": {"enum": ["resolved", "empty", "not_run"]},
           "structured_result_schema": {"const": "tool.structured_result.v1"},
           "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
@@ -89,8 +89,38 @@
             ]
           },
           "failure_category": {"type": "string"},
-          "sample_source": {"enum": ["provided", "default_filter"]}
+          "sample_source": {"enum": ["provided", "default_filter", "unavailable_feature"]}
         },
+        "allOf": [
+          {
+            "if": {
+              "properties": {"status": {"const": "skipped"}},
+              "required": ["status"]
+            },
+            "then": {
+              "properties": {
+                "capability_id": {"const": "tool.fobrain.pending_tickets"},
+                "result_state": {"const": "not_run"},
+                "failure_category": {"const": "skipped_unavailable_feature"},
+                "item_count": {"const": 0},
+                "policy_decision": {"const": "allowed"},
+                "sample_source": {"const": "unavailable_feature"}
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {"sample_source": {"const": "unavailable_feature"}},
+              "required": ["sample_source"]
+            },
+            "then": {
+              "properties": {
+                "capability_id": {"const": "tool.fobrain.pending_tickets"},
+                "status": {"const": "skipped"}
+              }
+            }
+          }
+        ],
         "additionalProperties": false
       }
     },
@@ -178,15 +208,43 @@
             "type": "array",
             "items": {
               "type": "object",
-              "properties": {
-                "status": {"type": "string", "const": "passed"},
-                "result_state": {"type": "string", "const": "resolved"},
-                "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
-                "policy_decision": {"type": "string", "const": "allowed"},
-                "failure_category": {"type": "string", "const": "none"},
-                "item_count": {"type": "integer", "minimum": 1}
-              },
-              "required": ["result_ref"]
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {"capability_id": {"const": "tool.fobrain.pending_tickets"}},
+                    "required": ["capability_id"]
+                  },
+                  "then": {
+                    "properties": {
+                      "status": {"type": "string", "const": "skipped"},
+                      "result_state": {"type": "string", "const": "not_run"},
+                      "policy_decision": {"type": "string", "const": "allowed"},
+                      "failure_category": {"type": "string", "const": "skipped_unavailable_feature"},
+                      "item_count": {"type": "integer", "const": 0},
+                      "sample_source": {"type": "string", "const": "unavailable_feature"}
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "not": {
+                      "properties": {"capability_id": {"const": "tool.fobrain.pending_tickets"}},
+                      "required": ["capability_id"]
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "status": {"type": "string", "const": "passed"},
+                      "result_state": {"type": "string", "const": "resolved"},
+                      "result_ref": {"type": "string", "pattern": "^result:[A-Za-z0-9_.:-]+$"},
+                      "policy_decision": {"type": "string", "const": "allowed"},
+                      "failure_category": {"type": "string", "const": "none"},
+                      "item_count": {"type": "integer", "minimum": 1}
+                    },
+                    "required": ["result_ref"]
+                  }
+                }
+              ]
             }
           }
         }
