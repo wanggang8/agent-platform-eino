@@ -983,6 +983,7 @@ git diff --check
 - `batch_gate` 必须由 `tool_matrix.v1.schema.json` 校验，并与 `docs/fobrain-live-read-batch-plan.md` 一致。
 - Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A live/smoke 必须生成 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json` 约束的报告。Batch A 最终完成声明还必须补 Workbench 视觉证据和验收记录。
 - Batch E 当前切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、`fobrain-batch-e` live smoke/report schema、真实环境脱敏 live pass 报告，以及 Workbench 视觉、fresh replay、audit evidence。该结论只覆盖 Batch E 四工具，不得把当前切片等同于 Fobrain 24 只读恢复完成。
+- 当前 `ReadonlyToolMatrix` 回归测试已对账机器矩阵和 provider catalog：`tool-matrix-24.json` 精确登记 A=2、B=6、C=6、D=6、E=4 共 24 个只读工具；provider 当前只可广告 connector、Batch A、Batch D、Batch E。Batch B/C 十二个工具仍是矩阵登记缺口，不得声明 provider 可用或 24/24 恢复完成。
 
 任务级检查：
 

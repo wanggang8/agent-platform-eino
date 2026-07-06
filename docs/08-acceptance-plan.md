@@ -362,3 +362,4 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 - Batch E mock/catalog/HTTP mapper 代码切片记录见 `docs/acceptance-records/phase-8-batch-e-mock-http-2026-07-02.md`。该记录不允许单独作为 live pass、视觉通过或 24 只读恢复完成声明。
 - Batch E live smoke 记录见 `docs/acceptance-records/phase-8-batch-e-live-smoke-infra-2026-07-03.md`。该记录已覆盖 discovery sidecar、report schema、smoke 脚本和真实脱敏 live pass。
 - Batch E 视觉、fresh replay 和 audit evidence 记录见 `docs/acceptance-records/phase-8-batch-e-visual-replay-audit-2026-07-03.md`。该记录只允许声明 Batch E 四个只读工具的 fixture-based 视觉切片通过，不代表 Batch B-D、Action API 真实服务同源 smoke 或 Fobrain 24/24 恢复完成。
+- Phase 8.1 只读矩阵对账记录见 `docs/acceptance-records/phase-8-readonly-tool-matrix-gap-2026-07-06.md`。该记录证明 24 工具矩阵完整、Batch B/C 尚未进入 provider catalog，防止把矩阵登记误读为 24/24 可用。
