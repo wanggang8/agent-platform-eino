@@ -984,7 +984,7 @@ git diff --check
 - Batch A 代码基础必须覆盖 `connector.fobrain.security`、`tool.fobrain.current_user_context`、`tool.fobrain.my_permissions`；Batch A live/smoke 必须生成 `docs/schemas/fobrain/batch_a_live_report.v1.schema.json` 约束的报告。Batch A 最终完成声明还必须补 Workbench 视觉证据和验收记录。
 - Batch E 当前切片已覆盖 `get_asset_detail`、`get_vulnerability_detail`、`business_risk_summary`、`threat_relevance_list` 的 catalog、输入 mapper、mock StructuredResult、HTTP mapper、sample discovery 本地样本扩展、`fobrain-batch-e` live smoke/report schema、真实环境脱敏 live pass 报告，以及 Workbench 视觉、fresh replay、audit evidence。该结论只覆盖 Batch E 四工具，不得把当前切片等同于 Fobrain 24 只读恢复完成。
 - 当前 Batch B mock/catalog 切片已覆盖 `my_assets`、`my_department_assets`、`my_vulnerabilities`、`my_department_vulnerabilities`、`my_business_systems`、`my_important_business_systems` 六个“我的范围”工具的 catalog、输入 mapper、mock client 和 StructuredResult 安全摘要。该结论只覆盖 mock/catalog，不覆盖 live mapper、视觉、Action API 同源 smoke 或 24/24 完成。
-- 当前 Batch C mock/catalog 切片已覆盖 `business_list`、`external_high_risk_assets`、`vulnerability_status_summary`、`pending_tickets`、`ip_stats`、`vul_stats` 六个“直接列表与统计”工具的 catalog、安全筛选 mapper、mock client 和 StructuredResult 安全摘要。该结论只覆盖 mock/catalog，不覆盖 HTTP live mapper、视觉、Action API 同源 smoke 或 24/24 完成。
+- 当前 Batch C 切片已覆盖 `business_list`、`external_high_risk_assets`、`vulnerability_status_summary`、`pending_tickets`、`ip_stats`、`vul_stats` 六个“直接列表与统计”工具的 catalog、安全筛选 mapper、mock client、StructuredResult 安全摘要和 HTTP live mapper focused tests。该结论不覆盖真实 live smoke、视觉、Action API 同源 smoke 或 24/24 完成。
 - 当前 `ReadonlyToolMatrix` 回归测试已对账机器矩阵和 provider catalog：`tool-matrix-24.json` 精确登记 A=2、B=6、C=6、D=6、E=4 共 24 个只读工具；mock provider 当前广告 connector + 24 个只读工具。该结论只证明 catalog/mapper mock 覆盖，不代表 live、视觉、Action API 或最终验收完成。
 
 任务级检查：
@@ -994,6 +994,7 @@ go test ./internal/einoapp/bootstrap -run 'FobrainConfig|RedactedSummary|Credent
 go test ./internal/einoapp/providers/fobrain -run 'HTTPClientCurrentUserContext|Provider|Client|Credential|StructuredResult|Unsafe' -count=1
 go test ./internal/einoapp/providers/fobrain -run 'BatchB|MyScope' -count=1
 go test ./internal/einoapp/providers/fobrain -run 'BatchC|DirectRead' -count=1
+go test ./internal/einoapp/providers/fobrain -run 'HTTPClientDirectRead|BatchCDirectRead' -count=1
 go test ./internal/einoapp/providers/fobrain -run 'BatchE|AssetDetail|VulnerabilityDetail|BusinessRisk|ThreatRelevance' -count=1
 go test ./scripts/fobrain_sample_discovery ./scripts/fobrain_batch_e_smoke -count=1
 npm run eino-workbench:schema-test

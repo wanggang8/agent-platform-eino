@@ -365,3 +365,4 @@ bash scripts/eino_workbench_server_smoke.sh --scenario fobrain-live-write
 - Phase 8.1 只读矩阵初始对账记录见 `docs/acceptance-records/phase-8-readonly-tool-matrix-gap-2026-07-06.md`。Batch B/C mock/catalog 完成后，mock provider catalog 已覆盖 connector + 24 个只读工具；live、视觉和 Action API 同源仍未完成。
 - Batch B mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-b-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch B provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
 - Batch C mock/catalog 记录见 `docs/acceptance-records/phase-8-batch-c-mock-catalog-2026-07-06.md`。该记录只允许声明 Batch C provider mock/catalog 可用，不代表 live、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。
+- Batch C HTTP mapper 记录见 `docs/acceptance-records/phase-8-batch-c-live-mapper-2026-07-06.md`。该记录只允许声明 Batch C live mapper 有本地 focused tests，不代表真实 live pass、视觉、Action API 同源 smoke 或 Fobrain 24/24 恢复完成。

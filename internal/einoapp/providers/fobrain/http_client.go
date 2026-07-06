@@ -35,6 +35,7 @@ type HTTPClient struct {
 }
 
 var _ FobrainClient = (*HTTPClient)(nil)
+var _ DirectReadClient = (*HTTPClient)(nil)
 var _ ParameterizedQueryClient = (*HTTPClient)(nil)
 var _ DetailRiskClient = (*HTTPClient)(nil)
 
