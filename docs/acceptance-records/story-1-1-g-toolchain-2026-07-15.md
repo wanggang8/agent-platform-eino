@@ -18,7 +18,7 @@ Story 状态：`complete`
 linux/amd64 image build/push、按 digest 验证的完整 baseline、批准的 71 张 desktop visual evidence
 与 30 天 artifact 已在同一 clean commit 上取得真实远程证据。
 
-run `29427351390` 对 commit `f975e258f0d5400fecbe81318083d0535eea4fb9` 的 `toolchain-build`
+run `29432627424` 对 commit `d174f79e5341dcce636d190aa0e510e4528a955a` 的 `toolchain-build`
 与 `toolchain-verify` 均成功；GHCR 不可变 digest、desktop 17/17、contract smoke、末尾
 tracked/staged/untracked clean gates 与可下载 artifact 同时满足 PASS 算法，因此裁决
 `G-TOOLCHAIN=PASS`。
@@ -28,10 +28,10 @@ tracked/staged/untracked clean gates 与可下载 artifact 同时满足 PASS 算
 | 输入／产物 | 精确值 | 证据角色 |
 | --- | --- | --- |
 | GitHub repository | `https://github.com/wanggang8/agent-platform-eino` | 唯一公开远程身份 |
-| commit identity | `f975e258f0d5400fecbe81318083d0535eea4fb9` | workflow、tag、baseline clean identity |
-| canonical image | `ghcr.io/wanggang8/agent-platform-eino/toolchain:f975e258f0d5400fecbe81318083d0535eea4fb9@sha256:1272821155d23cfb083cc4d0c1a7a77a96abd4ca00ae760d2339971a3bc6f080` | 真实 GHCR 不可变 image identity |
-| workflow evidence | `https://github.com/wanggang8/agent-platform-eino/actions/runs/29427351390` | `toolchain-build` / `toolchain-verify` 串行 run |
-| artifact | `toolchain-evidence-f975e258f0d5400fecbe81318083d0535eea4fb9`，expires_at `2026-08-14T15:22:11Z` | 未过期的 30 天 baseline log 与 desktop Playwright report |
+| commit identity | `d174f79e5341dcce636d190aa0e510e4528a955a` | workflow、tag、baseline clean identity |
+| canonical image | `ghcr.io/wanggang8/agent-platform-eino/toolchain:d174f79e5341dcce636d190aa0e510e4528a955a@sha256:a68cf71dc506c21573dea7984c95a71ed5ff1837467481a62d4901e8cba7455f` | 真实 GHCR 不可变 image identity |
+| workflow evidence | `https://github.com/wanggang8/agent-platform-eino/actions/runs/29432627424` | `toolchain-build` / `toolchain-verify` 串行 run |
+| artifact | id `8350167050`，`toolchain-evidence-d174f79e5341dcce636d190aa0e510e4528a955a`，231272 bytes，expires_at `2026-08-14T16:35:24Z` | 未过期的 30 天 baseline log 与 desktop Playwright report |
 | Go module language / toolchain | `1.26.0` / `1.26.5` | `.go-version` 与 `go.mod` exact declaration |
 | Go linux/amd64 archive SHA-256 | `5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053` | canonical image 下载校验 |
 | Node.js / npm | `24.18.0` / `11.16.0` | `.node-version` 与根 manifest exact declaration |
@@ -95,9 +95,9 @@ artifact 证据。本次文档迁移不修改上述运行实现。
 | source isolation 加固后 `bash scripts/build_toolchain_image.sh --load` | PASS / 历史 preflight | 产生 local image ID `sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93`；它不能代替 GHCR digest |
 | 批准后挂载 Git common dir 的完整 local baseline | PASS / 历史 preflight | desktop 17/17、contract smoke 与末尾 clean gate 通过；只闭合本地 visual migration 链 |
 | 迁移前 `git remote -v` | 无输出 / 历史事实 | 当时未配置公开 GitHub remote；现已解除 |
-| GitHub Actions run `29427351390` | PASS | `toolchain-build` job `87393086944` success；`toolchain-verify` job `87393589717` success |
+| GitHub Actions run `29432627424` | PASS | `toolchain-build` job `87411194696` success；`toolchain-verify` job `87411718738` success |
 | 远程 canonical baseline | PASS | desktop 17/17、contract smoke PASS、末尾 tracked/staged/untracked clean checks PASS |
-| 远程 artifact | PASS | `toolchain-evidence-f975e258f0d5400fecbe81318083d0535eea4fb9`；`artifact_expired=false`；expires_at `2026-08-14T15:22:11Z` |
+| 远程 artifact | PASS | id `8350167050`；`toolchain-evidence-d174f79e5341dcce636d190aa0e510e4528a955a`；`artifact_expired=false`；expires_at `2026-08-14T16:35:24Z` |
 
 ## PASS 算法逐项裁决
 
@@ -105,8 +105,8 @@ artifact 证据。本次文档迁移不修改上述运行实现。
 | --- | --- | --- |
 | exact declarations | PASS | 权威版本文件、manifest、lock、静态 verifier 与远程 baseline 通过 |
 | verifier negative tests | PASS | 错版本、缺／短／大写 SHA、GitLab-only identity、workflow 漂移与 bypass 场景已覆盖 |
-| canonical image build/push digest | PASS | `ghcr.io/wanggang8/agent-platform-eino/toolchain:f975e258f0d5400fecbe81318083d0535eea4fb9@sha256:1272821155d23cfb083cc4d0c1a7a77a96abd4ca00ae760d2339971a3bc6f080` |
-| clean GitHub Actions run | PASS | `https://github.com/wanggang8/agent-platform-eino/actions/runs/29427351390`；HEAD SHA 与 commit identity 一致；build/verify 均 success |
+| canonical image build/push digest | PASS | `ghcr.io/wanggang8/agent-platform-eino/toolchain:d174f79e5341dcce636d190aa0e510e4528a955a@sha256:a68cf71dc506c21573dea7984c95a71ed5ff1837467481a62d4901e8cba7455f` |
+| clean GitHub Actions run | PASS | `https://github.com/wanggang8/agent-platform-eino/actions/runs/29432627424`；HEAD SHA 与 commit identity 一致；build/verify 均 success |
 | reproducible install/no dependency drift | PASS | 远程 canonical baseline PASS |
 | schema/contract/OpenAPI | PASS | 远程 canonical baseline PASS |
 | Go/test/race/vet/build/checkpoint/SQLite/boundary | PASS | 远程 canonical baseline PASS |
@@ -114,7 +114,7 @@ artifact 证据。本次文档迁移不修改上述运行实现。
 | approved desktop visual baseline | PASS | Vick 于 2026-07-15 批准 71 张 snapshot；远程 desktop 17/17 PASS |
 | contract smoke | PASS | 远程 contract smoke PASS |
 | final tracked/staged/untracked clean checks | PASS | 远程 canonical baseline 末尾 clean gates PASS |
-| `toolchain-evidence-$GITHUB_SHA` (30 days) | PASS | 真实 artifact 名称与 commit 一致；`artifact_expired=false`；expires_at `2026-08-14T15:22:11Z` |
+| `toolchain-evidence-$GITHUB_SHA` (30 days) | PASS | 真实 artifact 名称与 commit 一致；`artifact_expired=false`；expires_at `2026-08-14T16:35:24Z` |
 
 所有条件已同时满足，整体门禁裁决为 `G-TOOLCHAIN=PASS`。静态与本地 preflight 仅作历史辅助证据，
 最终裁决以上述真实远程 run 为准。
@@ -125,7 +125,7 @@ artifact 证据。本次文档迁移不修改上述运行实现。
 GitHub Actions run 已完成 build/push、digest guard、pull 与唯一完整 baseline；GHCR digest 与
 30 天 artifact 已产生。迁移前 GitLab 与本地 preflight 历史继续保留，但不再是现行阻断。
 
-## 第一条真实远程证据
+## 迁移首条真实远程证据（历史）
 
 ```text
 repository=https://github.com/wanggang8/agent-platform-eino
@@ -143,9 +143,42 @@ contract_smoke=passed
 remote_clean_gates=passed
 ```
 
+## 安全评审修复
+
+整分支评审 C1/I1/I2/M1 修复将 GHCR 认证从会持久化 token 的 `docker login` 改为环境 credential
+helper。Docker config 与 mode `0700` helper 副本只存在于 `$RUNNER_TEMP`，config 不含 token；actor 与
+token 只注入实际 build/push、digest pull/run step，helper 固定拒绝 `store` / `erase`。token 作为
+opaque secret 只检查非空与 ASCII 控制字符并做 JSON 安全转义，不解析 stateless JWT。
+
+首个安全修复 run `29432152818` 对 commit `ff2e98f8fe27d81353ab983a225441c0a6b8b1fb`
+在 helper configure 后因旧 `[A-Za-z0-9_]+` 假设拒绝 GitHub 2026 stateless installation token 而失败；
+token 全程由 GitHub mask，失败记录只保留固定脱敏错误。依据 GitHub 官方格式变化，修复后的真实证据为：
+
+```text
+repository=https://github.com/wanggang8/agent-platform-eino
+commit=d174f79e5341dcce636d190aa0e510e4528a955a
+run_id=29432627424
+run_url=https://github.com/wanggang8/agent-platform-eino/actions/runs/29432627424
+toolchain_build_job=87411194696 success
+toolchain_verify_job=87411718738 success
+image=ghcr.io/wanggang8/agent-platform-eino/toolchain:d174f79e5341dcce636d190aa0e510e4528a955a@sha256:a68cf71dc506c21573dea7984c95a71ed5ff1837467481a62d4901e8cba7455f
+artifact_id=8350167050
+artifact=toolchain-evidence-d174f79e5341dcce636d190aa0e510e4528a955a
+artifact_size_bytes=231272
+artifact_expired=false
+artifact_expires_at=2026-08-14T16:35:24Z
+desktop=17 passed
+contract_smoke=passed
+remote_tracked_staged_untracked_clean_gates=passed
+```
+
+artifact 已下载到 ignored 验证目录复核，包含 `toolchain-baseline.log` 与 Playwright report；baseline
+日志逐字记录 desktop `17 passed` 和 `contract smoke passed`。canonical baseline 在 smoke 后固定执行
+tracked、staged、untracked 三类 clean gate；`Verify digest image` step success 证明三类静默 gate 均已通过。
+
 ## 未覆盖风险
 
-- artifact 会在 `2026-08-14T15:22:11Z` 到期；当前 `artifact_expired=false`，到期后若需重新审计必须使用后续
+- artifact 会在 `2026-08-14T16:35:24Z` 到期；当前 `artifact_expired=false`，到期后若需重新审计必须使用后续
   clean run 的新 artifact，不得伪造或回填已过期证据。
 - 后续提交会触发新 run；新 run 必须保持 build/verify 全成功才能证明门禁未回归，但不为记录
   其 run ID 再制造自引用文档提交。

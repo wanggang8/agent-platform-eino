@@ -215,8 +215,8 @@ Actions run，也不能单独形成 `G-TOOLCHAIN PASS`。A 链已完成。
 artifacts；当时仓库缺少 remote/pipeline，canonical registry digest 未产生，因此 Story 1.1 保持
 in-progress、`G-TOOLCHAIN` 保持 `BLOCKED`。这段历史不能作为现行平台或阻断条件。
 
-Accepted GitHub/GHCR 迁移已用唯一公开 GitHub remote 取代上述平台。clean GitHub Actions run
-`29427351390` 对 commit `f975e258f0d5400fecbe81318083d0535eea4fb9` 完成 canonical GHCR
+Accepted GitHub/GHCR 迁移已用唯一公开 GitHub remote 取代上述平台。安全评审修复后的 clean GitHub Actions run
+`29432627424` 对 commit `d174f79e5341dcce636d190aa0e510e4528a955a` 完成 canonical GHCR
 `tag@sha256` build/push 与 digest pull/run；`toolchain-build`、`toolchain-verify`、desktop 17/17、contract
 smoke 和末尾 clean gates 全部通过，并产生 30 天 `toolchain-evidence-$GITHUB_SHA` artifact。A/B 两链
 均已闭合，当前唯一裁决为 `G-TOOLCHAIN=PASS`，M-0 已完成，下一步为 M-1；精确 digest、run URL、
