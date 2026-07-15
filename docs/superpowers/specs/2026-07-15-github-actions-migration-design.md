@@ -113,7 +113,8 @@ canonical image registry。
 
 - build 失败：不产生 digest output；verify 不运行；保留 workflow 日志。
 - digest 缺失或格式错误：verify fail-fast，不 pull tag。
-- baseline 失败：上传现有 log/report，workflow 失败，`G-TOOLCHAIN` 保持 `BLOCKED`。
+- baseline 失败：上传现有 log/report，workflow 失败，`G-TOOLCHAIN` 保持
+  `BLOCKED_PENDING_GITHUB_RUN`。
 - artifact upload 使用 `if: always()`，但 upload 自身不能把前序失败改写为 PASS。
 - 最终验收记录保存 repository URL、commit SHA、workflow run URL、GHCR digest、artifact 名称和完整
   baseline 结论；不保存 token。

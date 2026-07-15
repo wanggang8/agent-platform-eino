@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- 所属阶段：Story 1.1／`G-TOOLCHAIN`；门禁保持 `BLOCKED`，直到真实 GitHub Actions run 全部通过。
+- 所属阶段：Story 1.1／`G-TOOLCHAIN`；门禁保持 `BLOCKED_PENDING_GITHUB_RUN`，直到真实 GitHub Actions run 全部通过。
 - 设计依据：`docs/superpowers/specs/2026-07-15-github-actions-migration-design.md`。
 - 仓库固定为公开 `wanggang8/agent-platform-eino`，remote 固定为 `origin=https://github.com/wanggang8/agent-platform-eino.git`。
 - 只保留 GitHub Actions 与 GHCR；删除 `.gitlab-ci.yml`，不保留 GitLab 兼容、双 CI 或降级路径。
@@ -642,7 +642,8 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   git add docs/adr/2026-07-15-github-actions-ghcr-toolchain-gate.md \
     docs/07-implementation-plan.md docs/08-acceptance-plan.md docs/tooling-and-reporting.md \
     docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md \
-    docs/superpowers/specs/2026-07-15-github-actions-migration-design.md
+    docs/superpowers/specs/2026-07-15-github-actions-migration-design.md \
+    docs/superpowers/plans/2026-07-15-github-actions-migration.md
   git commit -m "docs(ci): adopt GitHub Actions gate"
   ```
 
