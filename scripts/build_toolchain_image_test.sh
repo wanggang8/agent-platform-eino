@@ -11,7 +11,9 @@ test -f "$dockerfile" || { printf 'missing toolchain Dockerfile\n' >&2; exit 1; 
 test -f "$lock_helper" || { printf 'missing shared toolchain lock helper\n' >&2; exit 1; }
 for key in PLATFORM PLAYWRIGHT_IMAGE PLAYWRIGHT_AMD64_DIGEST PLAYWRIGHT_VERSION \
   CHROMIUM_REVISION CHROMIUM_VERSION GO_LINUX_AMD64_SHA256 NODE_LINUX_X64_SHA256 \
-  DOCKER_CLI_IMAGE DOCKER_CLI_AMD64_DIGEST DOCKER_DIND_IMAGE DOCKER_DIND_AMD64_DIGEST \
+  GITHUB_RUNNER ACTIONS_CHECKOUT_SHA ACTIONS_UPLOAD_ARTIFACT_SHA \
+  DOCKER_SETUP_DOCKER_SHA DOCKER_SETUP_BUILDX_SHA DOCKER_ENGINE_VERSION \
+  DOCKER_BUILDX_VERSION BUILDKIT_IMAGE BUILDKIT_DIGEST \
   UBUNTU_SNAPSHOT APT_BUILD_PACKAGES; do
   grep -Eq "^${key}=[^[:space:]]+$" "$lock" || {
     printf 'missing canonical lock key: %s\n' "$key" >&2
@@ -19,7 +21,7 @@ for key in PLATFORM PLAYWRIGHT_IMAGE PLAYWRIGHT_AMD64_DIGEST PLAYWRIGHT_VERSION 
   }
 done
 grep -Fxq 'NODE_LINUX_X64_SHA256=783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8' "$lock"
-test "$(bash "$lock_helper" "$lock" | awk -F '\t' '{ print NF }')" = 16
+test "$(bash "$lock_helper" "$lock" | awk -F '\t' '{ print NF }')" = 21
 grep -Fq 'FROM ${PLAYWRIGHT_IMAGE}@${PLAYWRIGHT_DIGEST}' "$dockerfile"
 ! grep -Eq 'go1\.26\.5|node-v24\.18\.0' "$dockerfile"
 ! grep -Eq 'tar\.xz|xJf' "$dockerfile"
@@ -269,6 +271,30 @@ rm -f /tmp/toolchain-lock-must-not-run
 assert_builder_failure 'invalid toolchain lock' --load
 test ! -e /tmp/toolchain-lock-must-not-run
 cp "$tmp/lock.good" "$repo/build/toolchain/toolchain.lock"
+
+# GitHub runner、action 与 Docker/BuildKit pin 都必须是不可漂移的完整值。
+sed -i.bak 's/GITHUB_RUNNER=ubuntu-24\.04/GITHUB_RUNNER=ubuntu-latest/' "$repo/build/toolchain/toolchain.lock"
+assert_builder_failure 'invalid toolchain lock' --load
+mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+for key in ACTIONS_CHECKOUT_SHA ACTIONS_UPLOAD_ARTIFACT_SHA \
+  DOCKER_SETUP_DOCKER_SHA DOCKER_SETUP_BUILDX_SHA; do
+  sed -i.bak "s/^${key}=.*/${key}=abcdef/" "$repo/build/toolchain/toolchain.lock"
+  assert_builder_failure 'invalid toolchain lock' --load
+  mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+done
+for mutation in \
+  'DOCKER_ENGINE_VERSION=latest' \
+  'DOCKER_BUILDX_VERSION=0.35' \
+  'BUILDKIT_IMAGE=moby/buildkit:latest'; do
+  key=${mutation%%=*}
+  sed -i.bak "s#^${key}=.*#${mutation}#" "$repo/build/toolchain/toolchain.lock"
+  assert_builder_failure 'invalid toolchain lock' --load
+  mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+done
+sed -i.bak 's/^BUILDKIT_DIGEST=.*/BUILDKIT_DIGEST=sha256:abcdef/' "$repo/build/toolchain/toolchain.lock"
+assert_builder_failure 'invalid toolchain lock' --load
+mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+
 assert_builder_failure 'usage: --load or strict CI --push'
 assert_builder_failure 'push requires CI' --push registry.example/team/project/toolchain:bad --env-file test-results/toolchain.env
 

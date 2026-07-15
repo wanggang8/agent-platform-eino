@@ -9,8 +9,10 @@ lock=$1
 platform= playwright_image= playwright_digest= playwright_version=
 chromium_revision= chromium_version= base_os= font_policy=
 ubuntu_snapshot= apt_build_packages=
-go_sha256= node_sha256= docker_cli_image= docker_cli_digest=
-docker_dind_image= docker_dind_digest=
+go_sha256= node_sha256=
+github_runner= actions_checkout_sha= actions_upload_artifact_sha=
+docker_setup_docker_sha= docker_setup_buildx_sha=
+docker_engine_version= docker_buildx_version= buildkit_image= buildkit_digest=
 seen_keys='|'
 test -r "$lock" || fail
 while IFS= read -r line || test -n "$line"; do
@@ -33,10 +35,15 @@ while IFS= read -r line || test -n "$line"; do
     APT_BUILD_PACKAGES) apt_build_packages=$value ;;
     GO_LINUX_AMD64_SHA256) go_sha256=$value ;;
     NODE_LINUX_X64_SHA256) node_sha256=$value ;;
-    DOCKER_CLI_IMAGE) docker_cli_image=$value ;;
-    DOCKER_CLI_AMD64_DIGEST) docker_cli_digest=$value ;;
-    DOCKER_DIND_IMAGE) docker_dind_image=$value ;;
-    DOCKER_DIND_AMD64_DIGEST) docker_dind_digest=$value ;;
+    GITHUB_RUNNER) github_runner=$value ;;
+    ACTIONS_CHECKOUT_SHA) actions_checkout_sha=$value ;;
+    ACTIONS_UPLOAD_ARTIFACT_SHA) actions_upload_artifact_sha=$value ;;
+    DOCKER_SETUP_DOCKER_SHA) docker_setup_docker_sha=$value ;;
+    DOCKER_SETUP_BUILDX_SHA) docker_setup_buildx_sha=$value ;;
+    DOCKER_ENGINE_VERSION) docker_engine_version=$value ;;
+    DOCKER_BUILDX_VERSION) docker_buildx_version=$value ;;
+    BUILDKIT_IMAGE) buildkit_image=$value ;;
+    BUILDKIT_DIGEST) buildkit_digest=$value ;;
     *) fail ;;
   esac
 done <"$lock"
@@ -44,7 +51,9 @@ done <"$lock"
 for required in platform playwright_image playwright_digest playwright_version \
   chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
   go_sha256 node_sha256 \
-  docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest; do
+  github_runner actions_checkout_sha actions_upload_artifact_sha \
+  docker_setup_docker_sha docker_setup_buildx_sha docker_engine_version \
+  docker_buildx_version buildkit_image buildkit_digest; do
   test -n "${!required:-}" || fail
 done
 [[ $platform == linux/amd64 ]] || fail
@@ -54,15 +63,23 @@ done
 [[ $ubuntu_snapshot =~ ^[0-9]{8}T[0-9]{6}Z$ ]] || fail
 [[ $apt_build_packages =~ ^[a-z0-9][a-z0-9+.-]*$ ]] || fail
 [[ $playwright_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
-[[ $docker_cli_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
-[[ $docker_dind_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
 [[ $go_sha256 =~ ^[0-9a-f]{64}$ ]] || fail
 [[ $node_sha256 =~ ^[0-9a-f]{64}$ ]] || fail
+[[ $github_runner == ubuntu-24.04 ]] || fail
+for action_sha in "$actions_checkout_sha" "$actions_upload_artifact_sha" \
+  "$docker_setup_docker_sha" "$docker_setup_buildx_sha"; do
+  [[ $action_sha =~ ^[0-9a-f]{40}$ ]] || fail
+done
+[[ $docker_engine_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail
+[[ $docker_buildx_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail
+[[ $buildkit_image =~ ^moby/buildkit:v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail
+[[ $buildkit_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
 
 # 固定字段顺序是 helper 与两个消费者之间唯一的可信接口，值域已禁止 tab/newline。
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "$platform" "$playwright_image" "$playwright_digest" "$playwright_version" \
   "$chromium_revision" "$chromium_version" "$base_os" "$font_policy" \
   "$ubuntu_snapshot" "$apt_build_packages" \
-  "$go_sha256" "$node_sha256" "$docker_cli_image" "$docker_cli_digest" \
-  "$docker_dind_image" "$docker_dind_digest"
+  "$go_sha256" "$node_sha256" "$github_runner" "$actions_checkout_sha" \
+  "$actions_upload_artifact_sha" "$docker_setup_docker_sha" "$docker_setup_buildx_sha" \
+  "$docker_engine_version" "$docker_buildx_version" "$buildkit_image" "$buildkit_digest"
