@@ -2,9 +2,9 @@
 
 日期：2026-07-15
 阶段／门禁：M-0 / G-TOOLCHAIN
-Verification status：`NEEDS_HUMAN_REVIEW`
-迁移状态：`PENDING_UX_APPROVAL`
-UX 状态：`PENDING_UX_APPROVAL`
+Verification status：`POST_APPROVAL_REVERIFY_PENDING`
+迁移状态：`APPROVED_BASELINE_UPDATED`
+UX 状态：`APPROVED`
 
 ## 裁决摘要
 
@@ -17,10 +17,12 @@ worker 后重跑仍为 1/17 PASS、16/17 FAIL，但 16 项全部是旧 screensho
 worktree 中使用首个成功构建的同 pins image、单 worker 和 `--update-snapshots` 生成审查候选，
 17/17 PASS、71/71 候选齐全；在删除浮动 apt source 后重建的最新 image 中又以零更新、单 worker
 方式 17/17 PASS，
-证明 71 张候选完全一致。以上操作均没有修改当前分支 snapshot。
+证明 71 张候选完全一致。Vick 随后批准迁移，正式 desktop snapshot 已在相同最新 image 中使用
+`--project=desktop --update-snapshots --workers=1` 更新，17/17 PASS；mobile snapshot 未修改。
 
-当前证据足以进入人工 UX checkpoint，但尚未获得批准，不能把候选复制回正式 baseline，也不能将
-本记录计为 `G-TOOLCHAIN PASS`。本地 image ID 也不能替代 GitLab registry digest 或 clean pipeline。
+UX checkpoint 已完成；批准后的唯一完整 baseline 尚待从包含本次 snapshot 与审批记录的干净提交
+重跑，因此当前仍不能将本记录计为 `G-TOOLCHAIN PASS`。本地 image ID 也不能替代 GitLab
+registry digest 或 clean pipeline。
 
 ## 旧环境与目标环境
 
@@ -161,19 +163,20 @@ tool-expanded-timeline.png
 tool-expanded-tool-card.png
 ```
 
-本次没有修改 `web/eino-workbench/tests/__screenshots__/desktop/**`，也没有修改 mobile screenshot。
+批准后已更新 `web/eino-workbench/tests/__screenshots__/desktop/**` 的 71 张正式 baseline；没有修改
+mobile screenshot。
 
 ## UX 审批门禁
 
 | 字段 | 当前值 |
 | --- | --- |
-| 审批人 | 等待 Vick checkpoint 决策 |
-| 审批时间 | 未发生 |
+| 审批人 | Vick |
+| 审批时间 | 2026-07-15 |
 | 可供审查的 actual/diff | 71 张临时 Linux candidate、10 组首跑 actual/diff、old/new 联系表与代表性对照 |
-| 结论 | `PENDING_UX_APPROVAL` |
+| 结论 | `APPROVED`；允许把 71 张 Linux candidate 迁移为正式 desktop baseline |
 
-当前已进入 checkpoint/human review。批准前不得运行当前分支的 snapshot update；任何未被接受的
-DOM、文案、尺寸或交互变化都必须按产品回归处理，不能仅凭跨 OS 迁移解释。
+checkpoint/human review 已批准迁移。正式 snapshot update 已严格使用审查时的同一 canonical
+image 和单 worker 执行；任何后续 DOM、文案、尺寸或交互变化仍必须按产品回归处理。
 
 ## 两条独立证据链
 
@@ -185,16 +188,16 @@ DOM、文案、尺寸或交互变化都必须按产品回归处理，不能仅�
    `bash scripts/run_toolchain_baseline.sh`。首次运行可能在 desktop screenshot diff 处非零停止；必须
    保存 `test-results/toolchain-baseline.log` 与 Playwright actual/diff，并从日志确认此前全部非视觉
    检查通过。若在 visual 之前失败，不得进入迁移审批。
-3. 已生成 71 张临时候选并完成机器辅助的尺寸、像素与代表性视觉检查；等待 human checkpoint
-   对差异分类和迁移建议作最终决定。
-4. 通过 checkpoint/human review 记录 UX 审批人、时间和明确结论；只有 UX 明确
-   批准后，才可在同一本地 image 运行 desktop-only `--update-snapshots`。
-5. 更新后在同一 image 完整重跑 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
+3. 已生成 71 张临时候选并完成机器辅助的尺寸、像素与代表性视觉检查。
+4. Vick 已通过 checkpoint/human review 明确批准；已在同一本地 image 运行 desktop-only
+   `--update-snapshots --workers=1`，17/17 PASS。
+5. 待从包含正式 snapshot 与审批记录的干净提交，在同一 image 完整重跑
+   `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
 
 本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
 registry digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean
-GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前阻塞在第 4 步：
-`PENDING_UX_APPROVAL`。
+GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前阻塞在第 5 步：
+`POST_APPROVAL_REVERIFY_PENDING`。
 
 ### B. Story / G-TOOLCHAIN chain
 

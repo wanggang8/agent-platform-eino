@@ -55,7 +55,8 @@ canonical image 已成功构建为 linux/amd64 image ID
 安装、版本断言、C compiler、race smoke 与 Chromium identity 均真实通过。首次完整 baseline 的
 非视觉检查全部通过，desktop browser 因旧 macOS screenshot 与 Linux candidate 差异停在 visual
 migration；71 张候选已在临时 detached worktree 以单 worker 完整生成，并在该最新 image 中以
-零更新方式 17/17 复验通过，尚未获 UX approval，也未更新本分支 snapshot。仓库没有
+零更新方式 17/17 复验通过。Vick 已于 2026-07-15 批准迁移，正式 desktop snapshot 已在同一
+image 中更新并以 17/17 通过；批准后的完整 baseline 尚待重跑。仓库没有
 remote/pipeline 仍独立阻止最终 Story 门禁。任何阻断记录都必须
 写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，
 也不得用本地 image 或静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见

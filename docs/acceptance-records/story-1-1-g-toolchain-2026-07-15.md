@@ -113,7 +113,7 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | schema/contract/OpenAPI | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
 | Go/test/race/vet/build/checkpoint/SQLite/boundary | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
 | TS/Vitest/stream/build | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
-| approved desktop visual baseline | BLOCKED | 71 张 Linux candidate 已生成并完成机器辅助审查；UX approval 未产生，正式 snapshot 未更新 |
+| approved desktop visual baseline | APPROVED_PENDING_REVERIFY | Vick 于 2026-07-15 批准；71 张正式 desktop snapshot 已在同一 canonical image 更新并 17/17 PASS，批准后的完整 baseline 尚待重跑 |
 | contract smoke | BLOCKED_FINAL_EVIDENCE | 未在 canonical pipeline 重跑 |
 
 任一条件缺失即整体 `BLOCKED`；上表中的 `SATISFIED_STATIC` 不是中间门禁 PASS。
@@ -123,9 +123,8 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 1. `BLOCKED_NO_REMOTE_OR_PIPELINE`：仓库没有 Git remote；未产生 GitLab lint、clean pipeline、
    `CI_COMMIT_SHA`、pipeline URL、registry `tag@sha256`、`toolchain-baseline.log` 或 Playwright report。
    配置 remote/runner 后，必须在包含全部变更的 clean commit 上运行真实 pipeline。
-2. `BLOCKED_UX_APPROVAL`：71 张 canonical Linux candidate 与联系表已经生成，机器辅助审查建议迁移，
-   但 human checkpoint 尚未批准。批准后才能把候选更新为正式 desktop snapshot，并在同一 image
-   重跑唯一完整 baseline；未批准时不得修改 screenshot。
+2. `BLOCKED_POST_APPROVAL_BASELINE`：Vick 已批准并完成正式 desktop snapshot 更新；必须从包含
+   snapshot 与审批记录的干净提交，在同一 image 重跑唯一完整 baseline 后才能闭合本地 A 链。
 
 ## 未产生的最终引用
 
@@ -143,14 +142,14 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 - privileged DinD runner、registry push/pull、dotenv artifact 传递和 commit-bound digest 尚未实测。
 - canonical `npm ci`、Go/TypeScript/contract 非视觉链已在本地通过；browser 后的 contract smoke 与
   最终 clean check 尚未在同一完整 PASS baseline 中执行。
-- 71 个 desktop Linux candidate 已生成；human UX 裁决与批准后的完整 baseline 尚未完成。
+- 71 个 desktop Linux baseline 已获 human UX 批准并更新；批准后的完整 baseline 尚未完成。
 - 当前仓库静态 clean 不等于 clean GitLab pipeline；任何后续提交都必须重新跑完整证据链。
 
 ## 最终结论
 
 `G-TOOLCHAIN=BLOCKED`。Story 1.1 与 Sprint 1.1 必须保持 `in-progress`，不得进入 M-1。
 
-下一步只允许补齐两条直接 blocker 的真实证据：完成 desktop visual human checkpoint，批准后更新
-snapshot 并在同一 image 重跑完整 baseline；在包含全部变更的 clean commit 上运行真实 GitLab
+下一步只允许补齐两条直接 blocker 的真实证据：从包含已批准 snapshot 的干净提交在同一 image
+重跑完整 baseline；在包含全部变更的 clean commit 上运行真实 GitLab
 pipeline并保存 registry digest 与 artifacts。全部 PASS 算法条件同时满足前，不得降低 AC 或把
 本地／静态 preflight 结果改写为 PASS。
