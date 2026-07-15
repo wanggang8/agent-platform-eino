@@ -74,12 +74,15 @@ e53cf18 docs(toolchain): separate visual and gate evidence
 | `bash scripts/build_toolchain_image_test.sh` | PASS | builder、pinned inputs、push/load 契约、dotenv、baseline 顺序与末尾 clean gate 的静态／行为测试通过 |
 | `bash scripts/build_toolchain_image.sh --load` | exit 130 | MCR base metadata 按 digest 解析；base layer 超过 15 分钟无字节进展后人工终止 |
 | `docker image inspect agent-platform-eino-toolchain:local` | FAIL / image 不存在 | 未产生 local image ID，因此未运行 canonical baseline |
-| 目标 Go 1.26.5 下 `GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1` | PASS preflight | 官方 darwin/arm64 archive SHA-256 为 `efb87ff28af9a188d0536ef5d42e63dd52ba8263cd7344a993cc48dd11dedb6a`；不是 canonical linux/amd64 证据 |
-| 目标 Go 1.26.5 下 `bash scripts/validate_ci_config.sh` | PASS preflight | 只证明静态 GitLab CI 配置契约，不是 GitLab lint 或 pipeline |
-| `bash -n`（Story shell scripts） | PASS | shell 语法通过 |
-| `git diff --check` | PASS | 已审查实现提交无 whitespace error |
+| `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1` | PASS preflight | 官方 darwin/arm64 archive SHA-256 为 `efb87ff28af9a188d0536ef5d42e63dd52ba8263cd7344a993cc48dd11dedb6a`；不是 canonical linux/amd64 证据 |
+| `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local bash scripts/validate_ci_config.sh` | PASS preflight | 只证明静态 GitLab CI 配置契约，不是 GitLab lint 或 pipeline |
+| `bash -n scripts/verify_toolchain.sh scripts/verify_toolchain_test.sh scripts/build_toolchain_image.sh scripts/build_toolchain_image_test.sh scripts/toolchain_lock.sh scripts/run_toolchain_baseline.sh scripts/validate_ci_config.sh` | PASS | Task 5 report 中列出的 Story shell scripts 语法通过 |
+| `git diff --cached --check` | PASS / exit 0 | 检查当时已 staged 的 Task 5 文档 diff；不扩大为未执行的 unstaged 或历史提交范围 |
+| `git diff --cached --name-only -- internal cmd web/eino-workbench/src` | PASS / 无输出 | staged Task 5 diff 未修改业务实现目录 |
+| `git diff --name-only 1ec4273 -- internal cmd web/eino-workbench/src` | PASS / 无输出 | Task 5 相对 task base 的业务实现目录零 diff |
 | `git diff --name-only f847458..1ec4273 -- internal cmd web/eino-workbench/src` | PASS / 无输出 | 业务实现目录零 diff |
 | `git remote -v` | 无输出 | 仓库没有 remote；未调用无目标的 `glab ci lint`，也未触发 pipeline |
+| `bash scripts/verify_toolchain.sh` | exit 1 | 非 canonical 宿主按预期 fail-fast：`node expected=v24.18.0 actual=v25.8.1`；不是 PASS，不改变整体 `BLOCKED` |
 
 ## PASS 算法逐项裁决
 
