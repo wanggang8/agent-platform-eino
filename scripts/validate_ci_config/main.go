@@ -14,99 +14,86 @@ import (
 )
 
 const (
-	buildJobName          = "toolchain-build"
-	verifyJobName         = "toolchain-verify"
-	dockerTemplateName    = ".docker-amd64"
-	toolchainDotenvPath   = "test-results/toolchain.env"
-	baselineScriptPath    = "scripts/run_toolchain_baseline.sh"
-	canonicalBuilderPath  = "scripts/build_toolchain_image.sh"
-	dockerHostValue       = "tcp://docker:2375"
-	dockerBuildkitValue   = "1"
-	dockerTLSCertdirValue = ""
-	canonicalMkdirLine    = "mkdir -p test-results"
-	canonicalLoginLine    = `printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"`
-	canonicalBuilderLine  = `bash ` + canonicalBuilderPath + ` --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file ` + toolchainDotenvPath
-	canonicalGuardLine    = `printf '%s\n' "$TOOLCHAIN_IMAGE" | grep -Eq '^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'`
-	canonicalPullLine     = `docker pull "$TOOLCHAIN_IMAGE"`
-	canonicalBaselineLine = `docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash ` + baselineScriptPath
+	buildJobName  = "toolchain-build"
+	verifyJobName = "toolchain-verify"
+
+	canonicalLoginCommand = `printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin`
+	canonicalBuildCommand = `repository=${GITHUB_REPOSITORY,,}
+image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
+bash scripts/build_toolchain_image.sh --push "$image_ref" --env-file test-results/toolchain.env
+cat test-results/toolchain.env >> "$GITHUB_OUTPUT"`
+	canonicalVerifyCommand = `[[ "$TOOLCHAIN_IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+/toolchain:[0-9a-f]{40}@sha256:[0-9a-f]{64}$ ]]
+docker pull "$TOOLCHAIN_IMAGE"
+docker run --rm --platform linux/amd64 -e CI=true -e GITHUB_SHA="$GITHUB_SHA" -v "$GITHUB_WORKSPACE:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
+
+	canonicalBuildOutput  = "${{ steps.build.outputs.TOOLCHAIN_IMAGE }}"
+	canonicalVerifyImage  = "${{ needs.toolchain-build.outputs.toolchain_image }}"
+	canonicalGitHubToken  = "${{ secrets.GITHUB_TOKEN }}"
+	canonicalAlways       = "${{ always() }}"
+	canonicalArtifactPath = "test-results/toolchain-baseline.log\ntest-results/eino-workbench-playwright-report/\n"
 )
 
 var (
-	lockKeyPattern = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
-	digestPattern  = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
-	imagePattern   = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._/:@-]*$`)
+	lockKeyPattern       = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+	lockValuePattern     = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._/:@+-]*$`)
+	actionSHAPattern     = regexp.MustCompile(`^[0-9a-f]{40}$`)
+	digestPattern        = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+	exactSemverPattern   = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
+	buildKitImagePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._/-]*:v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
+	gitLabSyntaxPattern  = regexp.MustCompile(`(?i)\.gitlab-ci|\bCI_(?:COMMIT|REGISTRY|PROJECT|PIPELINE|JOB|SERVER|RUNNER|DEFAULT_BRANCH|MERGE_REQUEST)[A-Z0-9_]*\b`)
+	scriptCallPattern    = regexp.MustCompile(`(?:^|[[:space:]])(?:bash|go[[:space:]]+run)[[:space:]]+([^[:space:]"']+)`)
 )
 
-// lockValues 仅承载 CI runner 边界需要核对的 Docker CLI 与 DinD 固定值。
+// lockValues 仅承载 GitHub Actions 执行边界需要核对的固定输入。
 type lockValues struct {
-	DockerCLIImage   string
-	DockerCLIDigest  string
-	DockerDindImage  string
-	DockerDindDigest string
+	GitHubRunner             string
+	ActionsCheckoutSHA       string
+	ActionsUploadArtifactSHA string
+	DockerSetupDockerSHA     string
+	DockerSetupBuildxSHA     string
+	DockerEngineVersion      string
+	DockerBuildxVersion      string
+	BuildKitImage            string
+	BuildKitDigest           string
 }
 
-// validateConfig 静态验证 pinned runner、构建到验证的 DAG 与 canonical image 传递。
+// validateConfig 对 GitHub Actions workflow 的触发器、权限、DAG 与执行入口做精确静态校验。
 func validateConfig(data []byte, lock lockValues) error {
+	if gitLabSyntaxPattern.Match(data) {
+		return errors.New("GitLab syntax is forbidden")
+	}
 	config, err := parseConfig(data)
 	if err != nil {
 		return err
 	}
-
-	stages, ok := stringSlice(config["stages"])
-	if !ok || len(stages) != 2 || stages[0] != "toolchain" || stages[1] != "verify" {
-		return errors.New("stages must be exactly [toolchain, verify]")
+	if !hasExactKeys(config, "name", "on", "permissions", "jobs") {
+		return errors.New("workflow top-level keys must be exact")
 	}
-
-	// 先保留原始未固定 image 的专用诊断，再强制所有有效配置走唯一模板。
-	if rawBuild, ok := stringMap(config[buildJobName]); ok {
-		if image, _ := rawBuild["image"].(string); image == lock.DockerCLIImage && lock.DockerCLIDigest != "" {
-			return errors.New("toolchain-build Docker CLI image must use the lock digest")
-		}
+	if config["name"] != "Toolchain Gate" {
+		return errors.New("workflow name must be Toolchain Gate")
 	}
-	template, ok := stringMap(config[dockerTemplateName])
-	if !ok {
-		return errors.New("missing .docker-amd64 template")
-	}
-	build, err := resolveJob(config, template, buildJobName)
-	if err != nil {
+	if err := validateTriggers(config); err != nil {
 		return err
 	}
-	if err := validateDockerBoundary(buildJobName, build, lock); err != nil {
+	if err := validateTopLevelPermissions(config); err != nil {
 		return err
 	}
-	if stage, _ := build["stage"].(string); stage != "toolchain" {
-		return errors.New("toolchain-build stage must be toolchain")
+	jobs, ok := stringMap(config["jobs"])
+	if !ok || !hasExactKeys(jobs, buildJobName, verifyJobName) {
+		return errors.New("jobs must be exactly toolchain-build and toolchain-verify")
 	}
-	buildLines, err := strictScriptLines(build)
-	if err != nil || !equalStrings(buildLines, []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}) {
-		return errors.New("toolchain-build must call scripts/build_toolchain_image.sh with the canonical dotenv path")
+	build, buildOK := stringMap(jobs[buildJobName])
+	verify, verifyOK := stringMap(jobs[verifyJobName])
+	if !buildOK || !verifyOK {
+		return errors.New("jobs must be exactly toolchain-build and toolchain-verify")
 	}
-	if got := nestedString(build, "artifacts", "reports", "dotenv"); got != toolchainDotenvPath {
-		return errors.New("toolchain-build dotenv artifact must be test-results/toolchain.env")
-	}
-
-	verify, err := resolveJob(config, template, verifyJobName)
-	if err != nil {
+	if err := validateBuildJob(build, lock); err != nil {
 		return err
 	}
-	if err := validateDockerBoundary(verifyJobName, verify, lock); err != nil {
-		return err
-	}
-	if stage, _ := verify["stage"].(string); stage != "verify" {
-		return errors.New("toolchain-verify stage must be verify")
-	}
-	if !hasBuildArtifactNeed(verify) {
-		return errors.New("toolchain-verify needs toolchain-build artifacts")
-	}
-
-	verifyLines, err := strictScriptLines(verify)
-	if err != nil || !equalStrings(verifyLines, []string{canonicalGuardLine, canonicalPullLine, canonicalBaselineLine}) {
-		return errors.New("toolchain-verify script must match the canonical @sha256: TOOLCHAIN_IMAGE baseline vector")
-	}
-	return nil
+	return validateVerifyJob(verify, lock)
 }
 
-// loadLock 从不可执行的 key=value 文件读取 Docker pins，拒绝重复键与非固定 digest。
+// loadLock 读取不可执行的 KEY=VALUE lock，并只投影 GitHub Actions 所需的九个固定字段。
 func loadLock(path string) (lockValues, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -122,7 +109,7 @@ func loadLock(path string) (lockValues, error) {
 			continue
 		}
 		key, value, ok := strings.Cut(line, "=")
-		if !ok || !lockKeyPattern.MatchString(key) || value == "" || strings.ContainsAny(value, " \t\r\n") {
+		if !ok || !lockKeyPattern.MatchString(key) || !lockValuePattern.MatchString(value) {
 			return lockValues{}, errors.New("invalid toolchain lock entry")
 		}
 		if _, exists := values[key]; exists {
@@ -134,20 +121,259 @@ func loadLock(path string) (lockValues, error) {
 		return lockValues{}, errors.New("cannot read toolchain lock")
 	}
 
-	lock := lockValues{
-		DockerCLIImage:   values["DOCKER_CLI_IMAGE"],
-		DockerCLIDigest:  values["DOCKER_CLI_AMD64_DIGEST"],
-		DockerDindImage:  values["DOCKER_DIND_IMAGE"],
-		DockerDindDigest: values["DOCKER_DIND_AMD64_DIGEST"],
+	required := []string{
+		"GITHUB_RUNNER",
+		"ACTIONS_CHECKOUT_SHA",
+		"ACTIONS_UPLOAD_ARTIFACT_SHA",
+		"DOCKER_SETUP_DOCKER_SHA",
+		"DOCKER_SETUP_BUILDX_SHA",
+		"DOCKER_ENGINE_VERSION",
+		"DOCKER_BUILDX_VERSION",
+		"BUILDKIT_IMAGE",
+		"BUILDKIT_DIGEST",
 	}
-	if !imagePattern.MatchString(lock.DockerCLIImage) || !imagePattern.MatchString(lock.DockerDindImage) ||
-		!digestPattern.MatchString(lock.DockerCLIDigest) || !digestPattern.MatchString(lock.DockerDindDigest) {
-		return lockValues{}, errors.New("toolchain lock must contain pinned Docker CLI and DinD images")
+	for _, key := range required {
+		if _, ok := values[key]; !ok {
+			return lockValues{}, fmt.Errorf("missing toolchain lock key %s", key)
+		}
 	}
-	return lock, nil
+
+	if values["GITHUB_RUNNER"] != "ubuntu-24.04" {
+		return lockValues{}, errors.New("invalid GITHUB_RUNNER pin")
+	}
+	for _, key := range []string{"ACTIONS_CHECKOUT_SHA", "ACTIONS_UPLOAD_ARTIFACT_SHA", "DOCKER_SETUP_DOCKER_SHA", "DOCKER_SETUP_BUILDX_SHA"} {
+		if !actionSHAPattern.MatchString(values[key]) {
+			return lockValues{}, fmt.Errorf("invalid %s pin", key)
+		}
+	}
+	for _, key := range []string{"DOCKER_ENGINE_VERSION", "DOCKER_BUILDX_VERSION"} {
+		if !exactSemverPattern.MatchString(values[key]) {
+			return lockValues{}, fmt.Errorf("invalid %s pin", key)
+		}
+	}
+	if !buildKitImagePattern.MatchString(values["BUILDKIT_IMAGE"]) {
+		return lockValues{}, errors.New("invalid BUILDKIT_IMAGE pin")
+	}
+	if !digestPattern.MatchString(values["BUILDKIT_DIGEST"]) {
+		return lockValues{}, errors.New("invalid BUILDKIT_DIGEST pin")
+	}
+
+	return lockValues{
+		GitHubRunner:             values["GITHUB_RUNNER"],
+		ActionsCheckoutSHA:       values["ACTIONS_CHECKOUT_SHA"],
+		ActionsUploadArtifactSHA: values["ACTIONS_UPLOAD_ARTIFACT_SHA"],
+		DockerSetupDockerSHA:     values["DOCKER_SETUP_DOCKER_SHA"],
+		DockerSetupBuildxSHA:     values["DOCKER_SETUP_BUILDX_SHA"],
+		DockerEngineVersion:      values["DOCKER_ENGINE_VERSION"],
+		DockerBuildxVersion:      values["DOCKER_BUILDX_VERSION"],
+		BuildKitImage:            values["BUILDKIT_IMAGE"],
+		BuildKitDigest:           values["BUILDKIT_DIGEST"],
+	}, nil
 }
 
-// validateScriptReferences 确保 CI 中由 bash/go run 启动的仓库脚本真实存在且不能逃逸根目录。
+// validateTriggers 只允许 push 与手动触发，避免未评审的执行入口。
+func validateTriggers(config map[string]any) error {
+	triggers, ok := stringMap(config["on"])
+	if !ok || !hasExactKeys(triggers, "push", "workflow_dispatch") || triggers["push"] != nil || triggers["workflow_dispatch"] != nil {
+		return errors.New("workflow triggers must be exactly push and workflow_dispatch")
+	}
+	return nil
+}
+
+// validateTopLevelPermissions 要求默认 token 权限为空，权限只能由两个 job 显式授予。
+func validateTopLevelPermissions(config map[string]any) error {
+	permissions, ok := stringMap(config["permissions"])
+	if !ok || len(permissions) != 0 {
+		return errors.New("top-level permissions must be empty")
+	}
+	return nil
+}
+
+// validateBuildJob 固定构建 job 的 runner、最小权限、输出与五个有序步骤。
+func validateBuildJob(job map[string]any, lock lockValues) error {
+	if job["runs-on"] != lock.GitHubRunner {
+		return errors.New("toolchain-build runner must match lock")
+	}
+	if err := validateExactPermissions(buildJobName, job["permissions"], map[string]string{"contents": "read", "packages": "write"}); err != nil {
+		return err
+	}
+	outputs, ok := stringMap(job["outputs"])
+	if !ok || !hasExactKeys(outputs, "toolchain_image") || outputs["toolchain_image"] != canonicalBuildOutput {
+		return errors.New("toolchain-build output must use steps.build.outputs.TOOLCHAIN_IMAGE")
+	}
+	steps, ok := anySlice(job["steps"])
+	if !ok || len(steps) != 5 {
+		return errors.New("toolchain-build steps must be exact")
+	}
+	checkout, checkoutOK := stringMap(steps[0])
+	setupDocker, setupDockerOK := stringMap(steps[1])
+	setupBuildx, setupBuildxOK := stringMap(steps[2])
+	login, loginOK := stringMap(steps[3])
+	build, buildOK := stringMap(steps[4])
+	if !checkoutOK || !setupDockerOK || !setupBuildxOK || !loginOK || !buildOK {
+		return errors.New("toolchain-build steps must be exact")
+	}
+	if err := validateActionStep(checkout, "actions/checkout@"+lock.ActionsCheckoutSHA, map[string]string{"fetch-depth": "0"}); err != nil {
+		return err
+	}
+	if err := validateActionStep(setupDocker, "docker/setup-docker-action@"+lock.DockerSetupDockerSHA, map[string]string{"version": "v" + lock.DockerEngineVersion}); err != nil {
+		return err
+	}
+	if err := validateActionStep(setupBuildx, "docker/setup-buildx-action@"+lock.DockerSetupBuildxSHA, map[string]string{
+		"version":     "v" + lock.DockerBuildxVersion,
+		"driver-opts": "image=" + lock.BuildKitImage + "@" + lock.BuildKitDigest,
+	}); err != nil {
+		return err
+	}
+	if !hasExactKeys(login, "name", "env", "run") || login["name"] != "Login GHCR" || !exactStringMap(login["env"], map[string]string{"GHCR_TOKEN": canonicalGitHubToken}) || validateRunStep(login, "", canonicalLoginCommand) != nil {
+		return errors.New("Login GHCR step must use GITHUB_TOKEN stdin")
+	}
+	if !hasExactKeys(build, "name", "id", "run") || build["name"] != "Build and push canonical image" || validateRunStep(build, "build", canonicalBuildCommand) != nil {
+		return errors.New("Build and push canonical image step must match canonical command")
+	}
+	if !hasExactKeys(job, "runs-on", "permissions", "outputs", "steps") {
+		return errors.New("toolchain-build keys must be exact")
+	}
+	return nil
+}
+
+// validateVerifyJob 固定验证 job 的依赖、只读权限、镜像来源与五个有序步骤。
+func validateVerifyJob(job map[string]any, lock lockValues) error {
+	if job["needs"] != buildJobName {
+		return errors.New("toolchain-verify must need toolchain-build")
+	}
+	if job["runs-on"] != lock.GitHubRunner {
+		return errors.New("toolchain-verify runner must match lock")
+	}
+	if err := validateExactPermissions(verifyJobName, job["permissions"], map[string]string{"contents": "read", "packages": "read"}); err != nil {
+		return err
+	}
+	if !exactStringMap(job["env"], map[string]string{"TOOLCHAIN_IMAGE": canonicalVerifyImage}) {
+		return errors.New("toolchain-verify image must come from toolchain-build output")
+	}
+	steps, ok := anySlice(job["steps"])
+	if !ok || len(steps) != 5 {
+		return errors.New("toolchain-verify steps must be exact")
+	}
+	checkout, checkoutOK := stringMap(steps[0])
+	setupDocker, setupDockerOK := stringMap(steps[1])
+	login, loginOK := stringMap(steps[2])
+	verify, verifyOK := stringMap(steps[3])
+	artifact, artifactOK := stringMap(steps[4])
+	if !checkoutOK || !setupDockerOK || !loginOK || !verifyOK || !artifactOK {
+		return errors.New("toolchain-verify steps must be exact")
+	}
+	if err := validateActionStep(checkout, "actions/checkout@"+lock.ActionsCheckoutSHA, map[string]string{"fetch-depth": "0"}); err != nil {
+		return err
+	}
+	if err := validateActionStep(setupDocker, "docker/setup-docker-action@"+lock.DockerSetupDockerSHA, map[string]string{"version": "v" + lock.DockerEngineVersion}); err != nil {
+		return err
+	}
+	if !hasExactKeys(login, "name", "env", "run") || login["name"] != "Login GHCR" || !exactStringMap(login["env"], map[string]string{"GHCR_TOKEN": canonicalGitHubToken}) || validateRunStep(login, "", canonicalLoginCommand) != nil {
+		return errors.New("Login GHCR step must use GITHUB_TOKEN stdin")
+	}
+	if !hasExactKeys(verify, "name", "run") || verify["name"] != "Verify digest image" || validateRunStep(verify, "", canonicalVerifyCommand) != nil {
+		return errors.New("Verify digest image step must match canonical command")
+	}
+	if err := validateArtifactStep(artifact, lock); err != nil {
+		return err
+	}
+	if !hasExactKeys(job, "needs", "runs-on", "permissions", "env", "steps") {
+		return errors.New("toolchain-verify keys must be exact")
+	}
+	return nil
+}
+
+// validateExactPermissions 拒绝缺失、升级或额外的 job token 权限。
+func validateExactPermissions(jobName string, actual any, expected map[string]string) error {
+	if !exactStringMap(actual, expected) {
+		return fmt.Errorf("%s permissions must be exact", jobName)
+	}
+	return nil
+}
+
+// validateActionStep 固定 action 名称、commit SHA、输入集合和值，禁止 tag、branch 或额外参数。
+func validateActionStep(step map[string]any, expectedUses string, expectedWith map[string]string) error {
+	name, summary := actionIdentity(expectedUses)
+	if !hasExactKeys(step, "name", "uses", "with") || step["name"] != name || step["uses"] != expectedUses || !exactStringMap(step["with"], expectedWith) {
+		return errors.New(summary)
+	}
+	return nil
+}
+
+// validateRunStep 对 run 文本去除 YAML 外围空白后逐字比较，并固定 id 是否存在。
+func validateRunStep(step map[string]any, expectedID, expectedRun string) error {
+	run, ok := step["run"].(string)
+	if !ok || strings.TrimSpace(run) != strings.TrimSpace(expectedRun) {
+		return errors.New("run step command mismatch")
+	}
+	if expectedID == "" {
+		if _, exists := step["id"]; exists {
+			return errors.New("run step id mismatch")
+		}
+		return nil
+	}
+	if step["id"] != expectedID {
+		return errors.New("run step id mismatch")
+	}
+	return nil
+}
+
+// validateArtifactStep 固定失败也上传的证据集合、保留期与 action commit。
+func validateArtifactStep(step map[string]any, lock lockValues) error {
+	expectedWith := map[string]string{
+		"name":              "toolchain-evidence-${{ github.sha }}",
+		"path":              canonicalArtifactPath,
+		"if-no-files-found": "error",
+		"retention-days":    "30",
+	}
+	if !hasExactKeys(step, "name", "if", "uses", "with") ||
+		step["name"] != "Upload toolchain evidence" ||
+		step["if"] != canonicalAlways ||
+		step["uses"] != "actions/upload-artifact@"+lock.ActionsUploadArtifactSHA ||
+		!exactStringMap(step["with"], expectedWith) {
+		return errors.New("artifact step must match lock")
+	}
+	return nil
+}
+
+// canonicalScriptReferences 只解析 workflow run 步骤中实际交给 bash 或 go run 的仓库路径。
+func canonicalScriptReferences(config map[string]any) ([]string, error) {
+	jobs, ok := stringMap(config["jobs"])
+	if !ok {
+		return nil, errors.New("jobs must be a map")
+	}
+	seen := make(map[string]struct{})
+	references := make([]string, 0, 2)
+	for _, jobName := range []string{buildJobName, verifyJobName} {
+		job, ok := stringMap(jobs[jobName])
+		if !ok {
+			return nil, fmt.Errorf("missing %s job", jobName)
+		}
+		steps, ok := anySlice(job["steps"])
+		if !ok {
+			return nil, fmt.Errorf("%s steps must be a list", jobName)
+		}
+		for _, rawStep := range steps {
+			step, ok := stringMap(rawStep)
+			if !ok {
+				return nil, fmt.Errorf("%s step must be a map", jobName)
+			}
+			run, _ := step["run"].(string)
+			for _, match := range scriptCallPattern.FindAllStringSubmatch(run, -1) {
+				target := match[1]
+				if _, exists := seen[target]; exists {
+					continue
+				}
+				seen[target] = struct{}{}
+				references = append(references, target)
+			}
+		}
+	}
+	return references, nil
+}
+
+// validateScriptReferences 对解析到的仓库脚本执行真实路径检查，阻断绝对路径、父级穿越与 symlink 逃逸。
 func validateScriptReferences(root string, config map[string]any) error {
 	realRoot, err := filepath.EvalSymlinks(root)
 	if err != nil {
@@ -165,8 +391,31 @@ func validateScriptReferences(root string, config map[string]any) error {
 	return nil
 }
 
+func validateRepositoryTarget(realRoot, target string) error {
+	if filepath.IsAbs(target) {
+		return errors.New("script reference escapes repository")
+	}
+	cleanTarget := filepath.Clean(target)
+	if cleanTarget == ".." || strings.HasPrefix(cleanTarget, ".."+string(filepath.Separator)) || !strings.HasPrefix(filepath.ToSlash(cleanTarget), "scripts/") {
+		return errors.New("script reference escapes repository")
+	}
+	realTarget, err := filepath.EvalSymlinks(filepath.Join(realRoot, cleanTarget))
+	if err != nil {
+		return errors.New("script reference does not exist")
+	}
+	relative, err := filepath.Rel(realRoot, realTarget)
+	if err != nil || filepath.IsAbs(relative) || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || !strings.HasPrefix(filepath.ToSlash(relative), "scripts/") {
+		return errors.New("script reference escapes repository")
+	}
+	info, err := os.Stat(realTarget)
+	if err != nil || !info.Mode().IsRegular() {
+		return errors.New("script reference does not exist")
+	}
+	return nil
+}
+
 func main() {
-	configPath := flag.String("config", ".gitlab-ci.yml", "GitLab CI config path")
+	configPath := flag.String("config", ".github/workflows/toolchain.yml", "GitHub Actions workflow path")
 	lockPath := flag.String("lock", "build/toolchain/toolchain.lock", "toolchain lock path")
 	root := flag.String("root", ".", "repository root")
 	flag.Parse()
@@ -189,7 +438,7 @@ func main() {
 	if err := validateScriptReferences(*root, config); err != nil {
 		exitInvalid(err)
 	}
-	fmt.Println("GitLab CI config validated")
+	fmt.Println("GitHub Actions config validated")
 }
 
 func exitInvalid(err error) {
@@ -208,231 +457,64 @@ func parseConfig(data []byte) (map[string]any, error) {
 	return config, nil
 }
 
-func resolveJob(config, template map[string]any, name string) (map[string]any, error) {
-	job, ok := stringMap(config[name])
-	if !ok {
-		return nil, fmt.Errorf("missing %s job", name)
+func actionIdentity(expectedUses string) (string, string) {
+	switch {
+	case strings.HasPrefix(expectedUses, "actions/checkout@"):
+		return "Checkout", "Checkout action must use the lock SHA"
+	case strings.HasPrefix(expectedUses, "docker/setup-docker-action@"):
+		return "Setup Docker", "Setup Docker action must match lock"
+	case strings.HasPrefix(expectedUses, "docker/setup-buildx-action@"):
+		return "Setup Buildx", "Setup Buildx action must match lock"
+	default:
+		return "", "action step must match lock"
 	}
-	extends, ok := job["extends"].(string)
-	if !ok || extends != dockerTemplateName || template == nil {
-		return nil, fmt.Errorf("%s must extend %s", name, dockerTemplateName)
-	}
-	resolved := make(map[string]any, len(template)+len(job))
-	for key, value := range template {
-		resolved[key] = value
-	}
-	for key, value := range job {
-		if key == "variables" {
-			inherited, inheritedOK := stringMap(resolved[key])
-			local, localOK := stringMap(value)
-			if !inheritedOK || !localOK {
-				return nil, fmt.Errorf("%s variables must be a map", name)
-			}
-			resolved[key] = mergeMaps(inherited, local)
-			continue
-		}
-		resolved[key] = value
-	}
-	return resolved, nil
 }
 
-func validateDockerBoundary(jobName string, job map[string]any, lock lockValues) error {
-	expectedImage := lock.DockerCLIImage + "@" + lock.DockerCLIDigest
-	image, _ := job["image"].(string)
-	if image != expectedImage {
-		return fmt.Errorf("%s Docker CLI image must use the lock digest", jobName)
-	}
-
-	services, ok := anySlice(job["services"])
-	if !ok || len(services) != 1 {
-		return fmt.Errorf("%s DinD digest must match the lock", jobName)
-	}
-	service, ok := stringMap(services[0])
-	if !ok || service["name"] != lock.DockerDindImage+"@"+lock.DockerDindDigest || service["alias"] != "docker" {
-		return fmt.Errorf("%s DinD digest must match the lock", jobName)
-	}
-
-	variables, _ := stringMap(job["variables"])
-	required := map[string]string{
-		"DOCKER_HOST":        dockerHostValue,
-		"DOCKER_TLS_CERTDIR": dockerTLSCertdirValue,
-		"DOCKER_BUILDKIT":    dockerBuildkitValue,
-	}
-	for key, value := range required {
-		if fmt.Sprint(variables[key]) != value {
-			return fmt.Errorf("%s must inherit %s", jobName, key)
-		}
-	}
-	return nil
-}
-
-func hasBuildArtifactNeed(job map[string]any) bool {
-	needs, ok := anySlice(job["needs"])
-	if !ok {
+func exactStringMap(actual any, expected map[string]string) bool {
+	values, ok := stringMap(actual)
+	if !ok || len(values) != len(expected) {
 		return false
 	}
-	for _, item := range needs {
-		need, ok := stringMap(item)
-		if ok && need["job"] == buildJobName && need["artifacts"] == true {
-			return true
-		}
-	}
-	return false
-}
-
-func validateRepositoryTarget(root, target string) error {
-	if filepath.IsAbs(target) {
-		return errors.New("absolute script reference is forbidden")
-	}
-	target = filepath.ToSlash(target)
-	parts := strings.Split(target, "/")
-	for _, part := range parts {
-		if part == ".." {
-			return errors.New("unsafe script reference is forbidden")
-		}
-	}
-	if !strings.HasPrefix(target, "scripts/") && !strings.HasPrefix(target, "./scripts/") {
-		return errors.New("script reference must stay under scripts")
-	}
-
-	joined := filepath.Join(root, filepath.FromSlash(strings.TrimPrefix(target, "./")))
-	realTarget, err := filepath.EvalSymlinks(joined)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.New("script reference does not exist")
-		}
-		return errors.New("invalid script reference")
-	}
-	relative, err := filepath.Rel(root, realTarget)
-	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
-		return errors.New("script reference resolves outside repository")
-	}
-	return nil
-}
-
-func canonicalScriptReferences(config map[string]any) ([]string, error) {
-	if containsNonCanonicalScriptKey(config, false) {
-		return nil, errors.New("CI config contains a non-canonical script section")
-	}
-	build, buildOK := stringMap(config[buildJobName])
-	verify, verifyOK := stringMap(config[verifyJobName])
-	if !buildOK || !verifyOK {
-		return nil, errors.New("CI config is missing a canonical job")
-	}
-	buildLines, buildErr := strictScriptLines(build)
-	verifyLines, verifyErr := strictScriptLines(verify)
-	if buildErr != nil || verifyErr != nil ||
-		!equalStrings(buildLines, []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}) ||
-		!equalStrings(verifyLines, []string{canonicalGuardLine, canonicalPullLine, canonicalBaselineLine}) {
-		return nil, errors.New("CI config contains a non-canonical script vector")
-	}
-	return []string{canonicalBuilderPath, baselineScriptPath}, nil
-}
-
-func containsNonCanonicalScriptKey(value any, insideCanonicalJob bool) bool {
-	switch typed := value.(type) {
-	case map[string]any:
-		for key, child := range typed {
-			if key == buildJobName || key == verifyJobName {
-				if containsNonCanonicalScriptKey(child, true) {
-					return true
-				}
-				continue
-			}
-			if key == "script" {
-				if !insideCanonicalJob {
-					return true
-				}
-				continue
-			}
-			if strings.HasSuffix(key, "_script") || containsNonCanonicalScriptKey(child, insideCanonicalJob) {
-				return true
-			}
-		}
-	case []any:
-		for _, child := range typed {
-			if containsNonCanonicalScriptKey(child, insideCanonicalJob) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func strictScriptLines(job map[string]any) ([]string, error) {
-	items, ok := anySlice(job["script"])
-	if !ok {
-		return nil, errors.New("script must be a command list")
-	}
-	lines := make([]string, len(items))
-	for index, item := range items {
-		line, ok := item.(string)
-		if !ok {
-			return nil, errors.New("script commands must be strings")
-		}
-		lines[index] = line
-	}
-	return lines, nil
-}
-
-func equalStrings(actual, expected []string) bool {
-	if len(actual) != len(expected) {
-		return false
-	}
-	for index := range actual {
-		if actual[index] != expected[index] {
+	for key, expectedValue := range expected {
+		value, ok := scalarString(values[key])
+		if !ok || value != expectedValue {
 			return false
 		}
 	}
 	return true
 }
 
-func nestedString(root map[string]any, keys ...string) string {
-	var current any = root
-	for _, key := range keys {
-		mapping, ok := stringMap(current)
-		if !ok {
-			return ""
-		}
-		current = mapping[key]
+func scalarString(value any) (string, bool) {
+	switch typed := value.(type) {
+	case string:
+		return typed, true
+	case int:
+		return fmt.Sprintf("%d", typed), true
+	case int64:
+		return fmt.Sprintf("%d", typed), true
+	default:
+		return "", false
 	}
-	value, _ := current.(string)
-	return value
+}
+
+func hasExactKeys(values map[string]any, expected ...string) bool {
+	if len(values) != len(expected) {
+		return false
+	}
+	for _, key := range expected {
+		if _, ok := values[key]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func stringMap(value any) (map[string]any, bool) {
-	mapping, ok := value.(map[string]any)
-	return mapping, ok
+	values, ok := value.(map[string]any)
+	return values, ok
 }
 
 func anySlice(value any) ([]any, bool) {
-	items, ok := value.([]any)
-	return items, ok
-}
-
-func stringSlice(value any) ([]string, bool) {
-	items, ok := anySlice(value)
-	if !ok {
-		return nil, false
-	}
-	result := make([]string, 0, len(items))
-	for _, item := range items {
-		text, ok := item.(string)
-		if !ok {
-			return nil, false
-		}
-		result = append(result, text)
-	}
-	return result, true
-}
-
-func mergeMaps(base, override map[string]any) map[string]any {
-	merged := make(map[string]any, len(base)+len(override))
-	for key, value := range base {
-		merged[key] = value
-	}
-	for key, value := range override {
-		merged[key] = value
-	}
-	return merged
+	values, ok := value.([]any)
+	return values, ok
 }

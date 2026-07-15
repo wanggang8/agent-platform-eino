@@ -3,330 +3,513 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	canonicalDigestGuardCommand = `printf '%s\n' "$TOOLCHAIN_IMAGE" | grep -Eq '^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'`
-	canonicalPullCommand        = `docker pull "$TOOLCHAIN_IMAGE"`
-	canonicalRunCommand         = `docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
-)
+const validFixture = `name: Toolchain Gate
 
-// validFixture 证明两个 job 通过 extends 继承 runner 镜像、DinD 与变量后仍能通过完整 DAG 校验。
-const validFixture = `stages:
-  - toolchain
-  - verify
+on:
+  push:
+  workflow_dispatch:
 
-.docker-amd64:
-  image: docker:29.4.0-cli@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-  services:
-    - name: docker:29.4.0-dind@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-      alias: docker
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_BUILDKIT: "1"
+permissions: {}
 
-toolchain-build:
-  extends: .docker-amd64
-  stage: toolchain
-  script:
-    - mkdir -p test-results
-    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - bash scripts/build_toolchain_image.sh --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file test-results/toolchain.env
-  artifacts:
-    reports:
-      dotenv: test-results/toolchain.env
+jobs:
+  toolchain-build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      toolchain_image: ${{ steps.build.outputs.TOOLCHAIN_IMAGE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 0
+      - name: Setup Docker
+        uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
+        with:
+          version: v29.4.0
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        with:
+          version: v0.35.0
+          driver-opts: image=moby/buildkit:v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a
+      - name: Login GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Build and push canonical image
+        id: build
+        run: |
+          repository=${GITHUB_REPOSITORY,,}
+          image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
+          bash scripts/build_toolchain_image.sh --push "$image_ref" --env-file test-results/toolchain.env
+          cat test-results/toolchain.env >> "$GITHUB_OUTPUT"
 
-toolchain-verify:
-  extends: .docker-amd64
-  stage: verify
-  needs:
-    - job: toolchain-build
-      artifacts: true
-  script:
-    - 'printf ''%s\n'' "$TOOLCHAIN_IMAGE" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''
-    - docker pull "$TOOLCHAIN_IMAGE"
-    - docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
-`
-
-const validFixtureWithoutNeed = `stages: [toolchain, verify]
-.docker-amd64:
-  image: docker:29.4.0-cli@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-  services:
-    - name: docker:29.4.0-dind@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-      alias: docker
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_BUILDKIT: "1"
-toolchain-build:
-  extends: .docker-amd64
-  stage: toolchain
-  script:
-    - mkdir -p test-results
-    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - bash scripts/build_toolchain_image.sh --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file test-results/toolchain.env
-  artifacts:
-    reports:
-      dotenv: test-results/toolchain.env
-toolchain-verify:
-  extends: .docker-amd64
-  stage: verify
-  script:
-    - 'printf ''%s\n'' "$TOOLCHAIN_IMAGE" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''
-    - docker pull "$TOOLCHAIN_IMAGE"
-    - docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
+  toolchain-verify:
+    needs: toolchain-build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TOOLCHAIN_IMAGE: ${{ needs.toolchain-build.outputs.toolchain_image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 0
+      - name: Setup Docker
+        uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
+        with:
+          version: v29.4.0
+      - name: Login GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Verify digest image
+        run: |
+          [[ "$TOOLCHAIN_IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+/toolchain:[0-9a-f]{40}@sha256:[0-9a-f]{64}$ ]]
+          docker pull "$TOOLCHAIN_IMAGE"
+          docker run --rm --platform linux/amd64 -e CI=true -e GITHUB_SHA="$GITHUB_SHA" -v "$GITHUB_WORKSPACE:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
+      - name: Upload toolchain evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: toolchain-evidence-${{ github.sha }}
+          path: |
+            test-results/toolchain-baseline.log
+            test-results/eino-workbench-playwright-report/
+          if-no-files-found: error
+          retention-days: 30
 `
 
 func completeTestLock() lockValues {
 	return lockValues{
-		DockerCLIImage:   "docker:29.4.0-cli",
-		DockerCLIDigest:  "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-		DockerDindImage:  "docker:29.4.0-dind",
-		DockerDindDigest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+		GitHubRunner:             "ubuntu-24.04",
+		ActionsCheckoutSHA:       "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
+		ActionsUploadArtifactSHA: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+		DockerSetupDockerSHA:     "6d7cfa65f60a9dda7b46e5513fa982536f3c9877",
+		DockerSetupBuildxSHA:     "bb05f3f5519dd87d3ba754cc423b652a5edd6d2c",
+		DockerEngineVersion:      "29.4.0",
+		DockerBuildxVersion:      "0.35.0",
+		BuildKitImage:            "moby/buildkit:v0.31.1",
+		BuildKitDigest:           "sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a",
 	}
 }
 
-func TestValidateAcceptsInheritedPinnedDAG(t *testing.T) {
+func TestValidateAcceptsCanonicalGitHubWorkflow(t *testing.T) {
 	if err := validateConfig([]byte(validFixture), completeTestLock()); err != nil {
-		t.Fatalf("expected inherited pinned DAG to pass, got %v", err)
+		t.Fatalf("expected canonical GitHub workflow to pass, got %v", err)
+	}
+	config := parseTestConfig(t, validFixture)
+	references, err := canonicalScriptReferences(config)
+	if err != nil {
+		t.Fatalf("expected canonical script references, got %v", err)
+	}
+	want := []string{"scripts/build_toolchain_image.sh", "scripts/run_toolchain_baseline.sh"}
+	if !reflect.DeepEqual(references, want) {
+		t.Fatalf("expected only canonical scripts %v, got %v", want, references)
 	}
 }
 
-func TestValidateRejectsUnpinnedDockerImage(t *testing.T) {
-	config := []byte("stages: [toolchain, verify]\ntoolchain-build:\n  image: docker:29.4.0-cli\n")
-	err := validateConfig(config, lockValues{
-		DockerCLIImage:  "docker:29.4.0-cli",
-		DockerCLIDigest: "sha256:bb21349a52c00b206ad8b5c03fa52023c741c4cf11f269d40d40b9ebaac73d96",
-	})
-	if err == nil || !strings.Contains(err.Error(), "digest") {
-		t.Fatalf("expected digest error, got %v", err)
+func TestValidateRejectsTriggerDrift(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{name: "missing push", mutate: func(config map[string]any) { delete(config["on"].(map[string]any), "push") }},
+		{name: "missing workflow dispatch", mutate: func(config map[string]any) { delete(config["on"].(map[string]any), "workflow_dispatch") }},
+		{name: "unexpected pull request", mutate: func(config map[string]any) { config["on"].(map[string]any)["pull_request"] = nil }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, "workflow triggers must be exactly push and workflow_dispatch")
+		})
 	}
 }
 
-func TestValidateRejectsMissingVerifyNeed(t *testing.T) {
-	config := []byte(validFixtureWithoutNeed)
-	if err := validateConfig(config, completeTestLock()); err == nil || !strings.Contains(err.Error(), "needs") {
-		t.Fatalf("expected missing build dependency to fail, got %v", err)
+func TestValidateRejectsTopLevelDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "wrong name", mutate: func(config map[string]any) { config["name"] = "Other" }, summary: "workflow name must be Toolchain Gate"},
+		{name: "non-empty permissions", mutate: func(config map[string]any) { config["permissions"] = map[string]any{"contents": "read"} }, summary: "top-level permissions must be empty"},
+		{name: "extra top-level key", mutate: func(config map[string]any) { config["concurrency"] = "toolchain" }, summary: "workflow top-level keys must be exact"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsJobSetDrift(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{name: "missing build", mutate: func(config map[string]any) { delete(config["jobs"].(map[string]any), buildJobName) }},
+		{name: "missing verify", mutate: func(config map[string]any) { delete(config["jobs"].(map[string]any), verifyJobName) }},
+		{name: "extra job", mutate: func(config map[string]any) { config["jobs"].(map[string]any)["extra"] = map[string]any{} }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, "jobs must be exactly toolchain-build and toolchain-verify")
+		})
+	}
+}
+
+func TestValidateRejectsRunnerAndPermissionDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "build runner", mutate: func(config map[string]any) { testJob(config, buildJobName)["runs-on"] = "ubuntu-latest" }, summary: "toolchain-build runner must match lock"},
+		{name: "verify runner", mutate: func(config map[string]any) { testJob(config, verifyJobName)["runs-on"] = "ubuntu-latest" }, summary: "toolchain-verify runner must match lock"},
+		{name: "build packages missing", mutate: func(config map[string]any) {
+			delete(testJob(config, buildJobName)["permissions"].(map[string]any), "packages")
+		}, summary: "toolchain-build permissions must be exact"},
+		{name: "build packages read", mutate: func(config map[string]any) {
+			testJob(config, buildJobName)["permissions"].(map[string]any)["packages"] = "read"
+		}, summary: "toolchain-build permissions must be exact"},
+		{name: "verify packages missing", mutate: func(config map[string]any) {
+			delete(testJob(config, verifyJobName)["permissions"].(map[string]any), "packages")
+		}, summary: "toolchain-verify permissions must be exact"},
+		{name: "verify packages write", mutate: func(config map[string]any) {
+			testJob(config, verifyJobName)["permissions"].(map[string]any)["packages"] = "write"
+		}, summary: "toolchain-verify permissions must be exact"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsActionPinAndVersionDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "checkout tag", mutate: func(config map[string]any) { testStep(config, buildJobName, 0)["uses"] = "actions/checkout@v7" }, summary: "Checkout action must use the lock SHA"},
+		{name: "checkout branch", mutate: func(config map[string]any) { testStep(config, buildJobName, 0)["uses"] = "actions/checkout@main" }, summary: "Checkout action must use the lock SHA"},
+		{name: "checkout different SHA", mutate: func(config map[string]any) {
+			testStep(config, verifyJobName, 0)["uses"] = "actions/checkout@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}, summary: "Checkout action must use the lock SHA"},
+		{name: "setup docker SHA", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 1)["uses"] = "docker/setup-docker-action@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}, summary: "Setup Docker action must match lock"},
+		{name: "setup buildx SHA", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 2)["uses"] = "docker/setup-buildx-action@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}, summary: "Setup Buildx action must match lock"},
+		{name: "engine version", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 1)["with"].(map[string]any)["version"] = "v29.3.0"
+		}, summary: "Setup Docker action must match lock"},
+		{name: "buildx version", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 2)["with"].(map[string]any)["version"] = "v0.34.0"
+		}, summary: "Setup Buildx action must match lock"},
+		{name: "buildkit image", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 2)["with"].(map[string]any)["driver-opts"] = "image=moby/buildkit:v0.30.0@" + completeTestLock().BuildKitDigest
+		}, summary: "Setup Buildx action must match lock"},
+		{name: "buildkit digest", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 2)["with"].(map[string]any)["driver-opts"] = "image=" + completeTestLock().BuildKitImage + "@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}, summary: "Setup Buildx action must match lock"},
+		{name: "artifact SHA", mutate: func(config map[string]any) {
+			testStep(config, verifyJobName, 4)["uses"] = "actions/upload-artifact@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}, summary: "artifact step must match lock"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsBuildBoundaryDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "output source", mutate: func(config map[string]any) {
+			testJob(config, buildJobName)["outputs"].(map[string]any)["toolchain_image"] = "${{ steps.other.outputs.TOOLCHAIN_IMAGE }}"
+		}, summary: "toolchain-build output must use steps.build.outputs.TOOLCHAIN_IMAGE"},
+		{name: "login token", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 3)["env"].(map[string]any)["GHCR_TOKEN"] = "${{ secrets.OTHER_TOKEN }}"
+		}, summary: "Login GHCR step must use GITHUB_TOKEN stdin"},
+		{name: "login without stdin", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 3)["run"] = "docker login ghcr.io --password token"
+		}, summary: "Login GHCR step must use GITHUB_TOKEN stdin"},
+		{name: "builder target", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 4)["run"] = strings.Replace(testStep(config, buildJobName, 4)["run"].(string), `ghcr.io/$repository/toolchain:$GITHUB_SHA`, `ghcr.io/$repository/toolchain:latest`, 1)
+		}, summary: "Build and push canonical image step must match canonical command"},
+		{name: "builder id", mutate: func(config map[string]any) { testStep(config, buildJobName, 4)["id"] = "other" }, summary: "Build and push canonical image step must match canonical command"},
+		{name: "extra step", mutate: func(config map[string]any) {
+			job := testJob(config, buildJobName)
+			job["steps"] = append(job["steps"].([]any), map[string]any{"run": "echo extra"})
+		}, summary: "toolchain-build steps must be exact"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsVerifyBoundaryDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "missing need", mutate: func(config map[string]any) { delete(testJob(config, verifyJobName), "needs") }, summary: "toolchain-verify must need toolchain-build"},
+		{name: "wrong need", mutate: func(config map[string]any) { testJob(config, verifyJobName)["needs"] = "other" }, summary: "toolchain-verify must need toolchain-build"},
+		{name: "tag-only guard", mutate: func(config map[string]any) {
+			step := testStep(config, verifyJobName, 3)
+			step["run"] = strings.Replace(step["run"].(string), `@sha256:[0-9a-f]{64}`, "", 1)
+		}, summary: "Verify digest image step must match canonical command"},
+		{name: "pull command", mutate: func(config map[string]any) {
+			step := testStep(config, verifyJobName, 3)
+			step["run"] = strings.Replace(step["run"].(string), `docker pull "$TOOLCHAIN_IMAGE"`, `docker pull ghcr.io/other/image:latest`, 1)
+		}, summary: "Verify digest image step must match canonical command"},
+		{name: "baseline command", mutate: func(config map[string]any) {
+			step := testStep(config, verifyJobName, 3)
+			step["run"] = strings.Replace(step["run"].(string), "bash scripts/run_toolchain_baseline.sh", "bash scripts/other.sh", 1)
+		}, summary: "Verify digest image step must match canonical command"},
+		{name: "verify image source", mutate: func(config map[string]any) {
+			testJob(config, verifyJobName)["env"].(map[string]any)["TOOLCHAIN_IMAGE"] = "${{ needs.other.outputs.toolchain_image }}"
+		}, summary: "toolchain-verify image must come from toolchain-build output"},
+		{name: "extra step", mutate: func(config map[string]any) {
+			job := testJob(config, verifyJobName)
+			job["steps"] = append(job["steps"].([]any), map[string]any{"run": "echo extra"})
+		}, summary: "toolchain-verify steps must be exact"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsArtifactDrift(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{name: "path", mutate: func(config map[string]any) {
+			testStep(config, verifyJobName, 4)["with"].(map[string]any)["path"] = "test-results/other.log"
+		}},
+		{name: "retention", mutate: func(config map[string]any) {
+			testStep(config, verifyJobName, 4)["with"].(map[string]any)["retention-days"] = 29
+		}},
+		{name: "missing always", mutate: func(config map[string]any) { delete(testStep(config, verifyJobName, 4), "if") }},
+		{name: "conditional success", mutate: func(config map[string]any) { testStep(config, verifyJobName, 4)["if"] = "${{ success() }}" }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, "artifact step must match lock")
+		})
+	}
+}
+
+func TestValidateRejectsGitLabSyntax(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{name: "GitLab variable", text: strings.Replace(validFixture, "$GITHUB_SHA", "$CI_COMMIT_SHA", 1)},
+		{name: "GitLab config", text: validFixture + "# .gitlab-ci.yml\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateConfig([]byte(tt.text), completeTestLock())
+			if err == nil || !strings.Contains(err.Error(), "GitLab syntax is forbidden") {
+				t.Fatalf("expected stable GitLab syntax error, got %v", err)
+			}
+		})
 	}
 }
 
 func TestValidateRejectsMalformedYAML(t *testing.T) {
-	if err := validateConfig([]byte("stages: [toolchain, verify"), completeTestLock()); err == nil || !strings.Contains(err.Error(), "YAML") {
+	err := validateConfig([]byte("jobs: ["), completeTestLock())
+	if err == nil || !strings.Contains(err.Error(), "invalid YAML") {
 		t.Fatalf("expected YAML parse error, got %v", err)
 	}
 }
 
-func TestValidateRejectsWrongStages(t *testing.T) {
-	config := strings.Replace(validFixture, "  - toolchain\n  - verify", "  - verify\n  - toolchain", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "stages") {
-		t.Fatalf("expected stage order error, got %v", err)
+func TestLoadLockAcceptsCanonicalPins(t *testing.T) {
+	path := writeTestLock(t, canonicalTestLock())
+	got, err := loadLock(path)
+	if err != nil {
+		t.Fatalf("expected lock to load, got %v", err)
+	}
+	if !reflect.DeepEqual(got, completeTestLock()) {
+		t.Fatalf("loaded lock mismatch: %#v", got)
 	}
 }
 
-func TestValidateRejectsMissingVerifyStage(t *testing.T) {
-	config := strings.Replace(validFixture, "  - verify\n", "", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "stages") {
-		t.Fatalf("expected missing verify stage error, got %v", err)
+func TestLoadLockAcceptsPinnedBuildKitRepositoryWithExactSemver(t *testing.T) {
+	content := strings.Replace(canonicalTestLock(), completeTestLock().BuildKitImage, "ghcr.io/example/buildkit:v1.2.3", 1)
+	got, err := loadLock(writeTestLock(t, content))
+	if err != nil {
+		t.Fatalf("expected lock-owned BuildKit repository to load, got %v", err)
+	}
+	if got.BuildKitImage != "ghcr.io/example/buildkit:v1.2.3" {
+		t.Fatalf("expected alternate pinned BuildKit image, got %q", got.BuildKitImage)
 	}
 }
 
-func TestValidateRejectsJobStageDrift(t *testing.T) {
-	config := strings.Replace(validFixture, "  stage: verify", "  stage: toolchain", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "stage") {
-		t.Fatalf("expected job stage error, got %v", err)
-	}
-}
-
-func TestValidateRejectsUnpinnedDind(t *testing.T) {
-	config := strings.Replace(validFixture, completeTestLock().DockerDindImage+"@"+completeTestLock().DockerDindDigest, completeTestLock().DockerDindImage, 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "DinD digest") {
-		t.Fatalf("expected DinD digest error, got %v", err)
-	}
-}
-
-func TestValidateRejectsMissingDockerTemplate(t *testing.T) {
-	config := parseTestConfig(t, validFixture)
-	delete(config, dockerTemplateName)
-	err := validateConfig(marshalTestConfig(t, config), completeTestLock())
-	if err == nil || !strings.Contains(err.Error(), "template") {
-		t.Fatalf("expected missing template error, got %v", err)
-	}
-}
-
-func TestValidateRejectsNonStringOrMissingExtends(t *testing.T) {
-	// 即使 job 内联了与模板等价的 runner 配置，也不能绕过唯一模板继承边界。
+func TestLoadLockRejectsMissingDuplicateAndMalformedEntries(t *testing.T) {
 	tests := []struct {
 		name    string
-		jobName string
-		value   any
+		content string
+		summary string
 	}{
-		{name: "build missing", jobName: buildJobName},
-		{name: "verify missing", jobName: verifyJobName},
-		{name: "array", jobName: buildJobName, value: []any{dockerTemplateName}},
+		{name: "missing key", content: strings.Replace(canonicalTestLock(), "GITHUB_RUNNER=ubuntu-24.04\n", "", 1), summary: "missing toolchain lock key GITHUB_RUNNER"},
+		{name: "duplicate key", content: canonicalTestLock() + "GITHUB_RUNNER=ubuntu-24.04\n", summary: "duplicate toolchain lock key GITHUB_RUNNER"},
+		{name: "malformed key", content: strings.Replace(canonicalTestLock(), "GITHUB_RUNNER=", "github_runner=", 1), summary: "invalid toolchain lock entry"},
+		{name: "whitespace", content: strings.Replace(canonicalTestLock(), "ubuntu-24.04", "ubuntu 24.04", 1), summary: "invalid toolchain lock entry"},
+		{name: "shell syntax", content: strings.Replace(canonicalTestLock(), "ubuntu-24.04", "$(uname)", 1), summary: "invalid toolchain lock entry"},
+		{name: "short action SHA", content: strings.Replace(canonicalTestLock(), completeTestLock().ActionsCheckoutSHA, "abc123", 1), summary: "invalid ACTIONS_CHECKOUT_SHA pin"},
+		{name: "uppercase action SHA", content: strings.Replace(canonicalTestLock(), completeTestLock().ActionsCheckoutSHA, strings.ToUpper(completeTestLock().ActionsCheckoutSHA), 1), summary: "invalid ACTIONS_CHECKOUT_SHA pin"},
+		{name: "invalid semver", content: strings.Replace(canonicalTestLock(), "DOCKER_ENGINE_VERSION=29.4.0", "DOCKER_ENGINE_VERSION=v29.4", 1), summary: "invalid DOCKER_ENGINE_VERSION pin"},
+		{name: "invalid buildkit image", content: strings.Replace(canonicalTestLock(), completeTestLock().BuildKitImage, "example/buildkit:latest", 1), summary: "invalid BUILDKIT_IMAGE pin"},
+		{name: "invalid digest", content: strings.Replace(canonicalTestLock(), completeTestLock().BuildKitDigest, "sha256:abc", 1), summary: "invalid BUILDKIT_DIGEST pin"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := loadLock(writeTestLock(t, tt.content))
+			if err == nil || !strings.Contains(err.Error(), tt.summary) {
+				t.Fatalf("expected %q, got %v", tt.summary, err)
+			}
+		})
+	}
+}
+
+func TestValidateScriptReferencesRejectsEscapes(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "scripts"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"build_toolchain_image.sh", "run_toolchain_baseline.sh"} {
+		if err := os.WriteFile(filepath.Join(root, "scripts", name), []byte("#!/bin/sh\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := validateScriptReferences(root, parseTestConfig(t, validFixture)); err != nil {
+		t.Fatalf("expected canonical references to remain inside root, got %v", err)
+	}
+
+	outside := filepath.Join(t.TempDir(), "outside.sh")
+	if err := os.WriteFile(outside, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name   string
+		target string
+	}{
+		{name: "absolute", target: outside},
+		{name: "parent traversal", target: "../outside.sh"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := parseTestConfig(t, validFixture)
-			job := config[tt.jobName].(map[string]any)
-			if tt.value == nil {
-				delete(job, "extends")
-			} else {
-				job["extends"] = tt.value
-			}
-			template := config[dockerTemplateName].(map[string]any)
-			job["image"] = template["image"]
-			job["services"] = template["services"]
-			job["variables"] = template["variables"]
-			err := validateConfig(marshalTestConfig(t, config), completeTestLock())
-			if err == nil || !strings.Contains(err.Error(), "extend") {
-				t.Fatalf("expected exact extends error, got %v", err)
+			step := testStep(config, buildJobName, 4)
+			step["run"] = strings.Replace(step["run"].(string), "scripts/build_toolchain_image.sh", tt.target, 1)
+			err := validateScriptReferences(root, config)
+			if err == nil || !strings.Contains(err.Error(), "script reference escapes repository") {
+				t.Fatalf("expected script escape error, got %v", err)
 			}
 		})
 	}
-}
 
-func TestValidateAcceptsGitLabStylePartialOverrides(t *testing.T) {
-	// variables 采用 map merge；image/services 采用 job 值覆盖模板，最终有效值仍须精确匹配 lock。
+	if err := os.Symlink(outside, filepath.Join(root, "scripts", "escape.sh")); err != nil {
+		t.Fatal(err)
+	}
 	config := parseTestConfig(t, validFixture)
-	template := config[dockerTemplateName].(map[string]any)
-	build := config[buildJobName].(map[string]any)
-	build["variables"] = map[string]any{"DOCKER_BUILDKIT": "1"}
-	verify := config[verifyJobName].(map[string]any)
-	verify["image"] = template["image"]
-	verify["services"] = template["services"]
-	if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err != nil {
-		t.Fatalf("expected partial overrides to follow GitLab merge semantics, got %v", err)
+	step := testStep(config, buildJobName, 4)
+	step["run"] = strings.Replace(step["run"].(string), "scripts/build_toolchain_image.sh", "scripts/escape.sh", 1)
+	err := validateScriptReferences(root, config)
+	if err == nil || !strings.Contains(err.Error(), "script reference escapes repository") {
+		t.Fatalf("expected symlink escape error, got %v", err)
 	}
 }
 
-func TestValidateRejectsInvalidPartialVariableOverride(t *testing.T) {
-	config := parseTestConfig(t, validFixture)
-	config[buildJobName].(map[string]any)["variables"] = map[string]any{"DOCKER_BUILDKIT": "0"}
-	if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "DOCKER_BUILDKIT") {
-		t.Fatalf("expected invalid local variable override error, got %v", err)
-	}
+func canonicalTestLock() string {
+	lock := completeTestLock()
+	return strings.Join([]string{
+		"PLATFORM=linux/amd64",
+		"GITHUB_RUNNER=" + lock.GitHubRunner,
+		"ACTIONS_CHECKOUT_SHA=" + lock.ActionsCheckoutSHA,
+		"ACTIONS_UPLOAD_ARTIFACT_SHA=" + lock.ActionsUploadArtifactSHA,
+		"DOCKER_SETUP_DOCKER_SHA=" + lock.DockerSetupDockerSHA,
+		"DOCKER_SETUP_BUILDX_SHA=" + lock.DockerSetupBuildxSHA,
+		"DOCKER_ENGINE_VERSION=" + lock.DockerEngineVersion,
+		"DOCKER_BUILDX_VERSION=" + lock.DockerBuildxVersion,
+		"BUILDKIT_IMAGE=" + lock.BuildKitImage,
+		"BUILDKIT_DIGEST=" + lock.BuildKitDigest,
+	}, "\n") + "\n"
 }
 
-func TestValidateRejectsNonMapVariableOverride(t *testing.T) {
-	tests := []struct {
-		name  string
-		value any
-	}{
-		{name: "string", value: "DOCKER_BUILDKIT=1"},
-		{name: "array", value: []any{"DOCKER_BUILDKIT=1"}},
-		{name: "null", value: nil},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := parseTestConfig(t, validFixture)
-			config[buildJobName].(map[string]any)["variables"] = tt.value
-			if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "variables") {
-				t.Fatalf("expected non-map variables error, got %v", err)
-			}
-		})
-	}
-}
-
-func TestValidateRejectsMissingDockerVariable(t *testing.T) {
-	config := strings.Replace(validFixture, "    DOCKER_BUILDKIT: \"1\"\n", "", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "DOCKER_BUILDKIT") {
-		t.Fatalf("expected inherited variable error, got %v", err)
-	}
-}
-
-func TestValidateRejectsMissingDotenvArtifact(t *testing.T) {
-	config := strings.Replace(validFixture, "      dotenv: test-results/toolchain.env", "      dotenv: test-results/other.env", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "dotenv") {
-		t.Fatalf("expected dotenv error, got %v", err)
-	}
-}
-
-func TestValidateRejectsBuildWithoutCanonicalBuilder(t *testing.T) {
-	config := strings.Replace(validFixture, "bash scripts/build_toolchain_image.sh", "bash scripts/other.sh", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "build_toolchain_image.sh") {
-		t.Fatalf("expected canonical builder error, got %v", err)
-	}
-}
-
-func TestValidateRejectsBuilderMentionWithoutInvocation(t *testing.T) {
-	// 单纯把路径输出到日志不能冒充 canonical builder 的真实执行。
-	config := strings.Replace(validFixture, "    - bash scripts/build_toolchain_image.sh", "    - echo bash scripts/build_toolchain_image.sh", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "build_toolchain_image.sh") {
-		t.Fatalf("expected non-executed builder mention to fail, got %v", err)
-	}
-}
-
-func TestValidateRejectsWrongBuilderPushTarget(t *testing.T) {
-	config := strings.Replace(validFixture, `"$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA"`, `registry.example/toolchain:latest`, 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "build_toolchain_image.sh") {
-		t.Fatalf("expected non-canonical push target to fail, got %v", err)
-	}
-}
-
-func TestValidateRejectsNeedWithoutArtifacts(t *testing.T) {
-	config := strings.Replace(validFixture, "      artifacts: true", "      artifacts: false", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "artifacts") {
-		t.Fatalf("expected need artifacts error, got %v", err)
-	}
-}
-
-func TestValidateRejectsVerifyWithoutDigestGuard(t *testing.T) {
-	config := strings.Replace(validFixture, "    - 'printf ''%s\\n'' \"$TOOLCHAIN_IMAGE\" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''\n", "", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "@sha256:") {
-		t.Fatalf("expected TOOLCHAIN_IMAGE digest guard error, got %v", err)
-	}
-}
-
-func TestValidateRejectsDigestTextWithoutGuard(t *testing.T) {
-	// 出现 digest 文本不等于运行时校验，必须有针对 TOOLCHAIN_IMAGE 的 guard。
-	config := strings.Replace(validFixture, "    - 'printf ''%s\\n'' \"$TOOLCHAIN_IMAGE\" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''", "    - echo marker-@sha256:value", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "@sha256:") {
-		t.Fatalf("expected non-guard digest text to fail, got %v", err)
-	}
-}
-
-func TestValidateRejectsNonCanonicalVerifyCommandVector(t *testing.T) {
-	// verify 三条必须逐字、定序且唯一，任何 shell 包装或复合命令都改变安全语义。
-	tests := []struct {
-		name     string
-		commands []string
-	}{
-		{name: "guard comment", commands: []string{"# " + canonicalDigestGuardCommand, canonicalPullCommand, canonicalRunCommand}},
-		{name: "guard reversed", commands: []string{"! " + canonicalDigestGuardCommand, canonicalPullCommand, canonicalRunCommand}},
-		{name: "guard ignored", commands: []string{canonicalDigestGuardCommand + " || true", canonicalPullCommand, canonicalRunCommand}},
-		{name: "guard after pull", commands: []string{canonicalPullCommand, canonicalDigestGuardCommand, canonicalRunCommand}},
-		{name: "extra line", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand, "echo extra", canonicalRunCommand}},
-		{name: "env wrapper", commands: []string{canonicalDigestGuardCommand, "env " + canonicalPullCommand, canonicalRunCommand}},
-		{name: "shell wrapper", commands: []string{canonicalDigestGuardCommand, "sh -c 'docker pull \"$TOOLCHAIN_IMAGE\"'", canonicalRunCommand}},
-		{name: "compound command", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand + "; true", canonicalRunCommand}},
-		{name: "parenthesized command", commands: []string{canonicalDigestGuardCommand, "(" + canonicalPullCommand + ")", canonicalRunCommand}},
-		{name: "extra docker run", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand, "docker run --rm ubuntu:latest true", canonicalRunCommand}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := fixtureWithVerifyCommands(t, tt.commands)
-			if err := validateConfig(config, completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
-				t.Fatalf("expected canonical vector error, got %v", err)
-			}
-		})
-	}
-}
-
-func fixtureWithVerifyCommands(t *testing.T, commands []string) []byte {
+func writeTestLock(t *testing.T, content string) string {
 	t.Helper()
-	config := parseTestConfig(t, validFixture)
-	job := config[verifyJobName].(map[string]any)
-	items := make([]any, len(commands))
-	for index, command := range commands {
-		items[index] = command
+	path := filepath.Join(t.TempDir(), "toolchain.lock")
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
 	}
-	job["script"] = items
-	return marshalTestConfig(t, config)
+	return path
+}
+
+func assertConfigError(t *testing.T, config map[string]any, summary string) {
+	t.Helper()
+	err := validateConfig(marshalTestConfig(t, config), completeTestLock())
+	if err == nil || !strings.Contains(err.Error(), summary) {
+		t.Fatalf("expected %q, got %v", summary, err)
+	}
+}
+
+func testJob(config map[string]any, name string) map[string]any {
+	return config["jobs"].(map[string]any)[name].(map[string]any)
+}
+
+func testStep(config map[string]any, jobName string, index int) map[string]any {
+	return testJob(config, jobName)["steps"].([]any)[index].(map[string]any)
+}
+
+func parseTestConfig(t *testing.T, fixture string) map[string]any {
+	t.Helper()
+	var config map[string]any
+	if err := yaml.Unmarshal([]byte(fixture), &config); err != nil {
+		t.Fatal(err)
+	}
+	return config
 }
 
 func marshalTestConfig(t *testing.T, config map[string]any) []byte {
@@ -336,193 +519,4 @@ func marshalTestConfig(t *testing.T, config map[string]any) []byte {
 		t.Fatal(err)
 	}
 	return data
-}
-
-func TestValidateRejectsVerifyWithoutBaseline(t *testing.T) {
-	config := strings.Replace(validFixture, "bash scripts/run_toolchain_baseline.sh", "bash scripts/verify_toolchain.sh", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "baseline") {
-		t.Fatalf("expected baseline invocation error, got %v", err)
-	}
-}
-
-func TestValidateRejectsBaselineMentionWithoutInvocation(t *testing.T) {
-	config := strings.Replace(validFixture, "    - "+canonicalRunCommand, "    - echo "+canonicalRunCommand, 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "baseline") {
-		t.Fatalf("expected non-executed baseline mention to fail, got %v", err)
-	}
-}
-
-func TestValidateRejectsVerifyUsingAnotherImage(t *testing.T) {
-	config := strings.Replace(validFixture, "docker pull \"$TOOLCHAIN_IMAGE\"", "docker pull ubuntu:latest", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "TOOLCHAIN_IMAGE") {
-		t.Fatalf("expected canonical image error, got %v", err)
-	}
-}
-
-func TestValidateRejectsAdditionalUnpinnedDockerRun(t *testing.T) {
-	// 即使 canonical baseline 存在，也不能夹带第二个未固定镜像执行。
-	config := strings.Replace(validFixture, "    - docker pull \"$TOOLCHAIN_IMAGE\"", "    - docker pull \"$TOOLCHAIN_IMAGE\"\n    - docker run --rm ubuntu:latest true", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
-		t.Fatalf("expected additional image run to fail, got %v", err)
-	}
-}
-
-func TestValidateRejectsToolchainImageUsedAsContainerArgument(t *testing.T) {
-	bypass := `docker run --rm ubuntu:latest "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
-	config := strings.Replace(validFixture, canonicalRunCommand, bypass, 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
-		t.Fatalf("expected non-image TOOLCHAIN_IMAGE usage to fail, got %v", err)
-	}
-}
-
-func TestLoadLockReadsDockerPins(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "toolchain.lock")
-	data := "DOCKER_CLI_IMAGE=docker:29.4.0-cli\n" +
-		"DOCKER_CLI_AMD64_DIGEST=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n" +
-		"DOCKER_DIND_IMAGE=docker:29.4.0-dind\n" +
-		"DOCKER_DIND_AMD64_DIGEST=sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\n"
-	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	got, err := loadLock(path)
-	if err != nil {
-		t.Fatalf("expected lock to load, got %v", err)
-	}
-	if got != completeTestLock() {
-		t.Fatalf("unexpected lock values: %#v", got)
-	}
-}
-
-func TestLoadLockRejectsDuplicateDockerPin(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "toolchain.lock")
-	data := "DOCKER_CLI_IMAGE=docker:29.4.0-cli\nDOCKER_CLI_IMAGE=docker:29.4.0-cli\n"
-	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := loadLock(path); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("expected duplicate lock key error, got %v", err)
-	}
-}
-
-func TestValidateScriptReferencesAcceptsCanonicalTargets(t *testing.T) {
-	root := t.TempDir()
-	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
-	mustWriteTestFile(t, filepath.Join(root, baselineScriptPath))
-	config := parseTestConfig(t, validFixture)
-	if err := validateScriptReferences(root, config); err != nil {
-		t.Fatalf("expected canonical references to pass, got %v", err)
-	}
-}
-
-func TestValidateScriptReferencesRejectsNonCanonicalShellSyntax(t *testing.T) {
-	// canonical job 不能通过注释、echo、动态执行、括号或额外 lifecycle hook 引入第二条执行路径。
-	root := t.TempDir()
-	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
-	mustWriteTestFile(t, filepath.Join(root, baselineScriptPath))
-	mustWriteTestFile(t, filepath.Join(root, "scripts", "validator", "main.go"))
-	canonicalBuild := []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}
-	tests := []struct {
-		name   string
-		mutate func(map[string]any)
-	}{
-		{name: "echo", mutate: func(config map[string]any) {
-			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "echo " + canonicalBuilderLine})
-		}},
-		{name: "command substitution", mutate: func(config map[string]any) {
-			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "$(" + canonicalBuilderLine + ")"})
-		}},
-		{name: "parentheses", mutate: func(config map[string]any) {
-			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "(" + canonicalBuilderLine + ")"})
-		}},
-		{name: "extra go run", mutate: func(config map[string]any) {
-			setJobCommands(config, buildJobName, append(append([]string{}, canonicalBuild...), "go run ./scripts/validator"))
-		}},
-		{name: "before script", mutate: func(config map[string]any) { config["before_script"] = []any{"echo before"} }},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := parseTestConfig(t, validFixture)
-			tt.mutate(config)
-			err := validateScriptReferences(root, config)
-			if err == nil || !strings.Contains(err.Error(), "canonical") {
-				t.Fatalf("expected canonical script error, got %v", err)
-			}
-		})
-	}
-}
-
-func TestValidateScriptReferencesRejectsMissingCanonicalTarget(t *testing.T) {
-	root := t.TempDir()
-	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
-	if err := validateScriptReferences(root, parseTestConfig(t, validFixture)); err == nil || !strings.Contains(err.Error(), "does not exist") {
-		t.Fatalf("expected missing baseline error, got %v", err)
-	}
-}
-
-func TestValidateScriptReferencesRejectsCanonicalSymlinkEscape(t *testing.T) {
-	// 仓库内名称若通过 symlink 指向仓库外，也必须按真实路径拒绝。
-	root := t.TempDir()
-	outside := filepath.Join(t.TempDir(), "outside.sh")
-	mustWriteTestFile(t, outside)
-	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
-	if err := os.MkdirAll(filepath.Dir(filepath.Join(root, baselineScriptPath)), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(outside, filepath.Join(root, baselineScriptPath)); err != nil {
-		t.Fatal(err)
-	}
-	config := parseTestConfig(t, validFixture)
-	if err := validateScriptReferences(root, config); err == nil || !strings.Contains(err.Error(), "outside repository") {
-		t.Fatalf("expected symlink escape error, got %v", err)
-	}
-}
-
-func TestValidateRepositoryTargetRejectsUnsafePaths(t *testing.T) {
-	// 严格 vector 之外仍保留底层路径边界，直接证明绝对路径与目录穿越被拒绝。
-	root := t.TempDir()
-	outside := filepath.Join(t.TempDir(), "outside.sh")
-	mustWriteTestFile(t, outside)
-	tests := []struct {
-		name   string
-		target string
-		want   string
-	}{
-		{name: "traversal", target: "scripts/../outside.sh", want: "unsafe"},
-		{name: "absolute", target: outside, want: "absolute"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := validateRepositoryTarget(root, tt.target); err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("expected %s path error, got %v", tt.want, err)
-			}
-		})
-	}
-}
-
-func parseTestConfig(t *testing.T, data string) map[string]any {
-	t.Helper()
-	var config map[string]any
-	if err := yaml.Unmarshal([]byte(data), &config); err != nil {
-		t.Fatal(err)
-	}
-	return config
-}
-
-func setJobCommands(config map[string]any, jobName string, commands []string) {
-	job := config[jobName].(map[string]any)
-	items := make([]any, len(commands))
-	for index, command := range commands {
-		items[index] = command
-	}
-	job["script"] = items
-}
-
-func mustWriteTestFile(t *testing.T, path string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(path, []byte("test\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
 }
