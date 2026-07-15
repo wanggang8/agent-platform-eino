@@ -5,8 +5,10 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-mkdir -p "$tmp/repo/scripts" "$tmp/repo/web/eino-workbench" "$tmp/bin"
+mkdir -p "$tmp/repo/scripts" "$tmp/repo/build/toolchain" "$tmp/repo/web/eino-workbench" "$tmp/bin"
 cp "$root/scripts/verify_toolchain.sh" "$tmp/repo/scripts/"
+cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" \
+  "$tmp/repo/build/toolchain/"
 cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \
   "$root/package.json" "$root/package-lock.json" "$tmp/repo/"
 cp "$root/web/eino-workbench/package.json" "$tmp/repo/web/eino-workbench/"

@@ -10,6 +10,8 @@
   "scripts": {
     "verify:toolchain": "bash scripts/verify_toolchain.sh",
     "test:toolchain": "bash scripts/verify_toolchain_test.sh",
+    "build:toolchain-image": "bash scripts/build_toolchain_image.sh --load",
+    "test:toolchain-image": "bash scripts/build_toolchain_image_test.sh",
     "eino-workbench:schema-test": "node scripts/eino_workbench_schema_validate.mjs",
     "eino-workbench:contract-generate": "node scripts/eino_workbench_contract_generate.mjs",
     "eino-workbench:contract-test": "node scripts/eino_workbench_schema_validate.mjs --contract && node scripts/eino_workbench_contract_generate.mjs --check",
