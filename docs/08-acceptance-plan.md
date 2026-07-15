@@ -59,6 +59,10 @@ PASS = exact declarations
 otherwise BLOCKED
 ```
 
+canonical image identity 必须同时证明 Node linux-x64 tar.gz checksum、Ubuntu Noble snapshot、
+`build-essential`、`command -v cc` 和构建期最小 `CGO_ENABLED=1 go test -race ./...`。缺少任一 pinned
+输入或真实 image 构建证据时，宿主 race PASS 与静态 Dockerfile 检查都不能替代门禁条件。
+
 本地 visual migration 必须先从同一 pinned inputs 取得真实 image ID，在该 image 运行唯一完整
 baseline；若首次停在 desktop screenshot diff，必须保留 baseline log 和 actual/diff，并确认所有前置
 非视觉检查通过。UX 明确批准后才可在同一 image 更新 desktop snapshot，并再次完整运行唯一 baseline。

@@ -12,6 +12,13 @@ image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_I
 test -n "$image_id"
 ```
 
+canonical identity 不只包含 runtime 与 browser：Node 使用官方 linux-x64 `tar.gz` 及其 SHA-256；
+Noble `/etc/apt/sources.list.d/ubuntu.sources` 的每个 `Signed-By` stanza 都注入 lock 中的
+`Snapshot: 20260708T000000Z`，再安装 lock 固定的 `build-essential`。Dockerfile 必须确认 snapshot
+插入数量与 stanza 数量一致、清理 apt lists，并以 `command -v cc` 和临时 module 中的
+`CGO_ENABLED=1 go test -race ./...` 固定 race detector 能力。以上值只能来自
+`build/toolchain/toolchain.lock`，不得由环境变量或浮动 apt 状态覆盖。
+
 进入同一环境进行诊断，或执行唯一的顺序 baseline：
 
 ```bash
@@ -55,6 +62,8 @@ image ID 和 pipeline image 都未产生，两条链均未前进。仓库没有 
 - 根 `package.json` 只提供 wrapper scripts，不复制前端包内部逻辑。
 - Chromium 与 OS/font layer 只随 pinned canonical image 构建；测试阶段不得运行浮动的
   `playwright install`、apt 安装或其他浏览器替换命令。
+- Node archive 固定为官方 linux-x64 `tar.gz`；构建期 apt 只允许使用 lock 的 Ubuntu snapshot
+  安装 `build-essential`，用于 image 内的 C compiler guard 与 Go race smoke，不得临时改用宿主编译器。
 
 当前 Phase 1 文档契约已提供根级 wrapper：
 

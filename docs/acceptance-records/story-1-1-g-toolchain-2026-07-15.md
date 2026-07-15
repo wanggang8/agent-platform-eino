@@ -27,10 +27,13 @@ clean GitLab pipeline、pipeline artifacts 和批准的 desktop visual evidence 
 | Go linux/amd64 archive SHA-256 | `5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053` | canonical image 下载校验 |
 | Node.js / npm | `24.18.0` / `11.16.0` | `.node-version` 与根 manifest exact declaration |
 | Node type declarations | `@types/node@24.13.3` | 本 Story 唯一批准的 exact dependency 变更 |
-| Node linux-x64 archive SHA-256 | `55aa7153f9d88f28d765fcdad5ae6945b5c0f98a36881703817e4c450fa76742` | canonical image 下载校验 |
+| Node linux-x64 tar.gz SHA-256 | `783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8` | canonical image 下载校验；不依赖 base 中不存在的 xz-utils |
 | Playwright / Chromium | `1.61.1` / revision `1228`, version `149.0.7827.55` | desktop browser identity |
 | Playwright MCR base | `mcr.microsoft.com/playwright:v1.61.1-noble@sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6` | pinned external base；不是最终 image digest |
 | OS / platform / font policy | `ubuntu-24.04-noble` / `linux/amd64` / `playwright-v1.61.1-noble-bundled` | release-build 与 visual identity |
+| Ubuntu archive snapshot | `20260708T000000Z` | Noble deb822 每个 Signed-By stanza 的固定 apt 仓库状态 |
+| Build prerequisites | `build-essential` | 提供 Go linux/amd64 race detector 所需 C compiler |
+| Race capability smoke | `command -v cc` + `CGO_ENABLED=1 go test -race ./...` | image 构建期编译并运行最小 race test，成功后清理临时 module |
 | Docker CLI | `docker:29.4.0-cli@sha256:bb21349a52c00b206ad8b5c03fa52023c741c4cf11f269d40d40b9ebaac73d96` | GitLab job image |
 | Docker DinD | `docker:29.4.0-dind@sha256:4d2c6e334de4b26d492c0a8cc5438e3dbf1a02eee899fc0d4d39b96202c943a7` | GitLab service image |
 | Eino | `v0.9.12` | 保持稳定 pin，本 Story 不升级 |
@@ -40,7 +43,7 @@ clean GitLab pipeline、pipeline artifacts 和批准的 desktop visual evidence 
 
 ## 实现提交范围
 
-实现基线为 `f847458`，Story 1.1 工具链实现提交集合为 `f847458..1ec4273`（首个实现提交
+实现基线为 `f847458`，Story 1.1 工具链实现提交集合为 `f847458..65aace9`（首个实现提交
 `422a6b5`）：
 
 ```text
@@ -53,6 +56,9 @@ d134f58 fix(ci): enforce canonical toolchain jobs
 cfd4fb6 docs(toolchain): record blocked visual migration
 e53cf18 docs(toolchain): separate visual and gate evidence
 1ec4273 docs(toolchain): require full visual baselines
+d60cc70 docs(toolchain): record g-toolchain blocked verdict
+8f0af13 docs(toolchain): align gate command evidence
+65aace9 fix(toolchain): pin build prerequisites
 ```
 
 该范围只说明已审查的实现输入，不是 clean pipeline commit 证据。clean `CI_COMMIT_SHA` 未产生。
@@ -71,7 +77,9 @@ e53cf18 docs(toolchain): separate visual and gate evidence
 | 命令／程序 | 结果 | 解释 |
 | --- | --- | --- |
 | `bash scripts/verify_toolchain_test.sh` | PASS | 目标 shim 正向通过，并拒绝 Go 1.23、Node 25、npm 错版、声明／CI／lock 漂移和不安全输入 |
-| `bash scripts/build_toolchain_image_test.sh` | PASS | builder、pinned inputs、push/load 契约、dotenv、baseline 顺序与末尾 clean gate 的静态／行为测试通过 |
+| `bash scripts/build_toolchain_image_test.sh` | PASS | builder、16 字段 pinned inputs、tar.gz、snapshot、C compiler/race smoke、push/load 契约、dotenv、baseline 顺序与末尾 clean gate 的静态／行为测试通过 |
+| Node `SHASUMS256.txt` 精确查询 | PASS | 官方结果为 `783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8  node-v24.18.0-linux-x64.tar.gz` |
+| Ubuntu snapshot Noble `InRelease` HEAD | PASS / HTTP 200 | `https://snapshot.ubuntu.com/ubuntu/20260708T000000Z/dists/noble/InRelease` 可访问；只证明公开输入存在，不证明 image 已构建 |
 | `bash scripts/build_toolchain_image.sh --load` | exit 130 | MCR base metadata 按 digest 解析；base layer 超过 15 分钟无字节进展后人工终止 |
 | `docker image inspect agent-platform-eino-toolchain:local` | FAIL / image 不存在 | 未产生 local image ID，因此未运行 canonical baseline |
 | `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1` | PASS preflight | 官方 darwin/arm64 archive SHA-256 为 `efb87ff28af9a188d0536ef5d42e63dd52ba8263cd7344a993cc48dd11dedb6a`；不是 canonical linux/amd64 证据 |
@@ -125,7 +133,8 @@ e53cf18 docs(toolchain): separate visual and gate evidence
 
 ## 未覆盖风险
 
-- pinned MCR、Go 和 Node 下载在 linux/amd64 runner 中的可用性尚未证明。
+- pinned MCR、Go、Node tar.gz 与 snapshot apt 安装在 linux/amd64 runner 中的端到端可用性尚未证明。
+- `build-essential` 安装、`cc` guard 与最小 Go race smoke 只有静态／shim 证据，尚未在 canonical image 构建层真实运行。
 - privileged DinD runner、registry push/pull、dotenv artifact 传递和 commit-bound digest 尚未实测。
 - canonical `npm ci` 是否零依赖漂移、全部 Go/TypeScript/contract/smoke 是否通过尚未证明。
 - 71 个 tracked desktop baseline 尚未在目标 OS/font/Chromium identity 生成 actual/diff 并人工裁决。

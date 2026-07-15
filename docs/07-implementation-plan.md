@@ -15,6 +15,11 @@ linux/amd64 image ID 做 preflight/visual migration；最终门禁必须由 clea
 commit-bound `tag@sha256` image 执行同一 baseline。desktop 是 Story 1.1 唯一视觉门禁，mobile
 不属于 `G-TOOLCHAIN`。测试阶段禁止运行浮动的 Playwright、apt 或浏览器安装命令。
 
+canonical build identity 还必须固定 Node linux-x64 tar.gz checksum、Ubuntu Noble snapshot 与
+`build-essential`。Dockerfile 在 snapshot 仓库状态下安装 C toolchain，并以 `command -v cc` 和
+临时 module 的 `CGO_ENABLED=1 go test -race ./...` 证明发布镜像具备 Go race baseline 能力；这些
+字段由共享 lock parser 校验和传递，不得从环境覆盖。
+
 ```bash
 image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_IMAGE_ID=/{print $2}')
 test -n "$image_id"
