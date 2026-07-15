@@ -197,13 +197,15 @@ assert_baseline_identity_failure gitlab-only \
 
 make_repo() {
   local repo=$1
-  mkdir -p "$repo/scripts" "$repo/build/toolchain" "$repo/web/eino-workbench"
+  mkdir -p "$repo/scripts" "$repo/build/toolchain" "$repo/web/eino-workbench" \
+    "$repo/.github/workflows"
   cp "$root/scripts/toolchain_lock.sh" "$root/scripts/build_toolchain_image.sh" \
-    "$root/scripts/verify_toolchain.sh" "$repo/scripts/"
+    "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/verify_toolchain.sh" \
+    "$repo/scripts/"
   cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" "$repo/build/toolchain/"
   cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \
     "$root/package.json" "$root/package-lock.json" "$repo/"
-  cp "$root/.gitlab-ci.yml" "$repo/"
+  cp "$root/.github/workflows/toolchain.yml" "$repo/.github/workflows/"
   cp "$root/web/eino-workbench/package.json" "$repo/web/eino-workbench/"
   # image fixture 不启动 Go validator；该 stub 只验证 verifier 的强制调用边界。
   cat >"$repo/scripts/validate_ci_config.sh" <<'SH'

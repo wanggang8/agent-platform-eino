@@ -5,14 +5,16 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-mkdir -p "$tmp/repo/scripts" "$tmp/repo/build/toolchain" "$tmp/repo/web/eino-workbench" "$tmp/bin"
-cp "$root/scripts/verify_toolchain.sh" "$tmp/repo/scripts/"
-cp "$root/scripts/toolchain_lock.sh" "$tmp/repo/scripts/"
+mkdir -p "$tmp/repo/scripts" "$tmp/repo/build/toolchain" "$tmp/repo/web/eino-workbench" \
+  "$tmp/repo/.github/workflows" "$tmp/bin"
+cp "$root/scripts/verify_toolchain.sh" "$root/scripts/toolchain_lock.sh" \
+  "$root/scripts/build_toolchain_image.sh" "$root/scripts/run_toolchain_baseline.sh" \
+  "$tmp/repo/scripts/"
 cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" \
   "$tmp/repo/build/toolchain/"
 cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \
   "$root/package.json" "$root/package-lock.json" "$tmp/repo/"
-cp "$root/.gitlab-ci.yml" "$tmp/repo/"
+cp "$root/.github/workflows/toolchain.yml" "$tmp/repo/.github/workflows/"
 cp "$root/web/eino-workbench/package.json" "$tmp/repo/web/eino-workbench/"
 
 # fixture 使用专用 stub 证明生产 verifier 总会调用静态 CI validator，不保留绕过开关。
@@ -50,14 +52,21 @@ export CI_VALIDATOR_LOG="$tmp/ci-validator.log"
 PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"
 grep -Fxq called "$CI_VALIDATOR_LOG"
 
+printf '%s\n' 'stages: [toolchain, verify]' >"$tmp/repo/.gitlab-ci.yml"
+if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
+  echo 'expected GitLab CI residue to fail' >&2
+  exit 1
+fi
+rm "$tmp/repo/.gitlab-ci.yml"
+
 # CI 不得复制三项 authoritative sources，避免形成第二组 runtime 常量。
-cp "$tmp/repo/.gitlab-ci.yml" "$tmp/repo/.gitlab-ci.yml.good"
-printf '%s\n' '# duplicated Go version: 1.26.5' >>"$tmp/repo/.gitlab-ci.yml"
+cp "$tmp/repo/.github/workflows/toolchain.yml" "$tmp/repo/.github/workflows/toolchain.yml.good"
+printf '%s\n' '# duplicated Go version: 1.26.5' >>"$tmp/repo/.github/workflows/toolchain.yml"
 if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
   echo 'expected duplicated CI Go version to fail' >&2
   exit 1
 fi
-mv "$tmp/repo/.gitlab-ci.yml.good" "$tmp/repo/.gitlab-ci.yml"
+mv "$tmp/repo/.github/workflows/toolchain.yml.good" "$tmp/repo/.github/workflows/toolchain.yml"
 
 # 逐项替换实际版本或声明，证明 Go 1.23、Node 25、npm 错版和声明漂移都会被拒绝。
 cp "$tmp/bin/go" "$tmp/bin/go.good"
