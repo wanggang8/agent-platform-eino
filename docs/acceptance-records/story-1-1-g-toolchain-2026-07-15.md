@@ -43,7 +43,7 @@ digest 尚未产生；不得把 local image ID 或 MCR base digest 写成 regist
 
 ## 实现提交范围
 
-实现基线为 `f847458`，Story 1.1 工具链实现提交集合为 `f847458..3d4dac8`（首个实现提交
+实现基线为 `f847458`，Story 1.1 工具链实现提交集合为 `f847458..8bc724b`（首个实现提交
 `422a6b5`）：
 
 ```text
@@ -61,6 +61,8 @@ d60cc70 docs(toolchain): record g-toolchain blocked verdict
 65aace9 fix(toolchain): pin build prerequisites
 ade9c54 docs(toolchain): record pinned build prerequisites
 3d4dac8 fix(toolchain): isolate snapshot package sources
+4a6093e docs(toolchain): record canonical visual checkpoint
+8bc724b fix(toolchain): stabilize desktop baseline
 ```
 
 该范围只说明已审查的实现输入，不是 clean pipeline commit 证据。clean `CI_COMMIT_SHA` 未产生。
