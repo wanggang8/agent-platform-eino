@@ -23,7 +23,11 @@ const (
 	dockerHostValue       = "tcp://docker:2375"
 	dockerBuildkitValue   = "1"
 	dockerTLSCertdirValue = ""
+	canonicalMkdirLine    = "mkdir -p test-results"
+	canonicalLoginLine    = `printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"`
 	canonicalBuilderLine  = `bash ` + canonicalBuilderPath + ` --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file ` + toolchainDotenvPath
+	canonicalGuardLine    = `printf '%s\n' "$TOOLCHAIN_IMAGE" | grep -Eq '^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'`
+	canonicalPullLine     = `docker pull "$TOOLCHAIN_IMAGE"`
 	canonicalBaselineLine = `docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash ` + baselineScriptPath
 )
 
@@ -53,7 +57,16 @@ func validateConfig(data []byte, lock lockValues) error {
 		return errors.New("stages must be exactly [toolchain, verify]")
 	}
 
-	template, _ := stringMap(config[dockerTemplateName])
+	// 先保留原始未固定 image 的专用诊断，再强制所有有效配置走唯一模板。
+	if rawBuild, ok := stringMap(config[buildJobName]); ok {
+		if image, _ := rawBuild["image"].(string); image == lock.DockerCLIImage && lock.DockerCLIDigest != "" {
+			return errors.New("toolchain-build Docker CLI image must use the lock digest")
+		}
+	}
+	template, ok := stringMap(config[dockerTemplateName])
+	if !ok {
+		return errors.New("missing .docker-amd64 template")
+	}
 	build, err := resolveJob(config, template, buildJobName)
 	if err != nil {
 		return err
@@ -64,7 +77,8 @@ func validateConfig(data []byte, lock lockValues) error {
 	if stage, _ := build["stage"].(string); stage != "toolchain" {
 		return errors.New("toolchain-build stage must be toolchain")
 	}
-	if !hasCanonicalBuilderInvocation(scriptLines(build)) {
+	buildLines, err := strictScriptLines(build)
+	if err != nil || !equalStrings(buildLines, []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}) {
 		return errors.New("toolchain-build must call scripts/build_toolchain_image.sh with the canonical dotenv path")
 	}
 	if got := nestedString(build, "artifacts", "reports", "dotenv"); got != toolchainDotenvPath {
@@ -85,8 +99,9 @@ func validateConfig(data []byte, lock lockValues) error {
 		return errors.New("toolchain-verify needs toolchain-build artifacts")
 	}
 
-	if err := validateVerifyCommands(scriptLines(verify)); err != nil {
-		return err
+	verifyLines, err := strictScriptLines(verify)
+	if err != nil || !equalStrings(verifyLines, []string{canonicalGuardLine, canonicalPullLine, canonicalBaselineLine}) {
+		return errors.New("toolchain-verify script must match the canonical @sha256: TOOLCHAIN_IMAGE baseline vector")
 	}
 	return nil
 }
@@ -138,21 +153,13 @@ func validateScriptReferences(root string, config map[string]any) error {
 	if err != nil {
 		return errors.New("invalid repository root")
 	}
-	for _, command := range allScriptLines(config) {
-		fields := strings.Fields(command)
-		for index := 0; index < len(fields); index++ {
-			var target string
-			switch {
-			case fields[index] == "bash" && index+1 < len(fields):
-				target = trimShellToken(fields[index+1])
-			case fields[index] == "go" && index+2 < len(fields) && fields[index+1] == "run":
-				target = trimShellToken(fields[index+2])
-			default:
-				continue
-			}
-			if err := validateRepositoryTarget(realRoot, target); err != nil {
-				return err
-			}
+	references, err := canonicalScriptReferences(config)
+	if err != nil {
+		return err
+	}
+	for _, target := range references {
+		if err := validateRepositoryTarget(realRoot, target); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -206,19 +213,21 @@ func resolveJob(config, template map[string]any, name string) (map[string]any, e
 	if !ok {
 		return nil, fmt.Errorf("missing %s job", name)
 	}
+	extends, ok := job["extends"].(string)
+	if !ok || extends != dockerTemplateName || template == nil {
+		return nil, fmt.Errorf("%s must extend %s", name, dockerTemplateName)
+	}
 	resolved := make(map[string]any, len(template)+len(job))
-	if extends, _ := job["extends"].(string); extends != "" {
-		if extends != dockerTemplateName || template == nil {
-			return nil, fmt.Errorf("%s must extend %s", name, dockerTemplateName)
-		}
-		for key, value := range template {
-			resolved[key] = value
-		}
+	for key, value := range template {
+		resolved[key] = value
 	}
 	for key, value := range job {
 		if key == "variables" {
-			inherited, _ := stringMap(resolved[key])
-			local, _ := stringMap(value)
+			inherited, inheritedOK := stringMap(resolved[key])
+			local, localOK := stringMap(value)
+			if !inheritedOK || !localOK {
+				return nil, fmt.Errorf("%s variables must be a map", name)
+			}
 			resolved[key] = mergeMaps(inherited, local)
 			continue
 		}
@@ -271,49 +280,6 @@ func hasBuildArtifactNeed(job map[string]any) bool {
 	return false
 }
 
-func hasCanonicalBuilderInvocation(lines []string) bool {
-	for _, line := range lines {
-		if strings.TrimSpace(line) == canonicalBuilderLine {
-			return true
-		}
-	}
-	return false
-}
-
-func validateVerifyCommands(lines []string) error {
-	guardFound := false
-	pullFound := false
-	runFound := false
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, `case "$TOOLCHAIN_IMAGE" in *@sha256:*)`) && strings.Contains(line, "exit 1") {
-			guardFound = true
-		}
-		if strings.HasPrefix(line, "docker pull ") {
-			if line != `docker pull "$TOOLCHAIN_IMAGE"` || pullFound {
-				return errors.New("toolchain-verify must pull only TOOLCHAIN_IMAGE")
-			}
-			pullFound = true
-		}
-		if strings.HasPrefix(line, "docker run ") {
-			if runFound || line != canonicalBaselineLine {
-				return errors.New("toolchain-verify may run only TOOLCHAIN_IMAGE with the canonical baseline")
-			}
-			runFound = true
-		}
-	}
-	if !guardFound {
-		return errors.New("toolchain-verify must reject TOOLCHAIN_IMAGE without @sha256:")
-	}
-	if !pullFound {
-		return errors.New("toolchain-verify must pull only TOOLCHAIN_IMAGE")
-	}
-	if !runFound {
-		return errors.New("toolchain-verify must call the canonical baseline")
-	}
-	return nil
-}
-
 func validateRepositoryTarget(root, target string) error {
 	if filepath.IsAbs(target) {
 		return errors.New("absolute script reference is forbidden")
@@ -344,47 +310,81 @@ func validateRepositoryTarget(root, target string) error {
 	return nil
 }
 
-func allScriptLines(value any) []string {
-	var lines []string
-	var walk func(any)
-	walk = func(current any) {
-		switch typed := current.(type) {
-		case map[string]any:
-			for key, child := range typed {
-				if key == "script" || strings.HasSuffix(key, "_script") {
-					lines = append(lines, scriptValueLines(child)...)
+func canonicalScriptReferences(config map[string]any) ([]string, error) {
+	if containsNonCanonicalScriptKey(config, false) {
+		return nil, errors.New("CI config contains a non-canonical script section")
+	}
+	build, buildOK := stringMap(config[buildJobName])
+	verify, verifyOK := stringMap(config[verifyJobName])
+	if !buildOK || !verifyOK {
+		return nil, errors.New("CI config is missing a canonical job")
+	}
+	buildLines, buildErr := strictScriptLines(build)
+	verifyLines, verifyErr := strictScriptLines(verify)
+	if buildErr != nil || verifyErr != nil ||
+		!equalStrings(buildLines, []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}) ||
+		!equalStrings(verifyLines, []string{canonicalGuardLine, canonicalPullLine, canonicalBaselineLine}) {
+		return nil, errors.New("CI config contains a non-canonical script vector")
+	}
+	return []string{canonicalBuilderPath, baselineScriptPath}, nil
+}
+
+func containsNonCanonicalScriptKey(value any, insideCanonicalJob bool) bool {
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, child := range typed {
+			if key == buildJobName || key == verifyJobName {
+				if containsNonCanonicalScriptKey(child, true) {
+					return true
 				}
-				walk(child)
+				continue
 			}
-		case []any:
-			for _, child := range typed {
-				walk(child)
+			if key == "script" {
+				if !insideCanonicalJob {
+					return true
+				}
+				continue
+			}
+			if strings.HasSuffix(key, "_script") || containsNonCanonicalScriptKey(child, insideCanonicalJob) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range typed {
+			if containsNonCanonicalScriptKey(child, insideCanonicalJob) {
+				return true
 			}
 		}
 	}
-	walk(value)
-	return lines
+	return false
 }
 
-func scriptLines(job map[string]any) []string {
-	return scriptValueLines(job["script"])
-}
-
-func scriptValueLines(value any) []string {
-	items, ok := anySlice(value)
+func strictScriptLines(job map[string]any) ([]string, error) {
+	items, ok := anySlice(job["script"])
 	if !ok {
-		if line, ok := value.(string); ok {
-			return []string{line}
-		}
-		return nil
+		return nil, errors.New("script must be a command list")
 	}
-	lines := make([]string, 0, len(items))
-	for _, item := range items {
-		if line, ok := item.(string); ok {
-			lines = append(lines, line)
+	lines := make([]string, len(items))
+	for index, item := range items {
+		line, ok := item.(string)
+		if !ok {
+			return nil, errors.New("script commands must be strings")
+		}
+		lines[index] = line
+	}
+	return lines, nil
+}
+
+func equalStrings(actual, expected []string) bool {
+	if len(actual) != len(expected) {
+		return false
+	}
+	for index := range actual {
+		if actual[index] != expected[index] {
+			return false
 		}
 	}
-	return lines
+	return true
 }
 
 func nestedString(root map[string]any, keys ...string) string {
@@ -435,8 +435,4 @@ func mergeMaps(base, override map[string]any) map[string]any {
 		merged[key] = value
 	}
 	return merged
-}
-
-func trimShellToken(value string) string {
-	return strings.Trim(value, `"'`)
 }

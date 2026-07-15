@@ -9,7 +9,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const canonicalRunCommand = `docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
+const (
+	canonicalDigestGuardCommand = `printf '%s\n' "$TOOLCHAIN_IMAGE" | grep -Eq '^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'`
+	canonicalPullCommand        = `docker pull "$TOOLCHAIN_IMAGE"`
+	canonicalRunCommand         = `docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
+)
 
 // validFixture 证明两个 job 通过 extends 继承 runner 镜像、DinD 与变量后仍能通过完整 DAG 校验。
 const validFixture = `stages:
@@ -31,6 +35,7 @@ toolchain-build:
   stage: toolchain
   script:
     - mkdir -p test-results
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - bash scripts/build_toolchain_image.sh --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file test-results/toolchain.env
   artifacts:
     reports:
@@ -43,8 +48,7 @@ toolchain-verify:
     - job: toolchain-build
       artifacts: true
   script:
-    - test -n "$TOOLCHAIN_IMAGE"
-    - 'case "$TOOLCHAIN_IMAGE" in *@sha256:*) ;; *) exit 1 ;; esac'
+    - 'printf ''%s\n'' "$TOOLCHAIN_IMAGE" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''
     - docker pull "$TOOLCHAIN_IMAGE"
     - docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
 `
@@ -63,6 +67,8 @@ toolchain-build:
   extends: .docker-amd64
   stage: toolchain
   script:
+    - mkdir -p test-results
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - bash scripts/build_toolchain_image.sh --push "$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA" --env-file test-results/toolchain.env
   artifacts:
     reports:
@@ -71,7 +77,7 @@ toolchain-verify:
   extends: .docker-amd64
   stage: verify
   script:
-    - 'case "$TOOLCHAIN_IMAGE" in *@sha256:*) ;; *) exit 1 ;; esac'
+    - 'printf ''%s\n'' "$TOOLCHAIN_IMAGE" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''
     - docker pull "$TOOLCHAIN_IMAGE"
     - docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
 `
@@ -143,6 +149,89 @@ func TestValidateRejectsUnpinnedDind(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMissingDockerTemplate(t *testing.T) {
+	config := parseTestConfig(t, validFixture)
+	delete(config, dockerTemplateName)
+	err := validateConfig(marshalTestConfig(t, config), completeTestLock())
+	if err == nil || !strings.Contains(err.Error(), "template") {
+		t.Fatalf("expected missing template error, got %v", err)
+	}
+}
+
+func TestValidateRejectsNonStringOrMissingExtends(t *testing.T) {
+	// 即使 job 内联了与模板等价的 runner 配置，也不能绕过唯一模板继承边界。
+	tests := []struct {
+		name    string
+		jobName string
+		value   any
+	}{
+		{name: "build missing", jobName: buildJobName},
+		{name: "verify missing", jobName: verifyJobName},
+		{name: "array", jobName: buildJobName, value: []any{dockerTemplateName}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			job := config[tt.jobName].(map[string]any)
+			if tt.value == nil {
+				delete(job, "extends")
+			} else {
+				job["extends"] = tt.value
+			}
+			template := config[dockerTemplateName].(map[string]any)
+			job["image"] = template["image"]
+			job["services"] = template["services"]
+			job["variables"] = template["variables"]
+			err := validateConfig(marshalTestConfig(t, config), completeTestLock())
+			if err == nil || !strings.Contains(err.Error(), "extend") {
+				t.Fatalf("expected exact extends error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateAcceptsGitLabStylePartialOverrides(t *testing.T) {
+	// variables 采用 map merge；image/services 采用 job 值覆盖模板，最终有效值仍须精确匹配 lock。
+	config := parseTestConfig(t, validFixture)
+	template := config[dockerTemplateName].(map[string]any)
+	build := config[buildJobName].(map[string]any)
+	build["variables"] = map[string]any{"DOCKER_BUILDKIT": "1"}
+	verify := config[verifyJobName].(map[string]any)
+	verify["image"] = template["image"]
+	verify["services"] = template["services"]
+	if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err != nil {
+		t.Fatalf("expected partial overrides to follow GitLab merge semantics, got %v", err)
+	}
+}
+
+func TestValidateRejectsInvalidPartialVariableOverride(t *testing.T) {
+	config := parseTestConfig(t, validFixture)
+	config[buildJobName].(map[string]any)["variables"] = map[string]any{"DOCKER_BUILDKIT": "0"}
+	if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "DOCKER_BUILDKIT") {
+		t.Fatalf("expected invalid local variable override error, got %v", err)
+	}
+}
+
+func TestValidateRejectsNonMapVariableOverride(t *testing.T) {
+	tests := []struct {
+		name  string
+		value any
+	}{
+		{name: "string", value: "DOCKER_BUILDKIT=1"},
+		{name: "array", value: []any{"DOCKER_BUILDKIT=1"}},
+		{name: "null", value: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			config[buildJobName].(map[string]any)["variables"] = tt.value
+			if err := validateConfig(marshalTestConfig(t, config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "variables") {
+				t.Fatalf("expected non-map variables error, got %v", err)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsMissingDockerVariable(t *testing.T) {
 	config := strings.Replace(validFixture, "    DOCKER_BUILDKIT: \"1\"\n", "", 1)
 	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "DOCKER_BUILDKIT") {
@@ -187,7 +276,7 @@ func TestValidateRejectsNeedWithoutArtifacts(t *testing.T) {
 }
 
 func TestValidateRejectsVerifyWithoutDigestGuard(t *testing.T) {
-	config := strings.Replace(validFixture, "    - 'case \"$TOOLCHAIN_IMAGE\" in *@sha256:*) ;; *) exit 1 ;; esac'\n", "", 1)
+	config := strings.Replace(validFixture, "    - 'printf ''%s\\n'' \"$TOOLCHAIN_IMAGE\" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''\n", "", 1)
 	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "@sha256:") {
 		t.Fatalf("expected TOOLCHAIN_IMAGE digest guard error, got %v", err)
 	}
@@ -195,10 +284,58 @@ func TestValidateRejectsVerifyWithoutDigestGuard(t *testing.T) {
 
 func TestValidateRejectsDigestTextWithoutGuard(t *testing.T) {
 	// 出现 digest 文本不等于运行时校验，必须有针对 TOOLCHAIN_IMAGE 的 guard。
-	config := strings.Replace(validFixture, "    - 'case \"$TOOLCHAIN_IMAGE\" in *@sha256:*) ;; *) exit 1 ;; esac'", "    - echo marker-@sha256:value", 1)
+	config := strings.Replace(validFixture, "    - 'printf ''%s\\n'' \"$TOOLCHAIN_IMAGE\" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''", "    - echo marker-@sha256:value", 1)
 	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "@sha256:") {
 		t.Fatalf("expected non-guard digest text to fail, got %v", err)
 	}
+}
+
+func TestValidateRejectsNonCanonicalVerifyCommandVector(t *testing.T) {
+	// verify 三条必须逐字、定序且唯一，任何 shell 包装或复合命令都改变安全语义。
+	tests := []struct {
+		name     string
+		commands []string
+	}{
+		{name: "guard comment", commands: []string{"# " + canonicalDigestGuardCommand, canonicalPullCommand, canonicalRunCommand}},
+		{name: "guard reversed", commands: []string{"! " + canonicalDigestGuardCommand, canonicalPullCommand, canonicalRunCommand}},
+		{name: "guard ignored", commands: []string{canonicalDigestGuardCommand + " || true", canonicalPullCommand, canonicalRunCommand}},
+		{name: "guard after pull", commands: []string{canonicalPullCommand, canonicalDigestGuardCommand, canonicalRunCommand}},
+		{name: "extra line", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand, "echo extra", canonicalRunCommand}},
+		{name: "env wrapper", commands: []string{canonicalDigestGuardCommand, "env " + canonicalPullCommand, canonicalRunCommand}},
+		{name: "shell wrapper", commands: []string{canonicalDigestGuardCommand, "sh -c 'docker pull \"$TOOLCHAIN_IMAGE\"'", canonicalRunCommand}},
+		{name: "compound command", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand + "; true", canonicalRunCommand}},
+		{name: "parenthesized command", commands: []string{canonicalDigestGuardCommand, "(" + canonicalPullCommand + ")", canonicalRunCommand}},
+		{name: "extra docker run", commands: []string{canonicalDigestGuardCommand, canonicalPullCommand, "docker run --rm ubuntu:latest true", canonicalRunCommand}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := fixtureWithVerifyCommands(t, tt.commands)
+			if err := validateConfig(config, completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
+				t.Fatalf("expected canonical vector error, got %v", err)
+			}
+		})
+	}
+}
+
+func fixtureWithVerifyCommands(t *testing.T, commands []string) []byte {
+	t.Helper()
+	config := parseTestConfig(t, validFixture)
+	job := config[verifyJobName].(map[string]any)
+	items := make([]any, len(commands))
+	for index, command := range commands {
+		items[index] = command
+	}
+	job["script"] = items
+	return marshalTestConfig(t, config)
+}
+
+func marshalTestConfig(t *testing.T, config map[string]any) []byte {
+	t.Helper()
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
 }
 
 func TestValidateRejectsVerifyWithoutBaseline(t *testing.T) {
@@ -225,7 +362,7 @@ func TestValidateRejectsVerifyUsingAnotherImage(t *testing.T) {
 func TestValidateRejectsAdditionalUnpinnedDockerRun(t *testing.T) {
 	// 即使 canonical baseline 存在，也不能夹带第二个未固定镜像执行。
 	config := strings.Replace(validFixture, "    - docker pull \"$TOOLCHAIN_IMAGE\"", "    - docker pull \"$TOOLCHAIN_IMAGE\"\n    - docker run --rm ubuntu:latest true", 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "only TOOLCHAIN_IMAGE") {
+	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
 		t.Fatalf("expected additional image run to fail, got %v", err)
 	}
 }
@@ -233,7 +370,7 @@ func TestValidateRejectsAdditionalUnpinnedDockerRun(t *testing.T) {
 func TestValidateRejectsToolchainImageUsedAsContainerArgument(t *testing.T) {
 	bypass := `docker run --rm ubuntu:latest "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh`
 	config := strings.Replace(validFixture, canonicalRunCommand, bypass, 1)
-	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "only TOOLCHAIN_IMAGE") {
+	if err := validateConfig([]byte(config), completeTestLock()); err == nil || !strings.Contains(err.Error(), "canonical") {
 		t.Fatalf("expected non-image TOOLCHAIN_IMAGE usage to fail, got %v", err)
 	}
 }
@@ -267,70 +404,98 @@ func TestLoadLockRejectsDuplicateDockerPin(t *testing.T) {
 	}
 }
 
-func TestValidateScriptReferencesAcceptsExistingBashAndGoTargets(t *testing.T) {
+func TestValidateScriptReferencesAcceptsCanonicalTargets(t *testing.T) {
 	root := t.TempDir()
-	mustWriteTestFile(t, filepath.Join(root, "scripts", "present.sh"))
-	mustWriteTestFile(t, filepath.Join(root, "scripts", "validator", "main.go"))
-	config := parseTestConfig(t, `job:
-  script:
-    - bash scripts/present.sh
-    - go run ./scripts/validator
-`)
+	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
+	mustWriteTestFile(t, filepath.Join(root, baselineScriptPath))
+	config := parseTestConfig(t, validFixture)
 	if err := validateScriptReferences(root, config); err != nil {
-		t.Fatalf("expected existing references to pass, got %v", err)
+		t.Fatalf("expected canonical references to pass, got %v", err)
 	}
 }
 
-func TestValidateScriptReferencesRejectsUnsafeOrMissingTargets(t *testing.T) {
-	// 路径安全覆盖缺失文件、目录穿越和 bash/go 两类绝对路径。
+func TestValidateScriptReferencesRejectsNonCanonicalShellSyntax(t *testing.T) {
+	// canonical job 不能通过注释、echo、动态执行、括号或额外 lifecycle hook 引入第二条执行路径。
 	root := t.TempDir()
-	mustWriteTestFile(t, filepath.Join(root, "scripts", "present.sh"))
-	outside := filepath.Join(t.TempDir(), "outside.sh")
-	mustWriteTestFile(t, outside)
-
+	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
+	mustWriteTestFile(t, filepath.Join(root, baselineScriptPath))
+	mustWriteTestFile(t, filepath.Join(root, "scripts", "validator", "main.go"))
+	canonicalBuild := []string{canonicalMkdirLine, canonicalLoginLine, canonicalBuilderLine}
 	tests := []struct {
-		name    string
-		command string
-		want    string
+		name   string
+		mutate func(map[string]any)
 	}{
-		{name: "missing bash script", command: "bash scripts/missing.sh", want: "does not exist"},
-		{name: "traversal", command: "bash scripts/../outside.sh", want: "unsafe"},
-		{name: "absolute bash path", command: "bash " + outside, want: "absolute"},
-		{name: "absolute go path", command: "go run " + outside, want: "absolute"},
+		{name: "echo", mutate: func(config map[string]any) {
+			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "echo " + canonicalBuilderLine})
+		}},
+		{name: "command substitution", mutate: func(config map[string]any) {
+			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "$(" + canonicalBuilderLine + ")"})
+		}},
+		{name: "parentheses", mutate: func(config map[string]any) {
+			setJobCommands(config, buildJobName, []string{canonicalMkdirLine, canonicalLoginLine, "(" + canonicalBuilderLine + ")"})
+		}},
+		{name: "extra go run", mutate: func(config map[string]any) {
+			setJobCommands(config, buildJobName, append(append([]string{}, canonicalBuild...), "go run ./scripts/validator"))
+		}},
+		{name: "before script", mutate: func(config map[string]any) { config["before_script"] = []any{"echo before"} }},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := map[string]any{"job": map[string]any{"script": []any{tt.command}}}
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
 			err := validateScriptReferences(root, config)
-			if err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("expected %q error, got %v", tt.want, err)
+			if err == nil || !strings.Contains(err.Error(), "canonical") {
+				t.Fatalf("expected canonical script error, got %v", err)
 			}
 		})
 	}
 }
 
-func TestValidateScriptReferencesRejectsSymlinkEscape(t *testing.T) {
+func TestValidateScriptReferencesRejectsMissingCanonicalTarget(t *testing.T) {
+	root := t.TempDir()
+	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
+	if err := validateScriptReferences(root, parseTestConfig(t, validFixture)); err == nil || !strings.Contains(err.Error(), "does not exist") {
+		t.Fatalf("expected missing baseline error, got %v", err)
+	}
+}
+
+func TestValidateScriptReferencesRejectsCanonicalSymlinkEscape(t *testing.T) {
 	// 仓库内名称若通过 symlink 指向仓库外，也必须按真实路径拒绝。
 	root := t.TempDir()
 	outside := filepath.Join(t.TempDir(), "outside.sh")
 	mustWriteTestFile(t, outside)
-	if err := os.MkdirAll(filepath.Join(root, "scripts"), 0o755); err != nil {
+	mustWriteTestFile(t, filepath.Join(root, canonicalBuilderPath))
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(root, baselineScriptPath)), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Symlink(outside, filepath.Join(root, "scripts", "escape.sh")); err != nil {
+	if err := os.Symlink(outside, filepath.Join(root, baselineScriptPath)); err != nil {
 		t.Fatal(err)
 	}
-	config := map[string]any{"job": map[string]any{"script": []any{"bash scripts/escape.sh"}}}
+	config := parseTestConfig(t, validFixture)
 	if err := validateScriptReferences(root, config); err == nil || !strings.Contains(err.Error(), "outside repository") {
 		t.Fatalf("expected symlink escape error, got %v", err)
 	}
 }
 
-func TestValidateScriptReferencesChecksBeforeScript(t *testing.T) {
+func TestValidateRepositoryTargetRejectsUnsafePaths(t *testing.T) {
+	// 严格 vector 之外仍保留底层路径边界，直接证明绝对路径与目录穿越被拒绝。
 	root := t.TempDir()
-	config := map[string]any{"job": map[string]any{"before_script": []any{"bash scripts/missing.sh"}}}
-	if err := validateScriptReferences(root, config); err == nil || !strings.Contains(err.Error(), "does not exist") {
-		t.Fatalf("expected before_script reference error, got %v", err)
+	outside := filepath.Join(t.TempDir(), "outside.sh")
+	mustWriteTestFile(t, outside)
+	tests := []struct {
+		name   string
+		target string
+		want   string
+	}{
+		{name: "traversal", target: "scripts/../outside.sh", want: "unsafe"},
+		{name: "absolute", target: outside, want: "absolute"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validateRepositoryTarget(root, tt.target); err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("expected %s path error, got %v", tt.want, err)
+			}
+		})
 	}
 }
 
@@ -341,6 +506,15 @@ func parseTestConfig(t *testing.T, data string) map[string]any {
 		t.Fatal(err)
 	}
 	return config
+}
+
+func setJobCommands(config map[string]any, jobName string, commands []string) {
+	job := config[jobName].(map[string]any)
+	items := make([]any, len(commands))
+	for index, command := range commands {
+		items[index] = command
+	}
+	job["script"] = items
 }
 
 func mustWriteTestFile(t *testing.T, path string) {

@@ -60,9 +60,85 @@ browser_line=$(grep -n 'browser-test.*--project=desktop' "$baseline" | cut -d: -
 test "$npm_ci_line" -lt "$browser_line"
 ! grep -Eq '^(go test|go vet|go build|go list|go mod)' "$baseline"
 ! grep -Eq -- '--project=mobile' "$baseline"
+test "$(grep -Fxc '  git diff --quiet' "$baseline")" = 2
+test "$(grep -Fxc '  git diff --cached --quiet' "$baseline")" = 2
+test "$(grep -Fxc '  test -z "$(git ls-files --others --exclude-standard)"' "$baseline")" = 2
+smoke_line=$(grep -n '^bash scripts/eino_workbench_server_smoke.sh --scenario contract$' "$baseline" | cut -d: -f1)
+final_clean_line=$(grep -n '^if \[\[ \${CI:-false} == true \]\]; then$' "$baseline" | tail -1 | cut -d: -f1)
+test "$final_clean_line" -gt "$smoke_line"
+test "$(tail -n 5 "$baseline")" = 'if [[ ${CI:-false} == true ]]; then
+  git diff --quiet
+  git diff --cached --quiet
+  test -z "$(git ls-files --others --exclude-standard)"
+fi'
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+
+# 用最小 shim 证明测试产生的 tracked/staged/untracked 污染都会被末尾 clean check 捕获。
+baseline_repo="$tmp/baseline-repo"
+baseline_bin="$tmp/baseline-bin"
+baseline_mutation="$tmp/baseline-mutation"
+mkdir -p "$baseline_repo/scripts" "$baseline_bin"
+cp "$baseline" "$baseline_repo/scripts/"
+for file in package-lock.json go.mod go.sum; do
+  printf '%s\n' fixture >"$baseline_repo/$file"
+done
+for script in verify_toolchain.sh validate_ci_config.sh eino_workbench_server_smoke.sh; do
+  cat >"$baseline_repo/scripts/$script" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 0
+SH
+done
+cat >"$baseline_bin/npm" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ ${1:-} == ci && -n ${MUTATION_KIND:-} ]]; then
+  printf '%s\n' "$MUTATION_KIND" >"$BASELINE_MUTATION"
+fi
+exit 0
+SH
+cat >"$baseline_bin/go" <<'SH'
+#!/usr/bin/env bash
+exit 0
+SH
+cat >"$baseline_bin/sha256sum" <<'SH'
+#!/usr/bin/env bash
+for file in "$@"; do
+  printf 'fixture  %s\n' "$file"
+done
+SH
+cat >"$baseline_bin/git" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+kind=
+if [[ -f $BASELINE_MUTATION ]]; then
+  kind=$(<"$BASELINE_MUTATION")
+fi
+case "$*" in
+  'diff --quiet') test "$kind" != tracked ;;
+  'diff --cached --quiet') test "$kind" != staged ;;
+  'ls-files --others --exclude-standard')
+    if [[ $kind == untracked ]]; then printf '%s\n' generated.file; fi
+    ;;
+  'diff --check') exit 0 ;;
+  *) exit 64 ;;
+esac
+SH
+chmod +x "$baseline_bin/npm" "$baseline_bin/go" "$baseline_bin/sha256sum" "$baseline_bin/git"
+export BASELINE_MUTATION="$baseline_mutation"
+for kind in tracked staged untracked; do
+  rm -f "$baseline_mutation"
+  if CI=true CI_COMMIT_SHA=0123456789abcdef MUTATION_KIND=$kind PATH="$baseline_bin:$PATH" \
+    bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-$kind.out" 2>&1; then
+    printf 'expected final clean check to reject %s mutation\n' "$kind" >&2
+    exit 1
+  fi
+done
+rm -f "$baseline_mutation"
+CI=true CI_COMMIT_SHA=0123456789abcdef PATH="$baseline_bin:$PATH" \
+  bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-clean.out" 2>&1
 
 make_repo() {
   local repo=$1

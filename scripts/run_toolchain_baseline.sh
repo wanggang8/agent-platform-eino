@@ -42,3 +42,9 @@ npm run eino-workbench:build
 npm run eino-workbench:browser-test -- --project=desktop
 bash scripts/eino_workbench_server_smoke.sh --scenario contract
 git diff --check
+
+if [[ ${CI:-false} == true ]]; then
+  git diff --quiet
+  git diff --cached --quiet
+  test -z "$(git ls-files --others --exclude-standard)"
+fi

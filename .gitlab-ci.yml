@@ -32,8 +32,7 @@ toolchain-verify:
     - job: toolchain-build
       artifacts: true
   script:
-    - test -n "$TOOLCHAIN_IMAGE"
-    - 'case "$TOOLCHAIN_IMAGE" in *@sha256:*) ;; *) printf "%s\n" "invalid TOOLCHAIN_IMAGE" >&2; exit 1 ;; esac'
+    - 'printf ''%s\n'' "$TOOLCHAIN_IMAGE" | grep -Eq ''^[A-Za-z0-9._/:-]+@sha256:[0-9a-f]{64}$'''
     - docker pull "$TOOLCHAIN_IMAGE"
     - docker run --rm --platform linux/amd64 -e CI=true -e CI_COMMIT_SHA="$CI_COMMIT_SHA" -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
   artifacts:
