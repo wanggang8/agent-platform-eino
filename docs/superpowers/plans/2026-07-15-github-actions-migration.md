@@ -683,12 +683,13 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   test -z "$(git diff --name-only 6ebf465..HEAD -- internal cmd web/eino-workbench/src)"
   test ! -e .gitlab-ci.yml
   ! rg -n 'CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR' \
-    .github build/toolchain scripts \
-    --glob '!validate_ci_config/main_test.go' \
-    --glob '!verify_toolchain_test.sh'
+    .github/workflows/toolchain.yml \
+    scripts/build_toolchain_image.sh \
+    scripts/run_toolchain_baseline.sh \
+    scripts/validate_ci_config.sh
   ```
 
-  Expected: 全部 exit 0；产品实现目录没有变更。
+  Expected: 全部 exit 0；产品实现目录没有变更。残留扫描与 Task 4 批准的四个生产执行入口完全一致；`scripts/verify_toolchain.sh` 的 fail-closed matcher、`scripts/validate_ci_config/main.go` 的 validator matcher 和负向测试必须保留旧语义以拒绝回归，不属于生产入口残留。
 
 - [ ] **Step 3: 用已批准 canonical image 重跑唯一 baseline**
 
