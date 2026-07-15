@@ -47,12 +47,14 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
   image ID 后运行唯一 `bash scripts/run_toolchain_baseline.sh`。首次运行可能在 desktop screenshot
   diff 处非零停止；保留 baseline log 与 Playwright actual/diff，并确认此前全部非视觉检查通过后，
   才能进入人工分类和 UX review。批准后只用 desktop-only 命令更新 snapshot，再在同一 image 完整
-  重跑唯一 baseline，要求所有适用检查通过。此链不要求 GitLab remote、registry digest 或
-  pipeline；结果始终只是 preflight/visual migration evidence，不能替代 clean GitLab pipeline，
+  重跑唯一 baseline，要求所有适用检查通过。此链不要求 GitHub remote、GHCR digest 或 Actions
+  run；结果始终只是 preflight/visual migration evidence，不能替代 clean GitHub Actions run，
   也不能单独形成 `G-TOOLCHAIN PASS`。
-- Story/G-TOOLCHAIN chain：clean GitLab pipeline 必须 push canonical image，产出绑定 commit 的
-  registry `tag@sha256` digest，并在该 image 执行完整 baseline 与 artifacts。只有该证据与已批准的
-  visual evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
+- Story/G-TOOLCHAIN chain：clean GitHub Actions run 必须 push
+  `ghcr.io/wanggang8/agent-platform-eino/toolchain:$GITHUB_SHA@sha256:$IMAGE_DIGEST`，并在该 image
+  执行完整 baseline；`toolchain-evidence-$GITHUB_SHA` (30 days) artifact 必须包含 baseline log 与
+  Playwright report。只有 GHCR digest、GitHub Actions run URL、artifact 与已批准的 visual
+  evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
 
 首次 pinned MCR base layer 传输曾因长时间无进展人工终止；在相同 pinned inputs 下重试后，本地
 canonical image 已成功构建为 linux/amd64 image ID
@@ -63,9 +65,9 @@ migration；71 张候选已在临时 detached worktree 以单 worker 完整生�
 零更新方式 17/17 复验通过。Vick 已于 2026-07-15 批准迁移，正式 desktop snapshot 已在同一
 image 中更新；从包含正式 snapshot 与审批记录的干净提交重跑完整 baseline 后，desktop 17/17、
 contract smoke 与末尾 clean gate 全部通过。仓库没有
-remote/pipeline 仍独立阻止最终 Story 门禁。任何阻断记录都必须
+公开 GitHub remote 与真实 Actions run 仍独立阻止最终 Story 门禁。任何阻断记录都必须
 写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，
-也不得用本地 image 或静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见
+也不得用本地 image 或静态 CI PASS 代替真实 GitHub Actions run。当前唯一裁决记录见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Node 与包管理
@@ -143,8 +145,8 @@ docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
 ```
 
 更新后必须在同一 image 再完整执行 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
-该 visual review 不依赖 GitLab remote 或 registry digest；本地结果只属于 preflight/visual migration
-evidence，不替代 clean GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。未产生 canonical
+该 visual review 不依赖 GitHub remote 或 GHCR digest；本地结果只属于 preflight/visual migration
+evidence，不替代 clean GitHub Actions run，也不能单独形成 `G-TOOLCHAIN PASS`。未产生 canonical
 image 或仍为 `PENDING_UX_APPROVAL` 时，禁止运行任何 snapshot update。
 
 ## 视觉基线

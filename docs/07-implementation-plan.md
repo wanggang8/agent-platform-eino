@@ -11,8 +11,8 @@ Story 1.1 先固定发布与 desktop visual 的唯一 canonical 环境。目标�
 `build/toolchain/Dockerfile` 读取；CI 只能调用仓库公共脚本，不得复制第二套版本常量。
 
 唯一完整 baseline 是 `scripts/run_toolchain_baseline.sh`。本地只允许用 pinned inputs 构建出的
-linux/amd64 image ID 做 preflight/visual migration；最终门禁必须由 clean GitLab pipeline push 的
-commit-bound `tag@sha256` image 执行同一 baseline。desktop 是 Story 1.1 唯一视觉门禁，mobile
+linux/amd64 image ID 做 preflight/visual migration；最终门禁必须由 clean GitHub Actions run push 的
+`ghcr.io/wanggang8/agent-platform-eino/toolchain:$GITHUB_SHA@sha256:$IMAGE_DIGEST` 执行同一 baseline。desktop 是 Story 1.1 唯一视觉门禁，mobile
 不属于 `G-TOOLCHAIN`；desktop browser 固定单 worker，不能由宿主 CPU 数量改变并发。测试阶段
 禁止运行浮动的 Playwright、apt 或浏览器安装命令。
 
@@ -32,13 +32,15 @@ docker run --rm --platform linux/amd64 -v "$PWD:/workspace" \
 ```
 
 本地命令必须只读挂载 Git common dir，保证普通 checkout 与 worktree 都能执行最终 clean gate；
-GitLab checkout 不需要额外宿主路径处理。
+GitHub Actions checkout 直接使用 `$GITHUB_WORKSPACE`，不需要挂载宿主 Git common dir。
 
-clean GitLab pipeline 必须另外产出 `CI_COMMIT_SHA`、`CI_PIPELINE_URL`、canonical
-`TOOLCHAIN_IMAGE=tag@sha256`、`test-results/toolchain-baseline.log` 和 desktop Playwright report。
+clean GitHub Actions run 必须另外产出 `GITHUB_SHA`、GitHub Actions run URL、canonical
+`TOOLCHAIN_IMAGE=ghcr.io/wanggang8/agent-platform-eino/toolchain:$GITHUB_SHA@sha256:$IMAGE_DIGEST`
+和 `toolchain-evidence-$GITHUB_SHA` (30 days) artifact；artifact 包含
+`test-results/toolchain-baseline.log` 与 desktop Playwright report。
 静态 validator、宿主临时 Go 1.26.5 或本地 image preflight 均不能替代这些证据。
 
-2026-07-15 客观裁决：`G-TOOLCHAIN=BLOCKED`，Story 1.1=`in-progress`，不得进入 M-1。直接阻断项
+2026-07-15 客观裁决：`BLOCKED_PENDING_GITHUB_RUN`，Story 1.1=`in-progress`，不得进入 M-1。直接阻断项
 与解除条件见 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Phase 0：文档整理

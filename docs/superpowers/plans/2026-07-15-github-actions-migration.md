@@ -151,6 +151,7 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
 - Modify: `scripts/build_toolchain_image.sh`
 - Modify: `scripts/run_toolchain_baseline.sh`
 - Modify: `scripts/build_toolchain_image_test.sh`
+- Modify: `docs/superpowers/plans/2026-07-15-github-actions-migration.md`
 
 **Interfaces:**
 - Consumes: `CI=true`、`GITHUB_REPOSITORY=wanggang8/agent-platform-eino`、40 位小写十六进制 `GITHUB_SHA`。
@@ -174,7 +175,10 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
       --push "$image_ref" --env-file test-results/toolchain.env >"$tmp/push.out"
   ```
 
-  添加负向断言，分别覆盖：缺 `GITHUB_REPOSITORY`、repo 不含单个 `/`、非 40 字符 SHA、带大写 SHA、非 `ghcr.io` target、tag 与 SHA 不一致、env file 非 canonical path、GitLab变量不能替代 GitHub变量。
+  添加负向断言，分别覆盖：缺 `GITHUB_REPOSITORY`、repo 不含单个 `/`、缺 `GITHUB_SHA`、短于
+  40 字符的 SHA、带大写 SHA、只提供 GitLab identity、非 `ghcr.io` target、tag 与 SHA 不一致、
+  env file 非 canonical path。缺 SHA、短 SHA、大写 SHA、GitLab-only 四类用例必须分别存在，不能
+  用一个通用非法 SHA 用例替代。
 
   Run: `bash scripts/build_toolchain_image_test.sh`
 
@@ -238,7 +242,8 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
 - [ ] **Step 6: 提交 identity 迁移**
 
   ```bash
-  git add scripts/build_toolchain_image.sh scripts/run_toolchain_baseline.sh scripts/build_toolchain_image_test.sh
+  git add scripts/build_toolchain_image.sh scripts/run_toolchain_baseline.sh scripts/build_toolchain_image_test.sh \
+    docs/superpowers/plans/2026-07-15-github-actions-migration.md
   git commit -m "build(toolchain): bind images to GitHub identity"
   ```
 
@@ -576,6 +581,7 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
 - Modify: `docs/tooling-and-reporting.md`
 - Modify: `docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md`
 - Modify: `docs/superpowers/specs/2026-07-15-github-actions-migration-design.md`
+- Modify: `docs/superpowers/plans/2026-07-15-github-actions-migration.md`
 
 **Interfaces:**
 - Consumes: 已通过静态测试的 GitHub-only 契约。
@@ -624,7 +630,8 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   rg -n 'GitLab|CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR|\.gitlab-ci' \
     docs/07-implementation-plan.md docs/08-acceptance-plan.md docs/tooling-and-reporting.md \
     docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md \
-    docs/superpowers/specs/2026-07-15-github-actions-migration-design.md
+    docs/superpowers/specs/2026-07-15-github-actions-migration-design.md \
+    docs/superpowers/plans/2026-07-15-github-actions-migration.md
   ```
 
   Expected: 只允许 ADR/验收记录中标记为“历史事实”或“已删除方案”的句子；不得出现现行 GitLab 执行指令。
