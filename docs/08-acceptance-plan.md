@@ -35,7 +35,7 @@ preflight，不得拆分拼接为阶段 PASS。当前首发视觉门禁仅为 de
 
 | 阶段 | 范围 | 必跑门禁 | 可 skip 项 | 阻断条件 |
 | --- | --- | --- | --- | --- |
-| M-0 | Story 1.1 固定可复现工具链 | exact declarations、负向 verifier、GHCR digest、clean GitHub Actions run、完整 baseline、`toolchain-evidence-$GITHUB_SHA` (30 days)、批准的 desktop visual evidence | 无 | 任一证据缺失即 `BLOCKED_PENDING_GITHUB_RUN`，不得进入 M-1 |
+| M-0 | Story 1.1 固定可复现工具链 | exact declarations、负向 verifier、GHCR digest、clean GitHub Actions run、完整 baseline、`toolchain-evidence-$GITHUB_SHA` (30 days)、批准的 desktop visual evidence | 无 | `G-TOOLCHAIN=PASS`；Story 1.1 / Sprint 1.1 已完成，下一步 M-1 |
 | P0 | 最小产品闭环，实施 Phase 1-4 | 开发前复核、基础、Contract、前端、服务 smoke `contract/chat-stream/action-basic/capability-selection/context-projection/tool-card`、安全门禁 | 无 | pre-development validation、contract、视觉、安全、Action API 任一失败 |
 | P1 | 产品级运行能力，实施 Phase 5-7 | P0 全部、开发前复核更新、HITL、clarification、Fobrain PoC、real model smoke、projection/replay | 无 Fobrain/LLM 凭据时 real model smoke 可 skip 但必须记录 | approval、clarification、projection、Action/Workbench 同源任一失败 |
 | P2 | 既有业务能力恢复，实施 Phase 8 | P1 全部、开发前复核更新、24 只读、connector、credential binding、disambiguation、write approval、live read/write | 无 live 凭据时 live read/write 可 skip 但不能声明能力可比 | Fobrain 恢复门禁未过时不能声明重构完成 |
@@ -78,11 +78,13 @@ Story 最终证据必须来自包含全部变更的 clean commit：clean GitHub 
 `test-results/toolchain-baseline.log` 与 `test-results/eino-workbench-playwright-report/`。缺公开 remote、
 Actions run、GHCR digest、artifact 或 UX approval 时不得填写模拟值，也不得形成中间“部分 PASS”。
 
-2026-07-15 裁决为 `BLOCKED_PENDING_GITHUB_RUN`：GitHub-only 静态契约已实现，本地 canonical
-image 已产生，Vick 已批准并迁移 71 张 desktop baseline，批准后的同 image 完整 baseline 已通过；
-但尚未创建／推送公开仓库，未产生真实 GitHub Actions run URL、GHCR digest 或
-`toolchain-evidence-$GITHUB_SHA` (30 days) artifact。Story 1.1 和 Sprint 1.1
-必须保持 `in-progress`，M-1 不得开始。详见
+2026-07-15 最终裁决为 `G-TOOLCHAIN=PASS`：公开 repository
+`https://github.com/wanggang8/agent-platform-eino` 上的 clean commit
+`f975e258f0d5400fecbe81318083d0535eea4fb9` 已由 GitHub Actions run
+`https://github.com/wanggang8/agent-platform-eino/actions/runs/29427351390` 验证；`toolchain-build`
+与 `toolchain-verify` 均 success，canonical image 以真实 `tag@sha256` digest 构建并验证，desktop
+17/17、contract smoke 与末尾 clean gates 全部 PASS，30 天 artifact 已产生且未过期。Story 1.1
+和 Sprint 1.1 已完成，允许进入 M-1。完整 digest、artifact 名称／expiry 与逐项 PASS 裁决见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## 基础门禁

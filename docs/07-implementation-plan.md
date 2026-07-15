@@ -40,8 +40,9 @@ clean GitHub Actions run 必须另外产出 `GITHUB_SHA`、GitHub Actions run UR
 `test-results/toolchain-baseline.log` 与 desktop Playwright report。
 静态 validator、宿主临时 Go 1.26.5 或本地 image preflight 均不能替代这些证据。
 
-2026-07-15 客观裁决：`BLOCKED_PENDING_GITHUB_RUN`，Story 1.1=`in-progress`，不得进入 M-1。直接阻断项
-与解除条件见 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
+2026-07-15 客观裁决：`G-TOOLCHAIN=PASS`，Story 1.1=`complete`，Sprint 1.1=`complete`，
+M-0 已完成，下一步为 M-1。真实 GitHub Actions run、GHCR digest、artifact 和逐项 PASS 裁决见
+`acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Phase 0：文档整理
 
