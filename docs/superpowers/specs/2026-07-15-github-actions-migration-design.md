@@ -58,7 +58,9 @@ canonical image registry。
    `build/toolchain/toolchain.lock`，由静态 validator 统一校验。
 5. 使用环境 credential helper 认证 `ghcr.io`：Docker config 与 mode `0700` helper 副本只写入
    `$RUNNER_TEMP`，config 不含 token；`${{ github.actor }}` 与 `${{ secrets.GITHUB_TOKEN }}` 只注入实际
-   build/push step。helper 仅从当前进程环境响应 `get`，固定拒绝 `store` / `erase`。
+   build/push step。helper 仅从当前进程环境响应 `get`，固定拒绝 `store` / `erase`。token 必须作为
+   opaque secret 处理：非空、无 ASCII 控制字符并做 JSON 安全转义，但不解析或匹配前缀、长度、
+   JWT 段数或内部字符结构。
 6. canonical tag 必须由 `GITHUB_REPOSITORY` 与 `GITHUB_SHA` 唯一构造，并转为小写：
    `ghcr.io/wanggang8/agent-platform-eino/toolchain:<sha>`。
 7. `scripts/build_toolchain_image.sh --push` 验证 GitHub identity、构建并 push；成功后输出唯一
@@ -108,6 +110,8 @@ canonical image registry。
 - workflow 显式声明最小 `GITHUB_TOKEN` permissions。GitHub 未声明的权限均为 `none`。
 - token 不得写入 Docker config、`GITHUB_ENV`、`GITHUB_PATH`、仓库文件、日志、artifact 或报告；
   `$RUNNER_TEMP` 只允许保存不含 token 的 helper 配置与 helper 可执行副本。
+- GitHub 自 2026-04-27 分阶段启用包含 JWT 分隔符的 stateless installation token，且范围包括 Actions
+  `GITHUB_TOKEN`；安全校验不得依赖旧 `[A-Za-z0-9_]+` token 结构，也不得解析 JWT 内容。
 - 只在仓库内 `push` 或人工 `workflow_dispatch` 发布 GHCR image；不在 fork PR 上运行 write token。
 - action 必须使用完整 commit SHA；外部 action 升级必须修改 lock、validator、测试和验收记录。
 - registry tag 只作地址，最终事实必须为 `tag@sha256:digest`。
@@ -132,6 +136,8 @@ canonical image registry。
   路径、tag-only 传递、非 40 字符 SHA、build/verify 无依赖、artifact path/retention 漂移、重新出现
   `.gitlab-ci.yml` 或 GitLab变量；重新出现 `docker login`、helper/config/path 漂移、token 提升到 job
   scope 或实际 registry step 缺少 step-local actor/token。
+- credential helper 正向覆盖旧 opaque token、新 `ghs_APPID_JWT` 和一般 opaque secret 的 JSON 转义；
+  空 token、CR/LF/control character、非法 actor/server、`store`、`erase` 与未知 action 必须脱敏失败。
 - builder 覆盖 GitHub identity、大小写归一化、push target、digest 输出和敏感错误脱敏。
 - baseline 覆盖 CI clean checks 使用 `GITHUB_SHA`。
 - 本地运行 toolchain verifier/tests、Go validator tests、shell syntax、`git diff --check` 和禁止产品目录
@@ -155,3 +161,4 @@ canonical image registry。
 - [Docker：GitHub Actions 构建集成](https://docs.docker.com/build/ci/github-actions/)
 - [Docker：固定 Buildx/BuildKit 版本](https://docs.docker.com/build/ci/github-actions/configure-builder/)
 - [Docker：固定 Docker Engine 的 setup action](https://github.com/docker/setup-docker-action)
+- [GitHub：2026 installation token format rollout](https://github.blog/changelog/2026-04-24-notice-about-upcoming-new-format-for-github-app-installation-tokens/)

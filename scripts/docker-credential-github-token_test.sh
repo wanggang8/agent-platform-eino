@@ -27,9 +27,16 @@ run_failure() {
 
 # 正向路径只允许从当前进程环境读取凭据，且不得触碰 HOME 或 Docker 配置目录。
 mkdir -p "$tmp/home" "$tmp/docker"
-output=$(printf '%s' ghcr.io | HOME="$tmp/home" DOCKER_CONFIG="$tmp/docker" \
-  GHCR_ACTOR=github-actions GHCR_TOKEN=fake_token_123 "$helper" get)
-[[ $output == '{"Username":"github-actions","Secret":"fake_token_123"}' ]]
+assert_get() {
+  local token=$1 expected=$2 output
+  output=$(printf '%s' ghcr.io | HOME="$tmp/home" DOCKER_CONFIG="$tmp/docker" \
+    GHCR_ACTOR=github-actions GHCR_TOKEN="$token" "$helper" get)
+  [[ $output == "$expected" ]] || { printf 'unexpected get JSON: %q\n' "$output" >&2; exit 1; }
+}
+
+assert_get 'ghs_AbC123' '{"Username":"github-actions","Secret":"ghs_AbC123"}'
+assert_get 'ghs_123_a.b-c_d.E_f-1' '{"Username":"github-actions","Secret":"ghs_123_a.b-c_d.E_f-1"}'
+assert_get 'opaque token"with\slashes' '{"Username":"github-actions","Secret":"opaque token\"with\\slashes"}'
 [[ -z $(find "$tmp/home" "$tmp/docker" -mindepth 1 -print -quit) ]]
 
 unset TEST_ACTOR TEST_TOKEN
@@ -40,8 +47,8 @@ TEST_TOKEN=fake_token_123
 TEST_ACTOR='invalid_actor'
 run_failure get ghcr.io 'credential helper: credentials are invalid'
 TEST_ACTOR=github-actions
-TEST_TOKEN='invalid-token'
-run_failure get ghcr.io 'credential helper: credentials are invalid'
+TEST_TOKEN=$'opaque\r\nsecret'
+run_failure get ghcr.io 'credential helper: token contains control characters'
 TEST_TOKEN=fake_token_123
 run_failure get registry.example 'credential helper: server is not allowed'
 run_failure store '{}' 'credential helper: persistence is disabled'

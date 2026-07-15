@@ -21,6 +21,10 @@ Story 1.1 的 canonical 工具链门禁需要由唯一远程平台、唯一 CI �
 - GHCR 认证使用环境 credential helper；无 token 的 Docker config 与 mode `0700` helper 可落在
   `$RUNNER_TEMP`，token 只允许存在于实际 registry step 的当前进程环境。helper 的 `store` / `erase`
   必须拒绝，禁止凭据进入 Docker config、GitHub environment/path 文件、artifact 或报告。
+- `GITHUB_TOKEN` 作为 opaque secret 处理：只要求非空并拒绝 ASCII 控制字符，不匹配前缀、长度、JWT
+  分段或其他内部格式；helper 对 JSON 所需字符做安全转义。GitHub 自 2026-04-27 分阶段把 GitHub App
+  installation token（包括 Actions `GITHUB_TOKEN`）迁移为 stateless `ghs_APPID_JWT`，因此依赖旧
+  `[A-Za-z0-9_]+` 格式会错误拒绝官方 token。
 - Product code、Eino runtime、Product Facts 和 Workbench UI 不受该 ADR 影响。
 - 只有新的 ADR 才能改变平台；不得在故障时静默恢复双 CI 或 tag-only 验证。
 
@@ -52,3 +56,8 @@ Story 1.1 的 canonical 工具链门禁需要由唯一远程平台、唯一 CI �
 - `docs/08-acceptance-plan.md` 的 `G-TOOLCHAIN` 唯一 PASS 算法。
 - `docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md` 的当前阻断裁决。
 - `.github/workflows/toolchain.yml` 与 `scripts/run_toolchain_baseline.sh` 的 GitHub-only 静态契约。
+
+## 外部依据
+
+- [GitHub Docs：GitHub token formats](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats)
+- [GitHub Changelog：2026 installation token format rollout](https://github.blog/changelog/2026-04-24-notice-about-upcoming-new-format-for-github-app-installation-tokens/)

@@ -329,7 +329,7 @@ func validateCredentialConfigStep(step map[string]any) error {
 	return nil
 }
 
-// canonicalCredentialEnv 只允许真正访问 GHCR 的 step 获取当前进程凭据。
+// canonicalCredentialEnv 只限制 opaque secret 的注入范围，不解释或校验 token 内部格式。
 func canonicalCredentialEnv() map[string]string {
 	return map[string]string{
 		"GHCR_ACTOR": canonicalGitHubActor,

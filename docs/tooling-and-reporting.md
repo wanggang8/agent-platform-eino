@@ -65,7 +65,8 @@ GHCR 认证使用仓库内 `scripts/docker-credential-github-token`：Docker con
 副本只能写入 `$RUNNER_TEMP`，config 只记录 `ghcr.io -> github-token` 映射；token 仅在实际 build/push
 或 digest pull/run step 的当前进程环境中存在。helper 的 `get` 直接向 Docker 返回该进程内凭据，
 `store`/`erase` 固定拒绝，因此 token 不进入 Docker config、`GITHUB_ENV`、`GITHUB_PATH`、artifact、
-报告或仓库文件。
+报告或仓库文件。token 是 opaque secret：helper 只检查非空、拒绝 ASCII 控制字符并执行 JSON 安全
+转义，不依赖旧 token 字符集，也不解析 stateless JWT 内容。
 
 首次 pinned MCR base layer 传输曾因长时间无进展人工终止；在相同 pinned inputs 下重试后，本地
 canonical image 已成功构建为 linux/amd64 image ID
