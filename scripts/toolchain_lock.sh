@@ -8,6 +8,7 @@ lock=$1
 # lock 属于不可信数据：只按 KEY=VALUE 读取，不允许执行、展开或回显原始内容。
 platform= playwright_image= playwright_digest= playwright_version=
 chromium_revision= chromium_version= base_os= font_policy=
+ubuntu_snapshot= apt_build_packages=
 go_sha256= node_sha256= docker_cli_image= docker_cli_digest=
 docker_dind_image= docker_dind_digest=
 seen_keys='|'
@@ -28,6 +29,8 @@ while IFS= read -r line || test -n "$line"; do
     CHROMIUM_VERSION) chromium_version=$value ;;
     BASE_OS) base_os=$value ;;
     FONT_POLICY) font_policy=$value ;;
+    UBUNTU_SNAPSHOT) ubuntu_snapshot=$value ;;
+    APT_BUILD_PACKAGES) apt_build_packages=$value ;;
     GO_LINUX_AMD64_SHA256) go_sha256=$value ;;
     NODE_LINUX_X64_SHA256) node_sha256=$value ;;
     DOCKER_CLI_IMAGE) docker_cli_image=$value ;;
@@ -39,7 +42,8 @@ while IFS= read -r line || test -n "$line"; do
 done <"$lock"
 
 for required in platform playwright_image playwright_digest playwright_version \
-  chromium_revision chromium_version base_os font_policy go_sha256 node_sha256 \
+  chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
+  go_sha256 node_sha256 \
   docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest; do
   test -n "${!required:-}" || fail
 done
@@ -47,6 +51,8 @@ done
 [[ $playwright_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail
 [[ $chromium_revision =~ ^[0-9]+$ ]] || fail
 [[ $chromium_version =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail
+[[ $ubuntu_snapshot =~ ^[0-9]{8}T[0-9]{6}Z$ ]] || fail
+[[ $apt_build_packages =~ ^[a-z0-9][a-z0-9+.-]*$ ]] || fail
 [[ $playwright_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
 [[ $docker_cli_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
 [[ $docker_dind_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail
@@ -54,8 +60,9 @@ done
 [[ $node_sha256 =~ ^[0-9a-f]{64}$ ]] || fail
 
 # 固定字段顺序是 helper 与两个消费者之间唯一的可信接口，值域已禁止 tab/newline。
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "$platform" "$playwright_image" "$playwright_digest" "$playwright_version" \
   "$chromium_revision" "$chromium_version" "$base_os" "$font_policy" \
+  "$ubuntu_snapshot" "$apt_build_packages" \
   "$go_sha256" "$node_sha256" "$docker_cli_image" "$docker_cli_digest" \
   "$docker_dind_image" "$docker_dind_digest"

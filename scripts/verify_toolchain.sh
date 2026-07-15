@@ -37,7 +37,8 @@ read_container_lock() {
     fail 'invalid toolchain.lock'
   fi
   IFS=$'\t' read -r container_platform playwright_image playwright_digest playwright_version \
-    chromium_revision chromium_version base_os font_policy go_linux_amd64_sha256 \
+    chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
+    go_linux_amd64_sha256 \
     node_linux_x64_sha256 docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest \
     <<<"$output" || fail 'invalid toolchain.lock'
 }
@@ -50,13 +51,25 @@ verify_container_dockerfile() {
     'FROM ${PLAYWRIGHT_IMAGE}@${PLAYWRIGHT_DIGEST}' \
     'ARG CHROMIUM_REVISION' \
     'ARG CHROMIUM_VERSION' \
+    'ARG UBUNTU_SNAPSHOT' \
+    'ARG APT_BUILD_PACKAGES' \
+    'node-v${NODE_VERSION}-linux-x64.tar.gz' \
+    'tar -C /usr/local --strip-components=1 -xzf /tmp/node.tar.gz' \
+    'Snapshot: ${UBUNTU_SNAPSHOT}' \
+    'test "$snapshot_count" = "$signed_by_count"' \
+    'apt-get install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
+    'rm -rf /var/lib/apt/lists/*' \
+    'command -v cc' \
+    'go mod init toolchain-race-smoke' \
+    'CGO_ENABLED=1 go test -race ./...' \
     'find "/ms-playwright/chromium-${CHROMIUM_REVISION}"' \
     'chromium_actual=$("$chromium_binary" --version)' \
     '[[ "$chromium_actual" == *"${CHROMIUM_VERSION}"* ]]'; do
     grep -Fq "$required" "$dockerfile" 2>/dev/null || fail 'invalid toolchain Dockerfile'
   done
   for forbidden in "$go_version" "$node_version" "$npm_version" "$chromium_revision" \
-    "$chromium_version" "$playwright_digest" 'node_modules/playwright-core/browsers.json'; do
+    "$chromium_version" "$playwright_digest" "$ubuntu_snapshot" "$apt_build_packages" \
+    'node_modules/playwright-core/browsers.json' 'tar.xz' 'xJf'; do
     if grep -Fq "$forbidden" "$dockerfile" 2>/dev/null; then
       fail 'invalid toolchain Dockerfile'
     fi

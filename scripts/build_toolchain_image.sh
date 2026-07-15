@@ -12,7 +12,8 @@ read_lock() {
     fail 'invalid toolchain lock'
   fi
   IFS=$'\t' read -r platform playwright_image playwright_digest playwright_version \
-    chromium_revision chromium_version base_os font_policy go_sha256 node_sha256 \
+    chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
+    go_sha256 node_sha256 \
     docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest <<<"$output" \
     || fail 'invalid toolchain lock'
 }
@@ -75,6 +76,8 @@ docker buildx build \
   --build-arg "NODE_SHA256=$node_sha256" \
   --build-arg "CHROMIUM_REVISION=$chromium_revision" \
   --build-arg "CHROMIUM_VERSION=$chromium_version" \
+  --build-arg "UBUNTU_SNAPSHOT=$ubuntu_snapshot" \
+  --build-arg "APT_BUILD_PACKAGES=$apt_build_packages" \
   -f "$root/build/toolchain/Dockerfile" \
   -t "$image_ref" \
   "$output_flag" \

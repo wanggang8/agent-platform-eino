@@ -11,17 +11,38 @@ test -f "$dockerfile" || { printf 'missing toolchain Dockerfile\n' >&2; exit 1; 
 test -f "$lock_helper" || { printf 'missing shared toolchain lock helper\n' >&2; exit 1; }
 for key in PLATFORM PLAYWRIGHT_IMAGE PLAYWRIGHT_AMD64_DIGEST PLAYWRIGHT_VERSION \
   CHROMIUM_REVISION CHROMIUM_VERSION GO_LINUX_AMD64_SHA256 NODE_LINUX_X64_SHA256 \
-  DOCKER_CLI_IMAGE DOCKER_CLI_AMD64_DIGEST DOCKER_DIND_IMAGE DOCKER_DIND_AMD64_DIGEST; do
-  grep -Eq "^${key}=[^[:space:]]+$" "$lock"
+  DOCKER_CLI_IMAGE DOCKER_CLI_AMD64_DIGEST DOCKER_DIND_IMAGE DOCKER_DIND_AMD64_DIGEST \
+  UBUNTU_SNAPSHOT APT_BUILD_PACKAGES; do
+  grep -Eq "^${key}=[^[:space:]]+$" "$lock" || {
+    printf 'missing canonical lock key: %s\n' "$key" >&2
+    exit 1
+  }
 done
+grep -Fxq 'NODE_LINUX_X64_SHA256=783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8' "$lock"
+test "$(bash "$lock_helper" "$lock" | awk -F '\t' '{ print NF }')" = 16
 grep -Fq 'FROM ${PLAYWRIGHT_IMAGE}@${PLAYWRIGHT_DIGEST}' "$dockerfile"
 ! grep -Eq 'go1\.26\.5|node-v24\.18\.0' "$dockerfile"
+! grep -Eq 'tar\.xz|xJf' "$dockerfile"
 for expected in \
   'ARG TARGETARCH' \
+  'ARG UBUNTU_SNAPSHOT' \
+  'ARG APT_BUILD_PACKAGES' \
   'RUN test "$TARGETARCH" = "amd64"' \
+  'node-v${NODE_VERSION}-linux-x64.tar.gz' \
+  'tar -C /usr/local --strip-components=1 -xzf /tmp/node.tar.gz' \
+  'Snapshot: ${UBUNTU_SNAPSHOT}' \
+  'signed_by_count=$(grep -c' \
+  "'^Signed-By:'" \
+  'test "$snapshot_count" = "$signed_by_count"' \
+  'apt-get install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
+  'rm -rf /var/lib/apt/lists/*' \
   'test "$(go env GOVERSION)" = "go${GO_VERSION}"' \
   'test "$(node --version)" = "v${NODE_VERSION}"' \
   'test "$(npm --version)" = "${NPM_VERSION}"' \
+  'command -v cc' \
+  'go mod init toolchain-race-smoke' \
+  'CGO_ENABLED=1 go test -race ./...' \
+  'rm -rf "$race_dir"' \
   'find "/ms-playwright/chromium-${CHROMIUM_REVISION}"' \
   'chromium_actual=$("$chromium_binary" --version)' \
   '[[ "$chromium_actual" == *"${CHROMIUM_VERSION}"* ]]'; do
@@ -196,7 +217,8 @@ chmod +x "$bin/node"
 
 export DOCKER_LOG="$tmp/docker.log"
 # 环境中的同名值不得覆盖三个权威源或公开摘要锁。
-GO_VERSION=0.0.0 NODE_VERSION=0.0.0 NPM_VERSION=0.0.0 \
+GO_VERSION=0.0.0 NODE_VERSION=0.0.0 NPM_VERSION=0.0.0 UBUNTU_SNAPSHOT=20990101T000000Z \
+APT_BUILD_PACKAGES=unfixed-package \
 PLAYWRIGHT_AMD64_DIGEST=sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc \
   PATH="$bin:$PATH" bash "$repo/scripts/build_toolchain_image.sh" --load >"$tmp/load.out"
 grep -Fxq 'TOOLCHAIN_IMAGE_ID=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' "$tmp/load.out"
@@ -204,10 +226,11 @@ for expected in \
   '--platform' 'linux/amd64' '--provenance=false' '--sbom=false' '--load' \
   'GO_VERSION=1.26.5' 'NODE_VERSION=24.18.0' 'NPM_VERSION=11.16.0' \
   'PLAYWRIGHT_DIGEST=sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6' \
-  'CHROMIUM_REVISION=1228' 'CHROMIUM_VERSION=149.0.7827.55'; do
+  'CHROMIUM_REVISION=1228' 'CHROMIUM_VERSION=149.0.7827.55' \
+  'UBUNTU_SNAPSHOT=20260708T000000Z' 'APT_BUILD_PACKAGES=build-essential'; do
   grep -Fxq -- "$expected" "$DOCKER_LOG"
 done
-! grep -Eq 'GO_VERSION=0\.0\.0|NODE_VERSION=0\.0\.0|NPM_VERSION=0\.0\.0|sha256:c{64}' "$DOCKER_LOG"
+! grep -Eq 'GO_VERSION=0\.0\.0|NODE_VERSION=0\.0\.0|NPM_VERSION=0\.0\.0|sha256:c{64}|20990101T000000Z|unfixed-package' "$DOCKER_LOG"
 
 assert_builder_failure() {
   local expected=$1
@@ -229,6 +252,9 @@ cp "$tmp/lock.good" "$repo/build/toolchain/toolchain.lock"
 sed -i.bak '/^GO_LINUX_AMD64_SHA256=/d' "$repo/build/toolchain/toolchain.lock"
 go_sha256=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd \
   assert_builder_failure 'invalid toolchain lock' --load
+mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+sed -i.bak '/^UBUNTU_SNAPSHOT=/d' "$repo/build/toolchain/toolchain.lock"
+ubuntu_snapshot=20990101T000000Z assert_builder_failure 'invalid toolchain lock' --load
 mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
 printf '%s\n' 'FONT_POLICY=bad value' >>"$repo/build/toolchain/toolchain.lock"
 assert_builder_failure 'invalid toolchain lock' --load
@@ -316,5 +342,14 @@ cp "$tmp/lock.good" "$repo/build/toolchain/toolchain.lock"
 sed -i.bak '/^PLAYWRIGHT_VERSION=/d' "$repo/build/toolchain/toolchain.lock"
 playwright_version=1.61.1 assert_verifier_rejects 'environment-backed missing lock key'
 mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+sed -i.bak 's/UBUNTU_SNAPSHOT=20260708T000000Z/UBUNTU_SNAPSHOT=floating/' "$repo/build/toolchain/toolchain.lock"
+assert_verifier_rejects 'Ubuntu snapshot drift'
+mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
+cp "$repo/build/toolchain/Dockerfile" "$repo/build/toolchain/Dockerfile.good"
 sed -i.bak 's#/ms-playwright/chromium-#/other/chromium-#' "$repo/build/toolchain/Dockerfile"
 assert_verifier_rejects 'Dockerfile Chromium evidence drift'
+mv "$repo/build/toolchain/Dockerfile.good" "$repo/build/toolchain/Dockerfile"
+cp "$repo/build/toolchain/Dockerfile" "$repo/build/toolchain/Dockerfile.good"
+sed -i.bak 's/CGO_ENABLED=1 go test -race/CGO_ENABLED=0 go test -race/' "$repo/build/toolchain/Dockerfile"
+assert_verifier_rejects 'Dockerfile race smoke drift'
+mv "$repo/build/toolchain/Dockerfile.good" "$repo/build/toolchain/Dockerfile"
