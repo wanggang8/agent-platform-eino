@@ -73,7 +73,7 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | --- | --- | --- | --- |
 | 静态 | exact declarations、lock/Dockerfile、CI DAG validator、baseline sequencing、负向 drift/bypass tests | 仓库契约会拒绝已覆盖的版本／CI 漂移 | image 可构建、runner 可用、pipeline 已通过 |
 | 开发 preflight | 官方 Go 1.26.5 darwin/arm64 归档校验后运行 validator tests/static | validator 在目标 Go 版本可编译并通过 | canonical linux/amd64、发布环境或 clean pipeline PASS |
-| 本地 canonical | linux/amd64 image ID、构建期 race smoke、首次 baseline log、71 张临时 visual candidate | image 可构建；非视觉链在 canonical 环境通过；可进入 UX checkpoint | registry digest、clean pipeline、批准后的完整 baseline PASS |
+| 本地 canonical | linux/amd64 image ID、构建期 race smoke、已批准的 71 张 desktop baseline、完整 baseline log | image 可构建；本地 visual migration A 链完整通过 | registry digest、clean pipeline |
 | 最终 gate | 未产生 | 无 | `G-TOOLCHAIN PASS`、进入 M-1 |
 
 ## 实际运行命令与结果
@@ -91,6 +91,8 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | 临时 detached worktree 单 worker candidate generation | PASS / 17 tests | 首个成功构建的同 pins image 下 17/17 desktop tests 通过并生成全部 71 张 Linux candidate；未修改当前分支 screenshot，仍待 UX approval |
 | 最新 hardened image 单 worker candidate recheck | PASS / 17 tests | 不运行 snapshot update，既有 71 张候选逐项匹配；确认 source 隔离重建未改变候选 |
 | 固定单 worker 后 canonical baseline 重跑 | PARTIAL / browser exit 1 | browser 前全部非视觉检查再次通过；desktop 1/17 PASS、16/17 全为 screenshot diff、零 target crash；正式 baseline 未迁移，contract smoke 与最终 clean check 未执行 |
+| 批准后的 canonical baseline 首次重跑 | PARTIAL / exit 128 | desktop 17/17 与 contract smoke 通过；worktree Git common dir 未挂载，末尾 clean gate 无法解析 `.git` 绝对指针，不计 PASS |
+| 挂载 Git common dir 后批准 baseline 完整重跑 | PASS / exit 0 | 干净提交 `e455c3c`、同一 image；全部前置检查、desktop 17/17、contract smoke 与末尾 `git diff --check` 通过，本地 A 链闭合 |
 | `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1` | PASS preflight | 官方 darwin/arm64 archive SHA-256 为 `efb87ff28af9a188d0536ef5d42e63dd52ba8263cd7344a993cc48dd11dedb6a`；不是 canonical linux/amd64 证据 |
 | `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local bash scripts/validate_ci_config.sh` | PASS preflight | 只证明静态 GitLab CI 配置契约，不是 GitLab lint 或 pipeline |
 | `bash -n scripts/verify_toolchain.sh scripts/verify_toolchain_test.sh scripts/build_toolchain_image.sh scripts/build_toolchain_image_test.sh scripts/toolchain_lock.sh scripts/run_toolchain_baseline.sh scripts/validate_ci_config.sh` | PASS | Task 5 report 中列出的 Story shell scripts 语法通过 |
@@ -113,8 +115,8 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | schema/contract/OpenAPI | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
 | Go/test/race/vet/build/checkpoint/SQLite/boundary | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
 | TS/Vitest/stream/build | SATISFIED_LOCAL / BLOCKED_FINAL | canonical 首跑通过；未在 clean pipeline 重跑 |
-| approved desktop visual baseline | APPROVED_PENDING_REVERIFY | Vick 于 2026-07-15 批准；71 张正式 desktop snapshot 已在同一 canonical image 更新并 17/17 PASS，批准后的完整 baseline 尚待重跑 |
-| contract smoke | BLOCKED_FINAL_EVIDENCE | 未在 canonical pipeline 重跑 |
+| approved desktop visual baseline | SATISFIED_LOCAL / BLOCKED_FINAL | Vick 于 2026-07-15 批准；71 张正式 desktop snapshot 已更新，批准后的同 image 完整 baseline 中 17/17 PASS |
+| contract smoke | SATISFIED_LOCAL / BLOCKED_FINAL | 批准后的本地完整 baseline 通过；clean GitLab pipeline 尚未执行 |
 
 任一条件缺失即整体 `BLOCKED`；上表中的 `SATISFIED_STATIC` 不是中间门禁 PASS。
 
@@ -123,8 +125,6 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 1. `BLOCKED_NO_REMOTE_OR_PIPELINE`：仓库没有 Git remote；未产生 GitLab lint、clean pipeline、
    `CI_COMMIT_SHA`、pipeline URL、registry `tag@sha256`、`toolchain-baseline.log` 或 Playwright report。
    配置 remote/runner 后，必须在包含全部变更的 clean commit 上运行真实 pipeline。
-2. `BLOCKED_POST_APPROVAL_BASELINE`：Vick 已批准并完成正式 desktop snapshot 更新；必须从包含
-   snapshot 与审批记录的干净提交，在同一 image 重跑唯一完整 baseline 后才能闭合本地 A 链。
 
 ## 未产生的最终引用
 
@@ -140,16 +140,15 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 - pinned MCR、Go、Node tar.gz、隔离后的 snapshot apt、`build-essential`、`cc` guard 与最小 race smoke 已在本地
   linux/amd64 image 真实运行；GitLab runner 中的相同端到端路径尚未证明。
 - privileged DinD runner、registry push/pull、dotenv artifact 传递和 commit-bound digest 尚未实测。
-- canonical `npm ci`、Go/TypeScript/contract 非视觉链已在本地通过；browser 后的 contract smoke 与
-  最终 clean check 尚未在同一完整 PASS baseline 中执行。
-- 71 个 desktop Linux baseline 已获 human UX 批准并更新；批准后的完整 baseline 尚未完成。
+- canonical `npm ci`、Go/TypeScript/contract、desktop 17/17、contract smoke 与最终 clean check 已在
+  同一本地完整 baseline 通过；clean GitLab pipeline 尚未执行。
+- 71 个 desktop Linux baseline 已获 human UX 批准并更新，本地 visual migration A 链已闭合。
 - 当前仓库静态 clean 不等于 clean GitLab pipeline；任何后续提交都必须重新跑完整证据链。
 
 ## 最终结论
 
 `G-TOOLCHAIN=BLOCKED`。Story 1.1 与 Sprint 1.1 必须保持 `in-progress`，不得进入 M-1。
 
-下一步只允许补齐两条直接 blocker 的真实证据：从包含已批准 snapshot 的干净提交在同一 image
-重跑完整 baseline；在包含全部变更的 clean commit 上运行真实 GitLab
-pipeline并保存 registry digest 与 artifacts。全部 PASS 算法条件同时满足前，不得降低 AC 或把
+下一步只允许补齐唯一直接 blocker 的真实证据：在包含全部变更的 clean commit 上运行真实 GitLab
+pipeline 并保存 registry digest 与 artifacts。全部 PASS 算法条件同时满足前，不得降低 AC 或把
 本地／静态 preflight 结果改写为 PASS。

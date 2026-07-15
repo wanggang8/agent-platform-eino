@@ -75,8 +75,8 @@ Story 最终证据必须来自包含全部变更的 clean commit：GitLab pipeli
 `test-results/toolchain-baseline.log` 与 `test-results/eino-workbench-playwright-report/`。缺 remote、
 pipeline、registry digest、artifact 或 UX approval 时不得填写模拟值，也不得形成中间“部分 PASS”。
 
-2026-07-15 裁决为 `G-TOOLCHAIN=BLOCKED`：本地 canonical image、非视觉 baseline 与 71 张 desktop
-候选已产生，但 UX approval 和批准后的完整 baseline 尚未发生；仓库无 Git remote，未产生 GitLab
+2026-07-15 裁决为 `G-TOOLCHAIN=BLOCKED`：本地 canonical image 已产生，Vick 已批准并迁移 71 张
+desktop baseline，批准后的同 image 完整 baseline 已通过；但仓库无 Git remote，未产生 GitLab
 lint/pipeline/clean `CI_COMMIT_SHA`、registry `tag@sha256` 或 artifacts。Story 1.1 和 Sprint 1.1
 必须保持 `in-progress`，M-1 不得开始。详见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。

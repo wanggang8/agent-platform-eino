@@ -25,9 +25,14 @@ canonical build identity 还必须固定 Node linux-x64 tar.gz checksum、Ubuntu
 ```bash
 image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_IMAGE_ID=/{print $2}')
 test -n "$image_id"
-docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" \
+  -v "$git_common_dir:$git_common_dir:ro" -w /workspace \
   "$image_id" bash scripts/run_toolchain_baseline.sh
 ```
+
+本地命令必须只读挂载 Git common dir，保证普通 checkout 与 worktree 都能执行最终 clean gate；
+GitLab checkout 不需要额外宿主路径处理。
 
 clean GitLab pipeline 必须另外产出 `CI_COMMIT_SHA`、`CI_PIPELINE_URL`、canonical
 `TOOLCHAIN_IMAGE=tag@sha256`、`test-results/toolchain-baseline.log` 和 desktop Playwright report。

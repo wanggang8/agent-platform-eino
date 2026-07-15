@@ -24,11 +24,16 @@ Noble `/etc/apt/sources.list.d/ubuntu.sources` 的每个 `Signed-By` stanza 都�
 进入同一环境进行诊断，或执行唯一的顺序 baseline：
 
 ```bash
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
 docker run --rm -it --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
   "$image_id" bash
-docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" \
+  -v "$git_common_dir:$git_common_dir:ro" -w /workspace \
   "$image_id" bash scripts/run_toolchain_baseline.sh
 ```
+
+额外只读挂载 `git_common_dir` 用于 Git worktree 的末尾 clean gate；普通 checkout 也可使用同一命令。
+缺少该挂载时，worktree 的 `.git` 绝对指针在容器内不可解析，不能把 exit 128 记录成 baseline 结果。
 
 `run_toolchain_baseline.sh` 先验证工具链与 CI 配置，再执行 `npm ci`；随后按 contract、Go、前端、
 desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令必须显式使用
@@ -56,7 +61,8 @@ canonical image 已成功构建为 linux/amd64 image ID
 非视觉检查全部通过，desktop browser 因旧 macOS screenshot 与 Linux candidate 差异停在 visual
 migration；71 张候选已在临时 detached worktree 以单 worker 完整生成，并在该最新 image 中以
 零更新方式 17/17 复验通过。Vick 已于 2026-07-15 批准迁移，正式 desktop snapshot 已在同一
-image 中更新并以 17/17 通过；批准后的完整 baseline 尚待重跑。仓库没有
+image 中更新；从包含正式 snapshot 与审批记录的干净提交重跑完整 baseline 后，desktop 17/17、
+contract smoke 与末尾 clean gate 全部通过。仓库没有
 remote/pipeline 仍独立阻止最终 Story 门禁。任何阻断记录都必须
 写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，
 也不得用本地 image 或静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见
@@ -120,7 +126,9 @@ npm run eino-workbench:visual-test -- --update-snapshots
 跨环境迁移是例外门禁。首次必须在本地 canonical image 运行唯一 baseline：
 
 ```bash
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
 docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  -v "$git_common_dir:$git_common_dir:ro" \
   "$image_id" bash scripts/run_toolchain_baseline.sh
 ```
 

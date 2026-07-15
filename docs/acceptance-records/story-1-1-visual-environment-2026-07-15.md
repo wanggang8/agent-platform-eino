@@ -2,8 +2,8 @@
 
 日期：2026-07-15
 阶段／门禁：M-0 / G-TOOLCHAIN
-Verification status：`POST_APPROVAL_REVERIFY_PENDING`
-迁移状态：`APPROVED_BASELINE_UPDATED`
+Verification status：`LOCAL_VISUAL_MIGRATION_PASS`
+迁移状态：`COMPLETE`
 UX 状态：`APPROVED`
 
 ## 裁决摘要
@@ -20,9 +20,10 @@ worktree 中使用首个成功构建的同 pins image、单 worker 和 `--update
 证明 71 张候选完全一致。Vick 随后批准迁移，正式 desktop snapshot 已在相同最新 image 中使用
 `--project=desktop --update-snapshots --workers=1` 更新，17/17 PASS；mobile snapshot 未修改。
 
-UX checkpoint 已完成；批准后的唯一完整 baseline 尚待从包含本次 snapshot 与审批记录的干净提交
-重跑，因此当前仍不能将本记录计为 `G-TOOLCHAIN PASS`。本地 image ID 也不能替代 GitLab
-registry digest 或 clean pipeline。
+UX checkpoint 已完成；批准后的唯一完整 baseline 已从包含本次 snapshot 与审批记录的干净提交
+在同一 image 重跑，desktop 17/17、contract smoke 与末尾 `git diff --check` 全部通过，A 链闭合。
+本地 visual migration PASS 仍不能替代 GitLab registry digest 或 clean pipeline，因此不能单独形成
+`G-TOOLCHAIN PASS`。
 
 ## 旧环境与目标环境
 
@@ -74,6 +75,13 @@ stream test 与 Vite build 全部通过。desktop browser 首跑产生 10 组 ac
 人工审批的结论。唯一 baseline 随后固定 `--workers=1` 并再次运行，browser 前检查全部通过，
 desktop 1/17 PASS、16/17 screenshot diff、零 target crash；仍因正式截图尚未批准迁移而在 browser
 处停止。
+
+批准并提交正式 baseline 与审批记录后，从干净提交 `e455c3c` 使用同一 image 重跑。首次运行已通过
+desktop 17/17 与 contract smoke，但因容器只挂载 worktree、无法解析指向主仓库的 `.git` 绝对指针，
+末尾 clean gate exit 128，不计 PASS。补充只读挂载主仓库 Git common dir，并用最小 smoke 前后
+`git status`/`git diff --check` 验证后，完整重跑 exit 0：全部前置检查、desktop 17/17、contract
+smoke 与末尾 `git diff --check` 均通过。该挂载只恢复 worktree Git 元数据，不改变镜像、源码、依赖
+或测试参数。
 
 ## Desktop snapshot 逐项迁移状态
 
@@ -191,13 +199,14 @@ image 和单 worker 执行；任何后续 DOM、文案、尺寸或交互变化�
 3. 已生成 71 张临时候选并完成机器辅助的尺寸、像素与代表性视觉检查。
 4. Vick 已通过 checkpoint/human review 明确批准；已在同一本地 image 运行 desktop-only
    `--update-snapshots --workers=1`，17/17 PASS。
-5. 待从包含正式 snapshot 与审批记录的干净提交，在同一 image 完整重跑
-   `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
+5. 已从包含正式 snapshot 与审批记录的干净提交，在同一 image 完整重跑
+   `bash scripts/run_toolchain_baseline.sh`；schema/contract/OpenAPI、Go/test/race/vet/build、
+   checkpoint/SQLite/boundary、TS/Vitest/stream/build、desktop 17/17、contract smoke 与末尾 clean
+   gate 全部通过。
 
 本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
 registry digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean
-GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前阻塞在第 5 步：
-`POST_APPROVAL_REVERIFY_PENDING`。
+GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。A 链已完成。
 
 ### B. Story / G-TOOLCHAIN chain
 
