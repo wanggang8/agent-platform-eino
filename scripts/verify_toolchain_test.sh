@@ -59,6 +59,36 @@ if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
 fi
 rm "$tmp/repo/.gitlab-ci.yml"
 
+# 四个生产入口必须 fail-closed；缺失入口只能返回固定摘要且不得泄露临时绝对路径。
+assert_unreadable_ci_entry_failure() {
+  local entry=$1
+  local stdout_file="$tmp/unreadable-entry.stdout"
+  local stderr_file="$tmp/unreadable-entry.stderr"
+  local actual rc
+
+  mv "$tmp/repo/$entry" "$tmp/repo/$entry.good"
+  if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh" \
+    >"$stdout_file" 2>"$stderr_file"; then
+    echo "expected unreadable CI entry to fail: $entry" >&2
+    exit 1
+  else
+    rc=$?
+  fi
+  mv "$tmp/repo/$entry.good" "$tmp/repo/$entry"
+
+  actual=$(<"$stderr_file")
+  [[ $rc -ne 0 ]] || { echo "expected non-zero unreadable entry failure: $entry" >&2; exit 1; }
+  [[ ! -s $stdout_file ]] || { echo "expected empty stdout for unreadable entry: $entry" >&2; exit 1; }
+  [[ $actual == 'toolchain mismatch: GitHub CI production entry is unreadable' ]] || {
+    printf 'unexpected unreadable entry error for %s: %q\n' "$entry" "$actual" >&2
+    exit 1
+  }
+  [[ $actual != *"$tmp"* ]] || { echo 'unreadable entry error leaked temporary path' >&2; exit 1; }
+}
+
+assert_unreadable_ci_entry_failure scripts/build_toolchain_image.sh
+assert_unreadable_ci_entry_failure scripts/run_toolchain_baseline.sh
+
 # CI 不得复制三项 authoritative sources，避免形成第二组 runtime 常量。
 cp "$tmp/repo/.github/workflows/toolchain.yml" "$tmp/repo/.github/workflows/toolchain.yml.good"
 printf '%s\n' '# duplicated Go version: 1.26.5' >>"$tmp/repo/.github/workflows/toolchain.yml"

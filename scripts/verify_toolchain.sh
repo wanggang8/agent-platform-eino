@@ -82,14 +82,16 @@ verify_container_dockerfile() {
 
 # CI 必须复用 lock 与公共 validator，禁止复制三项 runtime 权威版本形成第二套真相。
 verify_ci_config() {
-  local ci="$root/.github/workflows/toolchain.yml" validator="$root/scripts/validate_ci_config.sh" forbidden target
+  local ci="$root/.github/workflows/toolchain.yml" validator="$root/scripts/validate_ci_config.sh" forbidden target grep_status
   test ! -e "$root/.gitlab-ci.yml" || fail 'GitLab CI residue is forbidden'
-  test -r "$ci" || fail 'invalid GitHub Actions workflow'
-  test -r "$validator" || fail 'invalid CI validator'
   for target in "$ci" "$root/scripts/build_toolchain_image.sh" \
     "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/validate_ci_config.sh"; do
-    if grep -Eq 'CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR|GitLab|\.gitlab-ci' "$target"; then
+    test -r "$target" || fail 'GitHub CI production entry is unreadable'
+    if grep -Eq 'CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR|GitLab|\.gitlab-ci' "$target" 2>/dev/null; then
       fail 'GitLab CI residue is forbidden'
+    else
+      grep_status=$?
+      test "$grep_status" = 1 || fail 'cannot scan GitHub CI production entry'
     fi
   done
   for forbidden in "$go_version" "$node_version" "$npm_version"; do
