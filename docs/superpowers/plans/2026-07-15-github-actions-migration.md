@@ -539,15 +539,14 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   ```bash
   test ! -e "$root/.gitlab-ci.yml" || fail 'GitLab CI residue is forbidden'
   for target in "$ci" "$root/scripts/build_toolchain_image.sh" \
-    "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/validate_ci_config.sh" \
-    "$root/scripts/validate_ci_config/main.go"; do
+    "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/validate_ci_config.sh"; do
     if grep -Eq 'CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR|GitLab|\.gitlab-ci' "$target"; then
       fail 'GitLab CI residue is forbidden'
     fi
   done
   ```
 
-  继续拒绝 workflow 复制 Go、Node、npm 三个权威版本，再调用 `scripts/validate_ci_config.sh`；错误改为 `invalid GitHub Actions workflow`。
+  继续拒绝 workflow 复制 Go、Node、npm 三个权威版本，再调用 `scripts/validate_ci_config.sh`；错误改为 `invalid GitHub Actions workflow`。`scripts/validate_ci_config/main.go` 包含用于拒绝 GitLab 旧语义的 matcher，由 Go 负向测试约束，不属于四个生产执行入口的残留扫描集合。
 
 - [ ] **Step 4: 删除 GitLab CI 并运行所有 CI 契约测试**
 
@@ -697,7 +696,7 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   image_id=sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93
   git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
   docker run --rm --platform linux/amd64 \
-    -v "$PWD:/workspace" -v "$git_common_dir:$git_common_dir:ro" \
+    -v "$PWD:/workspace" -v "${git_common_dir}:${git_common_dir}:ro" \
     -w /workspace "$image_id" bash scripts/run_toolchain_baseline.sh
   ```
 
