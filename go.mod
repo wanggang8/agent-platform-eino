@@ -1,6 +1,8 @@
 module agent-platform-eino
 
-go 1.22
+go 1.26.0
+
+toolchain go1.26.5
 
 require (
 	github.com/cloudwego/eino v0.9.12

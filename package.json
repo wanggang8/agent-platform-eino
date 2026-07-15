@@ -3,10 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "npm@11.16.0",
   "workspaces": [
     "web/eino-workbench"
   ],
   "scripts": {
+    "verify:toolchain": "bash scripts/verify_toolchain.sh",
+    "test:toolchain": "bash scripts/verify_toolchain_test.sh",
     "eino-workbench:schema-test": "node scripts/eino_workbench_schema_validate.mjs",
     "eino-workbench:contract-generate": "node scripts/eino_workbench_contract_generate.mjs",
     "eino-workbench:contract-test": "node scripts/eino_workbench_schema_validate.mjs --contract && node scripts/eino_workbench_contract_generate.mjs --check",
@@ -21,12 +24,13 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "@types/node": "^26.0.1",
+    "@types/node": "24.13.3",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "typescript": "^5.5.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": "24.18.0",
+    "npm": "11.16.0"
   }
 }

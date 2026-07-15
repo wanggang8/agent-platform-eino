@@ -17,7 +17,8 @@
     "send-smoke": "bash ../../scripts/eino_workbench_server_smoke.sh --scenario contract"
   },
   "engines": {
-    "node": ">=20"
+    "node": "24.18.0",
+    "npm": "11.16.0"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.14",
