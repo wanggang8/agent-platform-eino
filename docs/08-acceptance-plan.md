@@ -60,8 +60,9 @@ otherwise BLOCKED
 ```
 
 canonical image identity 必须同时证明 Node linux-x64 tar.gz checksum、Ubuntu Noble snapshot、
-`build-essential`、`command -v cc` 和构建期最小 `CGO_ENABLED=1 go test -race ./...`。缺少任一 pinned
-输入或真实 image 构建证据时，宿主 race PASS 与静态 Dockerfile 检查都不能替代门禁条件。
+source isolation、`build-essential`、`command -v cc` 和构建期最小
+`CGO_ENABLED=1 go test -race ./...`。缺少任一 pinned 输入或真实 image 构建证据时，宿主 race
+PASS 与静态 Dockerfile 检查都不能替代门禁条件。
 
 本地 visual migration 必须先从同一 pinned inputs 取得真实 image ID，在该 image 运行唯一完整
 baseline；若首次停在 desktop screenshot diff，必须保留 baseline log 和 actual/diff，并确认所有前置
@@ -73,10 +74,10 @@ Story 最终证据必须来自包含全部变更的 clean commit：GitLab pipeli
 `test-results/toolchain-baseline.log` 与 `test-results/eino-workbench-playwright-report/`。缺 remote、
 pipeline、registry digest、artifact 或 UX approval 时不得填写模拟值，也不得形成中间“部分 PASS”。
 
-2026-07-15 裁决为 `G-TOOLCHAIN=BLOCKED`：pinned MCR base layer 未完成传输，未产生 local image ID
-或 canonical run；仓库无 Git remote，未产生 GitLab lint/pipeline/clean `CI_COMMIT_SHA`、registry
-`tag@sha256` 或 artifacts；未产生 canonical desktop actual/diff，故无 UX approval。Story 1.1 和
-Sprint 1.1 必须保持 `in-progress`，M-1 不得开始。详见
+2026-07-15 裁决为 `G-TOOLCHAIN=BLOCKED`：本地 canonical image、非视觉 baseline 与 71 张 desktop
+候选已产生，但 UX approval 和批准后的完整 baseline 尚未发生；仓库无 Git remote，未产生 GitLab
+lint/pipeline/clean `CI_COMMIT_SHA`、registry `tag@sha256` 或 artifacts。Story 1.1 和 Sprint 1.1
+必须保持 `in-progress`，M-1 不得开始。详见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## 基础门禁

@@ -2,16 +2,23 @@
 
 日期：2026-07-15
 阶段／门禁：M-0 / G-TOOLCHAIN
-Verification status：`NEEDS_MORE_EVIDENCE`
-迁移状态：`PENDING_CANONICAL_IMAGE_BUILD`
+Verification status：`NEEDS_HUMAN_REVIEW`
+迁移状态：`PENDING_UX_APPROVAL`
 UX 状态：`PENDING_UX_APPROVAL`
 
 ## 裁决摘要
 
-本记录只证明旧 desktop baseline 已被识别、目标环境已被固定，以及首次 canonical image 构建的
-外部阻断已被如实保留。canonical image 没有构建完成，因而没有 image ID／最终 image digest，
-没有在目标环境运行 baseline，也没有产生任何 actual、diff 或像素差。当前不能区分字体／栅格
-环境差异与产品回归，不能更新 screenshot，也不能将本记录计为 `G-TOOLCHAIN PASS`。
+本地 canonical image 已在相同 pinned inputs 下成功构建，snapshot apt 安装、Go/Node/npm、C
+compiler、最小 race smoke 与 Chromium identity 均在真实 linux/amd64 image layer 通过。首次完整
+baseline 的所有非视觉检查通过，desktop browser 因旧 macOS screenshot 与 Linux candidate 差异
+停止；并发首跑为 1/17 PASS、16/17 FAIL，其中 3 项为 target crash。随后仅在临时 detached
+worktree 中使用首个成功构建的同 pins image、单 worker 和 `--update-snapshots` 生成审查候选，
+17/17 PASS、71/71 候选齐全；在删除浮动 apt source 后重建的最新 image 中又以零更新、单 worker
+方式 17/17 PASS，
+证明 71 张候选完全一致。以上操作均没有修改当前分支 snapshot。
+
+当前证据足以进入人工 UX checkpoint，但尚未获得批准，不能把候选复制回正式 baseline，也不能将
+本记录计为 `G-TOOLCHAIN PASS`。本地 image ID 也不能替代 GitLab registry digest 或 clean pipeline。
 
 ## 旧环境与目标环境
 
@@ -24,47 +31,57 @@ UX 状态：`PENDING_UX_APPROVAL`
 | npm | 未作为旧 visual baseline 身份记录 | 11.16.0 |
 | Playwright | 仓库 lockfile 1.61.1 | 1.61.1 |
 | Chromium | 未作为旧 baseline 的可复现发布环境固定 | revision 1228 / 149.0.7827.55 |
-| 环境身份 | 历史截图，只作迁移输入 | canonical image 最终 digest：未产生 |
+| 环境身份 | 历史截图，只作迁移输入 | local image ID：`sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93`；registry digest 未产生 |
 
 `build/toolchain/toolchain.lock` 已固定 MCR Playwright Noble base digest，但该 base digest 不是本项目
 最终 canonical image digest，不能冒充构建产物证据。
 
-## Canonical image 构建阻断证据
+## Canonical image 与首次 baseline 证据
 
-首次执行：
+首次执行曾在 pinned MCR base layer 长时间无字节进展后人工终止，exit 130；该历史阻断没有被
+改写。修复 Node archive 与 Linux race build prerequisites 后，在完全相同的公开 pins 下重新执行：
 
 ```text
 bash scripts/build_toolchain_image.sh --load
 ```
 
-构建成功解析 Dockerfile frontend，并按已固定 digest 解析
-`mcr.microsoft.com/playwright:v1.61.1-noble`。随后停在 base layer 的 `FROM` 步骤超过 15 分钟，
-没有任何 layer 字节进展；观察期间 Build Cache 保持 3.126GB 不变。为避免无边界等待，终止该
-唯一尝试，结果为：
+进一步删除基底镜像附带的浮动 NodeSource source，并显式限制 apt 只消费注入 snapshot 的
+`ubuntu.sources` 后，最新重建成功，结果为：
 
 ```text
-#6 CANCELED
-ERROR: failed to build: failed to solve: Canceled: context canceled
-exit 130
+TOOLCHAIN_IMAGE_ID=sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93
 ```
 
-随后检查本地 tag 返回 `No such image`。因此：
+`docker image inspect` 确认 `os=linux arch=amd64`；镜像内直接回读为 Go `1.26.5`、Node
+`24.18.0`、npm `11.16.0`、`/usr/bin/cc` 与 Chromium `149.0.7827.55`。Dockerfile build layer 中的
+最小 `CGO_ENABLED=1 go test -race ./...` 真实通过。随后执行唯一完整 baseline：
 
-- `TOOLCHAIN_IMAGE_ID`：未产生。
-- canonical image 最终 digest：未产生。
-- `scripts/run_toolchain_baseline.sh` 的 canonical 容器运行：未执行。
-- desktop actual／diff：未产生。
-- 像素差与回归分类：不可裁决。
+```text
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  sha256:41f8317a...29ea93 bash scripts/run_toolchain_baseline.sh
+```
 
-本 Task 遵守已知边界，没有重试 MCR build，没有切换镜像或宿主环境，也没有伪造 image
-identity、actual、diff 或审批材料。
+在 browser 之前，toolchain verifier、CI validator、`npm ci`、39 项 schema/contract/OpenAPI、全部
+Go tests、Linux race、checkpoint/SQLite、vet/build/import boundary、typecheck、15 项 Vitest、4 项
+stream test 与 Vite build 全部通过。desktop browser 首跑产生 10 组 actual/diff 后停止，最终为
+1 PASS、16 FAIL；未执行其后的 contract smoke 与最终 `git diff --check`，因此该 baseline 不是
+整体 PASS。临时 detached worktree 随后在最新 image 中不更新任何文件、以单 worker 对 71 张
+候选复验，17/17 PASS；并发 target crash 归类为本机 amd64 模拟资源噪声，不改变截图差异仍需
+人工审批的结论。
 
 ## Desktop snapshot 逐项迁移状态
 
 旧路径根目录为 `web/eino-workbench/tests/__screenshots__/desktop/`。下面列出当前全部 71 个旧
-baseline。对每一项，canonical actual 路径均为“未产生”，canonical diff 路径均为“未产生”，
-像素差均为“不可裁决”，分类均为“无法判定”。这里不填写推测路径，避免把不存在的 artifact
-写成证据。
+baseline；临时 detached worktree 的同名路径保存 71 张 Linux candidate。71/71 文件均发生像素
+变化；46 张尺寸相同，25 张只有高度 `+1` 或 `-1` 像素，最大绝对尺寸差为 `0x1`。ImageMagick
+PHASH 归一化差异均值为 `0.064117`，主要高值集中于高度很小的运行状态条和工具卡文字抗锯齿；
+联系表与代表性 old/new 对照保存在忽略目录 `test-results/story-1-1-visual-*.png` 供本地 checkpoint。
+
+逐项候选生成时，17 个 desktop tests 在单 worker 下全部通过可见性、中文产品文案和敏感文本安全
+断言。审查发现布局层级、控件、状态颜色、交互区域和主要尺寸保持一致；差异主要来自跨 OS 字体／
+栅格与 1 像素高度变化。`shell-fixture.png` 中资产展示值从历史 `prod-web-01` 对齐为当前安全中文
+投影“生产网站一号”，与当前 fixture 和禁止 ASCII 产品文案断言一致，不属于本 Story 代码改动。
+最终分类与是否批准仍由 UX reviewer 决定。
 
 ```text
 approval-waiting-approval-card.png
@@ -146,34 +163,34 @@ tool-expanded-tool-card.png
 
 | 字段 | 当前值 |
 | --- | --- |
-| 审批人 | 未指定 |
+| 审批人 | 等待 Vick checkpoint 决策 |
 | 审批时间 | 未发生 |
-| 可供审查的 actual/diff | 未产生 |
+| 可供审查的 actual/diff | 71 张临时 Linux candidate、10 组首跑 actual/diff、old/new 联系表与代表性对照 |
 | 结论 | `PENDING_UX_APPROVAL` |
 
-没有 actual/diff 时不能进入 checkpoint/human review，也不能把差异预先归类为纯字体／栅格环境
-差异。任何 DOM、文案、尺寸或交互变化都必须先按产品回归调查，不能仅凭跨 OS 迁移解释。
+当前已进入 checkpoint/human review。批准前不得运行当前分支的 snapshot update；任何未被接受的
+DOM、文案、尺寸或交互变化都必须按产品回归处理，不能仅凭跨 OS 迁移解释。
 
 ## 两条独立证据链
 
 ### A. Visual migration chain
 
-1. MCR 传输恢复后，使用同一组 pinned external inputs 重跑
-   `bash scripts/build_toolchain_image.sh --load`，成功取得并验证本地 image ID。
+1. 已使用同一组 pinned external inputs 重跑 `bash scripts/build_toolchain_image.sh --load`，成功取得并
+   验证本地 image ID。
 2. 在该本地 image 的 linux/amd64 环境运行唯一
    `bash scripts/run_toolchain_baseline.sh`。首次运行可能在 desktop screenshot diff 处非零停止；必须
    保存 `test-results/toolchain-baseline.log` 与 Playwright actual/diff，并从日志确认此前全部非视觉
    检查通过。若在 visual 之前失败，不得进入迁移审批。
-3. 人工逐项审查 actual/diff、功能 DOM、文案、尺寸和交互，再分类为环境栅格差异、产品回归或
-   仍无法判定。
-4. 通过 checkpoint/human review 展示完整 diff，记录 UX 审批人、时间和明确结论；只有 UX 明确
+3. 已生成 71 张临时候选并完成机器辅助的尺寸、像素与代表性视觉检查；等待 human checkpoint
+   对差异分类和迁移建议作最终决定。
+4. 通过 checkpoint/human review 记录 UX 审批人、时间和明确结论；只有 UX 明确
    批准后，才可在同一本地 image 运行 desktop-only `--update-snapshots`。
 5. 更新后在同一 image 完整重跑 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
 
 本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
 registry digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean
-GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前仍阻塞在第 1 步：MCR base layer 构建
-失败，本地 image ID 未产生。
+GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前阻塞在第 4 步：
+`PENDING_UX_APPROVAL`。
 
 ### B. Story / G-TOOLCHAIN chain
 
@@ -183,8 +200,8 @@ GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前仍阻塞在�
 3. 真实 pipeline/digest/baseline 证据与 A 链已批准的 visual evidence 同时存在后，才可裁决
    `G-TOOLCHAIN PASS`。
 
-当前 MCR build 本身失败，pipeline canonical image 也未产生；此外仓库缺少 remote/pipeline，B 链
-仍有独立缺口。缺少 remote/pipeline 只阻止最终 Story/G-TOOLCHAIN PASS，不阻止未来完成 A 链的
-本地 visual run 与 UX 记录。
+当前本地 image 已产生，但 pipeline canonical image／registry digest 未产生；仓库缺少
+remote/pipeline，B 链仍有独立缺口。缺少 remote/pipeline 只阻止最终 Story/G-TOOLCHAIN PASS，
+不阻止完成 A 链的 UX 记录。
 
 两条链完成前，Story 1.1 保持 in-progress，`G-TOOLCHAIN` 保持 `BLOCKED`。

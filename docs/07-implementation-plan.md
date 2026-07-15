@@ -16,7 +16,8 @@ commit-bound `tag@sha256` image 执行同一 baseline。desktop 是 Story 1.1 �
 不属于 `G-TOOLCHAIN`。测试阶段禁止运行浮动的 Playwright、apt 或浏览器安装命令。
 
 canonical build identity 还必须固定 Node linux-x64 tar.gz checksum、Ubuntu Noble snapshot 与
-`build-essential`。Dockerfile 在 snapshot 仓库状态下安装 C toolchain，并以 `command -v cc` 和
+`build-essential`。Dockerfile 必须删除基底镜像附带的其他 apt source，显式只消费注入 snapshot
+的 Ubuntu source，再安装 C toolchain，并以 `command -v cc` 和
 临时 module 的 `CGO_ENABLED=1 go test -race ./...` 证明发布镜像具备 Go race baseline 能力；这些
 字段由共享 lock parser 校验和传递，不得从环境覆盖。
 

@@ -15,7 +15,9 @@ test -n "$image_id"
 canonical identity 不只包含 runtime 与 browser：Node 使用官方 linux-x64 `tar.gz` 及其 SHA-256；
 Noble `/etc/apt/sources.list.d/ubuntu.sources` 的每个 `Signed-By` stanza 都注入 lock 中的
 `Snapshot: 20260708T000000Z`，再安装 lock 固定的 `build-essential`。Dockerfile 必须确认 snapshot
-插入数量与 stanza 数量一致、清理 apt lists，并以 `command -v cc` 和临时 module 中的
+插入数量与 stanza 数量一致，删除基底镜像附带的其他 apt source，并通过显式
+`Dir::Etc::sourcelist`/`Dir::Etc::sourceparts=-` 只消费该 snapshot source；随后清理 apt lists，
+并以 `command -v cc` 和临时 module 中的
 `CGO_ENABLED=1 go test -race ./...` 固定 race detector 能力。以上值只能来自
 `build/toolchain/toolchain.lock`，不得由环境变量或浮动 apt 状态覆盖。
 
@@ -46,11 +48,16 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
   registry `tag@sha256` digest，并在该 image 执行完整 baseline 与 artifacts。只有该证据与已批准的
   visual evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
 
-当前 pinned MCR base layer 传输超过 15 分钟无 layer 字节进展，人工终止后 exit 130；因此本地
-image ID 和 pipeline image 都未产生，两条链均未前进。仓库没有 remote/pipeline 是 Story 门禁的
-额外缺口，但不阻止未来在真实本地 canonical image 上生成和记录 visual evidence。任何阻断记录都
-必须写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主
-环境，也不得用静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见
+首次 pinned MCR base layer 传输曾因长时间无进展人工终止；在相同 pinned inputs 下重试后，本地
+canonical image 已成功构建为 linux/amd64 image ID
+`sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93`，镜像构建期的 snapshot
+安装、版本断言、C compiler、race smoke 与 Chromium identity 均真实通过。首次完整 baseline 的
+非视觉检查全部通过，desktop browser 因旧 macOS screenshot 与 Linux candidate 差异停在 visual
+migration；71 张候选已在临时 detached worktree 以单 worker 完整生成，并在该最新 image 中以
+零更新方式 17/17 复验通过，尚未获 UX approval，也未更新本分支 snapshot。仓库没有
+remote/pipeline 仍独立阻止最终 Story 门禁。任何阻断记录都必须
+写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，
+也不得用本地 image 或静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Node 与包管理
@@ -62,8 +69,9 @@ image ID 和 pipeline image 都未产生，两条链均未前进。仓库没有 
 - 根 `package.json` 只提供 wrapper scripts，不复制前端包内部逻辑。
 - Chromium 与 OS/font layer 只随 pinned canonical image 构建；测试阶段不得运行浮动的
   `playwright install`、apt 安装或其他浏览器替换命令。
-- Node archive 固定为官方 linux-x64 `tar.gz`；构建期 apt 只允许使用 lock 的 Ubuntu snapshot
-  安装 `build-essential`，用于 image 内的 C compiler guard 与 Go race smoke，不得临时改用宿主编译器。
+- Node archive 固定为官方 linux-x64 `tar.gz`；构建期 apt 删除非 Ubuntu source，并显式只允许
+  使用 lock 的 Ubuntu snapshot 安装 `build-essential`，用于 image 内的 C compiler guard 与
+  Go race smoke，不得临时改用宿主编译器。
 
 当前 Phase 1 文档契约已提供根级 wrapper：
 
