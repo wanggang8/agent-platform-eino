@@ -54,7 +54,7 @@ Story 1.1 的 canonical 工具链门禁需要由唯一远程平台、唯一 CI �
 ## 关联验收
 
 - `docs/08-acceptance-plan.md` 的 `G-TOOLCHAIN` 唯一 PASS 算法。
-- `docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md` 的当前阻断裁决。
+- `docs/acceptance-records/story-1-1-g-toolchain-2026-07-15.md` 的当前裁决。
 - `.github/workflows/toolchain.yml` 与 `scripts/run_toolchain_baseline.sh` 的 GitHub-only 静态契约。
 
 ## 外部依据

@@ -263,14 +263,17 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
 
 - [ ] **Step 1: 用 GitHub workflow fixture 重写正向测试**
 
-  在 `main_test.go` 定义 `completeTestLock()`，字段与 Task 1 完全一致；正向 fixture 必须包含：
+  在 `main_test.go` 定义 `completeTestLock()`，字段与 Task 1 完全一致；正向 fixture 必须与生产 workflow 完全一致：
 
   ```yaml
   name: Toolchain Gate
+
   on:
     push:
     workflow_dispatch:
+
   permissions: {}
+
   jobs:
     toolchain-build:
       runs-on: ubuntu-24.04
@@ -279,15 +282,83 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
         packages: write
       outputs:
         toolchain_image: ${{ steps.build.outputs.TOOLCHAIN_IMAGE }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+          with:
+            fetch-depth: 0
+        - name: Setup Docker
+          uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
+          with:
+            version: v29.4.0
+        - name: Configure memory-only GHCR credentials
+          run: |
+            install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+            printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+            install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+            printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+            printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
+        - name: Setup Buildx
+          uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+          with:
+            version: v0.35.0
+            driver-opts: image=moby/buildkit:v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a
+        - name: Build and push canonical image
+          id: build
+          env:
+            GHCR_ACTOR: ${{ github.actor }}
+            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            repository=${GITHUB_REPOSITORY,,}
+            image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
+            bash scripts/build_toolchain_image.sh --push "$image_ref" --env-file test-results/toolchain.env
+            cat test-results/toolchain.env >> "$GITHUB_OUTPUT"
+
     toolchain-verify:
       needs: toolchain-build
       runs-on: ubuntu-24.04
       permissions:
         contents: read
         packages: read
+      env:
+        TOOLCHAIN_IMAGE: ${{ needs.toolchain-build.outputs.toolchain_image }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+          with:
+            fetch-depth: 0
+        - name: Setup Docker
+          uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
+          with:
+            version: v29.4.0
+        - name: Configure memory-only GHCR credentials
+          run: |
+            install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+            printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+            install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+            printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+            printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
+        - name: Verify digest image
+          env:
+            GHCR_ACTOR: ${{ github.actor }}
+            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            [[ "$TOOLCHAIN_IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+/toolchain:[0-9a-f]{40}@sha256:[0-9a-f]{64}$ ]]
+            docker pull "$TOOLCHAIN_IMAGE"
+            docker run --rm --platform linux/amd64 -e CI=true -e GITHUB_SHA="$GITHUB_SHA" -v "$GITHUB_WORKSPACE:/workspace" -w /workspace "$TOOLCHAIN_IMAGE" bash scripts/run_toolchain_baseline.sh
+        - name: Upload toolchain evidence
+          if: ${{ always() }}
+          uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+          with:
+            name: toolchain-evidence-${{ github.sha }}
+            path: |
+              test-results/toolchain-baseline.log
+              test-results/eino-workbench-playwright-report/
+            if-no-files-found: error
+            retention-days: 30
   ```
 
-  fixture 中还必须提供完整 checkout/setup-docker/setup-buildx/login/build、digest guard/pull/baseline/upload-artifact steps。测试断言 `validateConfig` 返回 `nil`，`validateScriptReferences` 只能解析 `scripts/build_toolchain_image.sh` 与 `scripts/run_toolchain_baseline.sh`。
+  测试断言 `validateConfig` 返回 `nil`，`validateScriptReferences` 只能按顺序解析 `scripts/docker-credential-github-token`、`scripts/build_toolchain_image.sh` 与 `scripts/run_toolchain_baseline.sh`。
 
   Run: `GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1`
 
@@ -310,7 +381,11 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   Docker/Buildx/BuildKit version differs from lock
   build output not sourced from steps.build.outputs.TOOLCHAIN_IMAGE
   verify lacks needs:toolchain-build
-  login does not use GHCR/GITHUB_TOKEN stdin
+  any docker login command reappears
+  token enters Docker config, GITHUB_ENV, GITHUB_PATH, or job-level env
+  credential helper name/path/env wiring drifts
+  build/verify step lacks step-local actor or token
+  credential helper reference escapes scripts/ via absolute/../symlink path or is missing
   builder target is not ghcr.io/$repository/toolchain:$GITHUB_SHA
   digest guard accepts tag-only image
   pull/baseline command differs
@@ -426,17 +501,23 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
           uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
           with:
             version: v29.4.0
+        - name: Configure memory-only GHCR credentials
+          run: |
+            install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+            printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+            install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+            printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+            printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
         - name: Setup Buildx
           uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
           with:
             version: v0.35.0
             driver-opts: image=moby/buildkit:v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a
-        - name: Login GHCR
-          env:
-            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
         - name: Build and push canonical image
           id: build
+          env:
+            GHCR_ACTOR: ${{ github.actor }}
+            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
             repository=${GITHUB_REPOSITORY,,}
             image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
@@ -460,11 +541,17 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
           uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
           with:
             version: v29.4.0
-        - name: Login GHCR
-          env:
-            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+        - name: Configure memory-only GHCR credentials
+          run: |
+            install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+            printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+            install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+            printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+            printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
         - name: Verify digest image
+          env:
+            GHCR_ACTOR: ${{ github.actor }}
+            GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
             [[ "$TOOLCHAIN_IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+/toolchain:[0-9a-f]{40}@sha256:[0-9a-f]{64}$ ]]
             docker pull "$TOOLCHAIN_IMAGE"

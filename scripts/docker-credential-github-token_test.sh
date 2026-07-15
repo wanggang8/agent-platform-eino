@@ -47,7 +47,16 @@ TEST_TOKEN=fake_token_123
 TEST_ACTOR='invalid_actor'
 run_failure get ghcr.io 'credential helper: credentials are invalid'
 TEST_ACTOR=github-actions
-TEST_TOKEN=$'opaque\r\nsecret'
+# 每个 ASCII 控制字符边界都必须独立失败，并只返回固定脱敏摘要。
+TEST_TOKEN=$'opaque\tsecret'
+run_failure get ghcr.io 'credential helper: token contains control characters'
+TEST_TOKEN=$'opaque\rsecret'
+run_failure get ghcr.io 'credential helper: token contains control characters'
+TEST_TOKEN=$'opaque\nsecret'
+run_failure get ghcr.io 'credential helper: token contains control characters'
+TEST_TOKEN=$'opaque\033secret'
+run_failure get ghcr.io 'credential helper: token contains control characters'
+TEST_TOKEN=$'opaque\177secret'
 run_failure get ghcr.io 'credential helper: token contains control characters'
 TEST_TOKEN=fake_token_123
 run_failure get registry.example 'credential helper: server is not allowed'
