@@ -34,7 +34,10 @@ for expected in \
   'signed_by_count=$(grep -c' \
   "'^Signed-By:'" \
   'test "$snapshot_count" = "$signed_by_count"' \
-  'apt-get install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
+  "! -name 'ubuntu.sources' -delete" \
+  'Dir::Etc::sourcelist="$sources"' \
+  'Dir::Etc::sourceparts="-"' \
+  'apt-get "${apt_snapshot_options[@]}" install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
   'rm -rf /var/lib/apt/lists/*' \
   'test "$(go env GOVERSION)" = "go${GO_VERSION}"' \
   'test "$(node --version)" = "v${NODE_VERSION}"' \

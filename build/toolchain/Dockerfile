@@ -27,8 +27,11 @@ RUN sources=/etc/apt/sources.list.d/ubuntu.sources \
     && sed -i "/^Signed-By:/a Snapshot: ${UBUNTU_SNAPSHOT}" "$sources" \
     && snapshot_count=$(grep -Fc "Snapshot: ${UBUNTU_SNAPSHOT}" "$sources") \
     && test "$snapshot_count" = "$signed_by_count" \
-    && apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$APT_BUILD_PACKAGES" \
+    && find /etc/apt/sources.list.d -mindepth 1 -maxdepth 1 -type f ! -name 'ubuntu.sources' -delete \
+    && test "$(find /etc/apt/sources.list.d -mindepth 1 -maxdepth 1 -type f -print | wc -l)" = 1 \
+    && apt_snapshot_options=(-o Dir::Etc::sourcelist="$sources" -o Dir::Etc::sourceparts="-") \
+    && apt-get "${apt_snapshot_options[@]}" update \
+    && DEBIAN_FRONTEND=noninteractive apt-get "${apt_snapshot_options[@]}" install -y --no-install-recommends "$APT_BUILD_PACKAGES" \
     && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSLo /tmp/go.tar.gz "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" \
     && echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c - \

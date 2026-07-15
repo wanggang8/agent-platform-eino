@@ -57,7 +57,10 @@ verify_container_dockerfile() {
     'tar -C /usr/local --strip-components=1 -xzf /tmp/node.tar.gz' \
     'Snapshot: ${UBUNTU_SNAPSHOT}' \
     'test "$snapshot_count" = "$signed_by_count"' \
-    'apt-get install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
+    "! -name 'ubuntu.sources' -delete" \
+    'Dir::Etc::sourcelist="$sources"' \
+    'Dir::Etc::sourceparts="-"' \
+    'apt-get "${apt_snapshot_options[@]}" install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
     'rm -rf /var/lib/apt/lists/*' \
     'command -v cc' \
     'go mod init toolchain-race-smoke' \
