@@ -160,15 +160,20 @@ tool-expanded-tool-card.png
 
 1. MCR 传输恢复后，使用同一组 pinned external inputs 重跑
    `bash scripts/build_toolchain_image.sh --load`，成功取得并验证本地 image ID。
-2. 在该本地 image 的 linux/amd64 环境运行 desktop-only Playwright，保留每个 desktop snapshot
-   的真实 actual、diff 与像素差。
-3. 逐项检查功能 DOM、文案、尺寸和交互，再区分环境栅格差异、产品回归或仍无法判定。
-4. 通过 checkpoint/human review 展示完整 diff，记录 UX 审批人、时间和明确结论。
-5. 只有批准后才可在同一本地 image 运行 desktop-only `--update-snapshots`，随后在同一环境重跑
-   desktop，并确认 mobile 与业务实现目录仍无 diff。
+2. 在该本地 image 的 linux/amd64 环境运行唯一
+   `bash scripts/run_toolchain_baseline.sh`。首次运行可能在 desktop screenshot diff 处非零停止；必须
+   保存 `test-results/toolchain-baseline.log` 与 Playwright actual/diff，并从日志确认此前全部非视觉
+   检查通过。若在 visual 之前失败，不得进入迁移审批。
+3. 人工逐项审查 actual/diff、功能 DOM、文案、尺寸和交互，再分类为环境栅格差异、产品回归或
+   仍无法判定。
+4. 通过 checkpoint/human review 展示完整 diff，记录 UX 审批人、时间和明确结论；只有 UX 明确
+   批准后，才可在同一本地 image 运行 desktop-only `--update-snapshots`。
+5. 更新后在同一 image 完整重跑 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
 
 本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
-registry digest 为前置。当前仍阻塞在第 1 步：MCR base layer 构建失败，本地 image ID 未产生。
+registry digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean
+GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。当前仍阻塞在第 1 步：MCR base layer 构建
+失败，本地 image ID 未产生。
 
 ### B. Story / G-TOOLCHAIN chain
 

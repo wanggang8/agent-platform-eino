@@ -29,9 +29,12 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
 本地 visual migration 与 Story/G-TOOLCHAIN 使用两条独立证据链：
 
 - Visual migration chain：使用同一组 pinned external inputs 本地构建 canonical image，取得本地
-  image ID 后即可在该 image 运行 desktop、生成 actual/diff/像素差并进入 UX review。此链不要求
-  GitLab remote、registry digest 或 pipeline；但本地结果始终只是 visual evidence，不能单独形成
-  `G-TOOLCHAIN PASS`。
+  image ID 后运行唯一 `bash scripts/run_toolchain_baseline.sh`。首次运行可能在 desktop screenshot
+  diff 处非零停止；保留 baseline log 与 Playwright actual/diff，并确认此前全部非视觉检查通过后，
+  才能进入人工分类和 UX review。批准后只用 desktop-only 命令更新 snapshot，再在同一 image 完整
+  重跑唯一 baseline，要求所有适用检查通过。此链不要求 GitLab remote、registry digest 或
+  pipeline；结果始终只是 preflight/visual migration evidence，不能替代 clean GitLab pipeline，
+  也不能单独形成 `G-TOOLCHAIN PASS`。
 - Story/G-TOOLCHAIN chain：clean GitLab pipeline 必须 push canonical image，产出绑定 commit 的
   registry `tag@sha256` digest，并在该 image 执行完整 baseline 与 artifacts。只有该证据与已批准的
   visual evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
@@ -93,16 +96,27 @@ npm run eino-workbench:visual-test
 npm run eino-workbench:visual-test -- --update-snapshots
 ```
 
-跨环境迁移是例外门禁：必须先在本地 canonical image 运行 desktop-only 测试、保留完整
-actual/diff，并在迁移记录中取得明确 UX 批准。该 visual review 不依赖 GitLab remote 或 registry
-digest；只有批准后，才可在同一 image 内执行：
+跨环境迁移是例外门禁。首次必须在本地 canonical image 运行唯一 baseline：
+
+```bash
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" bash scripts/run_toolchain_baseline.sh
+```
+
+该次运行预期可能在 desktop screenshot diff 处非零停止。必须保存
+`test-results/toolchain-baseline.log` 与 Playwright actual/diff，并确认 visual 之前的全部非视觉检查
+通过；若在此前失败，不得进入迁移审批。人工完成差异分类且 UX 明确批准后，才可在同一 image 内
+执行 desktop-only snapshot update：
 
 ```bash
 docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
   "$image_id" npm run eino-workbench:browser-test -- --project=desktop --update-snapshots
 ```
 
-未产生 canonical image 或仍为 `PENDING_UX_APPROVAL` 时，禁止运行任何 snapshot update。
+更新后必须在同一 image 再完整执行 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。
+该 visual review 不依赖 GitLab remote 或 registry digest；本地结果只属于 preflight/visual migration
+evidence，不替代 clean GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。未产生 canonical
+image 或仍为 `PENDING_UX_APPROVAL` 时，禁止运行任何 snapshot update。
 
 ## 视觉基线
 
