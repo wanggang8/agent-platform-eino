@@ -169,6 +169,32 @@ rm -f "$baseline_mutation"
 CI=true GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 PATH="$baseline_bin:$PATH" \
   bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-clean.out" 2>&1
 
+# baseline 自身必须固定拒绝无效 identity，且错误不能回显不可信 SHA。
+assert_baseline_identity_failure() {
+  local case_name=$1
+  shift
+  if env -u GITHUB_SHA -u CI_COMMIT_SHA CI=true "$@" PATH="$baseline_bin:$PATH" \
+    bash "$baseline_repo/scripts/run_toolchain_baseline.sh" \
+      >"$tmp/baseline-identity.out" 2>&1; then
+    printf 'expected baseline identity failure: %s\n' "$case_name" >&2
+    exit 1
+  fi
+  local attempt=0
+  while test ! -s "$tmp/baseline-identity.out" && test "$attempt" -lt 100; do
+    attempt=$((attempt + 1))
+    sleep 0.01
+  done
+  test "$(<"$tmp/baseline-identity.out")" = 'invalid GitHub commit SHA'
+  ! grep -Fq "$tmp" "$tmp/baseline-identity.out"
+}
+
+assert_baseline_identity_failure missing
+assert_baseline_identity_failure short GITHUB_SHA=0123456789abcdef
+assert_baseline_identity_failure uppercase \
+  GITHUB_SHA=ABCDEF0123456789ABCDEF0123456789ABCDEF01
+assert_baseline_identity_failure gitlab-only \
+  CI_COMMIT_SHA=0123456789abcdef0123456789abcdef01234567
+
 make_repo() {
   local repo=$1
   mkdir -p "$repo/scripts" "$repo/build/toolchain" "$repo/web/eino-workbench"

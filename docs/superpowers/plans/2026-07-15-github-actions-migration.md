@@ -202,22 +202,32 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
   test -n "${GITHUB_REPOSITORY:-}" && test -n "${GITHUB_SHA:-}" || fail 'push requires GitHub identity'
   [[ $GITHUB_REPOSITORY =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'invalid GitHub repository'
   [[ $GITHUB_SHA =~ ^[0-9a-f]{40}$ ]] || fail 'invalid GitHub commit SHA'
-  repository=${GITHUB_REPOSITORY,,}
+  repository=$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
   expected_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
   test "$2" = "$expected_ref" || fail 'push target must match GitHub identity'
   ```
 
   其余 buildx build、digest inspect、临时文件、`0600` 和脱敏错误行为保持不变。
 
+  裁决：本机 `/bin/bash` 为 3.2，不支持 Bash 4 的 `${GITHUB_REPOSITORY,,}`。使用上面的
+  `printf | tr` 是相同的小写归一化语义，也是 Task 2 的唯一批准实现；不得把它解释为 GitLab
+  兼容或 identity 降级。
+
 - [ ] **Step 4: 将 baseline CI identity 改为严格 GitHub SHA**
 
   在 baseline 的首个 CI 分支中用以下断言替换非空 GitLab变量检查：
 
   ```bash
-  [[ ${GITHUB_SHA:-} =~ ^[0-9a-f]{40}$ ]]
+  [[ ${GITHUB_SHA:-} =~ ^[0-9a-f]{40}$ ]] || {
+    printf '%s\n' 'invalid GitHub commit SHA' >&2
+    exit 1
+  }
   ```
 
   前后 tracked、staged、untracked clean checks 不变。
+
+  裁决：macOS Bash 3.2 会让独立的失败 `[[ ... ]]` 穿过 `set -e`，因此必须显式 `exit 1`；错误
+  只输出固定摘要，不得回显不可信 SHA。
 
 - [ ] **Step 5: 运行 builder 与 baseline 行为测试**
 
