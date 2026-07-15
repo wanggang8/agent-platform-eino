@@ -4,6 +4,31 @@
 
 权威阶段门禁在 `08-acceptance-plan.md`。本文中的命令用于任务完成时快速检查，不替代阶段、合并或完整重构验收。
 
+## M-0：固定可复现工具链与开工门禁
+
+Story 1.1 先固定发布与 desktop visual 的唯一 canonical 环境。目标版本、外部镜像与下载摘要只从
+`.go-version`、`.node-version`、根 `package.json`、`build/toolchain/toolchain.lock` 和
+`build/toolchain/Dockerfile` 读取；CI 只能调用仓库公共脚本，不得复制第二套版本常量。
+
+唯一完整 baseline 是 `scripts/run_toolchain_baseline.sh`。本地只允许用 pinned inputs 构建出的
+linux/amd64 image ID 做 preflight/visual migration；最终门禁必须由 clean GitLab pipeline push 的
+commit-bound `tag@sha256` image 执行同一 baseline。desktop 是 Story 1.1 唯一视觉门禁，mobile
+不属于 `G-TOOLCHAIN`。测试阶段禁止运行浮动的 Playwright、apt 或浏览器安装命令。
+
+```bash
+image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_IMAGE_ID=/{print $2}')
+test -n "$image_id"
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" bash scripts/run_toolchain_baseline.sh
+```
+
+clean GitLab pipeline 必须另外产出 `CI_COMMIT_SHA`、`CI_PIPELINE_URL`、canonical
+`TOOLCHAIN_IMAGE=tag@sha256`、`test-results/toolchain-baseline.log` 和 desktop Playwright report。
+静态 validator、宿主临时 Go 1.26.5 或本地 image preflight 均不能替代这些证据。
+
+2026-07-15 客观裁决：`G-TOOLCHAIN=BLOCKED`，Story 1.1=`in-progress`，不得进入 M-1。直接阻断项
+与解除条件见 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
+
 ## Phase 0：文档整理
 
 目标：建立分层文档，避免需求和技术设计混写。
@@ -41,16 +66,17 @@ test -f docs/pre-development-validation.md
 
 - 根 `package.json` 提供 `eino-workbench:*` wrapper。
 - 前端包声明 Node 版本，并提交 lockfile。
-- Playwright config 必须包含 webServer、baseURL、reporter、desktop/mobile viewport、截图阈值和动态内容 mask。
+- Playwright config 可保留 desktop/mobile project；当前首发与 `G-TOOLCHAIN` 只验收 desktop viewport、截图阈值和动态内容 mask。
 - scripts 至少包含：`schema-test`、`contract-generate`、`contract-test`、`typecheck`、`test`、`stream-test`、`browser-test`、`visual-test`、`build`、`send-smoke`。
-- 安装命令包含 `npm ci` 和浏览器安装命令。
+- 可复现安装使用 `npm ci`；浏览器与 OS/font layer 只来自 M-0 pinned canonical image，不在测试阶段浮动安装。
 
 任务级检查：
 
 ```bash
-npm ci
-npx playwright install --with-deps
-npm run eino-workbench:contract-test -- --help
+image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_IMAGE_ID=/{print $2}')
+test -n "$image_id"
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" bash scripts/run_toolchain_baseline.sh
 ```
 
 ### Task 1.2 OpenAPI、schema、fixtures

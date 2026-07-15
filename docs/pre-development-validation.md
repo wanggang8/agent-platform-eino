@@ -25,7 +25,7 @@
 | Eino ChatModelAgent / Runner | `https://www.cloudwego.io/docs/eino/core_modules/eino_adk/agent_implementation/chat_model/` | Runner event、tool call、stream 行为是否仍符合 Product Facts 设计 |
 | Eino HITL | `https://www.cloudwego.io/docs/eino/core_modules/eino_adk/agent_hitl/` | interrupt/resume 数据结构是否可映射到 `PendingInteraction` |
 | Eino Checkpoint / Interrupt | `https://www.cloudwego.io/docs/eino/core_modules/chain_and_graph_orchestration/checkpoint_interrupt/` | CheckPointStore 是否支持进程重启恢复和 waiting 状态保留 |
-| Eino Callback | `https://www.cloudwego.io/docs/eino/core_modules/chain_and_graph_orchestration/callback_manual/` | callback 是否只用于 tracing/metrics，不作为产品 SSE 主来源 |
+| Eino Agent Callback | `https://www.cloudwego.io/docs/eino/core_modules/eino_adk/adk_agent_callback/`（ADK Agent Callback）、`https://www.cloudwego.io/docs/eino/core_modules/chain_and_graph_orchestration/callback_manual/`（通用 callback 补充） | callback 是否严格只用于 tracing/metrics，不写 Product Facts、不驱动产品 SSE，也不裁决 run 终态 |
 | MCP lifecycle | `https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle` | initialize/session/auth/close 行为是否覆盖 provider contract |
 | MCP tools | `https://modelcontextprotocol.io/specification/2025-06-18/server/tools` | tools/list、listChanged、annotations、structuredContent/isError 是否覆盖 |
 | OpenAPI 3.1 | `https://spec.openapis.org/oas/v3.1.2.html` | OpenAPI 3.1 与 JSON Schema dialect、`type: ["x", "null"]`、oneOf 等生成器支持；不使用 OAS 3.0 `nullable` |

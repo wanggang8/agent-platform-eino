@@ -17,6 +17,12 @@ skip 必须写入验收记录，包含命令、原因、缺少的环境变量或
 
 旧项目最终验收证据只作为范围和视觉基线参考，索引见 `legacy-acceptance-evidence.md`。任何 P0/P1/P2 通过声明都必须来自新项目当次生成的 `test-results/eino-*` 报告，不能复用旧项目历史通过结论。
 
+Story 1.1 起，本文后续列出的 contract、Go、TypeScript、browser、checkpoint、SQLite、boundary 和
+smoke 命令是 `scripts/run_toolchain_baseline.sh` 的逻辑组成项；最终验收必须从 clean GitLab
+pipeline 产出的 canonical linux/amd64 `tag@sha256` image 进入并顺序执行。宿主或本地运行只可记录为
+preflight，不得拆分拼接为阶段 PASS。当前首发视觉门禁仅为 desktop，mobile 不属于
+`G-TOOLCHAIN`。
+
 验收记录必须明确：
 
 - 是否阻断 P0/P1/P2 声明。
@@ -28,11 +34,46 @@ skip 必须写入验收记录，包含命令、原因、缺少的环境变量或
 
 | 阶段 | 范围 | 必跑门禁 | 可 skip 项 | 阻断条件 |
 | --- | --- | --- | --- | --- |
+| M-0 | Story 1.1 固定可复现工具链 | exact declarations、负向 verifier、canonical image digest、clean pipeline、完整 baseline、批准的 desktop visual evidence | 无 | 任一证据缺失即 `G-TOOLCHAIN=BLOCKED`，不得进入 M-1 |
 | P0 | 最小产品闭环，实施 Phase 1-4 | 开发前复核、基础、Contract、前端、服务 smoke `contract/chat-stream/action-basic/capability-selection/context-projection/tool-card`、安全门禁 | 无 | pre-development validation、contract、视觉、安全、Action API 任一失败 |
 | P1 | 产品级运行能力，实施 Phase 5-7 | P0 全部、开发前复核更新、HITL、clarification、Fobrain PoC、real model smoke、projection/replay | 无 Fobrain/LLM 凭据时 real model smoke 可 skip 但必须记录 | approval、clarification、projection、Action/Workbench 同源任一失败 |
 | P2 | 既有业务能力恢复，实施 Phase 8 | P1 全部、开发前复核更新、24 只读、connector、credential binding、disambiguation、write approval、live read/write | 无 live 凭据时 live read/write 可 skip 但不能声明能力可比 | Fobrain 恢复门禁未过时不能声明重构完成 |
 
 完整重构目标是 P0 + P1 + P2。P0/P1 只能证明架构和主链可行；未完成 P2/Phase 8 不得声明重构完成、产品能力等价或替换当前产品基线。
+
+## G-TOOLCHAIN 门禁
+
+唯一裁决算法：
+
+```text
+PASS = exact declarations
+    AND verifier negative tests
+    AND canonical image build/push digest
+    AND clean GitLab pipeline
+    AND reproducible install/no dependency drift
+    AND schema/contract/OpenAPI
+    AND Go/test/race/vet/build/checkpoint/SQLite/boundary
+    AND TS/Vitest/stream/build
+    AND approved desktop visual baseline
+    AND contract smoke
+otherwise BLOCKED
+```
+
+本地 visual migration 必须先从同一 pinned inputs 取得真实 image ID，在该 image 运行唯一完整
+baseline；若首次停在 desktop screenshot diff，必须保留 baseline log 和 actual/diff，并确认所有前置
+非视觉检查通过。UX 明确批准后才可在同一 image 更新 desktop snapshot，并再次完整运行唯一 baseline。
+本地结果始终只是 preflight/visual migration evidence。
+
+Story 最终证据必须来自包含全部变更的 clean commit：GitLab pipeline push canonical image，输出
+`CI_COMMIT_SHA`、`CI_PIPELINE_URL`、`TOOLCHAIN_IMAGE=tag@sha256`，并保留
+`test-results/toolchain-baseline.log` 与 `test-results/eino-workbench-playwright-report/`。缺 remote、
+pipeline、registry digest、artifact 或 UX approval 时不得填写模拟值，也不得形成中间“部分 PASS”。
+
+2026-07-15 裁决为 `G-TOOLCHAIN=BLOCKED`：pinned MCR base layer 未完成传输，未产生 local image ID
+或 canonical run；仓库无 Git remote，未产生 GitLab lint/pipeline/clean `CI_COMMIT_SHA`、registry
+`tag@sha256` 或 artifacts；未产生 canonical desktop actual/diff，故无 UX approval。Story 1.1 和
+Sprint 1.1 必须保持 `in-progress`，M-1 不得开始。详见
+`acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## 基础门禁
 

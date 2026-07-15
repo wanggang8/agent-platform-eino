@@ -39,10 +39,12 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
   registry `tag@sha256` digest，并在该 image 执行完整 baseline 与 artifacts。只有该证据与已批准的
   visual evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
 
-当前 pinned MCR base layer 构建失败，因此本地 image ID 和 pipeline image 都未产生，两条链均未
-前进；仓库没有 remote/pipeline 是 Story 门禁的额外缺口，但不阻止未来在真实本地 canonical image
-上生成和记录 visual evidence。任何阻断记录都必须写明命令、退出码、最后一个可验证步骤、未产生
-的证据和解除条件；不得切换未批准镜像／宿主环境，也不得用静态 CI PASS 代替真实 pipeline。
+当前 pinned MCR base layer 传输超过 15 分钟无 layer 字节进展，人工终止后 exit 130；因此本地
+image ID 和 pipeline image 都未产生，两条链均未前进。仓库没有 remote/pipeline 是 Story 门禁的
+额外缺口，但不阻止未来在真实本地 canonical image 上生成和记录 visual evidence。任何阻断记录都
+必须写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主
+环境，也不得用静态 CI PASS 代替真实 pipeline。当前唯一裁决记录见
+`acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Node 与包管理
 
