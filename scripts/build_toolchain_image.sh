@@ -13,8 +13,9 @@ read_lock() {
   fi
   IFS=$'\t' read -r platform playwright_image playwright_digest playwright_version \
     chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
-    go_sha256 node_sha256 \
-    docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest <<<"$output" \
+    go_sha256 node_sha256 github_runner actions_checkout_sha actions_upload_artifact_sha \
+    docker_setup_docker_sha docker_setup_buildx_sha docker_engine_version \
+    docker_buildx_version buildkit_image buildkit_digest <<<"$output" \
     || fail 'invalid toolchain lock'
 }
 
@@ -50,11 +51,12 @@ case ${1:-} in
     test "$#" = 4 || fail 'usage: --load or strict CI --push'
     test "${3:-}" = --env-file || fail 'usage: --load or strict CI --push'
     test "${CI:-}" = true || fail 'push requires CI'
-    test -n "${CI_REGISTRY_IMAGE:-}" && test -n "${CI_COMMIT_SHA:-}" || fail 'push requires GitLab identity'
-    [[ $CI_REGISTRY_IMAGE =~ ^[A-Za-z0-9._/:@-]+$ ]] || fail 'invalid GitLab registry image'
-    [[ $CI_COMMIT_SHA =~ ^[0-9a-f]{40}$ ]] || fail 'invalid GitLab commit SHA'
-    expected_ref="$CI_REGISTRY_IMAGE/toolchain:$CI_COMMIT_SHA"
-    test "$2" = "$expected_ref" || fail 'push target must match GitLab identity'
+    test -n "${GITHUB_REPOSITORY:-}" && test -n "${GITHUB_SHA:-}" || fail 'push requires GitHub identity'
+    [[ $GITHUB_REPOSITORY =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail 'invalid GitHub repository'
+    [[ $GITHUB_SHA =~ ^[0-9a-f]{40}$ ]] || fail 'invalid GitHub commit SHA'
+    repository=$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+    expected_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
+    test "$2" = "$expected_ref" || fail 'push target must match GitHub identity'
     test "$4" = test-results/toolchain.env || fail 'dotenv path must be test-results/toolchain.env'
     image_ref=$2
     env_file="$root/$4"

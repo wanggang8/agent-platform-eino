@@ -158,14 +158,15 @@ chmod +x "$baseline_bin/npm" "$baseline_bin/go" "$baseline_bin/sha256sum" "$base
 export BASELINE_MUTATION="$baseline_mutation"
 for kind in tracked staged untracked; do
   rm -f "$baseline_mutation"
-  if CI=true CI_COMMIT_SHA=0123456789abcdef MUTATION_KIND=$kind PATH="$baseline_bin:$PATH" \
+  if CI=true GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 \
+    MUTATION_KIND=$kind PATH="$baseline_bin:$PATH" \
     bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-$kind.out" 2>&1; then
     printf 'expected final clean check to reject %s mutation\n' "$kind" >&2
     exit 1
   fi
 done
 rm -f "$baseline_mutation"
-CI=true CI_COMMIT_SHA=0123456789abcdef PATH="$baseline_bin:$PATH" \
+CI=true GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 PATH="$baseline_bin:$PATH" \
   bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-clean.out" 2>&1
 
 make_repo() {
@@ -252,6 +253,30 @@ assert_builder_failure() {
   ! grep -Fq 'SHOULD_NOT_LEAK' "$tmp/fail.err"
 }
 
+# GitHub identity 用例先清空宿主 CI 变量，避免本地或 runner 环境污染失败边界。
+assert_builder_failure_env() {
+  local expected=$1
+  shift
+  local -a command_env=()
+  while test "$#" -gt 0 && test "$1" != --; do
+    command_env+=("$1")
+    shift
+  done
+  test "${1:-}" = --
+  shift
+  if env -u CI -u GITHUB_REPOSITORY -u GITHUB_SHA \
+    -u CI_REGISTRY_IMAGE -u CI_COMMIT_SHA \
+    "${command_env[@]}" PATH="$bin:$PATH" \
+    bash "$repo/scripts/build_toolchain_image.sh" "$@" >"$tmp/fail.out" 2>"$tmp/fail.err"; then
+    printf 'expected builder failure: %s\n' "$expected" >&2
+    exit 1
+  fi
+  test ! -s "$tmp/fail.out"
+  test "$(<"$tmp/fail.err")" = "toolchain image error: $expected"
+  ! grep -Fq "$tmp" "$tmp/fail.err"
+  ! grep -Fq 'SHOULD_NOT_LEAK' "$tmp/fail.err"
+}
+
 cp "$repo/build/toolchain/toolchain.lock" "$tmp/lock.good"
 printf '%s\n' 'PLATFORM=linux/amd64' >>"$repo/build/toolchain/toolchain.lock"
 SECRET=SHOULD_NOT_LEAK assert_builder_failure 'invalid toolchain lock' --load
@@ -296,12 +321,43 @@ assert_builder_failure 'invalid toolchain lock' --load
 mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
 
 assert_builder_failure 'usage: --load or strict CI --push'
-assert_builder_failure 'push requires CI' --push registry.example/team/project/toolchain:bad --env-file test-results/toolchain.env
 
 commit_sha=0123456789abcdef0123456789abcdef01234567
-image_ref="registry.example/team/project/toolchain:$commit_sha"
+image_ref="ghcr.io/wanggang8/agent-platform-eino/toolchain:$commit_sha"
+different_sha=1123456789abcdef0123456789abcdef01234567
+assert_builder_failure_env 'push requires CI' CI=false -- \
+  --push "$image_ref" --env-file test-results/toolchain.env
+assert_builder_failure_env 'push requires GitHub identity' \
+  CI=true GITHUB_SHA=$commit_sha -- \
+  --push "$image_ref" --env-file test-results/toolchain.env
+assert_builder_failure_env 'invalid GitHub repository' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino/extra GITHUB_SHA=$commit_sha -- \
+  --push "$image_ref" --env-file test-results/toolchain.env
+assert_builder_failure_env 'invalid GitHub commit SHA' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino GITHUB_SHA=0123456789abcdef -- \
+  --push "$image_ref" --env-file test-results/toolchain.env
+assert_builder_failure_env 'invalid GitHub commit SHA' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino \
+  GITHUB_SHA=ABCDEF0123456789ABCDEF0123456789ABCDEF01 -- \
+  --push "$image_ref" --env-file test-results/toolchain.env
+assert_builder_failure_env 'push target must match GitHub identity' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino GITHUB_SHA=$commit_sha -- \
+  --push "registry.example/wanggang8/agent-platform-eino/toolchain:$commit_sha" \
+  --env-file test-results/toolchain.env
+assert_builder_failure_env 'push target must match GitHub identity' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino GITHUB_SHA=$commit_sha -- \
+  --push "ghcr.io/wanggang8/agent-platform-eino/toolchain:$different_sha" \
+  --env-file test-results/toolchain.env
+assert_builder_failure_env 'dotenv path must be test-results/toolchain.env' \
+  CI=true GITHUB_REPOSITORY=wanggang8/agent-platform-eino GITHUB_SHA=$commit_sha -- \
+  --push "$image_ref" --env-file toolchain.env
+assert_builder_failure_env 'push requires GitHub identity' \
+  CI=true CI_REGISTRY_IMAGE=registry.example/team/project CI_COMMIT_SHA=$commit_sha -- \
+  --push "registry.example/team/project/toolchain:$commit_sha" \
+  --env-file test-results/toolchain.env
+
 : >"$DOCKER_LOG"
-CI=true CI_REGISTRY_IMAGE=registry.example/team/project CI_COMMIT_SHA=$commit_sha \
+CI=true GITHUB_REPOSITORY=WangGang8/Agent-Platform-Eino GITHUB_SHA=$commit_sha \
   PATH="$bin:$PATH" bash "$repo/scripts/build_toolchain_image.sh" \
     --push "$image_ref" --env-file test-results/toolchain.env >"$tmp/push.out"
 grep -Fxq -- '--push' "$DOCKER_LOG"
@@ -320,6 +376,8 @@ awk -v ref="$image_ref" '
 ' "$DOCKER_LOG"
 grep -Fxq "TOOLCHAIN_IMAGE=$image_ref@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" \
   "$repo/test-results/toolchain.env"
+grep -Fxq "TOOLCHAIN_IMAGE=$image_ref@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" \
+  "$tmp/push.out"
 file_mode() {
   local path=$1 mode
   if mode=$(stat -c '%a' "$path" 2>/dev/null); then

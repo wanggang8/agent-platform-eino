@@ -6,7 +6,7 @@ mkdir -p test-results
 exec > >(tee test-results/toolchain-baseline.log) 2>&1
 
 if [[ ${CI:-false} == true ]]; then
-  test -n "${CI_COMMIT_SHA:-}"
+  [[ ${GITHUB_SHA:-} =~ ^[0-9a-f]{40}$ ]]
   git diff --quiet
   git diff --cached --quiet
   test -z "$(git ls-files --others --exclude-standard)"
