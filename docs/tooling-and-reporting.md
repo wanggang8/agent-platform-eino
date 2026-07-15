@@ -2,12 +2,44 @@
 
 本文固定前端、契约、视觉和 smoke 报告的工具链规则，避免不同机器产生不可复现的验收结果。
 
+## Canonical 工具链环境
+
+Story 1.1 起，发布构建和 desktop visual 的唯一目标环境由
+`build/toolchain/toolchain.lock` 与 `build/toolchain/Dockerfile` 固定。构建并取得本地 image ID：
+
+```bash
+image_id=$(bash scripts/build_toolchain_image.sh --load | awk -F= '/^TOOLCHAIN_IMAGE_ID=/{print $2}')
+test -n "$image_id"
+```
+
+进入同一环境进行诊断，或执行唯一的顺序 baseline：
+
+```bash
+docker run --rm -it --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" bash
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" bash scripts/run_toolchain_baseline.sh
+```
+
+`run_toolchain_baseline.sh` 先验证工具链与 CI 配置，再执行 `npm ci`；随后按 contract、Go、前端、
+desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令必须显式使用
+`GOTOOLCHAIN=local`，Playwright 门禁只运行 `--project=desktop`，mobile 不属于首版
+`G-TOOLCHAIN` 通过条件。日志写入 `test-results/toolchain-baseline.log`。
+
+本地构建失败、没有 image ID／最终 image digest、没有 actual/diff、没有 UX 审批，或没有 clean
+GitLab pipeline 时，只能形成 blocked/preflight evidence，不能声明 canonical baseline、视觉迁移或
+`G-TOOLCHAIN PASS`。阻断记录必须写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；
+不得切换未批准镜像／宿主环境，也不得用静态 CI PASS 代替真实 pipeline。
+
 ## Node 与包管理
 
-- Node 版本由 `web/eino-workbench/package.json` 的 `engines.node` 固定。
-- 默认使用 npm 和 `package-lock.json`。
+- Node 精确版本以根目录 `.node-version` 为权威源；npm 精确版本以根 `package.json` 的
+  `packageManager` 为权威源。根与 workspace 的 `engines` 是由 verifier 核对的声明镜像。
+- 使用 npm 和提交的 `package-lock.json`。
 - CI 和本地都使用 `npm ci` 进行可复现安装。
 - 根 `package.json` 只提供 wrapper scripts，不复制前端包内部逻辑。
+- Chromium 与 OS/font layer 只随 pinned canonical image 构建；测试阶段不得运行浮动的
+  `playwright install`、apt 安装或其他浏览器替换命令。
 
 当前 Phase 1 文档契约已提供根级 wrapper：
 
@@ -45,11 +77,21 @@ npm run eino-workbench:visual-test
 - screenshot/video/trace 失败时保留。
 - visual snapshot threshold 和 mask 规则。
 
-唯一截图更新命令：
+常规视觉基线的截图更新命令：
 
 ```bash
 npm run eino-workbench:visual-test -- --update-snapshots
 ```
+
+跨环境迁移是例外门禁：必须先在 canonical image 运行 desktop-only 测试、保留完整 actual/diff，
+并在迁移记录中取得明确 UX 批准。只有批准后，才可在同一 image 内执行：
+
+```bash
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
+  "$image_id" npm run eino-workbench:browser-test -- --project=desktop --update-snapshots
+```
+
+未产生 canonical image 或仍为 `PENDING_UX_APPROVAL` 时，禁止运行任何 snapshot update。
 
 ## 视觉基线
 
