@@ -42,6 +42,36 @@ var (
 	buildKitImagePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._/-]*:v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 	gitLabSyntaxPattern  = regexp.MustCompile(`(?i)\.gitlab-ci|\bCI_(?:COMMIT|REGISTRY|PROJECT|PIPELINE|JOB|SERVER|RUNNER|DEFAULT_BRANCH|MERGE_REQUEST)[A-Z0-9_]*\b`)
 	scriptCallPattern    = regexp.MustCompile(`(?:^|[[:space:]])(?:bash|go[[:space:]]+run)[[:space:]]+([^[:space:]"']+)`)
+	toolchainLockKeys    = []string{
+		"PLATFORM",
+		"PLAYWRIGHT_IMAGE",
+		"PLAYWRIGHT_AMD64_DIGEST",
+		"PLAYWRIGHT_VERSION",
+		"CHROMIUM_REVISION",
+		"CHROMIUM_VERSION",
+		"BASE_OS",
+		"FONT_POLICY",
+		"UBUNTU_SNAPSHOT",
+		"APT_BUILD_PACKAGES",
+		"GO_LINUX_AMD64_SHA256",
+		"NODE_LINUX_X64_SHA256",
+		"GITHUB_RUNNER",
+		"ACTIONS_CHECKOUT_SHA",
+		"ACTIONS_UPLOAD_ARTIFACT_SHA",
+		"DOCKER_SETUP_DOCKER_SHA",
+		"DOCKER_SETUP_BUILDX_SHA",
+		"DOCKER_ENGINE_VERSION",
+		"DOCKER_BUILDX_VERSION",
+		"BUILDKIT_IMAGE",
+		"BUILDKIT_DIGEST",
+	}
+	toolchainLockKeySet = func() map[string]struct{} {
+		keys := make(map[string]struct{}, len(toolchainLockKeys))
+		for _, key := range toolchainLockKeys {
+			keys[key] = struct{}{}
+		}
+		return keys
+	}()
 )
 
 // lockValues 仅承载 GitHub Actions 执行边界需要核对的固定输入。
@@ -112,6 +142,9 @@ func loadLock(path string) (lockValues, error) {
 		if !ok || !lockKeyPattern.MatchString(key) || !lockValuePattern.MatchString(value) {
 			return lockValues{}, errors.New("invalid toolchain lock entry")
 		}
+		if _, known := toolchainLockKeySet[key]; !known {
+			return lockValues{}, fmt.Errorf("unknown toolchain lock key %s", key)
+		}
 		if _, exists := values[key]; exists {
 			return lockValues{}, fmt.Errorf("duplicate toolchain lock key %s", key)
 		}
@@ -121,18 +154,8 @@ func loadLock(path string) (lockValues, error) {
 		return lockValues{}, errors.New("cannot read toolchain lock")
 	}
 
-	required := []string{
-		"GITHUB_RUNNER",
-		"ACTIONS_CHECKOUT_SHA",
-		"ACTIONS_UPLOAD_ARTIFACT_SHA",
-		"DOCKER_SETUP_DOCKER_SHA",
-		"DOCKER_SETUP_BUILDX_SHA",
-		"DOCKER_ENGINE_VERSION",
-		"DOCKER_BUILDX_VERSION",
-		"BUILDKIT_IMAGE",
-		"BUILDKIT_DIGEST",
-	}
-	for _, key := range required {
+	// 完整 schema 保持 lock 的封闭性；返回值仍只投影 workflow 使用的九个字段。
+	for _, key := range toolchainLockKeys {
 		if _, ok := values[key]; !ok {
 			return lockValues{}, fmt.Errorf("missing toolchain lock key %s", key)
 		}

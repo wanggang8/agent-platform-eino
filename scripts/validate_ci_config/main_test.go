@@ -393,6 +393,8 @@ func TestLoadLockRejectsMissingDuplicateAndMalformedEntries(t *testing.T) {
 		summary string
 	}{
 		{name: "missing key", content: strings.Replace(canonicalTestLock(), "GITHUB_RUNNER=ubuntu-24.04\n", "", 1), summary: "missing toolchain lock key GITHUB_RUNNER"},
+		{name: "missing runtime key", content: strings.Replace(canonicalTestLock(), "PLAYWRIGHT_VERSION=1.61.1\n", "", 1), summary: "missing toolchain lock key PLAYWRIGHT_VERSION"},
+		{name: "unknown key", content: canonicalTestLock() + "UNKNOWN_PIN=unexpected\n", summary: "unknown toolchain lock key UNKNOWN_PIN"},
 		{name: "duplicate key", content: canonicalTestLock() + "GITHUB_RUNNER=ubuntu-24.04\n", summary: "duplicate toolchain lock key GITHUB_RUNNER"},
 		{name: "malformed key", content: strings.Replace(canonicalTestLock(), "GITHUB_RUNNER=", "github_runner=", 1), summary: "invalid toolchain lock entry"},
 		{name: "whitespace", content: strings.Replace(canonicalTestLock(), "ubuntu-24.04", "ubuntu 24.04", 1), summary: "invalid toolchain lock entry"},
@@ -466,6 +468,17 @@ func canonicalTestLock() string {
 	lock := completeTestLock()
 	return strings.Join([]string{
 		"PLATFORM=linux/amd64",
+		"PLAYWRIGHT_IMAGE=mcr.microsoft.com/playwright:v1.61.1-noble",
+		"PLAYWRIGHT_AMD64_DIGEST=sha256:cf0daee9b994042e011bc29f20cdff1a9f682a039b43fcd738f7d8a9d3bcd9d6",
+		"PLAYWRIGHT_VERSION=1.61.1",
+		"CHROMIUM_REVISION=1228",
+		"CHROMIUM_VERSION=149.0.7827.55",
+		"BASE_OS=ubuntu-24.04-noble",
+		"FONT_POLICY=playwright-v1.61.1-noble-bundled",
+		"UBUNTU_SNAPSHOT=20260708T000000Z",
+		"APT_BUILD_PACKAGES=build-essential",
+		"GO_LINUX_AMD64_SHA256=5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053",
+		"NODE_LINUX_X64_SHA256=783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8",
 		"GITHUB_RUNNER=" + lock.GitHubRunner,
 		"ACTIONS_CHECKOUT_SHA=" + lock.ActionsCheckoutSHA,
 		"ACTIONS_UPLOAD_ARTIFACT_SHA=" + lock.ActionsUploadArtifactSHA,
