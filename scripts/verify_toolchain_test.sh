@@ -9,6 +9,7 @@ mkdir -p "$tmp/repo/scripts" "$tmp/repo/build/toolchain" "$tmp/repo/web/eino-wor
   "$tmp/repo/.github/workflows" "$tmp/bin"
 cp "$root/scripts/verify_toolchain.sh" "$root/scripts/toolchain_lock.sh" \
   "$root/scripts/build_toolchain_image.sh" "$root/scripts/run_toolchain_baseline.sh" \
+  "$root/scripts/docker-credential-github-token" \
   "$tmp/repo/scripts/"
 cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" \
   "$tmp/repo/build/toolchain/"
@@ -59,7 +60,16 @@ if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
 fi
 rm "$tmp/repo/.gitlab-ci.yml"
 
-# 四个生产入口必须 fail-closed；缺失入口只能返回固定摘要且不得泄露临时绝对路径。
+# 五入口中的任意旧平台变量残留都必须被生产扫描拒绝，同时 verifier 本体不保留完整旧变量名。
+cp "$tmp/repo/scripts/docker-credential-github-token" "$tmp/repo/scripts/docker-credential-github-token.good"
+printf '%s\n' '# CI_COMMIT_SHA residue' >>"$tmp/repo/scripts/docker-credential-github-token"
+if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
+  echo 'expected legacy CI variable residue to fail' >&2
+  exit 1
+fi
+mv "$tmp/repo/scripts/docker-credential-github-token.good" "$tmp/repo/scripts/docker-credential-github-token"
+
+# 五个生产入口必须 fail-closed；缺失入口只能返回固定摘要且不得泄露临时绝对路径。
 assert_unreadable_ci_entry_failure() {
   local entry=$1
   local stdout_file="$tmp/unreadable-entry.stdout"
@@ -88,6 +98,19 @@ assert_unreadable_ci_entry_failure() {
 
 assert_unreadable_ci_entry_failure scripts/build_toolchain_image.sh
 assert_unreadable_ci_entry_failure scripts/run_toolchain_baseline.sh
+assert_unreadable_ci_entry_failure .github/workflows/toolchain.yml
+assert_unreadable_ci_entry_failure scripts/validate_ci_config.sh
+assert_unreadable_ci_entry_failure scripts/docker-credential-github-token
+
+# 生产 verifier 必须完整绑定 GitHub Task 1 的 21 字段，且不能遗留旧平台结构变量。
+verifier=$(<"$root/scripts/verify_toolchain.sh")
+for forbidden in docker_dind docker_cli CI_COMMIT_SHA CI_REGISTRY CI_PROJECT_DIR; do
+  [[ $verifier != *"$forbidden"* ]] || { echo "production verifier contains forbidden structure: $forbidden" >&2; exit 1; }
+done
+for required in github_runner actions_checkout_sha actions_upload_artifact_sha docker_setup_docker_sha \
+  docker_setup_buildx_sha docker_engine_version docker_buildx_version buildkit_image buildkit_digest; do
+  [[ $verifier == *"$required"* ]] || { echo "production verifier does not bind lock field: $required" >&2; exit 1; }
+done
 
 # CI 不得复制三项 authoritative sources，避免形成第二组 runtime 常量。
 cp "$tmp/repo/.github/workflows/toolchain.yml" "$tmp/repo/.github/workflows/toolchain.yml.good"

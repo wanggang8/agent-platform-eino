@@ -56,8 +56,9 @@ canonical image registry。
 4. Docker Engine 固定为现有批准版本 `29.4.0`；Docker Setup action 用 exact `version` 安装，避免依赖
    GitHub runner 的浮动预装 Docker。Buildx/BuildKit 的 exact 版本与 action SHA 进入
    `build/toolchain/toolchain.lock`，由静态 validator 统一校验。
-5. 使用 `${{ secrets.GITHUB_TOKEN }}` 登录 `ghcr.io`；token 只通过 stdin 传给 `docker login`，不写入
-   文件、日志或 artifact。
+5. 使用环境 credential helper 认证 `ghcr.io`：Docker config 与 mode `0700` helper 副本只写入
+   `$RUNNER_TEMP`，config 不含 token；`${{ github.actor }}` 与 `${{ secrets.GITHUB_TOKEN }}` 只注入实际
+   build/push step。helper 仅从当前进程环境响应 `get`，固定拒绝 `store` / `erase`。
 6. canonical tag 必须由 `GITHUB_REPOSITORY` 与 `GITHUB_SHA` 唯一构造，并转为小写：
    `ghcr.io/wanggang8/agent-platform-eino/toolchain:<sha>`。
 7. `scripts/build_toolchain_image.sh --push` 验证 GitHub identity、构建并 push；成功后输出唯一
@@ -68,7 +69,8 @@ canonical image registry。
 
 1. `needs: toolchain-build`，只消费 build job 输出的 digest image。
 2. 权限为 `contents: read`、`packages: read`。
-3. checkout 同一 `GITHUB_SHA`，登录 GHCR，拒绝非 `@sha256:` image。
+3. checkout 同一 `GITHUB_SHA`，用相同环境 credential helper 认证 GHCR，并拒绝非 `@sha256:` image；
+   actor/token 只注入 digest pull/run step。
 4. pull digest image，随后执行：
 
    ```text
@@ -104,6 +106,8 @@ canonical image registry。
 - 仓库公开，但本地 `configs/eino-workbench.local.yaml`、token、cookie、真实 provider凭据仍由
   `.gitignore` 隔离，不得进入 Git 历史、workflow、artifact 或日志。
 - workflow 显式声明最小 `GITHUB_TOKEN` permissions。GitHub 未声明的权限均为 `none`。
+- token 不得写入 Docker config、`GITHUB_ENV`、`GITHUB_PATH`、仓库文件、日志、artifact 或报告；
+  `$RUNNER_TEMP` 只允许保存不含 token 的 helper 配置与 helper 可执行副本。
 - 只在仓库内 `push` 或人工 `workflow_dispatch` 发布 GHCR image；不在 fork PR 上运行 write token。
 - action 必须使用完整 commit SHA；外部 action 升级必须修改 lock、validator、测试和验收记录。
 - registry tag 只作地址，最终事实必须为 `tag@sha256:digest`。
@@ -126,7 +130,8 @@ canonical image registry。
 - validator 正向覆盖完整 GitHub workflow。
 - 负向覆盖：浮动 action tag、错误 permissions、非 `ubuntu-24.04`、缺 packages write/read、错误 GHCR
   路径、tag-only 传递、非 40 字符 SHA、build/verify 无依赖、artifact path/retention 漂移、重新出现
-  `.gitlab-ci.yml` 或 GitLab变量。
+  `.gitlab-ci.yml` 或 GitLab变量；重新出现 `docker login`、helper/config/path 漂移、token 提升到 job
+  scope 或实际 registry step 缺少 step-local actor/token。
 - builder 覆盖 GitHub identity、大小写归一化、push target、digest 输出和敏感错误脱敏。
 - baseline 覆盖 CI clean checks 使用 `GITHUB_SHA`。
 - 本地运行 toolchain verifier/tests、Go validator tests、shell syntax、`git diff --check` 和禁止产品目录

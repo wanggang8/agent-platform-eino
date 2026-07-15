@@ -40,6 +40,10 @@ clean GitHub Actions run 必须另外产出 `GITHUB_SHA`、GitHub Actions run UR
 `test-results/toolchain-baseline.log` 与 desktop Playwright report。
 静态 validator、宿主临时 Go 1.26.5 或本地 image preflight 均不能替代这些证据。
 
+GHCR token 只能由环境 credential helper 在实际 build/push 与 digest pull/run step 的当前进程读取；
+`$RUNNER_TEMP` 可保存不含 token 的 Docker config 和 mode `0700` helper 副本。helper 必须拒绝
+`store`/`erase`，token 不得进入 Docker config、`GITHUB_ENV`、`GITHUB_PATH`、日志、artifact 或报告。
+
 2026-07-15 客观裁决：`G-TOOLCHAIN=PASS`，Story 1.1=`complete`，Sprint 1.1=`complete`，
 M-0 已完成，下一步为 M-1。真实 GitHub Actions run、GHCR digest、artifact 和逐项 PASS 裁决见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。

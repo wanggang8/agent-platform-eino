@@ -17,7 +17,11 @@ const (
 	buildJobName  = "toolchain-build"
 	verifyJobName = "toolchain-verify"
 
-	canonicalLoginCommand = `printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin`
+	canonicalCredentialConfigCommand = `install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"`
 	canonicalBuildCommand = `repository=${GITHUB_REPOSITORY,,}
 image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
 bash scripts/build_toolchain_image.sh --push "$image_ref" --env-file test-results/toolchain.env
@@ -29,6 +33,7 @@ docker run --rm --platform linux/amd64 -e CI=true -e GITHUB_SHA="$GITHUB_SHA" -v
 	canonicalBuildOutput  = "${{ steps.build.outputs.TOOLCHAIN_IMAGE }}"
 	canonicalVerifyImage  = "${{ needs.toolchain-build.outputs.toolchain_image }}"
 	canonicalGitHubToken  = "${{ secrets.GITHUB_TOKEN }}"
+	canonicalGitHubActor  = "${{ github.actor }}"
 	canonicalAlways       = "${{ always() }}"
 	canonicalArtifactPath = "test-results/toolchain-baseline.log\ntest-results/eino-workbench-playwright-report/\n"
 )
@@ -42,6 +47,7 @@ var (
 	buildKitImagePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._/-]*:v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 	gitLabSyntaxPattern  = regexp.MustCompile(`(?i)\.gitlab-ci|\bCI_(?:COMMIT|REGISTRY|PROJECT|PIPELINE|JOB|SERVER|RUNNER|DEFAULT_BRANCH|MERGE_REQUEST)[A-Z0-9_]*\b`)
 	scriptCallPattern    = regexp.MustCompile(`(?:^|[[:space:]])(?:bash|go[[:space:]]+run)[[:space:]]+([^[:space:]"']+)`)
+	helperInstallPattern = regexp.MustCompile(`(?:^|[[:space:]])install[[:space:]]+-m[[:space:]]+0700[[:space:]]+(scripts/docker-credential-[^[:space:]"']+)`)
 	toolchainLockKeys    = []string{
 		"PLATFORM",
 		"PLAYWRIGHT_IMAGE",
@@ -230,10 +236,10 @@ func validateBuildJob(job map[string]any, lock lockValues) error {
 	}
 	checkout, checkoutOK := stringMap(steps[0])
 	setupDocker, setupDockerOK := stringMap(steps[1])
-	setupBuildx, setupBuildxOK := stringMap(steps[2])
-	login, loginOK := stringMap(steps[3])
+	configure, configureOK := stringMap(steps[2])
+	setupBuildx, setupBuildxOK := stringMap(steps[3])
 	build, buildOK := stringMap(steps[4])
-	if !checkoutOK || !setupDockerOK || !setupBuildxOK || !loginOK || !buildOK {
+	if !checkoutOK || !setupDockerOK || !configureOK || !setupBuildxOK || !buildOK {
 		return errors.New("toolchain-build steps must be exact")
 	}
 	if err := validateActionStep(checkout, "actions/checkout@"+lock.ActionsCheckoutSHA, map[string]string{"fetch-depth": "0"}); err != nil {
@@ -242,17 +248,20 @@ func validateBuildJob(job map[string]any, lock lockValues) error {
 	if err := validateActionStep(setupDocker, "docker/setup-docker-action@"+lock.DockerSetupDockerSHA, map[string]string{"version": "v" + lock.DockerEngineVersion}); err != nil {
 		return err
 	}
+	if err := validateCredentialConfigStep(configure); err != nil {
+		return err
+	}
 	if err := validateActionStep(setupBuildx, "docker/setup-buildx-action@"+lock.DockerSetupBuildxSHA, map[string]string{
 		"version":     "v" + lock.DockerBuildxVersion,
 		"driver-opts": "image=" + lock.BuildKitImage + "@" + lock.BuildKitDigest,
 	}); err != nil {
 		return err
 	}
-	if !hasExactKeys(login, "name", "env", "run") || login["name"] != "Login GHCR" || !exactStringMap(login["env"], map[string]string{"GHCR_TOKEN": canonicalGitHubToken}) || validateRunStep(login, "", canonicalLoginCommand) != nil {
-		return errors.New("Login GHCR step must use GITHUB_TOKEN stdin")
-	}
-	if !hasExactKeys(build, "name", "id", "run") || build["name"] != "Build and push canonical image" || validateRunStep(build, "build", canonicalBuildCommand) != nil {
+	if !hasExactKeys(build, "name", "id", "env", "run") || build["name"] != "Build and push canonical image" || validateRunStep(build, "build", canonicalBuildCommand) != nil {
 		return errors.New("Build and push canonical image step must match canonical command")
+	}
+	if !exactStringMap(build["env"], canonicalCredentialEnv()) {
+		return errors.New("Build and push canonical image authentication must be step-local")
 	}
 	if !hasExactKeys(job, "runs-on", "permissions", "outputs", "steps") {
 		return errors.New("toolchain-build keys must be exact")
@@ -280,10 +289,10 @@ func validateVerifyJob(job map[string]any, lock lockValues) error {
 	}
 	checkout, checkoutOK := stringMap(steps[0])
 	setupDocker, setupDockerOK := stringMap(steps[1])
-	login, loginOK := stringMap(steps[2])
+	configure, configureOK := stringMap(steps[2])
 	verify, verifyOK := stringMap(steps[3])
 	artifact, artifactOK := stringMap(steps[4])
-	if !checkoutOK || !setupDockerOK || !loginOK || !verifyOK || !artifactOK {
+	if !checkoutOK || !setupDockerOK || !configureOK || !verifyOK || !artifactOK {
 		return errors.New("toolchain-verify steps must be exact")
 	}
 	if err := validateActionStep(checkout, "actions/checkout@"+lock.ActionsCheckoutSHA, map[string]string{"fetch-depth": "0"}); err != nil {
@@ -292,11 +301,14 @@ func validateVerifyJob(job map[string]any, lock lockValues) error {
 	if err := validateActionStep(setupDocker, "docker/setup-docker-action@"+lock.DockerSetupDockerSHA, map[string]string{"version": "v" + lock.DockerEngineVersion}); err != nil {
 		return err
 	}
-	if !hasExactKeys(login, "name", "env", "run") || login["name"] != "Login GHCR" || !exactStringMap(login["env"], map[string]string{"GHCR_TOKEN": canonicalGitHubToken}) || validateRunStep(login, "", canonicalLoginCommand) != nil {
-		return errors.New("Login GHCR step must use GITHUB_TOKEN stdin")
+	if err := validateCredentialConfigStep(configure); err != nil {
+		return err
 	}
-	if !hasExactKeys(verify, "name", "run") || verify["name"] != "Verify digest image" || validateRunStep(verify, "", canonicalVerifyCommand) != nil {
+	if !hasExactKeys(verify, "name", "env", "run") || verify["name"] != "Verify digest image" || validateRunStep(verify, "", canonicalVerifyCommand) != nil {
 		return errors.New("Verify digest image step must match canonical command")
+	}
+	if !exactStringMap(verify["env"], canonicalCredentialEnv()) {
+		return errors.New("Verify digest image authentication must be step-local")
 	}
 	if err := validateArtifactStep(artifact, lock); err != nil {
 		return err
@@ -305,6 +317,24 @@ func validateVerifyJob(job map[string]any, lock lockValues) error {
 		return errors.New("toolchain-verify keys must be exact")
 	}
 	return nil
+}
+
+// validateCredentialConfigStep 固定无 token 的 Docker 配置与 helper 安装位置。
+func validateCredentialConfigStep(step map[string]any) error {
+	if !hasExactKeys(step, "name", "run") ||
+		step["name"] != "Configure memory-only GHCR credentials" ||
+		validateRunStep(step, "", canonicalCredentialConfigCommand) != nil {
+		return errors.New("credential helper configuration must match canonical command")
+	}
+	return nil
+}
+
+// canonicalCredentialEnv 只允许真正访问 GHCR 的 step 获取当前进程凭据。
+func canonicalCredentialEnv() map[string]string {
+	return map[string]string{
+		"GHCR_ACTOR": canonicalGitHubActor,
+		"GHCR_TOKEN": canonicalGitHubToken,
+	}
 }
 
 // validateExactPermissions 拒绝缺失、升级或额外的 job token 权限。
@@ -384,6 +414,14 @@ func canonicalScriptReferences(config map[string]any) ([]string, error) {
 			}
 			run, _ := step["run"].(string)
 			for _, match := range scriptCallPattern.FindAllStringSubmatch(run, -1) {
+				target := match[1]
+				if _, exists := seen[target]; exists {
+					continue
+				}
+				seen[target] = struct{}{}
+				references = append(references, target)
+			}
+			for _, match := range helperInstallPattern.FindAllStringSubmatch(run, -1) {
 				target := match[1]
 				if _, exists := seen[target]; exists {
 					continue

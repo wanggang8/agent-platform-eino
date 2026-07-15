@@ -35,17 +35,23 @@ jobs:
         uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
         with:
           version: v29.4.0
+      - name: Configure memory-only GHCR credentials
+        run: |
+          install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+          printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+          install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+          printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+          printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
       - name: Setup Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
         with:
           version: v0.35.0
           driver-opts: image=moby/buildkit:v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a
-      - name: Login GHCR
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
       - name: Build and push canonical image
         id: build
+        env:
+          GHCR_ACTOR: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           repository=${GITHUB_REPOSITORY,,}
           image_ref="ghcr.io/$repository/toolchain:$GITHUB_SHA"
@@ -69,11 +75,17 @@ jobs:
         uses: docker/setup-docker-action@6d7cfa65f60a9dda7b46e5513fa982536f3c9877
         with:
           version: v29.4.0
-      - name: Login GHCR
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Configure memory-only GHCR credentials
+        run: |
+          install -d -m 0700 "$RUNNER_TEMP/docker-config" "$RUNNER_TEMP/docker-credential-bin"
+          printf '%s\n' '{"credHelpers":{"ghcr.io":"github-token"}}' > "$RUNNER_TEMP/docker-config/config.json"
+          install -m 0700 scripts/docker-credential-github-token "$RUNNER_TEMP/docker-credential-bin/docker-credential-github-token"
+          printf 'DOCKER_CONFIG=%s\n' "$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+          printf '%s\n' "$RUNNER_TEMP/docker-credential-bin" >> "$GITHUB_PATH"
       - name: Verify digest image
+        env:
+          GHCR_ACTOR: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           [[ "$TOOLCHAIN_IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+/toolchain:[0-9a-f]{40}@sha256:[0-9a-f]{64}$ ]]
           docker pull "$TOOLCHAIN_IMAGE"
@@ -113,7 +125,7 @@ func TestValidateAcceptsCanonicalGitHubWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected canonical script references, got %v", err)
 	}
-	want := []string{"scripts/build_toolchain_image.sh", "scripts/run_toolchain_baseline.sh"}
+	want := []string{"scripts/docker-credential-github-token", "scripts/build_toolchain_image.sh", "scripts/run_toolchain_baseline.sh"}
 	if !reflect.DeepEqual(references, want) {
 		t.Fatalf("expected only canonical scripts %v, got %v", want, references)
 	}
@@ -219,19 +231,19 @@ func TestValidateRejectsActionPinAndVersionDrift(t *testing.T) {
 			testStep(config, buildJobName, 1)["uses"] = "docker/setup-docker-action@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		}, summary: "Setup Docker action must match lock"},
 		{name: "setup buildx SHA", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 2)["uses"] = "docker/setup-buildx-action@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+			testStep(config, buildJobName, 3)["uses"] = "docker/setup-buildx-action@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		}, summary: "Setup Buildx action must match lock"},
 		{name: "engine version", mutate: func(config map[string]any) {
 			testStep(config, buildJobName, 1)["with"].(map[string]any)["version"] = "v29.3.0"
 		}, summary: "Setup Docker action must match lock"},
 		{name: "buildx version", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 2)["with"].(map[string]any)["version"] = "v0.34.0"
+			testStep(config, buildJobName, 3)["with"].(map[string]any)["version"] = "v0.34.0"
 		}, summary: "Setup Buildx action must match lock"},
 		{name: "buildkit image", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 2)["with"].(map[string]any)["driver-opts"] = "image=moby/buildkit:v0.30.0@" + completeTestLock().BuildKitDigest
+			testStep(config, buildJobName, 3)["with"].(map[string]any)["driver-opts"] = "image=moby/buildkit:v0.30.0@" + completeTestLock().BuildKitDigest
 		}, summary: "Setup Buildx action must match lock"},
 		{name: "buildkit digest", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 2)["with"].(map[string]any)["driver-opts"] = "image=" + completeTestLock().BuildKitImage + "@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+			testStep(config, buildJobName, 3)["with"].(map[string]any)["driver-opts"] = "image=" + completeTestLock().BuildKitImage + "@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		}, summary: "Setup Buildx action must match lock"},
 		{name: "artifact SHA", mutate: func(config map[string]any) {
 			testStep(config, verifyJobName, 4)["uses"] = "actions/upload-artifact@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -255,12 +267,6 @@ func TestValidateRejectsBuildBoundaryDrift(t *testing.T) {
 		{name: "output source", mutate: func(config map[string]any) {
 			testJob(config, buildJobName)["outputs"].(map[string]any)["toolchain_image"] = "${{ steps.other.outputs.TOOLCHAIN_IMAGE }}"
 		}, summary: "toolchain-build output must use steps.build.outputs.TOOLCHAIN_IMAGE"},
-		{name: "login token", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 3)["env"].(map[string]any)["GHCR_TOKEN"] = "${{ secrets.OTHER_TOKEN }}"
-		}, summary: "Login GHCR step must use GITHUB_TOKEN stdin"},
-		{name: "login without stdin", mutate: func(config map[string]any) {
-			testStep(config, buildJobName, 3)["run"] = "docker login ghcr.io --password token"
-		}, summary: "Login GHCR step must use GITHUB_TOKEN stdin"},
 		{name: "builder target", mutate: func(config map[string]any) {
 			testStep(config, buildJobName, 4)["run"] = strings.Replace(testStep(config, buildJobName, 4)["run"].(string), `ghcr.io/$repository/toolchain:$GITHUB_SHA`, `ghcr.io/$repository/toolchain:latest`, 1)
 		}, summary: "Build and push canonical image step must match canonical command"},
@@ -269,6 +275,63 @@ func TestValidateRejectsBuildBoundaryDrift(t *testing.T) {
 			job := testJob(config, buildJobName)
 			job["steps"] = append(job["steps"].([]any), map[string]any{"run": "echo extra"})
 		}, summary: "toolchain-build steps must be exact"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := parseTestConfig(t, validFixture)
+			tt.mutate(config)
+			assertConfigError(t, config, tt.summary)
+		})
+	}
+}
+
+func TestValidateRejectsCredentialBoundaryDrift(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(map[string]any)
+		summary string
+	}{
+		{name: "docker login regression", mutate: func(config map[string]any) {
+			testStep(config, buildJobName, 2)["run"] = "docker login ghcr.io"
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "config contains token", mutate: func(config map[string]any) {
+			step := testStep(config, buildJobName, 2)
+			step["run"] = strings.Replace(step["run"].(string), `{"credHelpers":{"ghcr.io":"github-token"}}`, `{"token":"$GHCR_TOKEN"}`, 1)
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "helper name drift", mutate: func(config map[string]any) {
+			step := testStep(config, verifyJobName, 2)
+			step["run"] = strings.ReplaceAll(step["run"].(string), "github-token", "other-helper")
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "DOCKER_CONFIG drift", mutate: func(config map[string]any) {
+			step := testStep(config, buildJobName, 2)
+			step["run"] = strings.Replace(step["run"].(string), "DOCKER_CONFIG=%s", "DOCKER_CONFIG_FILE=%s", 1)
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "GITHUB_ENV drift", mutate: func(config map[string]any) {
+			step := testStep(config, buildJobName, 2)
+			step["run"] = strings.Replace(step["run"].(string), "$GITHUB_ENV", "$GITHUB_PATH", 1)
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "GITHUB_PATH drift", mutate: func(config map[string]any) {
+			step := testStep(config, verifyJobName, 2)
+			step["run"] = strings.Replace(step["run"].(string), "$GITHUB_PATH", "$GITHUB_ENV", 1)
+		}, summary: "credential helper configuration must match canonical command"},
+		{name: "build token at job scope", mutate: func(config map[string]any) {
+			testJob(config, buildJobName)["env"] = map[string]any{"GHCR_TOKEN": "${{ secrets.GITHUB_TOKEN }}"}
+		}, summary: "toolchain-build keys must be exact"},
+		{name: "verify token at job scope", mutate: func(config map[string]any) {
+			testJob(config, verifyJobName)["env"].(map[string]any)["GHCR_TOKEN"] = "${{ secrets.GITHUB_TOKEN }}"
+		}, summary: "toolchain-verify image must come from toolchain-build output"},
+		{name: "build missing actor", mutate: func(config map[string]any) {
+			delete(testStep(config, buildJobName, 4)["env"].(map[string]any), "GHCR_ACTOR")
+		}, summary: "Build and push canonical image authentication must be step-local"},
+		{name: "build missing token", mutate: func(config map[string]any) {
+			delete(testStep(config, buildJobName, 4)["env"].(map[string]any), "GHCR_TOKEN")
+		}, summary: "Build and push canonical image authentication must be step-local"},
+		{name: "verify missing actor", mutate: func(config map[string]any) {
+			delete(testStep(config, verifyJobName, 3)["env"].(map[string]any), "GHCR_ACTOR")
+		}, summary: "Verify digest image authentication must be step-local"},
+		{name: "verify missing token", mutate: func(config map[string]any) {
+			delete(testStep(config, verifyJobName, 3)["env"].(map[string]any), "GHCR_TOKEN")
+		}, summary: "Verify digest image authentication must be step-local"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -420,7 +483,7 @@ func TestValidateScriptReferencesRejectsEscapes(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, "scripts"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"build_toolchain_image.sh", "run_toolchain_baseline.sh"} {
+	for _, name := range []string{"docker-credential-github-token", "build_toolchain_image.sh", "run_toolchain_baseline.sh"} {
 		if err := os.WriteFile(filepath.Join(root, "scripts", name), []byte("#!/bin/sh\n"), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -431,6 +494,24 @@ func TestValidateScriptReferencesRejectsEscapes(t *testing.T) {
 
 	outside := filepath.Join(t.TempDir(), "outside.sh")
 	if err := os.WriteFile(outside, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// credential helper 也必须参与真实路径检查，不能通过 symlink 逃逸仓库边界。
+	helper := filepath.Join(root, "scripts", "docker-credential-github-token")
+	if err := os.Remove(helper); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, helper); err != nil {
+		t.Fatal(err)
+	}
+	err := validateScriptReferences(root, parseTestConfig(t, validFixture))
+	if err == nil || !strings.Contains(err.Error(), "script reference escapes repository") {
+		t.Fatalf("expected credential helper symlink escape error, got %v", err)
+	}
+	if err := os.Remove(helper); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(helper, []byte("#!/bin/sh\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	tests := []struct {
@@ -458,7 +539,7 @@ func TestValidateScriptReferencesRejectsEscapes(t *testing.T) {
 	config := parseTestConfig(t, validFixture)
 	step := testStep(config, buildJobName, 4)
 	step["run"] = strings.Replace(step["run"].(string), "scripts/build_toolchain_image.sh", "scripts/escape.sh", 1)
-	err := validateScriptReferences(root, config)
+	err = validateScriptReferences(root, config)
 	if err == nil || !strings.Contains(err.Error(), "script reference escapes repository") {
 		t.Fatalf("expected symlink escape error, got %v", err)
 	}

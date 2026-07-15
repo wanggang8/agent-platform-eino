@@ -61,6 +61,12 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
   Playwright report。只有 GHCR digest、GitHub Actions run URL、artifact 与已批准的 visual
   evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
 
+GHCR 认证使用仓库内 `scripts/docker-credential-github-token`：Docker config 和 mode `0700` helper
+副本只能写入 `$RUNNER_TEMP`，config 只记录 `ghcr.io -> github-token` 映射；token 仅在实际 build/push
+或 digest pull/run step 的当前进程环境中存在。helper 的 `get` 直接向 Docker 返回该进程内凭据，
+`store`/`erase` 固定拒绝，因此 token 不进入 Docker config、`GITHUB_ENV`、`GITHUB_PATH`、artifact、
+报告或仓库文件。
+
 首次 pinned MCR base layer 传输曾因长时间无进展人工终止；在相同 pinned inputs 下重试后，本地
 canonical image 已成功构建为 linux/amd64 image ID
 `sha256:41f8317a3cc392bca3eedcf390e70b1c6ae4be0b4548cc4d7d3c4f200a29ea93`，镜像构建期的 snapshot
@@ -69,10 +75,10 @@ canonical image 已成功构建为 linux/amd64 image ID
 migration；71 张候选已在临时 detached worktree 以单 worker 完整生成，并在该最新 image 中以
 零更新方式 17/17 复验通过。Vick 已于 2026-07-15 批准迁移，正式 desktop snapshot 已在同一
 image 中更新；从包含正式 snapshot 与审批记录的干净提交重跑完整 baseline 后，desktop 17/17、
-contract smoke 与末尾 clean gate 全部通过。仓库没有
-公开 GitHub remote 与真实 Actions run 仍独立阻止最终 Story 门禁。任何阻断记录都必须
-写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，
-也不得用本地 image 或静态 CI PASS 代替真实 GitHub Actions run。当前唯一裁决记录见
+contract smoke 与末尾 clean gate 全部通过。GitHub/GHCR 远程证据链随后也已闭合：当前唯一裁决为
+`G-TOOLCHAIN=PASS`，Story 1.1 与 M-0 已完成，下一步为 M-1。任何后续阻断记录仍必须写明命令、
+退出码、最后一个可验证步骤、未产生的证据和解除条件；不得切换未批准镜像／宿主环境，也不得用
+本地 image 或静态 CI PASS 代替真实 GitHub Actions run。当前唯一裁决记录见
 `acceptance-records/story-1-1-g-toolchain-2026-07-15.md`。
 
 ## Node 与包管理

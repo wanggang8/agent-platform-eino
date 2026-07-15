@@ -5,6 +5,7 @@
 Verification status：`LOCAL_VISUAL_MIGRATION_PASS`
 迁移状态：`COMPLETE`
 UX 状态：`APPROVED`
+当前 Story 门禁：`G-TOOLCHAIN=PASS`；M-0 已完成，下一步为 M-1
 
 ## 裁决摘要
 
@@ -22,8 +23,8 @@ worktree 中使用首个成功构建的同 pins image、单 worker 和 `--update
 
 UX checkpoint 已完成；批准后的唯一完整 baseline 已从包含本次 snapshot 与审批记录的干净提交
 在同一 image 重跑，desktop 17/17、contract smoke 与末尾 `git diff --check` 全部通过，A 链闭合。
-本地 visual migration PASS 仍不能替代 GitLab registry digest 或 clean pipeline，因此不能单独形成
-`G-TOOLCHAIN PASS`。
+本地 visual migration PASS 本身不能替代远程 registry digest 或 clean CI；迁移前因此不能单独形成
+`G-TOOLCHAIN PASS`。GitHub/GHCR 远程链现已另行闭合，当前 Story 门禁为 PASS。
 
 ## 旧环境与目标环境
 
@@ -204,20 +205,19 @@ image 和单 worker 执行；任何后续 DOM、文案、尺寸或交互变化�
    checkpoint/SQLite/boundary、TS/Vitest/stream/build、desktop 17/17、contract smoke 与末尾 clean
    gate 全部通过。
 
-本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
-registry digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean
-GitLab pipeline，也不能单独形成 `G-TOOLCHAIN PASS`。A 链已完成。
+本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以远程平台、CI run 或 registry
+digest 为前置。A 链结果始终只是 preflight/visual migration evidence，不替代 B 链 clean GitHub
+Actions run，也不能单独形成 `G-TOOLCHAIN PASS`。A 链已完成。
 
 ### B. Story / G-TOOLCHAIN chain
 
-1. clean GitLab pipeline 使用同一组 pinned inputs push canonical image，并产出绑定 clean commit
-   的 registry `tag@sha256` digest。
-2. pipeline 在该 digest image 内运行完整 `scripts/run_toolchain_baseline.sh` 并保留 release artifacts。
-3. 真实 pipeline/digest/baseline 证据与 A 链已批准的 visual evidence 同时存在后，才可裁决
-   `G-TOOLCHAIN PASS`。
+以下原结论明确属于迁移前历史快照：当时要求 clean GitLab pipeline 产生 registry digest 与 release
+artifacts；当时仓库缺少 remote/pipeline，canonical registry digest 未产生，因此 Story 1.1 保持
+in-progress、`G-TOOLCHAIN` 保持 `BLOCKED`。这段历史不能作为现行平台或阻断条件。
 
-当前本地 image 已产生，但 pipeline canonical image／registry digest 未产生；仓库缺少
-remote/pipeline，B 链仍有独立缺口。缺少 remote/pipeline 只阻止最终 Story/G-TOOLCHAIN PASS，
-不阻止完成 A 链的 UX 记录。
-
-两条链完成前，Story 1.1 保持 in-progress，`G-TOOLCHAIN` 保持 `BLOCKED`。
+Accepted GitHub/GHCR 迁移已用唯一公开 GitHub remote 取代上述平台。clean GitHub Actions run
+`29427351390` 对 commit `f975e258f0d5400fecbe81318083d0535eea4fb9` 完成 canonical GHCR
+`tag@sha256` build/push 与 digest pull/run；`toolchain-build`、`toolchain-verify`、desktop 17/17、contract
+smoke 和末尾 clean gates 全部通过，并产生 30 天 `toolchain-evidence-$GITHUB_SHA` artifact。A/B 两链
+均已闭合，当前唯一裁决为 `G-TOOLCHAIN=PASS`，M-0 已完成，下一步为 M-1；精确 digest、run URL、
+artifact expiry 与逐项裁决见 `story-1-1-g-toolchain-2026-07-15.md`。

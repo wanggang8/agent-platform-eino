@@ -38,8 +38,9 @@ read_container_lock() {
   fi
   IFS=$'\t' read -r container_platform playwright_image playwright_digest playwright_version \
     chromium_revision chromium_version base_os font_policy ubuntu_snapshot apt_build_packages \
-    go_linux_amd64_sha256 \
-    node_linux_x64_sha256 docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest \
+    go_linux_amd64_sha256 node_linux_x64_sha256 github_runner actions_checkout_sha \
+    actions_upload_artifact_sha docker_setup_docker_sha docker_setup_buildx_sha \
+    docker_engine_version docker_buildx_version buildkit_image buildkit_digest \
     <<<"$output" || fail 'invalid toolchain.lock'
 }
 
@@ -85,9 +86,10 @@ verify_ci_config() {
   local ci="$root/.github/workflows/toolchain.yml" validator="$root/scripts/validate_ci_config.sh" forbidden target grep_status
   test ! -e "$root/.gitlab-ci.yml" || fail 'GitLab CI residue is forbidden'
   for target in "$ci" "$root/scripts/build_toolchain_image.sh" \
-    "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/validate_ci_config.sh"; do
+    "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/validate_ci_config.sh" \
+    "$root/scripts/docker-credential-github-token"; do
     test -r "$target" || fail 'GitHub CI production entry is unreadable'
-    if grep -Eq 'CI_COMMIT_SHA|CI_REGISTRY|CI_PROJECT_DIR|GitLab|\.gitlab-ci' "$target" 2>/dev/null; then
+    if grep -Eq 'CI_(COMMIT_SHA|REGISTRY|PROJECT_DIR)|GitLab|\.gitlab-ci' "$target" 2>/dev/null; then
       fail 'GitLab CI residue is forbidden'
     else
       grep_status=$?

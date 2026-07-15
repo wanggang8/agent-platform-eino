@@ -217,6 +217,7 @@ make_repo() {
     "$repo/.github/workflows"
   cp "$root/scripts/toolchain_lock.sh" "$root/scripts/build_toolchain_image.sh" \
     "$root/scripts/run_toolchain_baseline.sh" "$root/scripts/verify_toolchain.sh" \
+    "$root/scripts/docker-credential-github-token" \
     "$repo/scripts/"
   cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" "$repo/build/toolchain/"
   cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \

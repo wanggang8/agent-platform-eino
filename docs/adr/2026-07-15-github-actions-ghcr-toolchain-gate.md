@@ -18,6 +18,9 @@ Story 1.1 的 canonical 工具链门禁需要由唯一远程平台、唯一 CI �
   `ghcr.io/wanggang8/agent-platform-eino/toolchain:$GITHUB_SHA@sha256:$IMAGE_DIGEST`。
 - 最终证据必须包含 GitHub Actions run URL，以及 `toolchain-evidence-$GITHUB_SHA` (30 days)
   artifact；artifact 包含 baseline log 与 Playwright report。
+- GHCR 认证使用环境 credential helper；无 token 的 Docker config 与 mode `0700` helper 可落在
+  `$RUNNER_TEMP`，token 只允许存在于实际 registry step 的当前进程环境。helper 的 `store` / `erase`
+  必须拒绝，禁止凭据进入 Docker config、GitHub environment/path 文件、artifact 或报告。
 - Product code、Eino runtime、Product Facts 和 Workbench UI 不受该 ADR 影响。
 - 只有新的 ADR 才能改变平台；不得在故障时静默恢复双 CI 或 tag-only 验证。
 
@@ -27,8 +30,8 @@ Story 1.1 的 canonical 工具链门禁需要由唯一远程平台、唯一 CI �
   契约，平台漂移由负向测试拒绝。
 - 本地 linux/amd64 image ID 继续作为 preflight 与 visual migration 历史证据，但不能代替 GHCR
   digest、真实 Actions run 或 30 天 artifacts。
-- 在真实 run URL、GHCR digest 和 artifacts 全部产生前，Story 1.1 保持
-  `BLOCKED_PENDING_GITHUB_RUN`，不得进入 M-1，也不得填写模拟 PASS。
+- 在真实 run URL、GHCR digest 和 artifacts 全部产生前，Story 1.1 必须保持
+  `BLOCKED_PENDING_GITHUB_RUN`，不得填写模拟 PASS；这些证据现已产生，当前门禁为 PASS，下一步为 M-1。
 
 ## 拒绝方案
 
