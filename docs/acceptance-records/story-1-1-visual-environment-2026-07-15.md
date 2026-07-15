@@ -19,7 +19,9 @@ UX 状态：`PENDING_UX_APPROVAL`
 | --- | --- | --- |
 | 操作系统 | macOS 26.5.1 | Ubuntu 24.04 Noble |
 | 架构 | arm64 | linux/amd64 |
+| Go | 未作为旧 visual baseline 身份记录 | 1.26.5 |
 | Node.js | Node 25 历史环境 | 24.18.0 |
+| npm | 未作为旧 visual baseline 身份记录 | 11.16.0 |
 | Playwright | 仓库 lockfile 1.61.1 | 1.61.1 |
 | Chromium | 未作为旧 baseline 的可复现发布环境固定 | revision 1228 / 149.0.7827.55 |
 | 环境身份 | 历史截图，只作迁移输入 | canonical image 最终 digest：未产生 |
@@ -152,12 +154,32 @@ tool-expanded-tool-card.png
 没有 actual/diff 时不能进入 checkpoint/human review，也不能把差异预先归类为纯字体／栅格环境
 差异。任何 DOM、文案、尺寸或交互变化都必须先按产品回归调查，不能仅凭跨 OS 迁移解释。
 
-## 解除条件
+## 两条独立证据链
 
-1. MCR 传输恢复后，只重跑同一 pinned `bash scripts/build_toolchain_image.sh --load`，成功取得并验证 image ID；clean GitLab pipeline 还必须产出绑定 commit 的最终 image digest。
-2. 在该 image 的 linux/amd64 环境执行 `bash scripts/run_toolchain_baseline.sh`，保留每个 desktop snapshot 的真实 actual/diff 与像素差。
+### A. Visual migration chain
+
+1. MCR 传输恢复后，使用同一组 pinned external inputs 重跑
+   `bash scripts/build_toolchain_image.sh --load`，成功取得并验证本地 image ID。
+2. 在该本地 image 的 linux/amd64 环境运行 desktop-only Playwright，保留每个 desktop snapshot
+   的真实 actual、diff 与像素差。
 3. 逐项检查功能 DOM、文案、尺寸和交互，再区分环境栅格差异、产品回归或仍无法判定。
 4. 通过 checkpoint/human review 展示完整 diff，记录 UX 审批人、时间和明确结论。
-5. 只有批准后才可运行 desktop-only `--update-snapshots`；更新后重跑完整 canonical baseline，并确认 mobile 与业务实现目录仍无 diff。
+5. 只有批准后才可在同一本地 image 运行 desktop-only `--update-snapshots`，随后在同一环境重跑
+   desktop，并确认 mobile 与业务实现目录仍无 diff。
 
-在上述条件全部满足前，Story 1.1 保持 in-progress，`G-TOOLCHAIN` 保持 `BLOCKED`。
+本链只依赖真实本地 canonical image ID 与相同的 pinned inputs，不以 GitLab remote、pipeline 或
+registry digest 为前置。当前仍阻塞在第 1 步：MCR base layer 构建失败，本地 image ID 未产生。
+
+### B. Story / G-TOOLCHAIN chain
+
+1. clean GitLab pipeline 使用同一组 pinned inputs push canonical image，并产出绑定 clean commit
+   的 registry `tag@sha256` digest。
+2. pipeline 在该 digest image 内运行完整 `scripts/run_toolchain_baseline.sh` 并保留 release artifacts。
+3. 真实 pipeline/digest/baseline 证据与 A 链已批准的 visual evidence 同时存在后，才可裁决
+   `G-TOOLCHAIN PASS`。
+
+当前 MCR build 本身失败，pipeline canonical image 也未产生；此外仓库缺少 remote/pipeline，B 链
+仍有独立缺口。缺少 remote/pipeline 只阻止最终 Story/G-TOOLCHAIN PASS，不阻止未来完成 A 链的
+本地 visual run 与 UX 记录。
+
+两条链完成前，Story 1.1 保持 in-progress，`G-TOOLCHAIN` 保持 `BLOCKED`。

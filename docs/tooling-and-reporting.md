@@ -26,10 +26,20 @@ desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令
 `GOTOOLCHAIN=local`，Playwright 门禁只运行 `--project=desktop`，mobile 不属于首版
 `G-TOOLCHAIN` 通过条件。日志写入 `test-results/toolchain-baseline.log`。
 
-本地构建失败、没有 image ID／最终 image digest、没有 actual/diff、没有 UX 审批，或没有 clean
-GitLab pipeline 时，只能形成 blocked/preflight evidence，不能声明 canonical baseline、视觉迁移或
-`G-TOOLCHAIN PASS`。阻断记录必须写明命令、退出码、最后一个可验证步骤、未产生的证据和解除条件；
-不得切换未批准镜像／宿主环境，也不得用静态 CI PASS 代替真实 pipeline。
+本地 visual migration 与 Story/G-TOOLCHAIN 使用两条独立证据链：
+
+- Visual migration chain：使用同一组 pinned external inputs 本地构建 canonical image，取得本地
+  image ID 后即可在该 image 运行 desktop、生成 actual/diff/像素差并进入 UX review。此链不要求
+  GitLab remote、registry digest 或 pipeline；但本地结果始终只是 visual evidence，不能单独形成
+  `G-TOOLCHAIN PASS`。
+- Story/G-TOOLCHAIN chain：clean GitLab pipeline 必须 push canonical image，产出绑定 commit 的
+  registry `tag@sha256` digest，并在该 image 执行完整 baseline 与 artifacts。只有该证据与已批准的
+  visual evidence 同时存在，才可裁决 `G-TOOLCHAIN PASS`。
+
+当前 pinned MCR base layer 构建失败，因此本地 image ID 和 pipeline image 都未产生，两条链均未
+前进；仓库没有 remote/pipeline 是 Story 门禁的额外缺口，但不阻止未来在真实本地 canonical image
+上生成和记录 visual evidence。任何阻断记录都必须写明命令、退出码、最后一个可验证步骤、未产生
+的证据和解除条件；不得切换未批准镜像／宿主环境，也不得用静态 CI PASS 代替真实 pipeline。
 
 ## Node 与包管理
 
@@ -83,8 +93,9 @@ npm run eino-workbench:visual-test
 npm run eino-workbench:visual-test -- --update-snapshots
 ```
 
-跨环境迁移是例外门禁：必须先在 canonical image 运行 desktop-only 测试、保留完整 actual/diff，
-并在迁移记录中取得明确 UX 批准。只有批准后，才可在同一 image 内执行：
+跨环境迁移是例外门禁：必须先在本地 canonical image 运行 desktop-only 测试、保留完整
+actual/diff，并在迁移记录中取得明确 UX 批准。该 visual review 不依赖 GitLab remote 或 registry
+digest；只有批准后，才可在同一 image 内执行：
 
 ```bash
 docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
