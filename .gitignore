@@ -6,3 +6,4 @@ data/
 npm-debug.log*
 web/eino-workbench/dist/
 configs/eino-workbench.local.yaml
+.worktrees/
