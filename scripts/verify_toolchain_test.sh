@@ -102,3 +102,43 @@ if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
   echo 'expected manifest drift to fail' >&2
   exit 1
 fi
+
+# 解析失败只能返回稳定的相对文件摘要，禁止泄露临时绝对路径、原始异常或 stack。
+assert_safe_input_failure() {
+  local expected=$1
+  local stdout_file="$tmp/verifier.stdout"
+  local stderr_file="$tmp/verifier.stderr"
+  local actual rc
+
+  if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh" >"$stdout_file" 2>"$stderr_file"; then
+    echo "expected safe input failure: $expected" >&2
+    exit 1
+  else
+    rc=$?
+  fi
+  actual=$(<"$stderr_file")
+  [[ $rc -ne 0 ]] || { echo "expected non-zero input failure: $expected" >&2; exit 1; }
+  [[ ! -s $stdout_file ]] || { echo "expected empty stdout: $expected" >&2; exit 1; }
+  [[ $actual == "$expected" ]] || {
+    printf 'expected safe error %q, got %q\n' "$expected" "$actual" >&2
+    exit 1
+  }
+  [[ $actual != *"$tmp"* ]] || { echo 'safe error leaked temporary path' >&2; exit 1; }
+  [[ $actual != *' at '* ]] || { echo 'safe error leaked stack trace' >&2; exit 1; }
+}
+
+cp "$root/package.json" "$tmp/repo/package.json"
+
+mv "$tmp/repo/go.mod" "$tmp/repo/go.mod.good"
+assert_safe_input_failure 'toolchain mismatch: invalid go.mod'
+mv "$tmp/repo/go.mod.good" "$tmp/repo/go.mod"
+
+cp "$tmp/repo/go.mod" "$tmp/repo/go.mod.good"
+: >"$tmp/repo/go.mod"
+assert_safe_input_failure 'toolchain mismatch: invalid go.mod'
+mv "$tmp/repo/go.mod.good" "$tmp/repo/go.mod"
+
+cp "$tmp/repo/package.json" "$tmp/repo/package.json.good"
+printf '%s\n' '{invalid json' >"$tmp/repo/package.json"
+assert_safe_input_failure 'toolchain mismatch: invalid package.json'
+mv "$tmp/repo/package.json.good" "$tmp/repo/package.json"

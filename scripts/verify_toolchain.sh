@@ -3,7 +3,31 @@ set -euo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 fail() { printf 'toolchain mismatch: %s\n' "$1" >&2; exit 1; }
-read_one() { test -f "$1" || fail "missing ${1#"$root"/}"; tr -d '[:space:]' <"$1"; }
+read_one() {
+  local file=$1 relative value
+  relative=${file#"$root"/}
+  test -f "$file" || fail "missing $relative"
+  if ! value=$(tr -d '[:space:]' 2>/dev/null <"$file"); then
+    fail "invalid $relative"
+  fi
+  printf '%s' "$value"
+}
+
+# go.mod 读取异常与缺失指令都在 shell 边界收敛，避免 awk 泄露本机路径。
+read_go_directive() {
+  local key=$1 value
+  test -r "$root/go.mod" || fail 'invalid go.mod'
+  if ! value=$(awk -v key="$key" '
+    $1 == key { count++; value = $2 }
+    END {
+      if (count != 1 || value == "") exit 1
+      print value
+    }
+  ' "$root/go.mod" 2>/dev/null); then
+    fail 'invalid go.mod'
+  fi
+  printf '%s' "$value"
+}
 
 # 版本文件与根 packageManager 是唯一权威源，其余声明只做一致性镜像。
 go_version=$(read_one "$root/.go-version")
@@ -19,8 +43,8 @@ actual_npm=$(npm --version 2>/dev/null || true)
 [[ $actual_go == "go$go_version" ]] || fail "go expected=go$go_version actual=${actual_go:-missing}"
 [[ $actual_node == "v$node_version" ]] || fail "node expected=v$node_version actual=${actual_node:-missing}"
 
-declared_go=$(awk '$1=="go" {print $2}' "$root/go.mod")
-declared_toolchain=$(awk '$1=="toolchain" {print $2}' "$root/go.mod")
+declared_go=$(read_go_directive go)
+declared_toolchain=$(read_go_directive toolchain)
 [[ $declared_go == "$go_language" ]] || fail "go.mod language expected=$go_language actual=${declared_go:-missing}"
 [[ $declared_toolchain == "go$go_version" ]] || fail "go.mod toolchain expected=go$go_version actual=${declared_toolchain:-missing}"
 
@@ -28,11 +52,19 @@ node - "$root" "$node_version" "$actual_npm" <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
 const [root, nodeVersion, actualNpm] = process.argv.slice(2);
-const read = (name) => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
+const fail = (message) => { console.error(`toolchain mismatch: ${message}`); process.exit(1); };
+
+// 仓库声明也视为不可信输入，解析异常只暴露稳定的相对文件名。
+const read = (name) => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
+  } catch {
+    fail(`invalid ${name}`);
+  }
+};
 const rootPackage = read('package.json');
 const webPackage = read('web/eino-workbench/package.json');
 const lock = read('package-lock.json');
-const fail = (message) => { console.error(`toolchain mismatch: ${message}`); process.exit(1); };
 
 // npm 版本只从根 packageManager 派生，避免 verifier 引入第二个工具链常量。
 if (!/^npm@\d+\.\d+\.\d+$/.test(String(rootPackage.packageManager || ''))) fail('packageManager must be an exact npm version');
