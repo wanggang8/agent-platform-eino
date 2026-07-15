@@ -29,55 +29,17 @@ read_go_directive() {
   printf '%s' "$value"
 }
 
-# canonical lock 只允许公开摘要字段；解析过程不执行 lock 内容，也不回显不可信值。
+# 共享 helper 集中维护 lock 白名单与摘要格式；verifier 只绑定固定安全输出。
 read_container_lock() {
-  local line key value required
-  container_platform= playwright_image= playwright_digest= playwright_version=
-  chromium_revision= chromium_version= base_os= font_policy=
-  go_linux_amd64_sha256= node_linux_x64_sha256=
-  docker_cli_image= docker_cli_digest= docker_dind_image= docker_dind_digest=
-  seen_container_keys='|'
-  test -r "$root/build/toolchain/toolchain.lock" || fail 'invalid toolchain.lock'
-  while IFS= read -r line || test -n "$line"; do
-    [[ $line =~ ^([A-Z][A-Z0-9_]*)=([^[:space:]]+)$ ]] || fail 'invalid toolchain.lock'
-    key=${BASH_REMATCH[1]}
-    value=${BASH_REMATCH[2]}
-    [[ $value =~ ^[A-Za-z0-9._/:@+-]+$ ]] || fail 'invalid toolchain.lock'
-    [[ $seen_container_keys != *"|$key|"* ]] || fail 'invalid toolchain.lock'
-    seen_container_keys="${seen_container_keys}${key}|"
-    case "$key" in
-      PLATFORM) container_platform=$value ;;
-      PLAYWRIGHT_IMAGE) playwright_image=$value ;;
-      PLAYWRIGHT_AMD64_DIGEST) playwright_digest=$value ;;
-      PLAYWRIGHT_VERSION) playwright_version=$value ;;
-      CHROMIUM_REVISION) chromium_revision=$value ;;
-      CHROMIUM_VERSION) chromium_version=$value ;;
-      BASE_OS) base_os=$value ;;
-      FONT_POLICY) font_policy=$value ;;
-      GO_LINUX_AMD64_SHA256) go_linux_amd64_sha256=$value ;;
-      NODE_LINUX_X64_SHA256) node_linux_x64_sha256=$value ;;
-      DOCKER_CLI_IMAGE) docker_cli_image=$value ;;
-      DOCKER_CLI_AMD64_DIGEST) docker_cli_digest=$value ;;
-      DOCKER_DIND_IMAGE) docker_dind_image=$value ;;
-      DOCKER_DIND_AMD64_DIGEST) docker_dind_digest=$value ;;
-      *) fail 'invalid toolchain.lock' ;;
-    esac
-  done <"$root/build/toolchain/toolchain.lock"
-
-  for required in container_platform playwright_image playwright_digest playwright_version \
+  local output
+  if ! output=$(bash "$root/scripts/toolchain_lock.sh" \
+    "$root/build/toolchain/toolchain.lock" 2>/dev/null); then
+    fail 'invalid toolchain.lock'
+  fi
+  IFS=$'\t' read -r container_platform playwright_image playwright_digest playwright_version \
     chromium_revision chromium_version base_os font_policy go_linux_amd64_sha256 \
-    node_linux_x64_sha256 docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest; do
-    test -n "${!required:-}" || fail 'invalid toolchain.lock'
-  done
-  [[ $container_platform == linux/amd64 ]] || fail 'invalid toolchain.lock'
-  [[ $playwright_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail 'invalid toolchain.lock'
-  [[ $chromium_revision =~ ^[0-9]+$ ]] || fail 'invalid toolchain.lock'
-  [[ $chromium_version =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail 'invalid toolchain.lock'
-  [[ $playwright_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid toolchain.lock'
-  [[ $docker_cli_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid toolchain.lock'
-  [[ $docker_dind_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid toolchain.lock'
-  [[ $go_linux_amd64_sha256 =~ ^[0-9a-f]{64}$ ]] || fail 'invalid toolchain.lock'
-  [[ $node_linux_x64_sha256 =~ ^[0-9a-f]{64}$ ]] || fail 'invalid toolchain.lock'
+    node_linux_x64_sha256 docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest \
+    <<<"$output" || fail 'invalid toolchain.lock'
 }
 
 # Dockerfile 只能消费传入参数，并在镜像内验证 pinned Chromium，不读取宿主安装产物。

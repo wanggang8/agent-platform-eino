@@ -4,9 +4,11 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 lock="$root/build/toolchain/toolchain.lock"
 dockerfile="$root/build/toolchain/Dockerfile"
+lock_helper="$root/scripts/toolchain_lock.sh"
 
 test -f "$lock" || { printf 'missing toolchain.lock\n' >&2; exit 1; }
 test -f "$dockerfile" || { printf 'missing toolchain Dockerfile\n' >&2; exit 1; }
+test -f "$lock_helper" || { printf 'missing shared toolchain lock helper\n' >&2; exit 1; }
 for key in PLATFORM PLAYWRIGHT_IMAGE PLAYWRIGHT_AMD64_DIGEST PLAYWRIGHT_VERSION \
   CHROMIUM_REVISION CHROMIUM_VERSION GO_LINUX_AMD64_SHA256 NODE_LINUX_X64_SHA256 \
   DOCKER_CLI_IMAGE DOCKER_CLI_AMD64_DIGEST DOCKER_DIND_IMAGE DOCKER_DIND_AMD64_DIGEST; do
@@ -14,7 +16,22 @@ for key in PLATFORM PLAYWRIGHT_IMAGE PLAYWRIGHT_AMD64_DIGEST PLAYWRIGHT_VERSION 
 done
 grep -Fq 'FROM ${PLAYWRIGHT_IMAGE}@${PLAYWRIGHT_DIGEST}' "$dockerfile"
 ! grep -Eq 'go1\.26\.5|node-v24\.18\.0' "$dockerfile"
-bash -n "$root/scripts/build_toolchain_image.sh"
+for expected in \
+  'ARG TARGETARCH' \
+  'RUN test "$TARGETARCH" = "amd64"' \
+  'test "$(go env GOVERSION)" = "go${GO_VERSION}"' \
+  'test "$(node --version)" = "v${NODE_VERSION}"' \
+  'test "$(npm --version)" = "${NPM_VERSION}"' \
+  'find "/ms-playwright/chromium-${CHROMIUM_REVISION}"' \
+  'chromium_actual=$("$chromium_binary" --version)' \
+  '[[ "$chromium_actual" == *"${CHROMIUM_VERSION}"* ]]'; do
+  grep -Fq "$expected" "$dockerfile"
+done
+for consumer in "$root/scripts/build_toolchain_image.sh" "$root/scripts/verify_toolchain.sh"; do
+  grep -Fq 'scripts/toolchain_lock.sh' "$consumer"
+  ! grep -Fq 'case "$key" in' "$consumer"
+done
+bash -n "$root/scripts/toolchain_lock.sh" "$root/scripts/build_toolchain_image.sh"
 node - "$root/package.json" <<'NODE'
 const pkg = require(process.argv[2]);
 if (pkg.scripts?.['build:toolchain-image'] !== 'bash scripts/build_toolchain_image.sh --load') {
@@ -33,7 +50,8 @@ trap 'rm -rf "$tmp"' EXIT
 make_repo() {
   local repo=$1
   mkdir -p "$repo/scripts" "$repo/build/toolchain" "$repo/web/eino-workbench"
-  cp "$root/scripts/build_toolchain_image.sh" "$root/scripts/verify_toolchain.sh" "$repo/scripts/"
+  cp "$root/scripts/toolchain_lock.sh" "$root/scripts/build_toolchain_image.sh" \
+    "$root/scripts/verify_toolchain.sh" "$repo/scripts/"
   cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" "$repo/build/toolchain/"
   cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \
     "$root/package.json" "$root/package-lock.json" "$repo/"
@@ -58,6 +76,10 @@ case "${1:-} ${2:-}" in
     printf '%s\n' 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
     ;;
   'buildx imagetools')
+    {
+      printf '%s\n' 'CALL buildx imagetools'
+      printf '%s\n' "$@"
+    } >>"$DOCKER_LOG"
     printf '%s\n' 'Name: registry.example/team/project/toolchain:commit'
     printf '%s\n' 'Digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
     ;;
@@ -101,11 +123,11 @@ assert_builder_failure() {
 
 cp "$repo/build/toolchain/toolchain.lock" "$tmp/lock.good"
 printf '%s\n' 'PLATFORM=linux/amd64' >>"$repo/build/toolchain/toolchain.lock"
-SECRET=SHOULD_NOT_LEAK assert_builder_failure 'duplicate toolchain lock key' --load
+SECRET=SHOULD_NOT_LEAK assert_builder_failure 'invalid toolchain lock' --load
 cp "$tmp/lock.good" "$repo/build/toolchain/toolchain.lock"
 sed -i.bak '/^GO_LINUX_AMD64_SHA256=/d' "$repo/build/toolchain/toolchain.lock"
 go_sha256=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd \
-  assert_builder_failure 'missing toolchain lock key' --load
+  assert_builder_failure 'invalid toolchain lock' --load
 mv "$repo/build/toolchain/toolchain.lock.bak" "$repo/build/toolchain/toolchain.lock"
 printf '%s\n' 'FONT_POLICY=bad value' >>"$repo/build/toolchain/toolchain.lock"
 assert_builder_failure 'invalid toolchain lock' --load
@@ -125,9 +147,32 @@ CI=true CI_REGISTRY_IMAGE=registry.example/team/project CI_COMMIT_SHA=$commit_sh
   PATH="$bin:$PATH" bash "$repo/scripts/build_toolchain_image.sh" \
     --push "$image_ref" --env-file test-results/toolchain.env >"$tmp/push.out"
 grep -Fxq -- '--push' "$DOCKER_LOG"
+grep -Fxq 'CALL buildx imagetools' "$DOCKER_LOG"
+test "$(grep -Fxc "$image_ref" "$DOCKER_LOG")" = 2
+awk -v ref="$image_ref" '
+  $0 == "-t" { getline; if ($0 == ref) tagged = 1 }
+  END { exit(tagged ? 0 : 1) }
+' "$DOCKER_LOG"
+awk -v ref="$image_ref" '
+  $0 == "CALL buildx imagetools" {
+    getline first; getline second; getline action; getline target
+    if (first == "buildx" && second == "imagetools" && action == "inspect" && target == ref) inspected = 1
+  }
+  END { exit(inspected ? 0 : 1) }
+' "$DOCKER_LOG"
 grep -Fxq "TOOLCHAIN_IMAGE=$image_ref@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" \
   "$repo/test-results/toolchain.env"
-test "$(stat -f '%Lp' "$repo/test-results/toolchain.env")" = 600
+file_mode() {
+  local path=$1 mode
+  if mode=$(stat -c '%a' "$path" 2>/dev/null); then
+    printf '%s' "$mode"
+  elif mode=$(stat -f '%Lp' "$path" 2>/dev/null); then
+    printf '%s' "$mode"
+  else
+    return 1
+  fi
+}
+test "$(file_mode "$repo/test-results/toolchain.env")" = 600
 
 # verifier 必须在没有 node_modules 的 clean checkout 中只使用 lock/package-lock/Dockerfile 证据。
 real_node=$(command -v node)

@@ -7,6 +7,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 mkdir -p "$tmp/repo/scripts" "$tmp/repo/build/toolchain" "$tmp/repo/web/eino-workbench" "$tmp/bin"
 cp "$root/scripts/verify_toolchain.sh" "$tmp/repo/scripts/"
+cp "$root/scripts/toolchain_lock.sh" "$tmp/repo/scripts/"
 cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" \
   "$tmp/repo/build/toolchain/"
 cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \

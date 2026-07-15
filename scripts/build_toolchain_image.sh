@@ -4,52 +4,17 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 fail() { printf 'toolchain image error: %s\n' "$1" >&2; exit 1; }
 
-# lock 是外部公开摘要的只读输入；逐行白名单解析，绝不执行其中内容。
+# 共享 helper 是唯一 lock 安全边界；这里只绑定其固定顺序输出，不解释 lock 内容。
 read_lock() {
-  local line key value
-  platform= playwright_image= playwright_digest= playwright_version=
-  chromium_revision= chromium_version= base_os= font_policy=
-  go_sha256= node_sha256= docker_cli_image= docker_cli_digest=
-  docker_dind_image= docker_dind_digest=
-  seen_lock_keys='|'
-  test -r "$root/build/toolchain/toolchain.lock" || fail 'invalid toolchain lock'
-  while IFS= read -r line || test -n "$line"; do
-    [[ $line =~ ^([A-Z][A-Z0-9_]*)=([^[:space:]]+)$ ]] || fail 'invalid toolchain lock'
-    key=${BASH_REMATCH[1]}
-    value=${BASH_REMATCH[2]}
-    [[ $value =~ ^[A-Za-z0-9._/:@+-]+$ ]] || fail 'invalid toolchain lock'
-    [[ $seen_lock_keys != *"|$key|"* ]] || fail 'duplicate toolchain lock key'
-    seen_lock_keys="${seen_lock_keys}${key}|"
-    case "$key" in
-      PLATFORM) platform=$value ;;
-      PLAYWRIGHT_IMAGE) playwright_image=$value ;;
-      PLAYWRIGHT_AMD64_DIGEST) playwright_digest=$value ;;
-      PLAYWRIGHT_VERSION) playwright_version=$value ;;
-      CHROMIUM_REVISION) chromium_revision=$value ;;
-      CHROMIUM_VERSION) chromium_version=$value ;;
-      BASE_OS) base_os=$value ;;
-      FONT_POLICY) font_policy=$value ;;
-      GO_LINUX_AMD64_SHA256) go_sha256=$value ;;
-      NODE_LINUX_X64_SHA256) node_sha256=$value ;;
-      DOCKER_CLI_IMAGE) docker_cli_image=$value ;;
-      DOCKER_CLI_AMD64_DIGEST) docker_cli_digest=$value ;;
-      DOCKER_DIND_IMAGE) docker_dind_image=$value ;;
-      DOCKER_DIND_AMD64_DIGEST) docker_dind_digest=$value ;;
-      *) fail 'unknown toolchain lock key' ;;
-    esac
-  done <"$root/build/toolchain/toolchain.lock"
-
-  for key in platform playwright_image playwright_digest playwright_version \
+  local output
+  if ! output=$(bash "$root/scripts/toolchain_lock.sh" \
+    "$root/build/toolchain/toolchain.lock" 2>/dev/null); then
+    fail 'invalid toolchain lock'
+  fi
+  IFS=$'\t' read -r platform playwright_image playwright_digest playwright_version \
     chromium_revision chromium_version base_os font_policy go_sha256 node_sha256 \
-    docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest; do
-    test -n "${!key:-}" || fail 'missing toolchain lock key'
-  done
-  [[ $platform == linux/amd64 ]] || fail 'platform must be linux/amd64'
-  [[ $playwright_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid Playwright digest'
-  [[ $docker_cli_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid Docker CLI digest'
-  [[ $docker_dind_digest =~ ^sha256:[0-9a-f]{64}$ ]] || fail 'invalid Docker DinD digest'
-  [[ $go_sha256 =~ ^[0-9a-f]{64}$ ]] || fail 'invalid Go checksum'
-  [[ $node_sha256 =~ ^[0-9a-f]{64}$ ]] || fail 'invalid Node checksum'
+    docker_cli_image docker_cli_digest docker_dind_image docker_dind_digest <<<"$output" \
+    || fail 'invalid toolchain lock'
 }
 
 read_version_file() {
