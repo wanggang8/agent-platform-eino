@@ -85,8 +85,8 @@ smoke 与末尾 `git diff --check` 均通过。该挂载只恢复 worktree Git �
 
 ## Desktop snapshot 逐项迁移状态
 
-旧路径根目录为 `web/eino-workbench/tests/__screenshots__/desktop/`。下面列出当前全部 71 个旧
-baseline；临时 detached worktree 的同名路径保存 71 张 Linux candidate。71/71 文件均发生像素
+路径根目录为 `web/eino-workbench/tests/__screenshots__/desktop/`。下面列出迁移前的 71 个
+baseline；临时 detached worktree 的同名路径曾保存 71 张 Linux candidate。71/71 文件均发生像素
 变化；46 张尺寸相同，25 张只有高度 `+1` 或 `-1` 像素，最大绝对尺寸差为 `0x1`。ImageMagick
 PHASH 归一化差异均值为 `0.064117`，主要高值集中于高度很小的运行状态条和工具卡文字抗锯齿；
 联系表与代表性 old/new 对照保存在忽略目录 `test-results/story-1-1-visual-*.png` 供本地 checkpoint。

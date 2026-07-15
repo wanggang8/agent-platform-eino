@@ -15,9 +15,9 @@ Story 状态：`in-progress`
 ## 裁决摘要
 
 本记录只给出唯一 Story 门禁裁决，不产生“部分 PASS”。版本声明、负向 verifier、canonical
-linux/amd64 image 和首次本地 baseline 已形成真实开发 preflight；但最终 PASS 算法中的 registry
-image digest、clean GitLab pipeline、pipeline artifacts 和批准的 desktop visual evidence 仍缺失。
-因此整体必须为 `BLOCKED`，本地 image、宿主临时 Go 1.26.5 或静态 CI 结果不得替代最终证据。
+linux/amd64 image、本地完整 baseline 和批准的 desktop visual evidence 已形成真实开发 preflight；
+最终 PASS 算法当前只缺 registry image digest、clean GitLab pipeline 和 pipeline artifacts。因此整体
+必须为 `BLOCKED`，本地 image 与完整 preflight 仍不得替代最终 pipeline 证据。
 
 ## 公开版本与 pinned 输入
 
