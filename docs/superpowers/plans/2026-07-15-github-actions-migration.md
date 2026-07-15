@@ -237,13 +237,14 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
 ### Task 3: 重写 GitHub Actions 静态 validator
 
 **Files:**
+- Create: `.github/workflows/toolchain.yml`
 - Modify: `scripts/validate_ci_config/main_test.go`
 - Modify: `scripts/validate_ci_config/main.go`
 - Modify: `scripts/validate_ci_config.sh`
 
 **Interfaces:**
 - Consumes: GitHub workflow YAML、Task 1 的九个 CI pin 字段、仓库根目录。
-- Produces: `validateConfig(data []byte, lock lockValues) error`、`loadLock(path string) (lockValues, error)` 和成功文本 `GitHub Actions config validated`。
+- Produces: canonical `.github/workflows/toolchain.yml`、`validateConfig(data []byte, lock lockValues) error`、`loadLock(path string) (lockValues, error)` 和成功文本 `GitHub Actions config validated`。
 
 - [ ] **Step 1: 用 GitHub workflow fixture 重写正向测试**
 
@@ -380,54 +381,9 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
     -config .github/workflows/toolchain.yml -lock build/toolchain/toolchain.lock -root "$root"
   ```
 
-- [ ] **Step 6: 运行 validator 单元测试和静态检查**
+- [ ] **Step 6: 创建 validator 所验证的 canonical workflow**
 
-  Run: `gofmt -w scripts/validate_ci_config/main.go scripts/validate_ci_config/main_test.go && GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1 && GOTOOLCHAIN=local go vet ./scripts/validate_ci_config`
-
-  Expected: PASS；所有正向/负向测试通过，无 GitLab validator 类型或错误文案残留。
-
-- [ ] **Step 7: 提交 validator 重写**
-
-  ```bash
-  git add scripts/validate_ci_config/main.go scripts/validate_ci_config/main_test.go scripts/validate_ci_config.sh
-  git commit -m "test(ci): validate GitHub Actions toolchain gate"
-  ```
-
----
-
-### Task 4: 创建唯一 GitHub workflow 并删除 GitLab CI
-
-**Files:**
-- Create: `.github/workflows/toolchain.yml`
-- Delete: `.gitlab-ci.yml`
-- Modify: `scripts/verify_toolchain.sh`
-- Modify: `scripts/verify_toolchain_test.sh`
-- Modify: `scripts/build_toolchain_image_test.sh`
-
-**Interfaces:**
-- Consumes: Task 1 pins、Task 2 builder/baseline、Task 3 validator。
-- Produces: `toolchain-build.outputs.toolchain_image`，供 `toolchain-verify` 作为唯一 `TOOLCHAIN_IMAGE`。
-
-- [ ] **Step 1: 先把 shell fixtures 切到 GitHub workflow 并验证失败**
-
-  两个 shell test 的临时仓库先创建 `.github/workflows/`，复制 `.github/workflows/toolchain.yml`，不再复制 `.gitlab-ci.yml`。在 `verify_toolchain_test.sh` 添加：
-
-  ```bash
-  printf '%s\n' 'stages: [toolchain, verify]' >"$tmp/repo/.gitlab-ci.yml"
-  if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
-    echo 'expected GitLab CI residue to fail' >&2
-    exit 1
-  fi
-  rm "$tmp/repo/.gitlab-ci.yml"
-  ```
-
-  Run: `bash scripts/verify_toolchain_test.sh`
-
-  Expected: FAIL，因为 workflow 尚不存在且 verifier 仍读取 `.gitlab-ci.yml`。
-
-- [ ] **Step 2: 创建 canonical GitHub Actions workflow**
-
-  `.github/workflows/toolchain.yml` 必须实现以下执行向量：
+  创建 `.github/workflows/toolchain.yml`，内容必须与 Step 1 的正向 fixture 完全一致，并完整包含以下两个 job：
 
   ```yaml
   name: Toolchain Gate
@@ -509,6 +465,57 @@ BUILDKIT_DIGEST=sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc
             if-no-files-found: error
             retention-days: 30
   ```
+
+- [ ] **Step 7: 运行 validator 单元测试、静态检查和真实 workflow 校验**
+
+  Run: `gofmt -w scripts/validate_ci_config/main.go scripts/validate_ci_config/main_test.go && GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1 && GOTOOLCHAIN=local go vet ./scripts/validate_ci_config && bash scripts/validate_ci_config.sh`
+
+  Expected: PASS；所有正向/负向测试通过，无 GitLab validator 类型或错误文案残留。
+
+- [ ] **Step 8: 提交 validator 与 workflow**
+
+  ```bash
+  git add .github/workflows/toolchain.yml scripts/validate_ci_config/main.go \
+    scripts/validate_ci_config/main_test.go scripts/validate_ci_config.sh
+  git commit -m "test(ci): validate GitHub Actions toolchain gate"
+  ```
+
+---
+
+### Task 4: 创建唯一 GitHub workflow 并删除 GitLab CI
+
+**Files:**
+- Delete: `.gitlab-ci.yml`
+- Modify: `scripts/verify_toolchain.sh`
+- Modify: `scripts/verify_toolchain_test.sh`
+- Modify: `scripts/build_toolchain_image_test.sh`
+
+**Interfaces:**
+- Consumes: Task 1 pins、Task 2 builder/baseline、Task 3 validator。
+- Produces: `toolchain-build.outputs.toolchain_image`，供 `toolchain-verify` 作为唯一 `TOOLCHAIN_IMAGE`。
+
+- [ ] **Step 1: 先把 shell fixtures 切到 GitHub workflow 并验证失败**
+
+  两个 shell test 的临时仓库先创建 `.github/workflows/`，复制 `.github/workflows/toolchain.yml`，不再复制 `.gitlab-ci.yml`。在 `verify_toolchain_test.sh` 添加：
+
+  ```bash
+  printf '%s\n' 'stages: [toolchain, verify]' >"$tmp/repo/.gitlab-ci.yml"
+  if PATH="$tmp/bin:$PATH" bash "$tmp/repo/scripts/verify_toolchain.sh"; then
+    echo 'expected GitLab CI residue to fail' >&2
+    exit 1
+  fi
+  rm "$tmp/repo/.gitlab-ci.yml"
+  ```
+
+  Run: `bash scripts/verify_toolchain_test.sh`
+
+  Expected: FAIL，因为 verifier 仍读取 `.gitlab-ci.yml`，不能接受已存在且已通过 Task 3 validator 的 GitHub workflow fixture。
+
+- [ ] **Step 2: 确认 Task 3 的 canonical workflow 未被 shell fixture 改写**
+
+  Run: `GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1 && bash scripts/validate_ci_config.sh`
+
+  Expected: PASS；`.github/workflows/toolchain.yml` 仍由同一 validator 与 lock pins 约束，Task 4 只负责删除 GitLab 和切换 shell verifier，不复制 workflow 逻辑。
 
 - [ ] **Step 3: 让 verifier 强制 GitHub-only 契约**
 
