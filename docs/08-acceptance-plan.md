@@ -35,7 +35,7 @@ preflight，不得拆分拼接为阶段 PASS。当前首发视觉门禁仅为 de
 
 | 阶段 | 范围 | 必跑门禁 | 可 skip 项 | 阻断条件 |
 | --- | --- | --- | --- | --- |
-| M-0 | Story 1.1 固定可复现工具链 | exact declarations、负向 verifier、GHCR digest、clean GitHub Actions run、完整 baseline、`toolchain-evidence-$GITHUB_SHA` (30 days)、批准的 desktop visual evidence | 无 | `G-TOOLCHAIN=PASS`；Story 1.1 / Sprint 1.1 已完成，下一步 M-1 |
+| M-0 | Story 1.1 固定可复现工具链 | exact declarations、负向 verifier、GHCR digest、clean GitHub Actions run、完整 baseline、`toolchain-evidence-$GITHUB_SHA` (30 days)、批准的 desktop visual evidence | 无 | 任一必跑证据缺失/失败，或 G-TOOLCHAIN != PASS |
 | P0 | 最小产品闭环，实施 Phase 1-4 | 开发前复核、基础、Contract、前端、服务 smoke `contract/chat-stream/action-basic/capability-selection/context-projection/tool-card`、安全门禁 | 无 | pre-development validation、contract、视觉、安全、Action API 任一失败 |
 | P1 | 产品级运行能力，实施 Phase 5-7 | P0 全部、开发前复核更新、HITL、clarification、Fobrain PoC、real model smoke、projection/replay | 无 Fobrain/LLM 凭据时 real model smoke 可 skip 但必须记录 | approval、clarification、projection、Action/Workbench 同源任一失败 |
 | P2 | 既有业务能力恢复，实施 Phase 8 | P1 全部、开发前复核更新、24 只读、connector、credential binding、disambiguation、write approval、live read/write | 无 live 凭据时 live read/write 可 skip 但不能声明能力可比 | Fobrain 恢复门禁未过时不能声明重构完成 |

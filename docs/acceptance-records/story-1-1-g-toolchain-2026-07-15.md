@@ -150,6 +150,19 @@ remote_clean_gates=passed
 - 后续提交会触发新 run；新 run 必须保持 build/verify 全成功才能证明门禁未回归，但不为记录
   其 run ID 再制造自引用文档提交。
 
+## 声明边界
+
+- 通过/不通过/skipped blocking: 通过（G-TOOLCHAIN=PASS）
+- 阻断 P0/P1/P2 完成声明: 是，P0/P1/P2尚未实施/验收
+- 阻断重构完成声明: 是
+- 允许替换当前产品基线: 否
+- report schema 校验结果: 不适用——本门禁无独立机器可读report schema；本次repository schema/contract/OpenAPI gates已通过
+- 不得声明的能力：P0/P1/P2 完成、重构完成、产品能力等价、Fobrain 24/24 恢复完成、
+  生产环境可用或可替换当前产品基线。
+- 关联 ADR：`docs/adr/2026-07-15-github-actions-ghcr-toolchain-gate.md`。
+
+上述限制不阻断进入 M-1；它们只阻断超出 M-0 工具链门禁证据范围的完成与能力声明。
+
 ## 最终结论
 
 `G-TOOLCHAIN=PASS`。Story 1.1 与 Sprint 1.1 已完成，允许进入 M-1。本结论仅表示 M-0
