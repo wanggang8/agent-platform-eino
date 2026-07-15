@@ -66,7 +66,8 @@ PASS 与静态 Dockerfile 检查都不能替代门禁条件。
 
 本地 visual migration 必须先从同一 pinned inputs 取得真实 image ID，在该 image 运行唯一完整
 baseline；若首次停在 desktop screenshot diff，必须保留 baseline log 和 actual/diff，并确认所有前置
-非视觉检查通过。UX 明确批准后才可在同一 image 更新 desktop snapshot，并再次完整运行唯一 baseline。
+非视觉检查通过。desktop browser 必须固定单 worker，避免宿主 CPU 数量或架构模拟改变资源压力。
+UX 明确批准后才可在同一 image 更新 desktop snapshot，并再次完整运行唯一 baseline。
 本地结果始终只是 preflight/visual migration evidence。
 
 Story 最终证据必须来自包含全部变更的 clean commit：GitLab pipeline push canonical image，输出

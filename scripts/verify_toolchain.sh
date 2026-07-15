@@ -60,6 +60,7 @@ verify_container_dockerfile() {
     "! -name 'ubuntu.sources' -delete" \
     'Dir::Etc::sourcelist="$sources"' \
     'Dir::Etc::sourceparts="-"' \
+    'apt-get "${apt_snapshot_options[@]}" update' \
     'apt-get "${apt_snapshot_options[@]}" install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
     'rm -rf /var/lib/apt/lists/*' \
     'command -v cc' \

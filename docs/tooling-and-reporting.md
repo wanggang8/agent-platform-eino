@@ -32,7 +32,8 @@ docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
 
 `run_toolchain_baseline.sh` 先验证工具链与 CI 配置，再执行 `npm ci`；随后按 contract、Go、前端、
 desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令必须显式使用
-`GOTOOLCHAIN=local`，Playwright 门禁只运行 `--project=desktop`，mobile 不属于首版
+`GOTOOLCHAIN=local`，Playwright 门禁固定运行 `--project=desktop --workers=1`，避免宿主 CPU 数量
+或架构模拟改变并发资源压力；mobile 不属于首版
 `G-TOOLCHAIN` 通过条件。日志写入 `test-results/toolchain-baseline.log`。
 
 本地 visual migration 与 Story/G-TOOLCHAIN 使用两条独立证据链：
@@ -129,7 +130,7 @@ docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
 
 ```bash
 docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -w /workspace \
-  "$image_id" npm run eino-workbench:browser-test -- --project=desktop --update-snapshots
+  "$image_id" npm run eino-workbench:browser-test -- --project=desktop --update-snapshots --workers=1
 ```
 
 更新后必须在同一 image 再完整执行 `bash scripts/run_toolchain_baseline.sh`，要求所有适用检查通过。

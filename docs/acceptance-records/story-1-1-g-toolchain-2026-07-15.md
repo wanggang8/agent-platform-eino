@@ -79,7 +79,7 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | 命令／程序 | 结果 | 解释 |
 | --- | --- | --- |
 | `bash scripts/verify_toolchain_test.sh` | PASS | 目标 shim 正向通过，并拒绝 Go 1.23、Node 25、npm 错版、声明／CI／lock 漂移和不安全输入 |
-| `bash scripts/build_toolchain_image_test.sh` | PASS | builder、16 字段 pinned inputs、tar.gz、snapshot、C compiler/race smoke、push/load 契约、dotenv、baseline 顺序与末尾 clean gate 的静态／行为测试通过 |
+| `bash scripts/build_toolchain_image_test.sh` | PASS | builder、16 字段 pinned inputs、tar.gz、snapshot、C compiler/race smoke、push/load 契约、dotenv、单 worker desktop baseline 顺序与末尾 clean gate 的静态／行为测试通过 |
 | Node `SHASUMS256.txt` 精确查询 | PASS | 官方结果为 `783130984963db7ba9cbd01089eaf2c2efb055c7c1693c943174b967b3050cb8  node-v24.18.0-linux-x64.tar.gz` |
 | Ubuntu snapshot Noble `InRelease` HEAD | PASS / HTTP 200 | `https://snapshot.ubuntu.com/ubuntu/20260708T000000Z/dists/noble/InRelease` 可访问；只证明公开输入存在，不证明 image 已构建 |
 | 首次 `bash scripts/build_toolchain_image.sh --load` | exit 130 | MCR base metadata 按 digest 解析；base layer 超过 15 分钟无字节进展后人工终止，历史阻断保留 |
@@ -88,6 +88,7 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 | canonical `bash scripts/run_toolchain_baseline.sh` 首跑 | PARTIAL / browser exit 1 | browser 前全部非视觉检查通过；desktop 1/17 PASS、16/17 FAIL，产生 10 组 actual/diff；contract smoke 与最终 clean check 未执行，因此不是 baseline PASS |
 | 临时 detached worktree 单 worker candidate generation | PASS / 17 tests | 首个成功构建的同 pins image 下 17/17 desktop tests 通过并生成全部 71 张 Linux candidate；未修改当前分支 screenshot，仍待 UX approval |
 | 最新 hardened image 单 worker candidate recheck | PASS / 17 tests | 不运行 snapshot update，既有 71 张候选逐项匹配；确认 source 隔离重建未改变候选 |
+| 固定单 worker 后 canonical baseline 重跑 | PARTIAL / browser exit 1 | browser 前全部非视觉检查再次通过；desktop 1/17 PASS、16/17 全为 screenshot diff、零 target crash；正式 baseline 未迁移，contract smoke 与最终 clean check 未执行 |
 | `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1` | PASS preflight | 官方 darwin/arm64 archive SHA-256 为 `efb87ff28af9a188d0536ef5d42e63dd52ba8263cd7344a993cc48dd11dedb6a`；不是 canonical linux/amd64 证据 |
 | `GOROOT=<Go 1.26.5 toolchain root> PATH=<Go 1.26.5 bin> GOTOOLCHAIN=local bash scripts/validate_ci_config.sh` | PASS preflight | 只证明静态 GitLab CI 配置契约，不是 GitLab lint 或 pipeline |
 | `bash -n scripts/verify_toolchain.sh scripts/verify_toolchain_test.sh scripts/build_toolchain_image.sh scripts/build_toolchain_image_test.sh scripts/toolchain_lock.sh scripts/run_toolchain_baseline.sh scripts/validate_ci_config.sh` | PASS | Task 5 report 中列出的 Story shell scripts 语法通过 |
@@ -131,7 +132,7 @@ ade9c54 docs(toolchain): record pinned build prerequisites
 - final `TOOLCHAIN_IMAGE=tag@sha256`：未产生。
 - `toolchain-baseline.log` pipeline artifact：未产生。
 - desktop Playwright report artifact：未产生。
-- canonical desktop actual/diff 与 UX approval：未产生。
+- pipeline 保留的 canonical desktop actual/diff 与 UX approval：未产生；本地审查材料已产生，不能替代该最终证据。
 
 ## 未覆盖风险
 

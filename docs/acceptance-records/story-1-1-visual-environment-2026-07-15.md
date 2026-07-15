@@ -11,7 +11,9 @@ UX 状态：`PENDING_UX_APPROVAL`
 本地 canonical image 已在相同 pinned inputs 下成功构建，snapshot apt 安装、Go/Node/npm、C
 compiler、最小 race smoke 与 Chromium identity 均在真实 linux/amd64 image layer 通过。首次完整
 baseline 的所有非视觉检查通过，desktop browser 因旧 macOS screenshot 与 Linux candidate 差异
-停止；并发首跑为 1/17 PASS、16/17 FAIL，其中 3 项为 target crash。随后仅在临时 detached
+停止；并发首跑为 1/17 PASS、16/17 FAIL，其中 3 项为 target crash。唯一 baseline 固定为单
+worker 后重跑仍为 1/17 PASS、16/17 FAIL，但 16 项全部是旧 screenshot 差异，target crash 为零。
+随后仅在临时 detached
 worktree 中使用首个成功构建的同 pins image、单 worker 和 `--update-snapshots` 生成审查候选，
 17/17 PASS、71/71 候选齐全；在删除浮动 apt source 后重建的最新 image 中又以零更新、单 worker
 方式 17/17 PASS，
@@ -67,7 +69,9 @@ stream test 与 Vite build 全部通过。desktop browser 首跑产生 10 组 ac
 1 PASS、16 FAIL；未执行其后的 contract smoke 与最终 `git diff --check`，因此该 baseline 不是
 整体 PASS。临时 detached worktree 随后在最新 image 中不更新任何文件、以单 worker 对 71 张
 候选复验，17/17 PASS；并发 target crash 归类为本机 amd64 模拟资源噪声，不改变截图差异仍需
-人工审批的结论。
+人工审批的结论。唯一 baseline 随后固定 `--workers=1` 并再次运行，browser 前检查全部通过，
+desktop 1/17 PASS、16/17 screenshot diff、零 target crash；仍因正式截图尚未批准迁移而在 browser
+处停止。
 
 ## Desktop snapshot 逐项迁移状态
 

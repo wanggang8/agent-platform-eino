@@ -13,7 +13,8 @@ Story 1.1 先固定发布与 desktop visual 的唯一 canonical 环境。目标�
 唯一完整 baseline 是 `scripts/run_toolchain_baseline.sh`。本地只允许用 pinned inputs 构建出的
 linux/amd64 image ID 做 preflight/visual migration；最终门禁必须由 clean GitLab pipeline push 的
 commit-bound `tag@sha256` image 执行同一 baseline。desktop 是 Story 1.1 唯一视觉门禁，mobile
-不属于 `G-TOOLCHAIN`。测试阶段禁止运行浮动的 Playwright、apt 或浏览器安装命令。
+不属于 `G-TOOLCHAIN`；desktop browser 固定单 worker，不能由宿主 CPU 数量改变并发。测试阶段
+禁止运行浮动的 Playwright、apt 或浏览器安装命令。
 
 canonical build identity 还必须固定 Node linux-x64 tar.gz checksum、Ubuntu Noble snapshot 与
 `build-essential`。Dockerfile 必须删除基底镜像附带的其他 apt source，显式只消费注入 snapshot

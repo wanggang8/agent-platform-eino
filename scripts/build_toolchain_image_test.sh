@@ -37,6 +37,7 @@ for expected in \
   "! -name 'ubuntu.sources' -delete" \
   'Dir::Etc::sourcelist="$sources"' \
   'Dir::Etc::sourceparts="-"' \
+  'apt-get "${apt_snapshot_options[@]}" update' \
   'apt-get "${apt_snapshot_options[@]}" install -y --no-install-recommends "$APT_BUILD_PACKAGES"' \
   'rm -rf /var/lib/apt/lists/*' \
   'test "$(go env GOVERSION)" = "go${GO_VERSION}"' \
@@ -82,6 +83,7 @@ test -f "$baseline"
 npm_ci_line=$(grep -n '^npm ci$' "$baseline" | cut -d: -f1)
 browser_line=$(grep -n 'browser-test.*--project=desktop' "$baseline" | cut -d: -f1)
 test "$npm_ci_line" -lt "$browser_line"
+grep -Fxq 'npm run eino-workbench:browser-test -- --project=desktop --workers=1' "$baseline"
 ! grep -Eq '^(go test|go vet|go build|go list|go mod)' "$baseline"
 ! grep -Eq -- '--project=mobile' "$baseline"
 test "$(grep -Fxc '  git diff --quiet' "$baseline")" = 2
@@ -355,4 +357,8 @@ mv "$repo/build/toolchain/Dockerfile.good" "$repo/build/toolchain/Dockerfile"
 cp "$repo/build/toolchain/Dockerfile" "$repo/build/toolchain/Dockerfile.good"
 sed -i.bak 's/CGO_ENABLED=1 go test -race/CGO_ENABLED=0 go test -race/' "$repo/build/toolchain/Dockerfile"
 assert_verifier_rejects 'Dockerfile race smoke drift'
+mv "$repo/build/toolchain/Dockerfile.good" "$repo/build/toolchain/Dockerfile"
+cp "$repo/build/toolchain/Dockerfile" "$repo/build/toolchain/Dockerfile.good"
+sed -i.bak 's/apt-get "${apt_snapshot_options\[@\]}" update/apt-get update/' "$repo/build/toolchain/Dockerfile"
+assert_verifier_rejects 'Dockerfile snapshot update drift'
 mv "$repo/build/toolchain/Dockerfile.good" "$repo/build/toolchain/Dockerfile"

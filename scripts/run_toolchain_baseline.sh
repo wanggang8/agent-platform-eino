@@ -39,7 +39,8 @@ npm run eino-workbench:typecheck
 npm run eino-workbench:test
 npm run eino-workbench:stream-test
 npm run eino-workbench:build
-npm run eino-workbench:browser-test -- --project=desktop
+# 固定单 worker，避免宿主 CPU 数量或架构模拟改变视觉门禁的并发与资源压力。
+npm run eino-workbench:browser-test -- --project=desktop --workers=1
 bash scripts/eino_workbench_server_smoke.sh --scenario contract
 git diff --check
 
