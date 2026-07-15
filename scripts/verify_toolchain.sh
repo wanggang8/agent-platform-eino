@@ -63,6 +63,21 @@ verify_container_dockerfile() {
   done
 }
 
+# CI 必须复用 lock 与公共 validator，禁止复制三项 runtime 权威版本形成第二套真相。
+verify_ci_config() {
+  local ci="$root/.gitlab-ci.yml" validator="$root/scripts/validate_ci_config.sh" forbidden
+  test -r "$ci" || fail 'invalid .gitlab-ci.yml'
+  test -r "$validator" || fail 'invalid CI validator'
+  for forbidden in "$go_version" "$node_version" "$npm_version"; do
+    if grep -Fq "$forbidden" "$ci" 2>/dev/null; then
+      fail 'CI duplicates an authoritative runtime version'
+    fi
+  done
+  if ! bash "$validator"; then
+    fail 'invalid .gitlab-ci.yml'
+  fi
+}
+
 # 版本文件与根 packageManager 是唯一权威源，其余声明只做一致性镜像。
 go_version=$(read_one "$root/.go-version")
 node_version=$(read_one "$root/.node-version")
@@ -127,5 +142,6 @@ NODE
 
 npm_version=$actual_npm
 verify_container_dockerfile
+verify_ci_config
 
 printf 'toolchain verified: go=%s node=%s npm=%s\n' "$go_version" "$node_version" "$actual_npm"

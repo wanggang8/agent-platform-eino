@@ -42,7 +42,24 @@ if (pkg.scripts?.['test:toolchain-image'] !== 'bash scripts/build_toolchain_imag
   console.error('missing canonical image test script');
   process.exit(1);
 }
+if (pkg.scripts?.['validate:ci'] !== 'bash scripts/validate_ci_config.sh') {
+  console.error('missing static CI validation script');
+  process.exit(1);
+}
+if (pkg.scripts?.['test:ci-config'] !== 'GOTOOLCHAIN=local go test ./scripts/validate_ci_config -count=1') {
+  console.error('missing static CI validator test script');
+  process.exit(1);
+}
 NODE
+
+# baseline 顺序是 canonical image 的验收契约，安装必须先于 desktop browser。
+baseline="$root/scripts/run_toolchain_baseline.sh"
+test -f "$baseline"
+npm_ci_line=$(grep -n '^npm ci$' "$baseline" | cut -d: -f1)
+browser_line=$(grep -n 'browser-test.*--project=desktop' "$baseline" | cut -d: -f1)
+test "$npm_ci_line" -lt "$browser_line"
+! grep -Eq '^(go test|go vet|go build|go list|go mod)' "$baseline"
+! grep -Eq -- '--project=mobile' "$baseline"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -55,7 +72,15 @@ make_repo() {
   cp "$root/build/toolchain/toolchain.lock" "$root/build/toolchain/Dockerfile" "$repo/build/toolchain/"
   cp "$root/.go-version" "$root/.node-version" "$root/go.mod" \
     "$root/package.json" "$root/package-lock.json" "$repo/"
+  cp "$root/.gitlab-ci.yml" "$repo/"
   cp "$root/web/eino-workbench/package.json" "$repo/web/eino-workbench/"
+  # image fixture 不启动 Go validator；该 stub 只验证 verifier 的强制调用边界。
+  cat >"$repo/scripts/validate_ci_config.sh" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 0
+SH
+  chmod +x "$repo/scripts/validate_ci_config.sh"
 }
 
 repo="$tmp/repo"
