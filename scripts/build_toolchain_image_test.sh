@@ -91,6 +91,15 @@ grep -Fxq 'npm run eino-workbench:browser-test -- --project=desktop --workers=1'
 test "$(grep -Fxc '  git diff --quiet' "$baseline")" = 2
 test "$(grep -Fxc '  git diff --cached --quiet' "$baseline")" = 2
 test "$(grep -Fxc '  test -z "$(git ls-files --others --exclude-standard)"' "$baseline")" = 2
+# GitHub checkout 属于 runner uid，canonical 容器以 root 执行；CI 必须先仅信任当前仓库绝对路径。
+safe_directory_line=$(grep -nF '  git config --global --add safe.directory "$root"' "$baseline" | cut -d: -f1 || true)
+first_ci_git_line=$(grep -nE '^  git (diff|ls-files)' "$baseline" | head -1 | cut -d: -f1)
+test -n "$safe_directory_line" || {
+  printf 'CI baseline must trust only its absolute repository root before git clean gates\n' >&2
+  exit 1
+}
+test "$safe_directory_line" -lt "$first_ci_git_line"
+test "$(grep -Fxc '  git config --global --add safe.directory "$root"' "$baseline")" = 1
 smoke_line=$(grep -n '^bash scripts/eino_workbench_server_smoke.sh --scenario contract$' "$baseline" | cut -d: -f1)
 final_clean_line=$(grep -n '^if \[\[ \${CI:-false} == true \]\]; then$' "$baseline" | tail -1 | cut -d: -f1)
 test "$final_clean_line" -gt "$smoke_line"
@@ -107,6 +116,7 @@ trap 'rm -rf "$tmp"' EXIT
 baseline_repo="$tmp/baseline-repo"
 baseline_bin="$tmp/baseline-bin"
 baseline_mutation="$tmp/baseline-mutation"
+baseline_safe_directory="$tmp/baseline-safe-directory"
 mkdir -p "$baseline_repo/scripts" "$baseline_bin"
 cp "$baseline" "$baseline_repo/scripts/"
 for file in package-lock.json go.mod go.sum; do
@@ -145,19 +155,25 @@ if [[ -f $BASELINE_MUTATION ]]; then
   kind=$(<"$BASELINE_MUTATION")
 fi
 case "$*" in
-  'diff --quiet') test "$kind" != tracked ;;
-  'diff --cached --quiet') test "$kind" != staged ;;
+  'config --global --add safe.directory '*)
+    test "${5:-}" = "$BASELINE_REPO"
+    : >"$BASELINE_SAFE_DIRECTORY"
+    ;;
+  'diff --quiet') test -f "$BASELINE_SAFE_DIRECTORY" && test "$kind" != tracked ;;
+  'diff --cached --quiet') test -f "$BASELINE_SAFE_DIRECTORY" && test "$kind" != staged ;;
   'ls-files --others --exclude-standard')
+    test -f "$BASELINE_SAFE_DIRECTORY"
     if [[ $kind == untracked ]]; then printf '%s\n' generated.file; fi
     ;;
-  'diff --check') exit 0 ;;
+  'diff --check') test -f "$BASELINE_SAFE_DIRECTORY" ;;
   *) exit 64 ;;
 esac
 SH
 chmod +x "$baseline_bin/npm" "$baseline_bin/go" "$baseline_bin/sha256sum" "$baseline_bin/git"
-export BASELINE_MUTATION="$baseline_mutation"
+export BASELINE_MUTATION="$baseline_mutation" BASELINE_REPO="$baseline_repo"
+export BASELINE_SAFE_DIRECTORY="$baseline_safe_directory"
 for kind in tracked staged untracked; do
-  rm -f "$baseline_mutation"
+  rm -f "$baseline_mutation" "$baseline_safe_directory"
   if CI=true GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 \
     MUTATION_KIND=$kind PATH="$baseline_bin:$PATH" \
     bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-$kind.out" 2>&1; then
@@ -165,7 +181,7 @@ for kind in tracked staged untracked; do
     exit 1
   fi
 done
-rm -f "$baseline_mutation"
+rm -f "$baseline_mutation" "$baseline_safe_directory"
 CI=true GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 PATH="$baseline_bin:$PATH" \
   bash "$baseline_repo/scripts/run_toolchain_baseline.sh" >"$tmp/baseline-clean.out" 2>&1
 

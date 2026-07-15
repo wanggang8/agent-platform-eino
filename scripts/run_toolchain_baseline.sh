@@ -6,6 +6,7 @@ mkdir -p test-results
 exec > >(tee test-results/toolchain-baseline.log) 2>&1
 
 if [[ ${CI:-false} == true ]]; then
+  git config --global --add safe.directory "$root"
   [[ ${GITHUB_SHA:-} =~ ^[0-9a-f]{40}$ ]] || {
     printf '%s\n' 'invalid GitHub commit SHA' >&2
     exit 1

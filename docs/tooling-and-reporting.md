@@ -35,6 +35,11 @@ docker run --rm --platform linux/amd64 -v "$PWD:/workspace" \
 额外只读挂载 `git_common_dir` 用于 Git worktree 的末尾 clean gate；普通 checkout 也可使用同一命令。
 缺少该挂载时，worktree 的 `.git` 绝对指针在容器内不可解析，不能把 exit 128 记录成 baseline 结果。
 
+GitHub runner 的 checkout 归属 uid 1001，而 canonical 容器以 root 执行。CI baseline 因此必须在任何
+`git diff` / `git ls-files` clean gate 前，将脚本解析出的仓库绝对根注册为 `safe.directory`；canonical
+Actions 中该根精确为 `/workspace`。该信任不得扩大到 `*`、父目录或其他挂载路径，避免以通过门禁为由
+放宽 Git 的跨 uid 仓库保护；前后 tracked、staged、untracked clean gate 均保持不变。
+
 `run_toolchain_baseline.sh` 先验证工具链与 CI 配置，再执行 `npm ci`；随后按 contract、Go、前端、
 desktop browser、service smoke 和 clean gate 的固定顺序运行。Go 命令必须显式使用
 `GOTOOLCHAIN=local`，Playwright 门禁固定运行 `--project=desktop --workers=1`，避免宿主 CPU 数量
