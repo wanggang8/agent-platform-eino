@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_query_result_snapshot.v2.schema.json",
+  "title": "M1 Query Result Snapshot",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "workspace_id", "conversation_id", "actor_id", "run_id", "tool_call_id", "query_kind", "captured_at", "expires_at", "freshness_version", "coverage", "items"],
+  "properties": {
+    "schema_version": {"const": "eino_query_result_snapshot.v2"},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "workspace_id": {"type": "string", "minLength": 1},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "tool_call_id": {"type": "string", "minLength": 1},
+    "query_kind": {"const": "new_vulnerabilities"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "freshness_version": {"type": "string", "minLength": 1},
+    "coverage": {"const": "complete_set"},
+    "items": {
+      "type": "array",
+      "items": {"$ref": "tool.structured_result.v2.schema.json#/$defs/item"}
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,91 +1,47 @@
-import { cleanup, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import type { StructuredResult } from "../../../contracts/generated";
-import { fobrainVisualFixtures } from "../../../fixtures/fobrainVisualFixtures";
-import { workbenchFixtures } from "../../../fixtures/workbenchFixtures";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { M1WorkbenchView as WorkbenchView } from "../../../contracts/generated";
 import { renderWithClient } from "../../../test/render";
-import { StructuredResultView } from "./StructuredResultView";
 import { WorkbenchShell } from "./WorkbenchShell";
 
-describe("WorkbenchShell", () => {
-  it("renders the fixture-driven workbench without exposing raw tool ids", () => {
-    // shell 测试以 fixture 契约为输入，确保 UI 不直接暴露 provider/tool 内部 id。
-    renderWithClient(<WorkbenchShell view={workbenchFixtures.success} />);
+const resolvedView: WorkbenchView = {
+  schema_version: "eino_workbench_view.v2", workspace_id: "ws-1", conversation_id: "conversation-1", run_id: "run-1", status: "resolved",
+  messages: [
+    { message_id: "m1", role: "user", content: "查询新增的漏洞" },
+    { message_id: "m2", role: "assistant", content: "发现 3 条新增漏洞" }
+  ],
+  result: { query_sequence: 1, summary: "发现 3 条新增漏洞", count: 3, observed_at: "2026-07-27T08:35:00Z" },
+  right_panel: { tabs: ["事实", "执行记录"], empty_message: "选择查询结果后查看安全事实。" }
+};
 
-    expect(screen.getByTestId("workbench-shell")).toBeInTheDocument();
-    expect(screen.getByTestId("workspace-sidebar")).toBeInTheDocument();
-    expect(screen.getByTestId("chat-timeline")).toBeInTheDocument();
-    expect(screen.getByTestId("inspector")).toBeInTheDocument();
-    expect(screen.queryByText(/tool\.fobrain/)).not.toBeInTheDocument();
+describe("M1 WorkbenchShell", () => {
+  it("按 nav/main/aside 顺序渲染唯一浅色桌面三栏", () => {
+    renderWithClient(<WorkbenchShell view={resolvedView} />);
+    const shell = screen.getByTestId("workbench-shell");
+    const regions = Array.from(shell.children).filter((node) => ["NAV", "MAIN", "ASIDE"].includes(node.tagName));
+    expect(regions.map((node) => node.tagName)).toEqual(["NAV", "MAIN", "ASIDE"]);
+    expect(screen.getByTestId("query-result-card")).toHaveTextContent("发现 3 条新增漏洞");
+    expect(shell.textContent).not.toMatch(/result_ref|snapshot_item_ref|StructuredResult|审计|审批|暗色|移动端/i);
   });
 
-  it("renders Fobrain visual fixtures as Chinese product UI without debug tokens", () => {
-    // 产品视觉验收看可见文本，不允许把调试态英文、tool id 或 schema 细节作为产品内容露出。
-    for (const view of Object.values(fobrainVisualFixtures)) {
-      cleanup();
-      renderWithClient(<WorkbenchShell view={view} />);
-      const visibleText = productText(screen.getByTestId("workbench-shell"));
-
-      expect(visibleText).not.toMatch(/[A-Za-z]/);
-      expect(visibleText).not.toMatch(/tool\.|schema_version|display_type|StructuredResult|Product Facts|safe projection|fixture|run-/i);
-      expect(visibleText).not.toMatch(/[{}]/);
-    }
+  it("操作记录只打开本地空态", () => {
+    renderWithClient(<WorkbenchShell view={resolvedView} />);
+    fireEvent.click(screen.getByRole("button", { name: "操作记录" }));
+    expect(screen.getByTestId("history-empty")).toHaveTextContent("操作记录尚未启用");
   });
 
-  it("does not stringify nested objects into visible JSON", () => {
-    // 嵌套对象值只能显示为产品化摘要，不能把 JSON 结构直接给用户。
-    const result: StructuredResult = {
-      schema_version: "tool.structured_result.v1",
-      status: "resolved",
-      data: {
-        summary: "对象值展示验证",
-        facts: [{ key: "nested", label: "嵌套对象", value: { raw: "value" } }]
-      },
-      metadata: { safe: true }
-    };
-
-    renderWithClient(<StructuredResultView result={result} />);
-
-    expect(screen.getByText("已整理")).toBeInTheDocument();
-    expect(productText(screen.getByTestId("structured-result-view"))).not.toMatch(/[{}]|raw|value/);
+  it("Composer 提交用户输入且不提供写域控件", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderWithClient(<WorkbenchShell view={resolvedView} onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByLabelText("输入查询"), { target: { value: "查询新增的漏洞" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("查询新增的漏洞"));
+    expect(screen.queryByRole("button", { name: /批准|派发|误报|延时|人员/ })).not.toBeInTheDocument();
   });
 
-  it("does not expose unknown tool status codes", () => {
-    // 未知状态只能显示产品化兜底，不能把 provider_timeout 等内部枚举透出。
-    const view = {
-      ...fobrainVisualFixtures.fobrainAssetDetail,
-      timeline: fobrainVisualFixtures.fobrainAssetDetail.timeline.map((item) =>
-        item.kind === "tool_card" ? { ...item, status: "provider_unknown_state" } : item
-      )
-    };
-
-    renderWithClient(<WorkbenchShell view={view} />);
-
-    const visibleText = productText(screen.getByTestId("workbench-shell"));
-    expect(visibleText).toContain("未知");
-    expect(visibleText).not.toContain("provider_unknown_state");
-  });
-
-  it("renders terminal pending cards as readonly product records", () => {
-    // 终态 pending 只能作为审计/回放记录展示，不能继续提供恢复动作。
-    const view = {
-      ...workbenchFixtures.approval,
-      timeline: workbenchFixtures.approval.timeline.map((item) =>
-        item.kind === "approval_card" ? { ...item, status: "cancelled" } : item
-      )
-    };
-
-    renderWithClient(<WorkbenchShell view={view} />);
-
-    expect(screen.getByText("已取消")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "批准并提交" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "拒绝" })).not.toBeInTheDocument();
+  it("失败态不生成伪空结果卡", () => {
+    renderWithClient(<WorkbenchShell view={{ ...resolvedView, status: "failed", result: null, safe_error: "无法读取漏洞事实。此次请求不是空结果。" }} />);
+    expect(screen.queryByTestId("query-result-card")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("此次请求不是空结果");
   });
 });
-
-function productText(element: HTMLElement) {
-  // 测试只检查产品可见文本；Radix 在 jsdom 中注入的 style 文本不是用户可见内容。
-  const clone = element.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll("style,script").forEach((node) => node.remove());
-  return clone.textContent ?? "";
-}

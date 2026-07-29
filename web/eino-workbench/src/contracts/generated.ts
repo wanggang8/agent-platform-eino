@@ -7,472 +7,120 @@ export type ContractSchema = {
 
 export const contractSchemas = [
   {
-    "id": "https://agent-platform-eino.local/schemas/capability_catalog.v1.schema.json",
-    "title": "Eino Capability Catalog",
-    "path": "docs/schemas/capability_catalog.v1.schema.json"
+    "id": "https://agent-platform-eino.local/schemas/eino_product_facts.v2.schema.json",
+    "title": "M1 Product Facts",
+    "path": "docs/schemas/eino_product_facts.v2.schema.json"
   },
   {
-    "id": "https://agent-platform-eino.local/schemas/connector_status.v1.schema.json",
-    "title": "Connector Status",
-    "path": "docs/schemas/connector_status.v1.schema.json"
+    "id": "https://agent-platform-eino.local/schemas/eino_query_result_snapshot.v2.schema.json",
+    "title": "M1 Query Result Snapshot",
+    "path": "docs/schemas/eino_query_result_snapshot.v2.schema.json"
   },
   {
-    "id": "https://agent-platform-eino.local/schemas/eino_action_request.v1.schema.json",
-    "title": "Eino Action Request",
-    "path": "docs/schemas/eino_action_request.v1.schema.json"
+    "id": "https://agent-platform-eino.local/schemas/eino_workbench_stream_event.v2.schema.json",
+    "title": "M1 Workbench Stream Event",
+    "path": "docs/schemas/eino_workbench_stream_event.v2.schema.json"
   },
   {
-    "id": "https://agent-platform-eino.local/schemas/eino_action_result.v1.schema.json",
-    "title": "Eino Action Result",
-    "path": "docs/schemas/eino_action_result.v1.schema.json"
+    "id": "https://agent-platform-eino.local/schemas/eino_workbench_view.v2.schema.json",
+    "title": "M1 Workbench View",
+    "path": "docs/schemas/eino_workbench_view.v2.schema.json"
   },
   {
-    "id": "https://agent-platform-eino.local/schemas/eino_audit_event.v1.schema.json",
-    "title": "Eino Audit Event",
-    "path": "docs/schemas/eino_audit_event.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_error_envelope.v1.schema.json",
-    "title": "Eino Error Envelope",
-    "path": "docs/schemas/eino_error_envelope.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_product_facts.v1.schema.json",
-    "title": "Eino Product Facts",
-    "path": "docs/schemas/eino_product_facts.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_replay_view.v1.schema.json",
-    "title": "Eino Replay View",
-    "path": "docs/schemas/eino_replay_view.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_run_lifecycle_request.v1.schema.json",
-    "title": "Eino Run Lifecycle Request",
-    "path": "docs/schemas/eino_run_lifecycle_request.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_run_snapshot.v1.schema.json",
-    "title": "Eino Run Snapshot",
-    "path": "docs/schemas/eino_run_snapshot.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_message_request.v1.schema.json",
-    "title": "Eino Workbench Message Request",
-    "path": "docs/schemas/eino_workbench_message_request.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_message_response.v1.schema.json",
-    "title": "Eino Workbench Message Response",
-    "path": "docs/schemas/eino_workbench_message_response.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_pending_interaction.v1.schema.json",
-    "title": "Eino Workbench Pending Interaction",
-    "path": "docs/schemas/eino_workbench_pending_interaction.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_resume_request.v1.schema.json",
-    "title": "Eino Workbench Resume Request",
-    "path": "docs/schemas/eino_workbench_resume_request.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_stream_event.v1.schema.json",
-    "title": "Eino Workbench Stream Event",
-    "path": "docs/schemas/eino_workbench_stream_event.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/eino_workbench_view.v1.schema.json",
-    "title": "Eino Workbench View",
-    "path": "docs/schemas/eino_workbench_view.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_a_live_report.v1.schema.json",
-    "title": "Fobrain Batch A Live Report",
-    "path": "docs/schemas/fobrain/batch_a_live_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_b_live_report.v1.schema.json",
-    "title": "Fobrain Batch B Live Report",
-    "path": "docs/schemas/fobrain/batch_b_live_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_c_live_report.v1.schema.json",
-    "title": "Fobrain Batch C Live Report",
-    "path": "docs/schemas/fobrain/batch_c_live_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_d_live_report.v1.schema.json",
-    "title": "Fobrain Batch D Live Report",
-    "path": "docs/schemas/fobrain/batch_d_live_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/batch_e_live_report.v1.schema.json",
-    "title": "Fobrain Batch E Live Report",
-    "path": "docs/schemas/fobrain/batch_e_live_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/my_assets.input.v1.schema.json",
-    "title": "Fobrain My Assets Input",
-    "path": "docs/schemas/fobrain/my_assets.input.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/provider_poc_report.v1.schema.json",
-    "title": "Fobrain Provider PoC Report",
-    "path": "docs/schemas/fobrain/provider_poc_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/sample_discovery_report.v1.schema.json",
-    "title": "Fobrain Sample Discovery Report",
-    "path": "docs/schemas/fobrain/sample_discovery_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/tool_inputs.v1.schema.json",
-    "title": "Fobrain Tool Inputs",
-    "path": "docs/schemas/fobrain/tool_inputs.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/tool_matrix.v1.schema.json",
-    "title": "Fobrain Tool Matrix",
-    "path": "docs/schemas/fobrain/tool_matrix.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/fobrain/tool_result.v2.schema.json",
-    "title": "Fobrain Professional Tool Result",
-    "path": "docs/schemas/fobrain/tool_result.v2.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/live-read-report.schema.json",
-    "title": "Eino Workbench Fobrain Live Read Report",
-    "path": "docs/schemas/live-read-report.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/live-write-report.schema.json",
-    "title": "Eino Workbench Fobrain Live Write Report",
-    "path": "docs/schemas/live-write-report.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/llm_provider_config.v1.schema.json",
-    "title": "LLM Provider Config",
-    "path": "docs/schemas/llm_provider_config.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/provider_credential_binding.v1.schema.json",
-    "title": "Provider Credential Binding",
-    "path": "docs/schemas/provider_credential_binding.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/provider_policy_decision.v1.schema.json",
-    "title": "Provider Policy Decision",
-    "path": "docs/schemas/provider_policy_decision.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/provider_redacted_error.v1.schema.json",
-    "title": "Provider Redacted Error",
-    "path": "docs/schemas/provider_redacted_error.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/real-model-provider-report.schema.json",
-    "title": "Eino Workbench Real Model Provider Report",
-    "path": "docs/schemas/real-model-provider-report.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/real-model-report.schema.json",
-    "title": "Eino Workbench Real Model Report",
-    "path": "docs/schemas/real-model-report.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/skip-report.schema.json",
-    "title": "Eino Workbench Skip Report",
-    "path": "docs/schemas/skip-report.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/telemetry_usage_summary_report.v1.schema.json",
-    "title": "Eino Telemetry Usage Summary Report",
-    "path": "docs/schemas/telemetry_usage_summary_report.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/tool.structured_result.v1.schema.json",
-    "title": "Generic Tool StructuredResult",
-    "path": "docs/schemas/tool.structured_result.v1.schema.json"
-  },
-  {
-    "id": "https://agent-platform-eino.local/schemas/visual_evidence_matrix.v1.schema.json",
-    "title": "Workbench Visual Evidence Matrix",
-    "path": "docs/schemas/visual_evidence_matrix.v1.schema.json"
+    "id": "https://agent-platform-eino.local/schemas/tool.structured_result.v2.schema.json",
+    "title": "M1 Safe StructuredResult",
+    "path": "docs/schemas/tool.structured_result.v2.schema.json"
   }
 ] as const satisfies readonly ContractSchema[];
 
-export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | { readonly [key: string]: JsonValue } | readonly JsonValue[];
-
-export type RunStatus = "created" | "running" | "waiting" | "succeeded" | "failed" | "cancelled" | "stopped";
-export type ActionStatus = "accepted" | "running" | "waiting" | "completed" | "failed" | "cancelled" | "stopped" | "denied" | "blocked";
-export type RunLifecycleAction = "cancel" | "stop" | "provider_timeout" | "pending_timeout" | "budget_exceeded" | "retry";
-export type TimelineKind = "user_message" | "assistant_message" | "tool_card" | "approval_card" | "clarification_card" | "run_notice";
-export type InspectorTab = "evidence" | "structured" | "runtime" | "audit";
-export type PendingKind = "approval" | "clarification";
-export type PendingStatus = "waiting" | "submitted" | "approved" | "rejected" | "cancelled" | "expired" | "consumed";
-export type StreamEventType = "message.delta" | "message.updated" | "tool.updated" | "pending.updated" | "run.updated" | "view.replaced" | "audit.updated";
-export type AuditEventType = "message" | "tool" | "pending" | "resume" | "approval" | "clarification" | "lifecycle" | "budget" | "safety" | "error";
-export type DisplayType = "entity_collection" | "entity_detail" | "metrics_summary" | "operation_result" | "connector_status" | "entity_resolution";
-export type StructuredStatus = "resolved" | "waiting" | "pending_approval" | "not_found" | "empty" | "failed" | "partial";
-export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
-export type InputMode = "single_choice" | "multi_choice" | "free_text" | "mixed";
-
-export type PendingCandidateField = {
-  readonly label: string;
-  readonly value: string;
+export type SnapshotItem = {
+  readonly snapshot_item_ref: string;
+  readonly display_label: string;
+  readonly discovered_at: string;
 };
 
-export type PendingCandidate = {
-  readonly candidate_ref: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly entity_type: "person" | "asset" | "vulnerability" | "department" | "business";
-  readonly safe_fields?: readonly PendingCandidateField[];
-};
-
-export type DisplayField = {
-  readonly key?: string;
-  readonly label: string;
-  readonly value: JsonValue;
-  readonly type?: "text" | "number" | "status" | "severity" | "code" | "datetime" | "duration" | "badge";
-  readonly tone?: Tone;
-  readonly copyable?: boolean;
-};
-
-export type StructuredMetric = {
-  readonly label: string;
-  readonly value: JsonValue;
-  readonly sub_label?: string;
-  readonly tone?: Tone;
-  readonly icon_hint?: string;
-};
-
-export type StructuredColumn = {
-  readonly key: string;
-  readonly label: string;
-  readonly type?: DisplayField["type"];
-  readonly width?: "compact" | "normal" | "wide" | "fill";
-  readonly align?: "left" | "center" | "right";
-  readonly copyable?: boolean;
-};
-
-export type StructuredItem = {
-  readonly entity_ref?: string;
-  readonly row_ref?: string;
-  readonly display_name?: string;
-  readonly masked_ip?: string;
-  readonly asset_type?: string;
-  readonly business_system?: string;
-  readonly owner_name?: string;
-  readonly vulnerability_ref?: string;
-  readonly title?: string;
-  readonly severity?: string;
-  readonly status?: string;
-  readonly affected_assets?: number;
-  readonly ticket_ref?: string;
-  readonly target_status?: string;
-  readonly risk_summary?: string;
-  readonly summary?: string;
-  readonly badges?: readonly { readonly label: string; readonly tone?: Tone }[];
-};
-
-export type StructuredAction = {
-  readonly id: string;
-  readonly label: string;
-  readonly kind?: "open" | "download" | "export" | "retry" | "resume" | "approve" | "reject" | "select_candidate";
-  readonly role?: "open" | "download" | "export" | "retry" | "resume" | "approve" | "reject" | "confirm" | "cancel";
-  readonly tone?: Tone;
-  readonly enabled?: boolean;
-};
-
-export type GenericStructuredResult = {
-  readonly schema_version: "tool.structured_result.v1";
-  readonly status: Exclude<StructuredStatus, "not_found">;
+export type StructuredResult = {
+  readonly schema_version: "tool.structured_result.v2";
+  readonly capability_id: "capability.vulnerability.list_new";
+  readonly status: "resolved" | "empty";
+  readonly query: { readonly kind: "new_vulnerabilities" };
   readonly data: {
-    readonly summary?: string;
-    readonly facts?: readonly DisplayField[];
+    readonly summary: string;
+    readonly count: number;
+    readonly items: readonly SnapshotItem[];
   };
   readonly metadata: {
     readonly safe: true;
-    readonly result_ref?: string;
-    readonly source?: string;
+    readonly coverage: "complete_set";
+    readonly observed_at: string;
   };
 };
 
-export type FobrainStructuredResult = {
-  readonly schema_version: "fobrain.tool_result.v2";
-  readonly tool_id: string;
-  readonly display_type: DisplayType;
-  readonly entity_type?: "asset" | "vulnerability" | "ticket" | "business_system" | "user" | "permission" | "risk" | "connector" | "entity";
-  readonly status: StructuredStatus;
-  readonly query: Record<string, JsonValue>;
-  readonly data: {
-    readonly title?: string;
-    readonly summary?: string;
-    readonly metrics?: readonly StructuredMetric[];
-    readonly columns?: readonly StructuredColumn[];
-    readonly items?: readonly StructuredItem[];
-    readonly facts?: readonly DisplayField[];
-    readonly actions?: readonly StructuredAction[];
-    readonly resume_refs?: readonly string[];
-    readonly candidate_refs?: readonly string[];
-    readonly resolved_entity?: PendingCandidate;
-    readonly candidates?: readonly PendingCandidate[];
-  };
-  readonly metadata: {
-    readonly safe: true;
-    readonly source?: "fobrain";
-    readonly result_ref?: string;
-    readonly attention_reason?: string;
-    readonly observed_at?: string;
-  };
-};
-
-export type StructuredResult = GenericStructuredResult | FobrainStructuredResult;
-
-export type AuditEvent = {
-  readonly schema_version: "eino_audit_event.v1";
-  readonly audit_id: string;
-  readonly run_id: string;
-  readonly event_type: AuditEventType;
-  readonly safe_summary: string;
-  readonly actor: string;
-  readonly created_at: string;
-};
-
-export type PendingInteraction = {
-  readonly schema_version: "eino_workbench_pending_interaction.v1";
-  readonly pending_id: string;
-  readonly run_id: string;
-  readonly kind: PendingKind;
-  readonly status: PendingStatus;
-  readonly question?: string;
-  readonly operation_name?: string;
-  readonly risk_summary?: string;
-  readonly target_summary?: string;
-  readonly input_mode?: InputMode;
-  readonly candidates?: readonly PendingCandidate[];
-  readonly resume_ref?: string;
-  readonly expires_at?: string;
-};
-
-export type TimelineItem = {
-  readonly item_id: string;
-  readonly kind: TimelineKind;
-  readonly tool_call_id?: string;
-  readonly pending_id?: string;
-  readonly content?: string;
-  readonly structured_result?: StructuredResult;
-  readonly status?: string;
-  readonly safe_summary?: string;
-  readonly input_mode?: InputMode;
-  readonly candidates?: readonly PendingCandidate[];
-};
-
-export type WorkbenchInspector = {
-  readonly tabs: readonly InspectorTab[];
-  readonly evidence?: readonly {
-    readonly label: string;
-    readonly value: string;
-    readonly target_ref?: string;
-    readonly observed_at?: string;
-  }[];
-  readonly structured?: {
-    readonly tool_call_id?: string;
-    readonly result_ref?: string;
-    readonly structured_result?: StructuredResult;
-  };
-  readonly runtime?: {
-    readonly status?: RunStatus;
-    readonly model_label?: string;
-    readonly safe_error?: string;
-    readonly pending_id?: string;
-  };
-  readonly audit?: readonly AuditEvent[];
-};
-
-export type WorkbenchView = {
-  readonly schema_version: "eino_workbench_view.v1";
+export type QueryResultSnapshot = {
+  readonly schema_version: "eino_query_result_snapshot.v2";
+  readonly snapshot_id: string;
   readonly workspace_id: string;
+  readonly conversation_id: string;
+  readonly actor_id: string;
   readonly run_id: string;
-  readonly status: RunStatus;
-  readonly timeline: readonly TimelineItem[];
-  readonly inspector: WorkbenchInspector;
-};
-
-export type ActionResult = {
-  readonly schema_version: "eino_action_result.v1";
-  readonly workspace_id: string;
-  readonly action_id: string;
-  readonly run_id: string;
-  readonly status: ActionStatus;
-  readonly final_answer?: string;
-  readonly result_cards: readonly {
-    readonly card_id: string;
-    readonly tool_call_id?: string;
-    readonly title: string;
-    readonly status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
-    readonly safe_summary?: string;
-    readonly structured_result?: StructuredResult;
-  }[];
-  readonly approval_refs?: readonly string[];
-  readonly resume_refs?: readonly string[];
-  readonly waiting?: {
-    readonly kind: "approval" | "clarification";
-    readonly question: string;
-    readonly risk_summary?: string;
-    readonly target_summary?: string;
-    readonly approval_refs?: readonly string[];
-    readonly resume_refs?: readonly string[];
-    readonly input_mode?: InputMode;
-    readonly candidates?: readonly PendingCandidate[];
-  };
-  readonly audit_refs: readonly string[];
-};
-
-export type RunLifecycleRequest = {
-  readonly schema_version: "eino_run_lifecycle_request.v1";
-  readonly action: RunLifecycleAction;
-  readonly client_request_id: string;
-};
-
-export type MessagePatch = {
-  readonly message_id: string;
-  readonly role: "user" | "assistant" | "system_notice";
-  readonly content_delta?: string;
-  readonly content?: string;
-  readonly status?: "streaming" | "completed" | "failed";
-};
-
-export type ToolPatch = {
   readonly tool_call_id: string;
-  readonly tool_id?: string;
-  readonly display_name?: string;
-  readonly status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
-  readonly safe_summary?: string;
-  readonly structured_result?: StructuredResult;
+  readonly query_kind: "new_vulnerabilities";
+  readonly captured_at: string;
+  readonly expires_at: string;
+  readonly freshness_version: string;
+  readonly coverage: "complete_set";
+  readonly items: readonly SnapshotItem[];
 };
 
-export type RunPatch = {
-  readonly status: RunStatus;
+export type ProductFacts = {
+  readonly schema_version: "eino_product_facts.v2";
+  readonly workspace_id: string;
+  readonly conversation_id: string;
+  readonly actor_id: string;
+  readonly run_id: string;
+  readonly query_sequence: number;
+  readonly status: "succeeded" | "failed";
+  readonly structured_result: StructuredResult | null;
+  readonly snapshot: QueryResultSnapshot | null;
+  readonly safe_error?: { readonly code: "fixture_read_failed"; readonly message: string };
+  readonly events: readonly {
+    readonly event_id: string;
+    readonly sequence: number;
+    readonly type: "query.succeeded" | "query.failed";
+    readonly created_at: string;
+  }[];
+};
+
+export type M1WorkbenchView = {
+  readonly schema_version: "eino_workbench_view.v2";
+  readonly workspace_id: string;
+  readonly conversation_id: string;
+  readonly run_id: string;
+  readonly status: "idle" | "running" | "resolved" | "empty" | "failed";
+  readonly messages: readonly {
+    readonly message_id: string;
+    readonly role: "user" | "assistant";
+    readonly content: string;
+  }[];
+  readonly result: {
+    readonly query_sequence: number;
+    readonly summary: string;
+    readonly count: number;
+    readonly observed_at: string;
+  } | null;
   readonly safe_error?: string;
-  readonly updated_at?: string;
+  readonly right_panel: {
+    readonly tabs: readonly ["事实", "执行记录"];
+    readonly empty_message: string;
+  };
 };
 
-export type WorkbenchStreamEvent = {
-  readonly schema_version: "eino_workbench_stream_event.v1";
+export type M1WorkbenchStreamEvent = {
+  readonly schema_version: "eino_workbench_stream_event.v2";
   readonly event_id: string;
   readonly run_id: string;
-  readonly type: StreamEventType;
   readonly sequence: number;
   readonly created_at: string;
-  readonly message?: MessagePatch;
-  readonly tool?: ToolPatch;
-  readonly pending?: PendingInteraction;
-  readonly run?: RunPatch;
-  readonly view?: WorkbenchView;
-  readonly audit?: AuditEvent;
+  readonly type: "view.replaced";
+  readonly view: M1WorkbenchView;
 };

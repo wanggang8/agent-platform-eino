@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_view.v2.schema.json",
+  "title": "M1 Workbench View",
+  "type": "object",
+  "required": ["schema_version", "workspace_id", "conversation_id", "run_id", "status", "messages", "result", "right_panel"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_view.v2"},
+    "workspace_id": {"type": "string", "minLength": 1},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["idle", "running", "resolved", "empty", "failed"]},
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["message_id", "role", "content"],
+        "properties": {
+          "message_id": {"type": "string", "minLength": 1},
+          "role": {"enum": ["user", "assistant"]},
+          "content": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "result": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["query_sequence", "summary", "count", "observed_at"],
+          "properties": {
+            "query_sequence": {"type": "integer", "minimum": 1},
+            "summary": {"type": "string", "minLength": 1},
+            "count": {"type": "integer", "minimum": 0},
+            "observed_at": {"type": "string", "format": "date-time"}
+          },
+          "additionalProperties": false
+        },
+        {"type": "null"}
+      ]
+    },
+    "safe_error": {"type": "string", "minLength": 1},
+    "right_panel": {
+      "type": "object",
+      "required": ["tabs", "empty_message"],
+      "properties": {
+        "tabs": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "事实"}, {"const": "执行记录"}], "items": false},
+        "empty_message": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

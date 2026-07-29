@@ -1,0 +1,61 @@
+# generated: 2026-07-20
+# last_updated: 2026-07-27
+# project: Agent Platform Eino
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# Epic: backlog | in-progress | done
+# Story: backlog | ready-for-dev | in-progress | review | done
+# Retrospective: optional | done
+
+# WORKFLOW NOTES:
+# - 当前唯一正式 inventory 来自 planning-artifacts/epics.md 的 27 个 Story。
+# - Target Candidate 与 Source Bundle 不是 Sprint 工作项。
+# - Implementation Readiness 已于 2026-07-20 达到 READY；Story 1.2 开发前复核已取得 ALLOW，当前等待 clean GitHub Actions 完成最终验收。
+# - M5 Gate Evidence 通过不等于 M6 真实产品集成已创建或完成。
+
+generated: 2026-07-20
+last_updated: 2026-07-27
+project: Agent Platform Eino
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-固定可复现工具链与开工门禁: done
+  1-2-用单一安全-fixture-跑通只读-walking-skeleton: in-progress
+  1-3-验证代表性读取与统一事实的数据可得性: backlog
+  1-4-查看当前用户与权限三态: backlog
+  1-5-查询全部新增漏洞并区分完整空部分与失败: backlog
+  1-6-按-ip-查询资产并打开安全详情: backlog
+  1-7-按-ip-查询漏洞并打开安全详情: backlog
+  1-8-查询全部业务系统并补齐统一漏洞行事实: backlog
+  1-9-在冻结快照中每页-100-条核对完整事实: backlog
+  1-10-确定性解析多次查询结果指代: backlog
+  1-11-在刷新断线和服务重启后恢复同一只读事实: backlog
+  1-12-完成-read-01-只读端到端验收: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-读取-fobrain-全部人员安全列表: backlog
+  2-2-人工搜索消歧并选择唯一接收人: backlog
+  2-3-基于冻结事实准备不可变派发草案: backlog
+  2-4-确认或取消派发并证明未批准路径零写入: backlog
+  2-5-单条-mock-派发只执行一次并回读完成: backlog
+  2-6-批量-mock-派发逐条结算并可恢复: backlog
+  2-7-主动转发复用同一-action-控制面: backlog
+  2-8-从固定操作记录入口恢复同源逐条结果: backlog
+  2-9-验证目标部署的派发权限写入与回读: backlog
+  2-10-验证目标部署的转发权限写入与回读: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-验证并固定直接修复延时规则: backlog
+  3-2-复用控制面完成单条-mock-修复延时: backlog
+  3-3-复用控制面完成人工误报-mock-旅程: backlog
+  3-4-验证目标部署的延时权限写入与双事实回读: backlog
+  3-5-验证目标部署的误报权限写入与状态回读: backlog
+  epic-3-retrospective: optional

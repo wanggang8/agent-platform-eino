@@ -1,28 +1,28 @@
-import { Paperclip, Send, Wrench } from "lucide-react";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Send } from "lucide-react";
 
 type ComposerProps = {
   readonly disabled: boolean;
+  readonly onSubmit: (content: string) => Promise<void> | void;
 };
 
-// Composer 是消息输入区；disabled 时只表示等待审批/澄清，不在前端推进 run 状态。
-export function Composer({ disabled }: ComposerProps) {
+// Composer 只提交用户文本，不在前端选择工具、状态或 fixture。
+export function Composer({ disabled, onSubmit }: ComposerProps) {
+  const [content, setContent] = useState("");
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = content.trim();
+    if (!value || disabled) return;
+    await onSubmit(value);
+    setContent("");
+  }
   return (
-    <form className="chat-composer" data-testid="chat-composer">
-      <div className="mode-row" aria-label="模式">
-        <button type="button" className="is-active">智能模式</button>
-        <button type="button">分析模式</button>
-        <button type="button">执行模式</button>
-        <button type="button">只读模式</button>
-      </div>
-      <label>
-        <span className="sr-only">输入你的问题</span>
-        <textarea disabled={disabled} placeholder={disabled ? "等待审批或澄清后继续" : "输入你的问题，或使用 / 选择能力"} />
-      </label>
-      <div className="composer-actions">
-        <button type="button"><Wrench size={15} /> 工具</button>
-        <button type="button">能力</button>
-        <button type="button"><Paperclip size={15} /> 附件</button>
-        <button type="submit" className="send-button" disabled={disabled} aria-label="发送"><Send size={16} /></button>
+    <form className="chat-composer" data-testid="chat-composer" onSubmit={submit}>
+      <label htmlFor="query-input">输入查询</label>
+      <div>
+        <textarea id="query-input" value={content} disabled={disabled} onChange={(event) => setContent(event.target.value)} placeholder="例如：查询新增的漏洞" rows={3} />
+        <button type="submit" disabled={disabled || !content.trim()}><Send size={17} />发送</button>
       </div>
     </form>
   );

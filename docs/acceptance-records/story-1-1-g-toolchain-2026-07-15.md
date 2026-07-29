@@ -186,11 +186,11 @@ tracked、staged、untracked 三类 clean gate；`Verify digest image` step succ
 ## 声明边界
 
 - 通过/不通过/skipped blocking: 通过（G-TOOLCHAIN=PASS）
-- 阻断 P0/P1/P2 完成声明: 是，P0/P1/P2尚未实施/验收
+- 阻断 M1～M6 完成声明: 是，M1～M6 尚未实施/验收
 - 阻断重构完成声明: 是
 - 允许替换当前产品基线: 否
 - report schema 校验结果: 不适用——本门禁无独立机器可读report schema；本次repository schema/contract/OpenAPI gates已通过
-- 不得声明的能力：P0/P1/P2 完成、重构完成、产品能力等价、Fobrain 24/24 恢复完成、
+- 不得声明的能力：M1～M6 完成、27 个正式 Story 完成、真实 FOBrain 写动作已启用、
   生产环境可用或可替换当前产品基线。
 - 关联 ADR：`docs/adr/2026-07-15-github-actions-ghcr-toolchain-gate.md`。
 
@@ -199,4 +199,4 @@ tracked、staged、untracked 三类 clean gate；`Verify digest image` step succ
 ## 最终结论
 
 `G-TOOLCHAIN=PASS`。Story 1.1 与 Sprint 1.1 已完成，允许进入 M-1。本结论仅表示 M-0
-可复现工具链与开工门禁通过，不代表 P0/P1/P2 或“重构完成”。
+可复现工具链与开工门禁通过，不代表 M1～M6 或“产品实验完成”。

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FOBrain 漏洞处置实验 Agent — UX Design Validation</title>
+<style>
+:root{--bg:#fafaf9;--surface:#fff;--border:#e7e5e4;--text:#1c1917;--muted:#78716c;--strong:#16a34a;--adequate:#65a30d;--thin:#d97706;--broken:#dc2626;--high:#ea580c;--medium:#ca8a04;--low:#64748b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.container{max-width:960px;margin:auto;padding:32px 24px 64px}header{border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:24px}h1{font-size:22px;margin:0}.subtitle,footer{color:var(--muted);font:12px ui-monospace,monospace}.synthesis,.mechanical{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin:0 0 24px}.synthesis{border-left:3px solid var(--thin)}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:24px}.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px}.name{font-size:13px;color:var(--muted)}.verdict{font-weight:700}.strong{color:var(--strong)}.adequate{color:var(--adequate)}.thin{color:var(--thin)}section{margin-bottom:14px}details{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}summary{cursor:pointer;padding:14px 20px;font-weight:700}details>div{padding:0 20px 18px}.badge{display:inline-block;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;margin-right:7px}.high{background:#fff0e8;color:var(--high)}.medium{background:#fff8d9;color:var(--medium)}.low{background:#eef2f7;color:var(--low)}li{margin-bottom:8px}footer{border-top:1px solid var(--border);margin-top:36px;padding-top:16px}
+</style>
+</head>
+<body><div class="container">
+<header><h1>FOBrain 漏洞处置实验 Agent — UX Design Validation Report</h1><div class="subtitle">DESIGN.md + EXPERIENCE.md · 2026-07-14T14:14:52+08:00</div></header>
+<div class="synthesis"><p><strong>整体 verdict：thin。</strong> 核心安全原则、视觉 token 和双表面架构成立，没有 critical；但当前只读流程、628 条浏览、长事实、人员选择、审批恢复和正式视觉引用尚未全部闭合。</p><p>三路原始评审为 22 high / 15 medium / 4 low；相同根因去重后为 14 high / 11 medium / 3 low。</p></div>
+<div class="summary">
+<div class="card"><div class="name">Flow coverage</div><div class="verdict adequate">adequate</div></div>
+<div class="card"><div class="name">Token completeness</div><div class="verdict strong">strong</div></div>
+<div class="card"><div class="name">Component coverage</div><div class="verdict thin">thin</div></div>
+<div class="card"><div class="name">State coverage</div><div class="verdict adequate">adequate</div></div>
+<div class="card"><div class="name">Visual reference coverage</div><div class="verdict thin">thin</div></div>
+<div class="card"><div class="name">Bloat & overspecification</div><div class="verdict strong">strong</div></div>
+<div class="card"><div class="name">Inheritance discipline</div><div class="verdict adequate">adequate</div></div>
+<div class="card"><div class="name">Shape fit</div><div class="verdict adequate">adequate</div></div>
+</div>
+<section><details open><summary>1. Flow coverage — adequate</summary><div><ul><li><span class="badge high">HIGH</span>当前唯一可启用的只读流程没有独立 Key Flow。</li><li><span class="badge high">HIGH</span>纯聊天入口下的子集分组、多来源合并和去重总数没有可见契约。</li><li><span class="badge medium">MEDIUM</span>UJ-05 异常处置与 UJ-01～UJ-04 的一跳追踪不足。</li></ul></div></details></section>
+<section><details><summary>2. Token completeness — strong</summary><div><p>全部 token 引用可解析，核心浅色组合满足已声明的 AA 目标。可访问性评审另发现深色左栏需要专用焦点 token。</p></div></details></section>
+<section><details open><summary>3. Component coverage — thin</summary><div><ul><li><span class="badge high">HIGH</span>243 人选择没有独立“人员选择卡”组件。</li><li><span class="badge medium">MEDIUM</span>Dialog/Popover/Tooltip 若首版使用，需要补齐行为与视觉契约。</li></ul></div></details></section>
+<section><details><summary>4. State coverage — adequate</summary><div><ul><li><span class="badge high">HIGH</span>628 条浏览、长字段和时间规则阻塞当前只读实现。</li><li><span class="badge high">HIGH</span>审批过期、重复确认、重启恢复和确认后断线待核验尚未闭合。</li><li><span class="badge medium">MEDIUM</span>IA-02 异步加载、局部失败和恢复分流不足。</li></ul></div></details></section>
+<section><details open><summary>5. Visual reference coverage — thin</summary><div><ul><li><span class="badge high">HIGH</span>选定“精密指挥台”仍在 .working，未提升和内联引用。</li><li><span class="badge high">HIGH</span>当前稿混合只读已验证与可确认写入，状态色也与 spine 冲突。</li></ul></div></details></section>
+<section><details><summary>6. Bloat & overspecification — strong</summary><div><p>两份 spine 的篇幅、表格密度和职责划分与产品复杂度匹配。</p></div></details></section>
+<section><details><summary>7. Inheritance discipline — adequate</summary><div><ul><li><span class="badge high">HIGH</span>产品 AC 的“逐条展示”与 UX 的“前 5 条 + 查看全部”需要同步。</li><li><span class="badge medium">MEDIUM</span>UJ 名称需要在 Key Flow 中原样继承。</li></ul></div></details></section>
+<section><details><summary>8. Shape fit — adequate</summary><div><ul><li><span class="badge medium">MEDIUM</span>应补 Inspiration & Anti-patterns，记录选定与拒绝方向。</li></ul></div></details></section>
+<section><details open><summary>Accessibility & safety reviewer</summary><div><ul><li><span class="badge high">HIGH</span>修复深色左栏焦点环、DOM 焦点顺序与新审批卡可达性。</li><li><span class="badge high">HIGH</span>定义批量 live region 协议和执行记录最小安全字段。</li><li><span class="badge medium">MEDIUM</span>补 200% 缩放、landmark、失败后的 FOBrain 排查指引。</li><li><span class="badge low">LOW</span>正式视觉参考不能复制无语义 DOM 和小字低对比。</li></ul><p class="subtitle">review-accessibility-safety.md</p></div></details></section>
+<section><details open><summary>Edge cases & recovery reviewer</summary><div><ul><li><span class="badge high">HIGH</span>多来源合并、审批过期、确认后结果未知、历史结果重开需要明确 UX 状态。</li><li><span class="badge medium">MEDIUM</span>区分主动取消、尚未确认、已过期与待核验。</li><li><span class="badge low">LOW</span>统一回读成功后的业务文案；人员状态并入选择器决策。</li></ul><p class="subtitle">review-edge-cases-recovery.md</p></div></details></section>
+<div class="mechanical"><strong>Mechanical notes</strong><ul><li>9 个 frontmatter source 均可解析。</li><li>46 个 token 引用可解析。</li><li>13 个正式组件在两份 spine 中名称一致。</li><li>当前 23 个状态、4 条目标写流程；仍需补当前只读流程和恢复状态。</li><li>首版仅浅色，不设计暗色 token 或主题切换。</li></ul></div>
+<footer>DESIGN.md · EXPERIENCE.md · review-rubric.md · review-accessibility-safety.md · review-edge-cases-recovery.md</footer>
+</div></body></html>

@@ -1,0 +1,21 @@
+server:
+  addr: "127.0.0.1:8080"
+  read_timeout: "10s"
+  write_timeout: "30s"
+
+database:
+  driver: "sqlite"
+  dsn: "data/eino-workbench-m1.db"
+  busy_timeout: "3s"
+  pool_size: 2
+
+fixture:
+  path: "docs/fixtures/new-vulnerability-walking-skeleton.v1.json"
+  case: "resolved"
+
+freshness:
+  policy_version: "m1.v1"
+  ttl: "30m"
+
+capability:
+  timeout: "5s"

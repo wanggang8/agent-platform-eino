@@ -1,46 +1,26 @@
-import { MessageSquare, Plus, Search, Settings, UserRound } from "lucide-react";
+import { History, MessageSquareText } from "lucide-react";
+import { useWorkbenchUiStore } from "../state/useWorkbenchUiStore";
 
-type WorkspaceSidebarProps = {
-  readonly activeRunId: string;
-};
-
-const conversations = [
-  { title: "查询 10.10.11.69 关联资产与风险", meta: "已完成 · 3 个资产 · 1 个高危漏洞", time: "16:48" },
-  { title: "漏洞工单状态更新审批流程", meta: "等待审批 · 工单 20250624-0178", time: "15:22" },
-  { title: "资产基线合规检查", meta: "已完成 · 不合规 7 条", time: "14:10" },
-  { title: "域名枚举与暴露面分析", meta: "已完成 · 发现域名 12 个", time: "11:35" }
-];
-
-// WorkspaceSidebar 是 fixture 阶段的会话导航壳，真实会话列表后续仍从产品投影读取。
-export function WorkspaceSidebar({ activeRunId }: WorkspaceSidebarProps) {
+// WorkspaceSidebar 只提供当前会话和固定操作记录入口，不伪造历史列表。
+export function WorkspaceSidebar() {
+  const historyOpen = useWorkbenchUiStore((state) => state.historyOpen);
+  const toggleHistory = useWorkbenchUiStore((state) => state.toggleHistory);
   return (
-    <aside className="workspace-sidebar" data-testid="workspace-sidebar" aria-label="工作区导航">
-      <div className="brand-row">
-        <div className="brand-mark">智</div>
-        <div>
-          <strong>智能任务台</strong>
-          <span>安全运营工作台</span>
-        </div>
+    <nav className="workspace-sidebar" data-testid="workspace-sidebar" aria-label="工作区导航">
+      <div className="brand-block">
+        <span aria-hidden>智</span>
+        <div><strong>智能任务台</strong><small>安全运营</small></div>
       </div>
-      <button className="new-chat" type="button"><Plus size={16} /> 新建会话</button>
-      <label className="search-box">
-        <Search size={16} />
-        <input aria-label="搜索会话" placeholder="搜索会话或收藏内容" />
-      </label>
-      <nav className="conversation-list" aria-label="会话列表">
-        {conversations.map((item, index) => (
-          <button key={item.title} className={index === 0 ? "conversation-item is-active" : "conversation-item"} type="button">
-            <span className="conversation-title">{item.title}</span>
-            <span className="conversation-meta">{item.meta}</span>
-            <span className="conversation-time">{item.time}</span>
-            {index === 0 ? <MessageSquare size={14} aria-hidden /> : null}
-          </button>
-        ))}
-      </nav>
-      <div className="sidebar-footer">
-        <button type="button"><Settings size={16} /> 设置与能力</button>
-        <button type="button"><UserRound size={16} /> 当前用户 · 运行记录</button>
+      <div className="sidebar-section">
+        <span className="sidebar-label">当前会话</span>
+        <div className="current-conversation"><MessageSquareText size={18} /><span>新增漏洞查询</span></div>
       </div>
-    </aside>
+      <div className="sidebar-section sidebar-records">
+        <button type="button" aria-expanded={historyOpen} onClick={toggleHistory}>
+          <History size={18} />操作记录
+        </button>
+        {historyOpen ? <p data-testid="history-empty">操作记录尚未启用</p> : null}
+      </div>
+    </nav>
   );
 }

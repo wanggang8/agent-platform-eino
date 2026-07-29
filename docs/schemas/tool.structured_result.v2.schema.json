@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/tool.structured_result.v2.schema.json",
+  "title": "M1 Safe StructuredResult",
+  "type": "object",
+  "required": ["schema_version", "capability_id", "status", "query", "data", "metadata"],
+  "properties": {
+    "schema_version": {"const": "tool.structured_result.v2"},
+    "capability_id": {"const": "capability.vulnerability.list_new"},
+    "status": {"enum": ["resolved", "empty"]},
+    "query": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {"kind": {"const": "new_vulnerabilities"}},
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "required": ["summary", "count", "items"],
+      "properties": {
+        "summary": {"type": "string", "minLength": 1},
+        "count": {"type": "integer", "minimum": 0},
+        "items": {"type": "array", "items": {"$ref": "#/$defs/item"}}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["safe", "coverage", "observed_at"],
+      "properties": {
+        "safe": {"const": true},
+        "coverage": {"const": "complete_set"},
+        "observed_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "required": ["snapshot_item_ref", "display_label", "discovered_at"],
+      "properties": {
+        "snapshot_item_ref": {"type": "string", "pattern": "^item_[a-z0-9_-]+$"},
+        "display_label": {"type": "string", "minLength": 1},
+        "discovered_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "empty"}}, "required": ["status"]},
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {"count": {"type": "integer", "const": 0}, "items": {"type": "array", "maxItems": 0}}
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "resolved"}}, "required": ["status"]},
+      "then": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {"count": {"type": "integer", "minimum": 1}, "items": {"type": "array", "minItems": 1}}
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

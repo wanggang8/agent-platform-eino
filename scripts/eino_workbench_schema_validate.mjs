@@ -1,228 +1,127 @@
 import fs from "node:fs";
 import path from "node:path";
-import process from "node:process";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(scriptDir, "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const m1Schemas = [
+  "docs/schemas/tool.structured_result.v2.schema.json",
+  "docs/schemas/eino_query_result_snapshot.v2.schema.json",
+  "docs/schemas/eino_product_facts.v2.schema.json",
+  "docs/schemas/eino_workbench_view.v2.schema.json",
+  "docs/schemas/eino_workbench_stream_event.v2.schema.json",
+  "docs/schemas/new_vulnerability_fixture_bundle.v1.schema.json"
+];
 const forbiddenMarkers = [
-  "resume_token",
-  "credential_ref",
   "authorization",
   "bearer ",
   "api_key",
-  "raw_provider_body",
-  "raw provider payload"
-];
-const fobrainReadonlyToolIds = [
-  "tool.fobrain.current_user_context",
-  "tool.fobrain.my_permissions",
-  "tool.fobrain.list_assets_by_owner",
-  "tool.fobrain.list_vulnerabilities_by_owner",
-  "tool.fobrain.list_assets_by_department",
-  "tool.fobrain.list_vulnerabilities_by_department",
-  "tool.fobrain.list_assets_by_ip",
-  "tool.fobrain.list_vulnerabilities_by_ip",
-  "tool.fobrain.get_asset_detail",
-  "tool.fobrain.get_vulnerability_detail",
-  "tool.fobrain.business_risk_summary",
-  "tool.fobrain.business_list",
-  "tool.fobrain.external_high_risk_assets",
-  "tool.fobrain.threat_relevance_list",
-  "tool.fobrain.vulnerability_status_summary",
-  "tool.fobrain.pending_tickets",
-  "tool.fobrain.ip_stats",
-  "tool.fobrain.vul_stats",
-  "tool.fobrain.my_assets",
-  "tool.fobrain.my_department_assets",
-  "tool.fobrain.my_vulnerabilities",
-  "tool.fobrain.my_department_vulnerabilities",
-  "tool.fobrain.my_business_systems",
-  "tool.fobrain.my_important_business_systems"
-];
-const visualBlockIds = [
-  "shell",
-  "sidebar",
-  "timeline",
-  "composer",
-  "tool-card",
-  "approval-card",
-  "clarification-card",
-  "inspector"
+  "token",
+  "cookie",
+  "credential",
+  "raw_provider",
+  "provider_url",
+  "provider_locator",
+  "resume_ref",
+  "actiondraft",
+  "tool.structured_result.v1"
 ];
 
-// readJSON 统一从仓库根目录读取 JSON 文件。
-function readJSON(filePath) {
-  return JSON.parse(fs.readFileSync(path.join(root, filePath), "utf8"));
+// readJSON 统一从仓库根目录读取 JSON，避免校验器依赖调用位置。
+function readJSON(file) {
+  return JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
 }
 
-// walk 收集目标目录下的文件，确保校验顺序稳定。
-function walk(dir, predicate = () => true) {
-  const out = [];
-  for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
-    const rel = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walk(rel, predicate));
-    if (entry.isFile() && predicate(rel)) out.push(rel);
-  }
-  return out.sort();
+// schemaKey 与本地 $ref 使用同一相对命名空间。
+function schemaKey(file) {
+  return path.relative("docs/schemas", file).replaceAll(path.sep, "/");
 }
 
-// schemaKey 使用相对路径注册 schema，支持本地 $ref。
-function schemaKey(filePath) {
-  return path.relative("docs/schemas", filePath).replaceAll(path.sep, "/");
-}
-
-// loadAjv 装载 JSON Schema 2020-12 校验器和所有 schema。
-function loadAjv() {
+function buildValidator() {
   const ajv = new Ajv2020({ allErrors: true, strict: true, validateFormats: true });
   addFormats(ajv);
-  const schemaFiles = walk("docs/schemas", (rel) => rel.endsWith(".json"));
-  for (const file of schemaFiles) {
+  for (const file of m1Schemas) {
     const schema = readJSON(file);
+    if (JSON.stringify(schema).includes('"additionalProperties":true')) {
+      throw new Error(`${file} opens additionalProperties`);
+    }
     ajv.addSchema(schema, schemaKey(file));
   }
-  return { ajv, schemaFiles };
+  return ajv;
 }
 
-// assertNoOpenObjects 禁止 schema 打开 additionalProperties，避免契约漂移。
-function assertNoOpenObjects(schemaFiles) {
-  const failures = [];
-  for (const file of schemaFiles) {
-    const text = fs.readFileSync(path.join(root, file), "utf8");
-    if (text.includes('"additionalProperties": true')) {
-      failures.push(file);
-    }
-  }
-  if (failures.length > 0) {
-    throw new Error(`open additionalProperties found:\n${failures.join("\n")}`);
-  }
-}
-
-// assertNoForbiddenMarkers 防止 fixture 泄漏 token、raw provider 或 resume token。
-function assertNoForbiddenMarkers(filePath, value) {
-  const encoded = JSON.stringify(value).toLowerCase();
-  const hit = forbiddenMarkers.find((marker) => encoded.includes(marker));
-  if (hit) {
-    throw new Error(`${filePath} contains forbidden marker ${hit}`);
-  }
-}
-
-// validateFixtures 校验 manifest 中声明的 fixture 与 schema 一致。
-function validateFixtures(ajv) {
+function validateFixture(ajv) {
   const manifest = readJSON("docs/fixtures/manifest.json");
-  if (manifest.schema_version !== "eino_fixture_manifest.v1") {
-    throw new Error("fixture manifest schema_version mismatch");
+  if (manifest.schema_version !== "eino_fixture_manifest.v1" || manifest.fixtures.length !== 1) {
+    throw new Error("M1 fixture manifest must contain exactly one versioned bundle");
   }
-  for (const item of manifest.fixtures) {
-    const schema = readJSON(item.schema);
-    const fixture = readJSON(item.fixture);
-    const validate = ajv.getSchema(schema.$id) ?? ajv.compile(schema);
-    if (!validate(fixture)) {
-      throw new Error(`${item.fixture} failed ${item.schema}:\n${ajv.errorsText(validate.errors, { separator: "\n" })}`);
-    }
-    assertNoForbiddenMarkers(item.fixture, fixture);
+  const entry = manifest.fixtures[0];
+  if (entry.fixture !== "docs/fixtures/new-vulnerability-walking-skeleton.v1.json") {
+    throw new Error("M1 fixture bundle path mismatch");
+  }
+  const fixture = readJSON(entry.fixture);
+  const schema = readJSON(entry.schema);
+  const validate = ajv.getSchema(schema.$id) ?? ajv.compile(schema);
+  if (!validate(fixture)) {
+    throw new Error(`${entry.fixture} failed schema:\n${ajv.errorsText(validate.errors, { separator: "\n" })}`);
+  }
+  const encoded = JSON.stringify(fixture).toLowerCase();
+  const hit = forbiddenMarkers.find((marker) => encoded.includes(marker));
+  if (hit) throw new Error(`${entry.fixture} contains forbidden marker ${hit}`);
+
+  const { resolved, empty, failed } = fixture.cases;
+  if (resolved.data.count !== resolved.data.items.length) throw new Error("resolved count/items mismatch");
+  if (empty.data.summary !== "没有待派发漏洞" || empty.data.count !== 0 || empty.data.items.length !== 0) {
+    throw new Error("empty case must be a complete zero result");
+  }
+  if (failed.message !== "无法读取漏洞事实。此次请求不是空结果。") {
+    throw new Error("failed case must remain distinct from empty");
+  }
+  const sorted = [...resolved.data.items].sort((a, b) => {
+    const byTime = b.discovered_at.localeCompare(a.discovered_at);
+    return byTime || a.snapshot_item_ref.localeCompare(b.snapshot_item_ref);
+  });
+  if (JSON.stringify(sorted) !== JSON.stringify(resolved.data.items)) {
+    throw new Error("resolved items must use discovered_at DESC + snapshot_item_ref ASC");
   }
 }
 
-// validateFobrainToolMatrix 确认 24 个 Fobrain 只读能力 fixture 完整。
-function validateFobrainToolMatrix(ajv) {
-  const matrix = readJSON("docs/fixtures/fobrain/tool-matrix-24.json");
-  const expected = new Set(fobrainReadonlyToolIds);
-  const seen = new Set();
-  const resultSchema = readJSON("docs/schemas/fobrain/tool_result.v2.schema.json");
-  const validateResult = ajv.getSchema(resultSchema.$id) ?? ajv.compile(resultSchema);
-  for (const tool of matrix.tools ?? []) {
-    if (seen.has(tool.tool_id)) {
-      throw new Error(`duplicate Fobrain tool matrix entry ${tool.tool_id}`);
-    }
-    seen.add(tool.tool_id);
-    if (!fs.existsSync(path.join(root, tool.fixture))) {
-      throw new Error(`Fobrain tool matrix fixture missing for ${tool.tool_id}: ${tool.fixture}`);
-    }
-    const fixture = readJSON(tool.fixture);
-    if (!validateResult(fixture)) {
-      throw new Error(`${tool.fixture} failed Fobrain result schema:\n${ajv.errorsText(validateResult.errors, { separator: "\n" })}`);
-    }
-    if (fixture.tool_id !== tool.tool_id) {
-      throw new Error(`${tool.fixture} tool_id ${fixture.tool_id} does not match matrix ${tool.tool_id}`);
-    }
-    if (fixture.display_type !== tool.display_type) {
-      throw new Error(`${tool.fixture} display_type ${fixture.display_type} does not match matrix ${tool.display_type}`);
-    }
-  }
-  const missing = [...expected].filter((toolID) => !seen.has(toolID));
-  const extra = [...seen].filter((toolID) => !expected.has(toolID));
-  if (missing.length > 0 || extra.length > 0) {
-    throw new Error(`Fobrain 24 tool matrix mismatch\nmissing: ${missing.join(", ")}\nextra: ${extra.join(", ")}`);
-  }
-}
-
-// validateVisualEvidenceMatrix 确认视觉验收 block 和状态 fixture 完整。
-function validateVisualEvidenceMatrix() {
-  const matrix = readJSON("docs/fixtures/visual-evidence-matrix.json");
-  const expected = new Set(visualBlockIds);
-  const seen = new Set();
-  for (const block of matrix.blocks ?? []) {
-    if (seen.has(block.block_id)) {
-      throw new Error(`duplicate visual block matrix entry ${block.block_id}`);
-    }
-    seen.add(block.block_id);
-    if (block.target_crop_path && !fs.existsSync(path.join(root, block.target_crop_path))) {
-      throw new Error(`visual block target reference missing for ${block.block_id}: ${block.target_crop_path}`);
-    }
-  }
-  const missing = [...expected].filter((blockID) => !seen.has(blockID));
-  const extra = [...seen].filter((blockID) => !expected.has(blockID));
-  if (missing.length > 0 || extra.length > 0) {
-    throw new Error(`visual block matrix mismatch\nmissing: ${missing.join(", ")}\nextra: ${extra.join(", ")}`);
-  }
-  for (const state of matrix.states ?? []) {
-    if (!fs.existsSync(path.join(root, state.fixture))) {
-      throw new Error(`visual state fixture missing for ${state.state_id}: ${state.fixture}`);
-    }
-  }
-}
-
-// lintOpenAPI 做轻量 OpenAPI 引用和 operationId 校验。
 function lintOpenAPI() {
   const doc = readJSON("docs/api/eino-workbench.openapi.json");
   if (doc.openapi !== "3.1.2") throw new Error("OpenAPI version must be 3.1.2");
-  const operationIds = new Set();
-  for (const [apiPath, methods] of Object.entries(doc.paths ?? {})) {
-    for (const [method, operation] of Object.entries(methods)) {
-      if (!operation.operationId) throw new Error(`${method.toUpperCase()} ${apiPath} missing operationId`);
-      if (operationIds.has(operation.operationId)) throw new Error(`duplicate operationId ${operation.operationId}`);
-      operationIds.add(operation.operationId);
-      const encoded = JSON.stringify(operation);
-      for (const match of encoded.matchAll(/"\$ref":"([^"]+)"/g)) {
+  const expectedPaths = [
+    "/api/workspaces/{workspace_id}/messages",
+    "/api/workspaces/{workspace_id}/runs/{run_id}",
+    "/api/workspaces/{workspace_id}/runs/{run_id}/stream",
+    "/api/workspaces/{workspace_id}/views/current",
+    "/healthz",
+    "/readyz"
+  ];
+  if (JSON.stringify(Object.keys(doc.paths ?? {}).sort()) !== JSON.stringify(expectedPaths.sort())) {
+    throw new Error("M1 OpenAPI path set drifted");
+  }
+  const encoded = JSON.stringify(doc);
+  for (const marker of ["action", "resume", "replay", "lifecycle", ".v1.schema.json"]) {
+    if (encoded.toLowerCase().includes(marker)) throw new Error(`M1 OpenAPI contains out-of-scope marker ${marker}`);
+  }
+  for (const methods of Object.values(doc.paths ?? {})) {
+    for (const operation of Object.values(methods)) {
+      if (!operation.operationId) throw new Error("OpenAPI operation missing operationId");
+      for (const match of JSON.stringify(operation).matchAll(/"\$ref":"([^"]+)"/g)) {
         const ref = match[1].split("#")[0];
         if (!ref) continue;
-        const refPath = path.normalize(path.join("docs/api", ref));
-        if (!fs.existsSync(path.join(root, refPath))) {
-          throw new Error(`${operation.operationId} references missing schema ${ref}`);
-        }
+        if (!fs.existsSync(path.resolve(root, "docs/api", ref))) throw new Error(`missing OpenAPI ref ${ref}`);
       }
     }
   }
 }
 
-// main 汇总执行所有 contract/schema/fixture 门禁。
-function main() {
-  const { ajv, schemaFiles } = loadAjv();
-  for (const file of schemaFiles) {
-    const schema = readJSON(file);
-    if (!ajv.getSchema(schema.$id)) {
-      ajv.compile(schema);
-    }
-  }
-  assertNoOpenObjects(schemaFiles);
-  validateFixtures(ajv);
-  validateFobrainToolMatrix(ajv);
-  validateVisualEvidenceMatrix();
-  lintOpenAPI();
-  console.log(`validated ${schemaFiles.length} schemas and fixture manifest`);
+const ajv = buildValidator();
+for (const file of m1Schemas) {
+  const schema = readJSON(file);
+  if (!ajv.getSchema(schema.$id)) ajv.compile(schema);
 }
-
-main();
+validateFixture(ajv);
+lintOpenAPI();
+console.log(`validated ${m1Schemas.length} M1 schemas and one fixture bundle`);

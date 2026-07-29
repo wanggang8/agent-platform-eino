@@ -11,10 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "stream-test": "node ../../scripts/eino_workbench_stream_test.mjs",
-    "browser-test": "playwright test",
-    "visual-test": "EINO_WORKBENCH_REPORT_KIND=visual playwright test --grep @visual",
-    "build": "tsc --noEmit -p tsconfig.json && vite build",
-    "send-smoke": "bash ../../scripts/eino_workbench_server_smoke.sh --scenario contract"
+    "browser-test": "bash ../../scripts/m1_browser_test.sh",
+    "build": "tsc --noEmit -p tsconfig.json && vite build"
   },
   "engines": {
     "node": "24.18.0",

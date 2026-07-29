@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="FOBrain 用户任务与解法候选的历史脑暴快照；所有优先级已废弃，不能作为产品范围。">
+  <title>候选任务空间 · 历史脑暴快照</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eef4f0;
+      --muted: #a9b9b1;
+      --surface: #111a19;
+      --surface-2: #162321;
+      --line: rgba(207, 232, 220, .14);
+      --mint: #74e0b5;
+      --cyan: #75d5e6;
+      --amber: #ffc96b;
+      --coral: #ff8f70;
+      --violet: #bea6ff;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(116, 224, 181, .11), transparent 28rem),
+        radial-gradient(circle at 88% 20%, rgba(117, 213, 230, .08), transparent 24rem),
+        #09100f;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .28;
+      background-image: linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, #000, transparent 86%);
+    }
+    a { color: inherit; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .hero { padding: 36px 0 68px; border-bottom: 1px solid var(--line); overflow: hidden; }
+    .topbar { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-bottom: 56px; }
+    .eyebrow { color: var(--mint); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 16px var(--mint); }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 54px; align-items: center; }
+    h1 { margin: 0; max-width: 760px; font-size: clamp(42px, 7vw, 82px); line-height: 1.02; letter-spacing: -.055em; }
+    h1 span { display: block; color: var(--mint); }
+    .lead { max-width: 670px; margin: 26px 0 0; color: #c4d2cc; font-size: clamp(17px, 2vw, 21px); }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 36px; }
+    .metric { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(17,26,25,.72); }
+    .metric strong { display: block; font-size: 28px; line-height: 1; color: var(--mint); }
+    .metric span { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .orbit { position: relative; min-height: 430px; border: 1px solid var(--line); border-radius: 32px; background: radial-gradient(circle, rgba(116,224,181,.08), transparent 60%); }
+    .orbit svg { width: 100%; height: 100%; min-height: 430px; display: block; }
+    .orbit .center-label { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 150px; text-align: center; }
+    .orbit .center-label b { display: block; font-size: 22px; }
+    .orbit .center-label small { color: var(--muted); }
+    .assumption-strip { margin-top: 34px; padding: 16px 18px; border: 1px solid rgba(255,201,107,.35); border-radius: 14px; background: rgba(255,201,107,.07); color: #f7ddaa; font-size: 14px; }
+    .assumption-strip b { margin-right: 10px; color: var(--amber); }
+    .boundary-note { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; margin-top: 24px; padding: 20px 22px; border: 1px solid rgba(117,213,230,.38); border-radius: 18px; background: linear-gradient(90deg, rgba(117,213,230,.11), rgba(116,224,181,.05)); }
+    .boundary-note .flag { padding: 7px 9px; border-radius: 8px; background: var(--cyan); color: #071110; font: 900 10px/1 ui-monospace, monospace; letter-spacing: .08em; }
+    .boundary-note p { margin: 0; color: #d5e7e1; font-size: 14px; }
+    .boundary-note strong { color: #fff; }
+    .boundary-note a { white-space: nowrap; color: var(--cyan); font-size: 12px; font-weight: 800; text-underline-offset: 4px; }
+    main section { padding: 82px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: .72fr 1.28fr; gap: 48px; margin-bottom: 38px; }
+    .kicker { color: var(--mint); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h2 { margin: 8px 0 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; letter-spacing: -.035em; }
+    .section-head p { margin: 0; align-self: end; color: var(--muted); font-size: 16px; }
+    .techniques { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .technique { position: relative; min-height: 292px; padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.012)); overflow: hidden; }
+    .technique::after { content: attr(data-n); position: absolute; right: -5px; bottom: -32px; color: rgba(255,255,255,.045); font-size: 112px; font-weight: 900; line-height: 1; }
+    .technique .num { color: var(--amber); font: 800 12px/1 ui-monospace, monospace; }
+    .technique h3 { margin: 18px 0 8px; min-height: 48px; font-size: 18px; line-height: 1.3; }
+    .technique p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .technique ul { position: relative; z-index: 1; margin: 0; padding: 0; list-style: none; color: #d8e4de; font-size: 13px; }
+    .technique li + li { margin-top: 8px; }
+    .technique li::before { content: "↳"; margin-right: 6px; color: var(--mint); }
+    .converge { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center; margin-top: 22px; }
+    .converge-card { padding: 22px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line); }
+    .converge-card b { color: var(--cyan); }
+    .arrow { color: var(--mint); font-size: 26px; }
+    .thesis { padding: 92px 0; }
+    .thesis-card { position: relative; padding: clamp(30px, 6vw, 72px); border: 1px solid rgba(116,224,181,.28); border-radius: 30px; background: linear-gradient(135deg, rgba(116,224,181,.12), rgba(117,213,230,.05) 55%, rgba(190,166,255,.07)); overflow: hidden; }
+    .thesis-card::before { content: "CASE"; position: absolute; top: -28px; right: 22px; color: rgba(255,255,255,.035); font-size: 150px; font-weight: 900; letter-spacing: -.08em; }
+    blockquote { position: relative; z-index: 1; margin: 0; max-width: 950px; font-size: clamp(27px, 4vw, 48px); font-weight: 750; line-height: 1.25; letter-spacing: -.03em; }
+    blockquote em { color: var(--mint); font-style: normal; }
+    .thesis-note { position: relative; z-index: 1; max-width: 780px; margin: 24px 0 0; color: #c3d2cb; }
+    .case-flow { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 38px; }
+    .case-step { padding: 14px 10px; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(9,16,15,.48); font-size: 13px; }
+    .case-step b { display: block; color: var(--mint); margin-bottom: 3px; }
+    .clusters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: clusters; }
+    .cluster { counter-increment: clusters; min-height: 190px; padding: 23px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+    .cluster::before { content: "0" counter(clusters); display: block; margin-bottom: 30px; color: var(--coral); font: 800 12px/1 ui-monospace, monospace; }
+    .cluster h3 { margin: 0 0 9px; font-size: 18px; }
+    .cluster p { margin: 0; color: var(--muted); font-size: 13px; }
+    .moscow { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1.1fr; gap: 14px; }
+    .priority { padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+    .priority.must { border-color: rgba(116,224,181,.38); background: rgba(116,224,181,.06); }
+    .priority.wont { border-color: rgba(255,143,112,.28); }
+    .priority h3 { margin: 0 0 18px; font-size: 20px; }
+    .priority h3 span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .12em; }
+    .priority ul { margin: 0; padding: 0; list-style: none; color: #d3ded9; font-size: 13px; }
+    .priority li { padding: 9px 0; border-top: 1px solid var(--line); }
+    .assumptions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .assumption { padding: 22px; border: 1px solid rgba(255,201,107,.27); border-radius: 18px; background: rgba(255,201,107,.055); }
+    .assumption .tag { display: inline-block; margin-bottom: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(255,201,107,.13); color: var(--amber); font: 800 10px/1 ui-monospace, monospace; letter-spacing: .08em; }
+    .assumption h3 { margin: 0 0 7px; font-size: 17px; }
+    .assumption p { margin: 0; color: #d0c5aa; font-size: 13px; }
+    .review { display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px; }
+    .review-card { padding: 28px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); }
+    .review-card h3 { margin: 0 0 16px; font-size: 22px; }
+    .review-card p { color: var(--muted); }
+    .question { color: var(--ink) !important; font-size: 20px; font-weight: 700; }
+    footer { padding: 36px 0 52px; color: var(--muted); font-size: 12px; }
+    footer .wrap { display: flex; justify-content: space-between; gap: 20px; }
+    @media (max-width: 980px) {
+      .hero-grid, .section-head, .review { grid-template-columns: 1fr; }
+      .orbit { min-height: 350px; }
+      .orbit svg { min-height: 350px; }
+      .techniques { grid-template-columns: repeat(2, 1fr); }
+      .moscow { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 680px) {
+      .wrap { width: min(calc(100% - 24px), var(--max)); }
+      .topbar { margin-bottom: 34px; }
+      .hero { padding-top: 24px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .orbit { display: none; }
+      main section { padding: 58px 0; }
+      .techniques, .clusters, .moscow, .assumptions { grid-template-columns: 1fr; }
+      .technique { min-height: auto; }
+      .converge { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); text-align: center; }
+      .case-flow { grid-template-columns: 1fr; }
+      .boundary-note { grid-template-columns: 1fr; }
+      footer .wrap { display: block; }
+    }
+    @media print {
+      :root { color-scheme: light; }
+      body { color: #15201d; background: #fff; }
+      body::before { display: none; }
+      .hero, main section { break-inside: avoid; }
+      .technique, .cluster, .priority, .review-card { background: #fff; border-color: #ccd8d2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="eyebrow">BMAD · Autonomous Brainstorm</div>
+        <div class="status">历史快照 · 优先级已废弃 · 2026.07.11</div>
+      </div>
+      <div class="hero-grid">
+        <div>
+          <h1>从工具清单<span>走向候选任务空间</span></h1>
+          <p class="lead">围绕资产与漏洞风险运营发散 120 个想法。本页只保留创意历史；风险案件、能力簇和旧 MoSCoW 都不是 Must、首版范围或 Product Brief 输入。</p>
+          <div class="metrics" aria-label="会话统计">
+            <div class="metric"><strong>5</strong><span>发散技术</span></div>
+            <div class="metric"><strong>120</strong><span>产品想法</span></div>
+            <div class="metric"><strong>9</strong><span>能力簇</span></div>
+            <div class="metric"><strong>4</strong><span>已废弃分组</span></div>
+          </div>
+          <div class="assumption-strip"><b>未确认假设</b>当前不预选主用户、任务、AI、风险案件、核心结果或产品关系；以 DG-01～DG-09 为唯一门禁。</div>
+        </div>
+        <div class="orbit" aria-label="风险案件由证据、责任、决策、跟踪和复核构成">
+          <svg viewBox="0 0 430 430" role="img" aria-labelledby="orbit-title">
+            <title id="orbit-title">风险案件构成示意</title>
+            <circle cx="215" cy="215" r="128" fill="none" stroke="rgba(116,224,181,.24)" stroke-width="1.5" stroke-dasharray="5 9"/>
+            <circle cx="215" cy="215" r="73" fill="rgba(116,224,181,.10)" stroke="rgba(116,224,181,.48)" stroke-width="1.5"/>
+            <g fill="#09100f" stroke-width="1.5">
+              <circle cx="215" cy="66" r="34" stroke="#75d5e6"/><circle cx="356" cy="168" r="34" stroke="#ffc96b"/>
+              <circle cx="304" cy="338" r="34" stroke="#ff8f70"/><circle cx="126" cy="338" r="34" stroke="#bea6ff"/>
+              <circle cx="74" cy="168" r="34" stroke="#74e0b5"/>
+            </g>
+            <g fill="#dce8e2" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">
+              <text x="215" y="70">证据</text><text x="356" y="172">责任</text><text x="304" y="342">决策</text><text x="126" y="342">跟踪</text><text x="74" y="172">复核</text>
+            </g>
+            <g stroke="rgba(116,224,181,.32)" stroke-width="1.4"><line x1="215" y1="100" x2="215" y2="142"/><line x1="322" y1="181" x2="283" y2="197"/><line x1="283" y1="310" x2="255" y2="274"/><line x1="147" y1="310" x2="175" y2="274"/><line x1="108" y1="181" x2="147" y2="197"/></g>
+          </svg>
+          <div class="center-label"><b>风险案件视图</b><small>未验证解法假设</small></div>
+        </div>
+      </div>
+      <aside class="boundary-note" aria-label="产品边界校准">
+        <div class="flag">BOUNDARY</div>
+        <p><strong>FOBrain 官方产品已覆盖多源数据归一、漏洞动态优先级与闭环处置。</strong>本次脑暴的九个能力簇是候选 AI 增量层，不等于另建一套风险运营平台；最终产品定位仍待产品负责人确认。</p>
+        <a href="https://www.huashunxinan.net/product-fobrain" target="_blank" rel="noreferrer">FOBrain 官方说明 ↗</a>
+      </aside>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="kicker">01 · Divergence</div><h2>五次换镜头，挖出 120 个可能</h2></div>
+          <p>前三种技术从问题本质、用户任务与失败模式扩张能力边界；后两种用极端约束和未来交叉检验哪些产品行为依然成立。</p>
+        </div>
+        <div class="techniques">
+          <article class="technique" data-n="20"><div class="num">20 IDEAS</div><h3>First Principles Thinking</h3><p>从一项可信风险决策必须具备什么重新开始。</p><ul><li>问题到证据链</li><li>不确定性标签</li><li>共享风险案件</li></ul></article>
+          <article class="technique" data-n="30"><div class="num">30 IDEAS</div><h3>Job to Be Done</h3><p>围绕发现、判断、交接、验证和汇报的真实任务展开。</p><ul><li>完整风险上下文</li><li>可行动风险队列</li><li>可交接调查摘要</li></ul></article>
+          <article class="technique" data-n="30"><div class="num">30 IDEAS</div><h3>Reverse Brainstorming</h3><p>先问怎样让工作台失信、误导和越权，再逐项反转。</p><ul><li>空结果语义</li><li>只看证据模式</li><li>修复后重新验证</li></ul></article>
+          <article class="technique" data-n="20"><div class="num">20 IDEAS</div><h3>One Feature Only</h3><p>每次只保留一种能力，检验其能否独立成为产品。</p><ul><li>责任范围收件箱</li><li>证据简报</li><li>风险优先队列</li></ul></article>
+          <article class="technique" data-n="20"><div class="num">20 IDEAS</div><h3>Scenario Cross</h3><p>跨越两类用户与只读／受控处置两种未来寻找稳健行为。</p><ul><li>证据先行卡</li><li>建议与动作分栏</li><li>结果复核</li></ul></article>
+        </div>
+        <div class="converge">
+          <div class="converge-card"><b>收敛一 · Affinity Clustering</b><br>120 个想法按共同用户价值归并为九组能力。</div>
+          <div class="arrow">→</div>
+          <div class="converge-card"><b>历史收敛 · MoSCoW</b><br>该优先级已废弃；现只保留候选创意来源。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="thesis">
+      <div class="wrap">
+        <div class="thesis-card">
+          <div class="kicker">Creative Hypothesis · Not a Decision</div>
+          <blockquote>“风险案件视图”只是一个<em>待验证解法假设</em>，不是产品单位、首版范围或既定入口。</blockquote>
+          <p class="thesis-note">只有真实任务证明跨时段／跨角色上下文缺口，且该形态按 DG-05 规则胜出时才可继续；否则使用 FOBrain 原生对象、非 AI 改进或不做。</p>
+          <div class="case-flow" aria-label="风险案件五个构成">
+            <div class="case-step"><b>01 证据</b>来源、时效与边界</div>
+            <div class="case-step"><b>02 责任</b>对象、角色与期限</div>
+            <div class="case-step"><b>03 决策</b>建议、异议与批准</div>
+            <div class="case-step"><b>04 跟踪</b>状态、升级与交接</div>
+            <div class="case-step"><b>05 复核</b>结果、回放与学习</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="kicker">02 · Affinity Map</div><h2>九个能力簇，不是九张功能清单</h2></div>
+          <p>每一簇只是一个候选研究问题；它是否必要，必须由选定任务证明，不能由风险案件假设反向决定。</p>
+        </div>
+        <div class="clusters">
+          <article class="cluster"><h3>职责范围与权限</h3><p>身份范围风险入口、责任确认、权限解释与可见边界。</p></article>
+          <article class="cluster"><h3>证据与不确定性</h3><p>来源、时效、覆盖率，以及事实／推断／未知的明确区分。</p></article>
+          <article class="cluster"><h3>实体和数据质量</h3><p>实体澄清、冲突探测、缺失范围与空结果真实语义。</p></article>
+          <article class="cluster"><h3>可解释风险优先级</h3><p>结合利用、暴露、业务重要性和状态回答“为什么现在”。</p></article>
+          <article class="cluster"><h3>变化与待办</h3><p>新增、恶化、逾期、已解决和需要立即判断的事项。</p></article>
+          <article class="cluster"><h3>协作交接</h3><p>责任人、完成条件、期限、未决问题和安全升级。</p></article>
+          <article class="cluster"><h3>受控动作</h3><p>影响预览、人工修改／拒绝／取消、审批和分批确认。</p></article>
+          <article class="cluster"><h3>结果验证</h3><p>完成证据、修复后复核、前后对照与复发识别。</p></article>
+          <article class="cluster"><h3>审计学习与报告</h3><p>决策回放、人工异议、效果指标、摘要与可复用手册。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="kicker">03 · Superseded MoSCoW</div><h2>历史创意分组，不是产品优先级</h2></div>
+          <p>以下 Must／Should／Could／Won't 标签全部失效，所有条目统一为 HYPOTHESIS；只有通过 DG-04～DG-09 的必要项才可能进入 final Brief。</p>
+        </div>
+        <div class="moscow">
+          <article class="priority must"><h3>候选组 A<span>原 Must，现非 Must</span></h3><ul><li>职责范围风险入口</li><li>证据来源与数据新鲜度</li><li>事实／推断／未知区分</li><li>实体澄清</li><li>可解释优先级</li><li>风险案件与决策记录</li><li>人机动作边界</li><li>审计回放</li></ul></article>
+          <article class="priority"><h3>Should<span>闭环增强</span></h3><ul><li>风险变化摘要</li><li>责任交接和状态跟踪</li><li>处置完成复核</li><li>管理摘要与流程指标</li></ul></article>
+          <article class="priority"><h3>Could<span>后续探索</span></h3><ul><li>可复用调查手册</li><li>建议反馈学习</li><li>替代排序</li><li>风险对比</li><li>个性化信息密度</li></ul></article>
+          <article class="priority wont"><h3>Won't<span>V1 明确不做</span></h3><ul><li>通用 Agent builder</li><li>无人监督自主修复</li><li>无证据的综合风险分</li><li>把聊天记录当唯一案件载体</li></ul></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div><div class="kicker">04 · Assumption Register</div><h2>黄色不是结论，是待验证的下注</h2></div>
+          <p>这些假设影响用户、价值、权限和数据可行性。它们不能因为出现在脑暴结果中就被视为已确认需求。</p>
+        </div>
+        <div class="assumptions">
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>研究队列</h3><p>漏洞运营、资产责任、管理和审计角色均为候选；DG-03 只选观察队列，不等于最终主用户。</p></article>
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>核心结果</h3><p>A 路径可关注净效率，B 路径可关注高损失任务结果；具体任务、路径和指标分别由 DG-04／DG-05 决定。</p></article>
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>产品价值</h3><p>当前没有已验证价值；原生增强、AI、独立 Workbench、非 AI 和不做都必须公平比较。</p></article>
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>动作边界</h3><p>分派、澄清、批准、升级和管理摘要均被标记为待定位确认；只读建议与受控处置尚未定案。</p></article>
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>数据可用性</h3><p>责任归属、业务关系、时间序列、暴露信息和修复后状态是否可靠，决定多项候选能力能否成立。</p></article>
+          <article class="assumption"><div class="tag">UNCONFIRMED</div><h3>运营规则</h3><p>处置时限、风险例外、升级路径、完成定义和用户纠正归属的权限仍需被明确。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="review">
+          <article class="review-card"><div class="kicker">Review Lens</div><h3>先问是否存在真实任务，再看任何能力</h3><p>它必须服务 DG-04 选定任务并通过 DG-05／DG-06；风险案件、聊天、工具按钮或分数都不能凭脑暴进入范围。</p></article>
+          <article class="review-card"><div class="kicker">Owner Decision · DG-01</div><h3>当前唯一确认</h3><p class="question">是否同意先研究 FOBrain 活跃用户的一个重要剩余任务，并保留 A/B、全部解法和“不做”？</p><p>产品关系留到 DG-07；主用户、结果、动作与适用边界不得在此提前确认。</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap"><span>FOBrain 候选任务空间 · Superseded Brainstorm Snapshot</span><span>5 techniques · 120 ideas · 9 clusters · 0 validated priorities</span></div>
+  </footer>
+</body>
+</html>

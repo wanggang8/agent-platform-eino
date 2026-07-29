@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-platform-eino.local/schemas/eino_workbench_stream_event.v2.schema.json",
+  "title": "M1 Workbench Stream Event",
+  "type": "object",
+  "required": ["schema_version", "event_id", "run_id", "sequence", "created_at", "type", "view"],
+  "properties": {
+    "schema_version": {"const": "eino_workbench_stream_event.v2"},
+    "event_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer", "minimum": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "type": {"const": "view.replaced"},
+    "view": {"$ref": "eino_workbench_view.v2.schema.json"}
+  },
+  "additionalProperties": false
+}

@@ -1,21 +1,13 @@
 import { useParams } from "react-router-dom";
-import { useWorkbenchView } from "../api/workbenchQueries";
-import { useWorkbenchUiStore } from "../state/useWorkbenchUiStore";
+import { useSubmitWorkbenchMessage, useWorkbenchView } from "../api/workbenchQueries";
 import { WorkbenchShell } from "../components/WorkbenchShell";
 
-// WorkbenchPage 负责从路由读取 workspace，并把 contract view 交给 shell。
 export function WorkbenchPage() {
-  const { workspaceId = "ws-demo" } = useParams();
-  const activeFixture = useWorkbenchUiStore((state) => state.activeFixture);
-  const view = useWorkbenchView(workspaceId, activeFixture);
-
-  if (view.isError) {
-    return <div className="app-failure">Workbench fixture 加载失败。</div>;
-  }
-
-  if (!view.data) {
-    return <div className="app-loading">正在加载 Workbench...</div>;
-  }
-
-  return <WorkbenchShell view={view.data} />;
+  const { workspaceId = "ws-workbench" } = useParams();
+  const view = useWorkbenchView(workspaceId);
+  const conversationID = view.data?.conversation_id ?? "conversation_initial";
+  const submit = useSubmitWorkbenchMessage(workspaceId, conversationID);
+  if (view.isError) return <div className="app-failure" role="alert">无法加载工作台。</div>;
+  if (!view.data) return <div className="app-loading">正在加载工作台…</div>;
+  return <WorkbenchShell view={view.data} isSubmitting={submit.isPending} onSubmit={(content) => submit.mutateAsync(content).then(() => undefined)} />;
 }

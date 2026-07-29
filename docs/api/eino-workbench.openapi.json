@@ -1,127 +1,46 @@
 {
   "openapi": "3.1.2",
-  "info": {
-    "title": "Eino Workbench Product API",
-    "version": "0.1.0"
-  },
-  "components": {
-    "responses": {
-      "Error": {
-        "description": "Safe error envelope",
-        "content": {
-          "application/json": {
-            "schema": {"$ref": "../schemas/eino_error_envelope.v1.schema.json"}
-          }
-        }
-      }
-    }
-  },
+  "info": {"title": "Eino Workbench M1 API", "version": "2.0.0-m1"},
   "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "getWorkbenchHealth",
+        "responses": {"200": {"description": "Process is alive", "content": {"application/json": {"schema": {"type": "object", "required": ["status"], "properties": {"status": {"const": "ok"}}, "additionalProperties": false}}}}}
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "getWorkbenchReadiness",
+        "responses": {"200": {"description": "M1 dependencies are ready", "content": {"application/json": {"schema": {"type": "object", "required": ["status"], "properties": {"status": {"const": "ready"}}, "additionalProperties": false}}}}}
+      }
+    },
     "/api/workspaces/{workspace_id}/views/current": {
       "get": {
         "operationId": "getCurrentWorkbenchView",
-        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {
-          "200": {"description": "Current Workbench view", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_view.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
+        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}],
+        "responses": {"200": {"description": "Current safe view", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_view.v2.schema.json"}}}}}
       }
     },
     "/api/workspaces/{workspace_id}/messages": {
       "post": {
         "operationId": "postWorkbenchMessage",
-        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_message_request.v1.schema.json"}}}},
-        "responses": {
-          "200": {"description": "Message accepted", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_message_response.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
+        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["conversation_id", "actor_id", "content"], "properties": {"conversation_id": {"type": "string", "minLength": 1}, "actor_id": {"type": "string", "minLength": 1}, "content": {"type": "string", "minLength": 1}}, "additionalProperties": false}}}},
+        "responses": {"200": {"description": "Completed safe view", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_view.v2.schema.json"}}}}}
       }
     },
     "/api/workspaces/{workspace_id}/runs/{run_id}": {
       "get": {
         "operationId": "getWorkbenchRunSnapshot",
-        "parameters": [
-          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
-        ],
-        "responses": {
-          "200": {"description": "Run snapshot projected from Product Facts", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_run_snapshot.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
+        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}],
+        "responses": {"200": {"description": "Persisted safe view", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_view.v2.schema.json"}}}}}
       }
     },
     "/api/workspaces/{workspace_id}/runs/{run_id}/stream": {
       "get": {
         "operationId": "streamWorkbenchRun",
-        "parameters": [
-          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
-        ],
-        "responses": {
-          "200": {"description": "SSE stream of workbench events", "content": {"text/event-stream": {"schema": {"$ref": "../schemas/eino_workbench_stream_event.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
-      }
-    },
-    "/api/workspaces/{workspace_id}/runs/{run_id}/replay": {
-      "get": {
-        "operationId": "getWorkbenchRunReplay",
-        "parameters": [
-          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
-        ],
-        "responses": {
-          "200": {"description": "Replay view projected from Product Facts", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_replay_view.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
-      }
-    },
-    "/api/workspaces/{workspace_id}/runs/{run_id}/resume": {
-      "post": {
-        "operationId": "resumeWorkbenchRun",
-        "parameters": [
-          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
-        ],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/eino_workbench_resume_request.v1.schema.json"}}}},
-        "responses": {
-          "200": {"description": "Resume accepted", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_action_result.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
-      }
-    },
-    "/api/workspaces/{workspace_id}/runs/{run_id}/lifecycle": {
-      "post": {
-        "operationId": "postWorkbenchRunLifecycle",
-        "parameters": [
-          {"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string"}}
-        ],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/eino_run_lifecycle_request.v1.schema.json"}}}},
-        "responses": {
-          "200": {"description": "Lifecycle action result", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_action_result.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
-      }
-    },
-    "/api/workspaces/{workspace_id}/agent/actions": {
-      "post": {
-        "operationId": "postAgentAction",
-        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "../schemas/eino_action_request.v1.schema.json"}}}},
-        "responses": {
-          "200": {"description": "Action result", "content": {"application/json": {"schema": {"$ref": "../schemas/eino_action_result.v1.schema.json"}}}},
-          "4XX": {"$ref": "#/components/responses/Error"},
-          "5XX": {"$ref": "#/components/responses/Error"}
-        }
+        "parameters": [{"name": "workspace_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}, {"name": "run_id", "in": "path", "required": true, "schema": {"type": "string", "minLength": 1}}],
+        "responses": {"200": {"description": "Safe SSE projection", "content": {"text/event-stream": {"schema": {"$ref": "../schemas/eino_workbench_stream_event.v2.schema.json"}}}}}
       }
     }
   }

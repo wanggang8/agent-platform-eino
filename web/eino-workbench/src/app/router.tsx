@@ -5,7 +5,7 @@ import { App } from "./App";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/workspaces/ws-demo" replace />
+    element: <Navigate to="/workspaces/ws-workbench" replace />
   },
   {
     path: "/workspaces/:workspaceId",

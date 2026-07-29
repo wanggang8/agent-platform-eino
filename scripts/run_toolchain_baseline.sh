@@ -34,18 +34,16 @@ GOTOOLCHAIN=local go list -mod=readonly -m all
 GOTOOLCHAIN=local go mod verify
 GOTOOLCHAIN=local go test ./... -count=1
 GOTOOLCHAIN=local go test -race ./internal/einoapp/execution ./internal/einoapp/store/sqlite -count=1
-GOTOOLCHAIN=local go test ./internal/einoapp/execution ./internal/einoapp/store/sqlite -run 'CheckPoint|Checkpoint|SQLite|Migration|Store' -count=1
+GOTOOLCHAIN=local go test ./internal/einoapp/execution ./internal/einoapp/store/sqlite -run 'M1|Query|SQLiteVersion' -count=1
 GOTOOLCHAIN=local go vet ./...
 GOTOOLCHAIN=local go build ./...
 GOTOOLCHAIN=local go test ./internal/einoapp/architecture -run 'TestImportBoundaryDoesNotUseLegacyProjectPackages|TestImportBoundaryPreservesLayering|TestProductLayersDoNotImportEino|TestPhaseOnePackageSkeletonExists' -count=1
 
 npm run eino-workbench:typecheck
 npm run eino-workbench:test
-npm run eino-workbench:stream-test
 npm run eino-workbench:build
 # 固定单 worker，避免宿主 CPU 数量或架构模拟改变视觉门禁的并发与资源压力。
 npm run eino-workbench:browser-test -- --project=desktop --workers=1
-bash scripts/eino_workbench_server_smoke.sh --scenario contract
 git diff --check
 
 if [[ ${CI:-false} == true ]]; then

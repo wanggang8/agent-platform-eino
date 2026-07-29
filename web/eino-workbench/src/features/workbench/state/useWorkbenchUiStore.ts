@@ -1,35 +1,16 @@
 import { create } from "zustand";
-import type { InspectorTab } from "../../../contracts/generated";
-import type { WorkbenchFixtureKey } from "../../../fixtures/workbenchFixtures";
 
 type WorkbenchUiState = {
-  readonly activeFixture: WorkbenchFixtureKey;
-  readonly activeInspectorTab: InspectorTab;
-  readonly collapsedToolCards: ReadonlySet<string>;
-  readonly mobilePanel: "chat" | "inspector";
-  readonly setActiveFixture: (fixture: WorkbenchFixtureKey) => void;
-  readonly setActiveInspectorTab: (tab: InspectorTab) => void;
-  readonly toggleToolCard: (itemId: string) => void;
-  readonly setMobilePanel: (panel: "chat" | "inspector") => void;
+  readonly activeRightTab: "事实" | "执行记录";
+  readonly historyOpen: boolean;
+  readonly setActiveRightTab: (tab: "事实" | "执行记录") => void;
+  readonly toggleHistory: () => void;
 };
 
-// useWorkbenchUiStore 只保存前端 UI 状态，不保存 Product Facts、run lifecycle 或 provider 事实。
+// Zustand 只保存 tab/展开态，不复制任何服务端事实。
 export const useWorkbenchUiStore = create<WorkbenchUiState>((set) => ({
-  activeFixture: "success",
-  activeInspectorTab: "evidence",
-  collapsedToolCards: new Set(),
-  mobilePanel: "chat",
-  setActiveFixture: (fixture) => set({ activeFixture: fixture }),
-  setActiveInspectorTab: (tab) => set({ activeInspectorTab: tab }),
-  toggleToolCard: (itemId) =>
-    set((state) => {
-      const next = new Set(state.collapsedToolCards);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
-      return { collapsedToolCards: next };
-    }),
-  setMobilePanel: (panel) => set({ mobilePanel: panel })
+  activeRightTab: "事实",
+  historyOpen: false,
+  setActiveRightTab: (activeRightTab) => set({ activeRightTab }),
+  toggleHistory: () => set((state) => ({ historyOpen: !state.historyOpen }))
 }));

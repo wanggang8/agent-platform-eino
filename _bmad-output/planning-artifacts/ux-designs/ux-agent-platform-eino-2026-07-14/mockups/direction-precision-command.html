@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>方向一 · 精密指挥台</title>
+  <style>
+    /*
+      方向色板：#F3F5F7 #FFFFFF #111827 #475569 #D8DEE6 #0F6CBD
+      #E8F2FC #146C43 #E9F7EF #A15C00 #FFF6E5 #B42318 #FDECEC
+    */
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 1180px; background: #e8ebef; color: #111827; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .note { width: min(1440px, calc(100vw - 32px)); margin: 16px auto 10px; padding: 14px 18px; background: #fff; border-left: 4px solid #0f6cbd; box-shadow: 0 2px 8px rgba(15,23,42,.06); font-size: 13px; line-height: 1.65; color: #475569; }
+    .note strong { color: #111827; font-size: 15px; }
+    .browser { width: min(1440px, calc(100vw - 32px)); height: 1000px; margin: 0 auto 24px; background: #fff; border: 1px solid #b9c1cc; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 48px rgba(15,23,42,.15); }
+    .chrome { height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #eef1f4; border-bottom: 1px solid #d8dee6; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #c3c9d2; }
+    .address { margin-left: 14px; height: 25px; flex: 1; max-width: 620px; border: 1px solid #d0d6df; background: #fff; border-radius: 5px; display: flex; align-items: center; padding: 0 10px; font-size: 11px; color: #64748b; }
+    .shell { height: 958px; display: grid; grid-template-columns: 232px minmax(600px, 1fr) 360px; background: #f3f5f7; }
+    .left { background: #18212d; color: #d8e0ea; display: flex; flex-direction: column; min-width: 0; }
+    .brand { height: 68px; padding: 18px 18px; border-bottom: 1px solid #2d3947; display: flex; gap: 11px; align-items: center; }
+    .brandmark { width: 30px; height: 30px; border: 1px solid #5fa7e2; border-radius: 6px; display: grid; place-items: center; color: #8ec7f2; font-weight: 800; font-size: 12px; }
+    .brand strong { display:block; color:#fff; font-size:14px; letter-spacing:.04em; }
+    .brand span { display:block; font-size:10px; color:#8b9bad; margin-top:2px; }
+    .newchat { margin: 14px; padding: 10px 12px; background: #263545; color: white; border: 1px solid #52657a; border-radius: 5px; font-size: 12px; font-weight: 700; text-align:center; }
+    .nav-label { padding: 10px 16px 6px; color: #9aabbd; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .session { margin: 2px 8px; padding: 10px 10px; border-radius: 5px; font-size: 12px; color: #b8c5d3; line-height: 1.45; }
+    .session.active { background:#263545; color:#fff; box-shadow: inset 3px 0 #4ba3e3; }
+    .session small { display:block; color:#a7b6c6; margin-top:3px; font-size:10px; }
+    .leftfoot { margin-top:auto; padding:14px; border-top:1px solid #2d3947; font-size:11px; display:flex; align-items:center; gap:9px; }
+    .avatar { width:28px; height:28px; border-radius:50%; background:#dcecff; color:#0f6cbd; display:grid; place-items:center; font-weight:800; }
+    .center { min-width:0; display:flex; flex-direction:column; border-right:1px solid #d8dee6; }
+    .topbar { height:68px; padding:0 22px; background:#fff; border-bottom:1px solid #d8dee6; display:flex; align-items:center; justify-content:space-between; }
+    .title strong { display:block; font-size:15px; }
+    .title span { display:block; font-size:10px; color:#64748b; margin-top:4px; }
+    .badges { display:flex; gap:7px; }
+    .badge { padding:5px 8px; border:1px solid #d8dee6; border-radius:4px; color:#475569; background:#f8fafc; font-size:10px; }
+    .timeline { flex:1; overflow:hidden; padding:22px 28px 14px; background:linear-gradient(#f8fafc,#f3f5f7); }
+    .msg { max-width:760px; margin-bottom:18px; }
+    .msg.user { margin-left:auto; max-width:460px; }
+    .who { font-size:10px; color:#64748b; margin:0 0 6px; text-transform:uppercase; letter-spacing:.08em; }
+    .bubble { background:#fff; border:1px solid #d8dee6; border-radius:7px; padding:12px 14px; font-size:13px; line-height:1.55; box-shadow:0 1px 2px rgba(15,23,42,.03); }
+    .user .bubble { background:#f8fafc; border-color:#d8dee6; }
+    .result { background:#fff; border:1px solid #c9d2dd; border-radius:8px; overflow:hidden; box-shadow:0 4px 14px rgba(15,23,42,.06); }
+    .result-head { display:flex; align-items:flex-start; justify-content:space-between; padding:14px 15px 11px; border-bottom:1px solid #e3e8ee; }
+    .result-head h3 { margin:0; font-size:14px; }
+    .result-head p { margin:5px 0 0; color:#64748b; font-size:11px; }
+    .count { text-align:right; }
+    .count strong { display:block; font-size:25px; line-height:1; font-variant-numeric:tabular-nums; }
+    .count span { color:#64748b; font-size:10px; }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid #e3e8ee; }
+    .metric { padding:10px 14px; border-right:1px solid #e3e8ee; font-size:10px; color:#64748b; }
+    .metric:last-child{border-right:0}.metric b{display:block;color:#111827;font-size:14px;margin-bottom:2px}
+    .result-action { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; font-size:11px; color:#475569; }
+    .link { color:#0f6cbd; font-weight:700; }
+    .confirm { margin-top:14px; border:1px solid #e3b35d; border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 5px 18px rgba(161,92,0,.08); }
+    .confirm-title { background:#fff6e5; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #efd69c; }
+    .confirm-title strong { font-size:13px; }.pending { color:#a15c00;font-size:10px;font-weight:800;letter-spacing:.05em; }
+    .change { padding:12px 14px 10px; display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; font-size:11px; }
+    .person { border:1px solid #e3e8ee; background:#f8fafc; padding:8px; border-radius:5px; }
+    .person span{display:block;color:#64748b;font-size:9px;margin-bottom:3px}.person b{font-size:12px}.arrow{color:#a15c00;font-weight:900}
+    .rows { margin:0 14px; border:1px solid #e1e6ec; border-radius:5px; overflow:hidden; }
+    .row { display:grid; grid-template-columns:1.25fr .8fr .58fr .8fr; gap:8px; padding:7px 9px; font-size:10px; border-bottom:1px solid #edf0f3; align-items:center; }
+    .row:last-child{border-bottom:0}.row.head{background:#f6f8fa;color:#64748b;font-size:9px;font-weight:700}.mono{font-family:"SFMono-Regular",Consolas,monospace;font-variant-numeric:tabular-nums}.online,.offline{color:#475569;font-weight:700}.missing{color:#475569;background:#f8fafc;border:1px solid #d8dee6;padding:2px 4px;border-radius:3px}
+    .confirm-foot { padding:11px 14px 13px; display:flex; justify-content:space-between; align-items:center; }
+    .safety { font-size:9px;color:#64748b;max-width:390px;line-height:1.5}.buttons{display:flex;gap:7px}.btn{padding:8px 13px;border-radius:5px;border:1px solid #cbd3dc;background:#fff;font-size:11px;font-weight:700}.btn.primary{background:#a15c00;border-color:#a15c00;color:#fff}
+    .composer { height:75px; margin:0 22px 16px; border:1px solid #cbd3dc; border-radius:8px; background:#fff; padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 8px rgba(15,23,42,.05); }
+    .composer p{margin:0;color:#64748b;font-size:11px}.composer-foot{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b}.send{background:#111827;color:#fff;border-radius:4px;padding:6px 10px;font-weight:700}
+    .right { background:#fff; display:flex; flex-direction:column; min-width:0; }
+    .right-head { height:68px; padding:17px 17px 0; border-bottom:1px solid #d8dee6; }
+    .right-head strong{font-size:13px}.tabs{display:flex;gap:18px;margin-top:14px;font-size:10px;color:#64748b}.tab{padding-bottom:9px}.tab.active{color:#0f6cbd;border-bottom:2px solid #0f6cbd;font-weight:800}
+    .panel { padding:16px; overflow:hidden; }
+    .panel-title { font-size:10px;color:#64748b;font-weight:800;letter-spacing:.08em;margin:0 0 9px; }
+    .fact-card { border:1px solid #d8dee6;border-radius:6px;padding:12px;margin-bottom:13px; }
+    .fact-card h4{font-size:12px;margin:0 0 11px}.kv{display:grid;grid-template-columns:92px 1fr;gap:8px 10px;font-size:10px;margin-bottom:8px}.kv dt{color:#64748b}.kv dd{margin:0;text-align:right;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .statusline { display:flex;gap:8px;align-items:center;font-size:10px;margin-bottom:8px; }.check{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#e9f7ef;color:#146c43;font-weight:900}.clock{background:#fff6e5;color:#a15c00}.muted{color:#64748b}.audit { border-left:1px solid #d8dee6;margin-left:9px;padding-left:15px; }
+    .notice { background:#f3f7fb;border:1px solid #d9e5ef;padding:10px;border-radius:5px;font-size:9px;line-height:1.55;color:#475569; }
+  </style>
+</head>
+<body>
+  <div class="note"><strong>方向一：精密指挥台 · 门禁后的目标写态</strong><br>仅用于确定三栏布局、视觉密度与目标审批状态，不代表当前写域已启用，也不是 DOM／交互实现参考。低饱和蓝只承担查询与导航，琥珀色只用于尚未写入的二次确认；当前可实现版本收到写意图时必须显示“写域尚未启用”，不得出现确认按钮。</div>
+  <main class="browser" aria-label="FOBrain Agent 精密指挥台视觉方向">
+    <div class="chrome"><i class="dot"></i><i class="dot"></i><i class="dot"></i><div class="address">agent-workbench / 会话 / 每日新增漏洞处置</div></div>
+    <div class="shell">
+      <nav class="left">
+        <div class="brand"><div class="brandmark">FA</div><div><strong>FOBrain Agent</strong><span>安全运营工作台</span></div></div>
+        <div class="newchat">＋ 新建会话</div>
+        <div class="nav-label">今天</div>
+        <div class="session active">每日新增漏洞处置<small>628 条 · 目标态待确认</small></div>
+        <div class="session">公司业务主机梳理<small>昨天 · 已完成</small></div>
+        <div class="session">离线资产复核<small>周一 · 42 条</small></div>
+        <div class="nav-label">工作区</div>
+        <div class="session">操作记录<small>最近六个月 · 待处理持续可见</small></div>
+        <div class="leftfoot"><span class="avatar">运</span><span>产品中心 · 运营</span></div>
+      </nav>
+      <section class="center">
+        <header class="topbar"><div class="title"><strong>每日新增漏洞处置</strong><span>结果引用已保存 · 最近更新 10:42</span></div><div class="badges"><span class="badge">当前权限范围</span><span class="badge">门禁后的目标写态</span></div></header>
+        <div class="timeline">
+          <article class="msg user"><div class="who">你 · 10:40</div><div class="bubble">查询全部新增的漏洞。</div></article>
+          <article class="msg"><div class="who">FOBrain Agent · 10:42</div><div class="result">
+            <div class="result-head"><div><h3>新增漏洞查询完成</h3><p>当前账号权限范围 · 按发现时间倒序 · 共 7 页</p></div><div class="count"><strong>628</strong><span>条新增漏洞</span></div></div>
+            <div class="metrics"><div class="metric"><b>628</b>POC、IP 完整</div><div class="metric"><b>6</b>业务系统未提供</div><div class="metric"><b>628</b>当前负责人未分配</div></div>
+            <div class="result-action"><span>结果范围已锁定，不包含后续新增项</span><span class="link">查看全部明细 →</span></div>
+          </div></article>
+          <article class="msg user"><div class="who">你 · 10:43</div><div class="bubble">把这些漏洞转发给张三。</div></article>
+          <article class="msg"><div class="who">FOBrain Agent · 10:43</div><div class="confirm">
+            <div class="confirm-title"><strong>确认转发 628 条漏洞</strong><span class="pending">等待你的确认</span></div>
+            <div class="change"><div class="person"><span>当前修复负责人</span><b>未分配</b></div><div class="arrow">→</div><div class="person"><span>目标修复负责人</span><b>张三 · 在职</b></div></div>
+            <div class="rows"><div class="row head"><span>POC</span><span>IP</span><span>在线状态</span><span>业务系统</span></div><div class="row"><span>Apache 路径遍历</span><span class="mono">10.24.18.××</span><span class="online">在线</span><span>统一门户</span></div><div class="row"><span>WebLogic 远程执行</span><span class="mono">10.24.33.××</span><span class="offline">离线</span><span class="missing">未提供</span></div><div class="row"><span>OpenSSH 权限绕过</span><span class="mono">10.28.07.××</span><span class="online">在线</span><span>数据交换平台</span></div><div class="row"><span>Nginx 配置泄露</span><span class="mono">10.31.09.××</span><span class="offline">离线</span><span>客户服务平台</span></div><div class="row"><span>Redis 未授权访问</span><span class="mono">10.31.12.××</span><span class="online">在线</span><span>数据交换平台</span></div></div>
+            <div class="confirm-foot"><div class="safety">此操作将修改 FOBrain 数据。确认后才会逐条写入并回读负责人；失败项不会显示为成功。前 5 条，共 628 条。</div><div class="buttons"><button class="btn">取消</button><button class="btn">查看全部</button><button class="btn primary">确认执行</button></div></div>
+          </div></article>
+        </div>
+        <div class="composer"><p>继续描述你要查询或处理的内容…</p><div class="composer-foot"><span>AI 负责理解意图，写操作范围由结果引用锁定</span><span class="send">发送 ↑</span></div></div>
+      </section>
+      <aside class="right">
+        <div class="right-head"><strong>事实与执行</strong><div class="tabs"><span class="tab active">事实</span><span class="tab">执行记录</span></div></div>
+        <div class="panel"><p class="panel-title">当前结果</p><div class="fact-card"><h4>新增漏洞 · 628 条</h4><dl class="kv"><dt>查询条件</dt><dd>状态：新增</dd><dt>排序方式</dt><dd>发现时间倒序</dd><dt>结果范围</dt><dd>已锁定</dd><dt>业务系统</dt><dd class="missing">6 条未提供</dd><dt>当前负责人</dt><dd class="missing">628 条未分配</dd></dl></div>
+          <p class="panel-title">运行状态</p><div class="audit"><div class="statusline"><span class="check">✓</span><div><b>查询完成</b><div class="muted">628 条事实已保存</div></div></div><div class="statusline"><span class="check">✓</span><div><b>人员已确认</b><div class="muted">张三 · 来自 FOBrain 人员列表</div></div></div><div class="statusline"><span class="check clock">!</span><div><b>等待二次确认</b><div class="muted">尚未发生外部写入</div></div></div></div>
+          <div class="notice">状态变体 · 缺失事实不会被 AI 补全：“当前修复负责人”显示“未分配”，“业务系统”显示“未提供”。缺失业务负责人不阻断手动指定张三。</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
