@@ -26,7 +26,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   epic-1: in-progress
   1-1-固定可复现工具链与开工门禁: done
-  1-2-用单一安全-fixture-跑通只读-walking-skeleton: in-progress
+  1-2-用单一安全-fixture-跑通只读-walking-skeleton: done
   1-3-验证代表性读取与统一事实的数据可得性: backlog
   1-4-查看当前用户与权限三态: backlog
   1-5-查询全部新增漏洞并区分完整空部分与失败: backlog

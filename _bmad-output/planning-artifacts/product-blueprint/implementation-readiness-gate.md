@@ -1,6 +1,6 @@
 ---
 title: FOBrain 漏洞处置实验 Agent 实施就绪门禁
-status: STORY_1_2_CLEAN_CI_PENDING
+status: STORY_1_2_CLEAN_CI_PASS
 updated: '2026-07-27'
 ---
 
@@ -8,7 +8,7 @@ updated: '2026-07-27'
 
 ## 当前结论
 
-Story 1.1 与工具链门禁已完成。Story 1.2 的单 fixture 只读实现、三态纵向 E2E、重启恢复、安全扫描和固定 Linux/amd64 工具链预检已通过，证据见 [`story-1-2-m1-walking-skeleton-2026-07-27.md`](../../../docs/acceptance-records/story-1-2-m1-walking-skeleton-2026-07-27.md)。当前仍缺与该实现对应的 clean GitHub Actions run，因此 Story 保持 `in-progress`。
+Story 1.1 与工具链门禁已完成。Story 1.2 的单 fixture 只读实现、三态纵向 E2E、重启恢复、安全扫描和固定 Linux/amd64 工具链预检已通过，证据见 [`story-1-2-m1-walking-skeleton-2026-07-27.md`](../../../docs/acceptance-records/story-1-2-m1-walking-skeleton-2026-07-27.md)。Story 1.2 已有对应 clean GitHub Actions run（30446096645）与 commit `62d91a0c1174b1f8de11f70b06993de56f746af0`，可标记为 `done`。
 
 真实 FOBrain 写入保持关闭。M5 的规则与 Gate Evidence 只用于客观裁决，不自动注册生产 capability；真实动作必须在适用门禁通过后另建 M6 Target Story。
 
@@ -43,7 +43,7 @@ Story 1.1 与工具链门禁已完成。Story 1.2 的单 fixture 只读实现、
 | 里程碑 | 正式 Story | 状态 / 允许范围 |
 | --- | --- | --- |
 | M0 | 1.1 | `done`；G-TOOLCHAIN `PASS` |
-| M1 | 1.2 | Story=`in-progress`；实现与固定工具链预检通过，clean GitHub Actions 待完成 |
+| M1 | 1.2 | Story=`done`；实现与固定工具链预检、clean GitHub Actions 均通过，G-ARCH-V2 全局仍 BLOCKED |
 | M2 | 1.3～1.8 | 代表性真实读取与统一行事实 |
 | M3 | 1.9～1.12 | 快照、引用、恢复与 READ-01 |
 | M4 | 2.1～2.8 | 人员选择与 mock Action 控制面；真实 mutation=0 |
@@ -67,4 +67,4 @@ Story 1.1 与工具链门禁已完成。Story 1.2 的单 fixture 只读实现、
 
 ## 下一步
 
-为 Story 1.2 的当前变更创建提交并推送到 GitHub，在新的 clean `Toolchain Gate` run 成功后补充 commit SHA / run URL，再将 Story 标记 `done`。全局 G-ARCH-V2 继续保持 `BLOCKED`，真实 LLM、真实 FOBrain 和所有外部 mutation 继续为 0。
+为 Story 1.2 的当前变更创建提交并推送到 GitHub，已完成 clean `Toolchain Gate` run，已补充 commit SHA / run URL，Story 标记为 `done`。全局 G-ARCH-V2 继续保持 `BLOCKED`，真实 LLM、真实 FOBrain 和所有外部 mutation 继续为 0。

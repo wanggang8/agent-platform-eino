@@ -6,7 +6,7 @@
 
 - Story 1.1：`done`。
 - `G-TOOLCHAIN`：`PASS`，权威证据见 [`story-1-1-g-toolchain-2026-07-15.md`](./acceptance-records/story-1-1-g-toolchain-2026-07-15.md)。
-- Story 1.2：实现、三态纵向 E2E、重启恢复、安全扫描和固定 Linux/amd64 工具链预检已通过；证据见 [`story-1-2-m1-walking-skeleton-2026-07-27.md`](./acceptance-records/story-1-2-m1-walking-skeleton-2026-07-27.md)。clean GitHub Actions 尚未生成，Story 保持 `in-progress`。
+- Story 1.2：实现、三态纵向 E2E、重启恢复、安全扫描和固定 Linux/amd64 工具链预检已通过；证据见 [`story-1-2-m1-walking-skeleton-2026-07-27.md`](./acceptance-records/story-1-2-m1-walking-skeleton-2026-07-27.md)；已生成 clean GitHub Actions（run: https://github.com/wanggang8/agent-platform-eino/actions/runs/30446096645，commit: `62d91a0c1174b1f8de11f70b06993de56f746af0`）。Story 1.2 标记 `done`。
 - `G-READ-01/02` 的目标部署 API 证据已存在，但当前产品 capability 仍未完成。
 - 真实写域门禁保持 `BLOCKED`；任何 mock 或 Gate Evidence 通过都不自动开启生产入口。
 
@@ -99,7 +99,7 @@ Gate Evidence Story 仅可修改 `scripts/acceptance/`、`docs/fixtures/`、`doc
 | 门禁 | 当前状态 | 解除位置 |
 | --- | --- | --- |
 | G-TOOLCHAIN | `PASS` | Story 1.1 |
-| G-ARCH-V2 | 全局 `BLOCKED`；M1 read subset 固定工具链预检 `PASS`，clean CI 待补 | Stories 1.2、1.12 的契约与产品证据 |
+| G-ARCH-V2 | 全局 `BLOCKED`；M1 read subset 固定工具链预检 `PASS`，clean CI 已补齐 | Stories 1.2、1.12 的契约与产品证据 |
 | G-READ-01 | 目标 API `PASS`；产品 `BLOCKED` | Stories 1.3、1.5、1.12 |
 | G-READ-02 | 目标 API `PASS`；产品 `BLOCKED` | Stories 2.1、2.2 |
 | G-READ-03 | 接口证据存在；产品 `BLOCKED` | Stories 1.3、1.4、1.6～1.8、1.12 |

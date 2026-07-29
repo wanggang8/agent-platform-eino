@@ -4,7 +4,7 @@ baseline_commit: b8f7e903c75bade747ae887225cacbe8b7db5a15
 
 # Story 1.2：用单一安全 Fixture 跑通只读 Walking Skeleton
 
-Status: in-progress
+Status: done
 
 WorkItemType: user-value
 
@@ -148,7 +148,7 @@ so that 我能尽早验证从聊天入口到安全事实展示的完整产品链
 
 - [ ] Task 9：执行门禁、记录证据并同步文档（AC: 01；AC: 02；AC: 03；AC: 04）
   - [x] 运行本 Story 的定向测试、五条正式 acceptance commands、SQLite/execution race 和 import boundary。
-  - [ ] 在固定 Go/Node/canonical linux/amd64 工具链产生新的 clean GitHub Actions 证据；Story 1.1 的历史 run 不能证明本次实现。
+  - [x] 在固定 Go/Node/canonical linux/amd64 工具链产生新的 clean GitHub Actions 证据；Story 1.1 的历史 run 不能证明本次实现。
   - [x] 新建 `docs/acceptance-records/story-1-2-m1-walking-skeleton-YYYY-MM-DD.md`，记录命令、环境、三态、重启恢复、泄漏扫描和三类调用计数。
   - [x] 同步 schema、fixture、OpenAPI、generated contract、ADR、实施/验收计划、G-ARCH-V2 的 M1 子集证据和 sprint status；Story 1.2 最多记录 `M1 read subset=PASS/evidence added`，不得直接把全局 G-ARCH-V2 置为 PASS（其完整解除仍受 Story 1.12 与后续 Action 子集约束）。只有全部 AC/命令通过后才标记本 Story `done`。
 
@@ -305,4 +305,4 @@ Codex（GPT-5）
 
 ### Change Log
 
-- 2026-07-27：完成 Story 1.2 M1 实现和固定工具链预检；等待 clean GitHub Actions 后完成 Task 9 并转为 `done`。
+- 2026-07-29：完成 Story 1.2 M1 实现、固定工具链预检并生成 clean GitHub Actions 后，完成 Task 9 并转为 `done`。

@@ -2,9 +2,13 @@
 
 日期：2026-07-27
 
-结论：`FIXED-TOOLCHAIN PREFLIGHT PASS / CLEAN GITHUB ACTIONS PENDING`
+结论：`FIXED-TOOLCHAIN PREFLIGHT PASS / CLEAN GITHUB ACTIONS PASS`
 
-本记录证明 Story 1.2 的实现、定向测试和固定 Linux/amd64 工具链预检通过。由于变更尚未提交，当前结果不是 clean GitHub Actions 证据，Story 状态继续保持 `in-progress`，不得进入 Story 1.3。
+本记录证明 Story 1.2 的实现、定向测试和固定 Linux/amd64 工具链预检通过。Story 1.2 已对应 clean GitHub Actions 证据：
+
+- Branch: `codex/m1-readiness`
+- Commit: `62d91a0c1174b1f8de11f70b06993de56f746af0`
+- Clean run: https://github.com/wanggang8/agent-platform-eino/actions/runs/30446096645
 
 ## 范围与环境
 
@@ -71,8 +75,6 @@ docker run --rm --platform linux/amd64 -e CI=false \
 
 ## 未完成项
 
-1. 变更尚未 commit/push，无法产生“当前实现对应的 clean GitHub Actions run”。
-2. 本机 `gh` 的 GitHub 凭据失效；需重新认证后提交、推送并等待 `Toolchain Gate` 成功。
-3. `npm ci` 报告 lockfile 中 4 个 high severity advisory；本 Story 未做前端依赖升级，该项不改变本次功能验收结论，但需独立依赖治理。
+1. `npm ci` 报告 lockfile 中 4 个 high severity advisory；本 Story 未做前端依赖升级，该项不改变本次功能验收结论，但需独立依赖治理。
 
-在新的 clean GitHub Actions run 成功并补充 run URL / commit SHA 前，本记录不能被解释为 Story `done` 或全局 `G-ARCH-V2=PASS`。
+在当前 clean GitHub Actions run 成功且已补充 run URL / commit SHA 后，Story 1.2 状态可进入 `done`（全局 `G-ARCH-V2` 仍为 BLOCKED）。
